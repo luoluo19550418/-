@@ -1,0 +1,17 @@
+#+TITLE: 实用CommonLisp编程
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* REPL简介
+  1. 一般来说,Lisp对列表求值的时候会将第一个元素视为一个函数的名字,而其他元素作为即将求值的表达式则形成了该函数的实参.
+  2. 打印机会试图以一种读取器可以理解的相同语法来打印对象.
+  3. format函数类似C中的printf函数,它接受变长参数,但只有两个必要参数,分别代表发送输出的位置(t表示输出到标准输出)以及格式字符串(以~为转义前缀)
+  4. 用defun表达式来定义函数,Common lisp中的函数自动返回其最后求值的哪个表达式的值.
+  5. 使用load加载一个文件.
+  6. compile-file编译lisp文件成fasl文件(快速加载文件fast-load file),并返回编译产生的FASL文件
+* 实践:简单的数据库
+  1. 使用list函数生成列表.
+     列表可以有两类,一类相当于C的数组,格式为(1 2 3). 一类类似于C++的map,格式为(:k1 v1 :k2 v2 :k3 v3)
+  2. getf函数可以根据key从列表中取出value,它接受一个列表和一个符号类型的key,并返回value,格式为(getf list(:k1 v1 :k2 v2 :k3 v3) k1)
+  3. 

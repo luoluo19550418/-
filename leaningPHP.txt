@@ -1,0 +1,15 @@
+一、PHP连接MySql的方式
+*1、建立连接
+$db=mysql_connect(hostname,username,passwd)
+*2、选择数据库
+mysql_select_db(dbName,$db)
+*3、执行SQL查询
+$result=mysql_query(sql,$db);
+*4、查看某个域值
+$field=mysql_result($result,line,filedName)
+*5、获取行记录
+**根据下标获取域值
+$row=mysql_fetch_row($result);//一般用于循环中，filed值放在$row[1],$row[2]中
+**根据域名获取域值
+$row=mysql_fetch_array($result);//一般用于循环中，filed值放在$row["field1"],$row["field2"]中
+

@@ -1,0 +1,457 @@
+#+TITLE: Ruby
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+#+ STARTUP: hidestars
+#+TAGS:  变量(B) 语句(Y) 语法(F)
+#+TAGS:  NOTE(N)
+* 语法
+** 表达式
+*** 命名
+*** 定义
+*** 特殊说明
+** 方法
+*** 命名
+**** 1. 以=结尾的方法，Ruby运行赋值操作的语法来调用他们。例如：
+#+BEGIN_SRC Ruby
+#假如一个对象拥有一个叫做x=的方法，那么下面两行代码所做的事情是一样的：
+o.x=(1)
+o.x = 1
+#+END_SRC
+**** 2. 以?结尾的方法表示判断，即返回Boolean值的方法
+**** 3. 以!结尾的方法表示一个可变方法，该方法会修改原对象，不带!的方法返回调用该方法对象的一个修改过的拷贝
+*** 定义
+** 类
+*** 命名
+*** 定义
+*** 特殊说明
+**** 构造函数名为initialize 例如
+#<<class_example>> 
+#+BEGIN_SRC Ruby
+class Sequence
+    include Enumerable
+    def initialize(from,to,by)
+        @from,@to,@by=from,to,by  #@开头的变量表示这些变量为类成员变量
+    end
+    def *(factor)
+        Sequence.new(@from*factor,@to*factor,@by*factor)
+    end
+end
+#+END_SRC
+**** 重载类的操作符的方法为def 操作符(参数...)
+[[class_example][例如]]
+**** 实例化类的方法为:类名.new(参数化)
+[[class_example][例如]]
+#+BEGIN_SRC Ruby
+s=Sequence.new(1,10,2)
+#+END_SRC
+**** Ruby的类是开放的，即使是那些内建的核心类也是如此
+例如
+#+BEGIN_SRC ruby
+class Range          #打开一个已存在的类
+  def by(step)
+    x=self.begin
+    if exclude_end?
+      while x<self.end
+        yield x
+	x+=step
+      end
+    else
+      while x<=self.end
+        yield x
+	x+=step
+      end
+    end
+  end
+end
+#使用新增的方法
+(0. .10).by(2) {|x| print x}
+#+END_SRC
+** 模块
+*** 命名
+*** 定义
+moudle 模块名
+def self.函数名(参数列表)
+end
+例如
+#+BEGIN_SRC Ruby
+module Sequences
+    def self.fromtoby(from,to,by)
+       x=from
+       while x<=to
+           yield x
+	   x+=by
+       end
+    end
+end
+Sequences.fromtoby(1,10,2)
+{|x| print x} # Prints "13579"
+#+END_SRC
+*** 特殊说明
+**** 1. 作用类似C++的namespace
+* 变量
+** 变量命名规则
+ 1. 全局变量以$为前缀
+ 2. 实例变量以@为前缀
+ 3. 类变量以@@为前缀
+ 4. 类和模块必须以大写字母开头，否则会报错!! 				 :语法:
+ 5. Ruby大小写敏感
+ 6. 以A-Z这26个大写字母开头的标识符是常量，如果试图修改这个标识符，会发出警告 ，而不是错误
+ 7. 在Ruby语言中，并没有对Unicode进行规范化，即使两个字符有同样的含义，或者有同样的字体字形，但是如果他们的码点不一样，就会认为是两个不同的字符
+ 8. 可以在Ruby关键字前面分别加上@、@@和$，可以把他们作为实例变量、类变量和全局变量来使用
+** 数据类型
+*** Regexp对象
+字面量语法为/正则表达式/
+**** 操作符
+1. ===操作符来测试匹配性
+*** Range对象
+字面量语法为min..max 或者min...max+1
+**** 操作符
+===操作符来测试从属关系
+*** 字符串
+**** 操作符
+***** []操作符
+1. []操作符用于提取或者改变一个字符串的某些部分。如果试图访问一个超出了字符串末尾的字符，Ruby不抛出异常，只是简单地返回nil
+2. []=操作符号允许你改变一个字符串中的字符，或者插入，删除和替换子字符串,这一点跟Python类似
+   1) str[$index,$length]  #第一位为索引位，第二位为长度
+   2) str[$index1,$index2] #第一位为开始索引位置，第二位为结束索引位置
+   3) str[$substr]         #如果目标字符串里含有和索引字符串相匹配的子字符串，那么第一个匹配的子字符串会返回，否则返回nil
+   4) str[$Regexp]         #如果目标字符串里含有和索引正则表达式相匹配的子字符串，那么第一个匹配的子字符串会返回，否则返回nil
+  #+BEGIN_SRC Ruby
+  s="hello"
+  print s[2,3]           =>"llo"                #第二位代表长度！！
+  print s[0..3]          =>"hell"               #第二位代表索引！！
+  #+END_SRC
+***** <<操作符
+1. <<操作符将你在一个字符串后面追加一些东西，并不返回新对象
+2. <<并不对右侧操作数做任何的类型转换
+***** +操作符
+1. +操作符将两个字符串连接起来，并将结果作为一个新字符串返回，
+2. 该操作符不会讲其右侧的操作数自动转换成字符串，必须手工调用.to_s方法
+3. 一般用字符串内插法代替
+***** *操作符
+1. *操作符右侧操作数是一个整数，它返回一个字符串，该字符串依照右侧操作数指定的次数来重复左侧的文本
+
+***** 字符串迭代器
+1. each_byte迭代器按字节的方式来迭代一个字符串
+2. each_line迭代器按行迭代
+***** length方法、size方法和bytesize方法
+#+BEGIN_SRC Ruby
+      str="测试"
+      print str.size()          #=>2
+      print str.bytesize()      #=>4
+#+END_SRC
+***** 字符编码方法
+1. force_encoding：指定Ruby对它的解释方法，字符串底层字节没有改变
+2. valid_encoding：验证字符串底层字节是否代表了指定的编码方式
+3. encode|encode!：改变字符串编码方式，会改变字符串底层字节
+***** intern、to_sym方法
+将String转换成一个Symbol
+**** 特殊说明
+1.  由双引号引起来的字符串可以包含任何Ruby表达式，前提是这些表达式包含在#{}里，当要出入的是一个全局、实例或类变量时，可以省略{}例如
+#+BEGIN_SRC Ruby
+value=1
+key="one"
+print "#{value}:#{key};" #=>1:one
+$salutation='hell'
+print "#$salutation world"  #=>hello world
+#+END_SRC
+2.  字符串是可变的
+3.  因为字符串是可变的，所以字符串字面量在程序中并不是独一无二的对象。如果你在一个循环内包含了一个字符串字面量，那么每次循环都会它创建一个新的对象。例如
+#+BEGIN_SRC Ruby
+    10.times{puts 'test'.object_id}  #会打出10个不同的object_id
+#+END_SRC
+4. 通过在一个字符串（或者任何对象）上调用freeze方法，可以防止该对象的任何改变
+5. 在一个由单引号引用的字符串里，如果一个\后面的字符不是'或者\，那么该\就没有任何特殊作用,及表示反斜杠本身。例如
+#+BEGIN_SRC Ruby
+print 'a\b'=='a\\b' =>true
+#+END_SRC
+6. 类似C++，相邻的字符串字面量会自动合并。需要注意的是，这时候必须用\对换行符进行转移，否则Ruby会将换行符解释成语句的终结符
+7. 类似shell一样，字符串可以用HERE DOCUMENT的方式来定义，可以用反括号引用命令的执行。例如
+#+BEGIN_SRC Ruby
+#Here Document的结尾分界符必须单独出现在一行，甚至后面不能接注释
+num=5
+document=<<HERE
+This is a string literal.
+如果采用没有引号括起来的标识符作为分界符，here document机会表现的想被双引号引用的字符串一样，
+其中反斜线用于转义，而#用于内插字符串
+It has #{num} lines and \n abruptly ends...
+HERE
+#如果将标识分界符放入单引号内，则不逊于有任何转义字符
+document=<<'THIS IS THE END, MY ONLY FRIEND,THE END'
+    .
+    . lots and lots of text goes there
+    . with no escaping at all.
+THIS IS THE END, MY ONLY FRIEND,THE END
+#可以有多个标识分界符
+greeting=<<HERE+<<THERE+"world"
+Hello
+HERE
+There
+THERE                              =>hello There world
+#使用反引号引用命令执行结果
+files=`ls`
+#也可用%x[ls]代替反引号
+files=%x[ls]
+#位于反引号或者%[]中的文本将作为一个由双引号引用的字面量来处理，因此任何Ruby表达式都可以被内插到该字符串中。
+if windows
+  listcmd='dir'
+else
+  listcmd='ls'
+end
+files=`#{listcmd}`
+#+END_SRC
+8. Ruby中没有字符型，只有字符串型
+*** boolean值
+**** 操作符
+**** 特殊说明
+1. nil当做false来处理，其他任何值都是true，包括0和""
+*** Symbol对象
+符号是不可变的、功能受限的字符串，可以通过其身份来对符号进行比较而不用通过其文本内容（因为两个不同的Symbol对象绝对不会包含相同的内容的）
+**** 字面量
+1.以冒号为前缀的标识符，例如
+#+BEGIN_SRC Ruby
+:one
+s="string with blank"
+:S
+sym=:"this is a ${s}"
+#+END_SRC
+2. %s开始分隔符 标志 结束分隔符。例如
+%s[*]  # same as :'*'
+**** 操作符
+***** to_s、id2name方法
+将Symbol转换为字符串类型
+**** 特殊说明
+1. 可以把符号当做不可变的字符串来用
+*** 数值对象
+**** 操作符
+**** 特殊说明
+1. 所有数值对象是不可变的
+2. 可以在整数字面量里插入下划线（不在开头和结尾），这个特性有时也叫千分位，例如
+#+BEGIN_SRC Ruby
+1_000_000_000     #one billion
+#+END_SRC
+3. 如果一个整数字面量以0开头，且数字个数大于1，那么它不会被视为10进制。如
+#+BEGIN_SRC Ruby
+0377         #8进制的255
+0b1111_1111  #2进制的255
+0xFF         #15进制的255
+#+END_SRC
+4. 浮点数只能以10进制表示
+5. 除数为0的整数除法会导致一个ZeroDivisionError被抛出。除数为0的浮点数不会导致错误，只会返回一个名为Infinity的值。0.0/0.0是一个特例。在大多数新式硬件和操作系统上，它都等于另一个特殊的浮点值，NaN
+6. 当一个表达式含有多个指数操作时，他们按照从右到左的顺序被执行，因此4**3**2=4**9
+7. 可以像索引数组那样对整数值的单个位进行索引。索引将返回最低有效位，例如
+#+BEGIN_SRC Ruby
+print 0==10[0] =>true
+#+END_SRC
+*** Encoding对象
+**** 操作符
+***** name、to_s、inspect方法
+1. name和to_s方法返回一个编码方式的名字
+2. inspect方法返回笔name更详尽的字符串
+***** find方法（类方法）
+find返回对应的Encoding对象，例如
+encoding=Encoding.find("utf-8")
+***** list方法（类方法）
+1. list方法返回一个Encoding对象组成的列表
+2. list方法只列出内建的编码及任何已经动态载入的编码
+***** default_external方法（类方法）
+Encoding.default_external方法，返回一个Encoding对象，代表了默认的外部编码
+***** locale_charmap方法（类方法）
+Encoding.locale_charmap方法返回字符串，获得当前区域设置（locale）的编码方式
+*** 数组
+字面量语法为
+1. 一个由逗号分隔的值所构成的列表，位于一对方括号内：[1,2,3]
+2. %w$开始分隔符 $以空格分隔的列表 $结束分隔符:white=%w(\s \t \r \n)
+**** 操作符
+***** +操作符用来连接两个数组
+***** -操作符从一个数组减去另一个数组
+***** <<操作符在一个数组后面添加元素
+***** * 操作符表示重复
+***** |操作符，两个数组做并集，去除所有重复的元素
+***** &操作符，两个数组做交集，去除所有重复的元素
+***** each迭代器：
+#+BEGIN_SRC Ruby
+a=('A'..'Z').to_a
+a.each {|x| print x}
+#+END_SRC
+**** 特殊说明
+1. Ruby的数组时无类型且可变的，数组中的元素不必都属于同一个类型，而且他们可以随时改变
+2. 
+*** Hash对象
+**** 字面量
+一个hash字面量就是一列由都好分隔的键值对，被包含在花括号中。键和值之间由双字符的=>来分隔。例如
+#+BEGIN_SRC Ruby
+numbers={"one"=>1,"two"=>2}
+#+END_SRC
+当使用符号作为键时，Ruby支持一种非常有用且简介的hash字面量语法，在这种语法中，冒号被放置在hash键的后面并取代了=>:
+#+BEGIN_SRC Ruby
+numbers={one:1,two:2,three:3}
+#+END_SRc
+**** 操作符
+***** hash方法
+作为hash键的对象必须有一个hash方法，该方法为该键返回一个Fixnum的哈希码。如果两个键相等，那么他们必须具有相同的哈希码。
+***** eql?方法
+Hash类采用eql?方法比较键之间的相等性。对于大多数Ruby类来讲，eql?方法与==操作符一样。如果重写了eql?方法，那么你必须同时重写hash方法，否则类实例无法作为哈希键
+**** 特殊说明
+1. 由于字符串是可变的，但是常常作为hash键，所以Ruby将它们作为 特例进行处理。对所有那些作为键的字符串，Ruby会生成私有拷贝。
+2. 由于改变可变对象时，会改变对象的hash值，从而破坏hash对象的内部结构，故考虑当将可变对象作为hash键时，为这些可变对象生成私有拷贝，或者调用freeze方法，或者每次改键之后，调用hash对象的rehash方法
+*** Range对象
+**** 字面量
+一个Range字面量是在开始和结束值之间放2，或者3个点。如果使用2个点，那么该范围就是包含结束值，3个点不包含结束值
+#+BEGIN_SRC Ruby
+1..3    =>123
+1...3   =>12
+#+END_SRC
+**** 操作符
+***** include?方法						       :NOTE:
+测试一个值是否被包含在一个范围内
+#+BEGIN_SRC
+cold_war=1945..1989
+cold_war.include?(1980)      #=>true
+#+END_SRC
+NOTE!!如果范围的端点是数字，那么这两个方法就是用连续的成员关系测试，如果范围的端点是非数值对象，那么使用离散型成员关系测试
+#+BEGIN_SRC Ruby
+r=0..100
+r.include? 99.9  #=>True
+a="AAA".."ZZZ"
+a.include? "ABCD"   #=>false
+a.conver? "ABCD"    #=>true
+#+END_SRC
+***** 比较符<=>							      
+如果能通过范围端点的<=>操作符对一个值进行比较，并且结果表明这个值位于两个端点之间，那么就可以认为这个值是该范围的一个成员
+**** 特殊说明
+1. 如果Range中的对象定义了succ方法（该方法返回下一个值），那么Range就可以表示一个离散列表，可用于迭代
+   1. 
+*** Range对象
+**** 字面量
+一个Range字面量是在开始和结束值之间放2，或者3个点。如果使用2个点，那么该范围就是包含结束值，3个点不包含结束值
+#+BEGIN_SRC Ruby
+1..3    =>123
+1...3   =>12
+#+END_SRC
+**** 操作符
+***** include?方法						       :NOTE:
+测试一个值是否被包含在一个范围内
+#+BEGIN_SRC
+cold_war=1945..1989
+cold_war.include?(1980)      #=>true
+#+END_SRC
+NOTE!!如果范围的端点是数字，那么这两个方法就是用连续的成员关系测试，如果范围的端点是非数值对象，那么使用离散型成员关系测试
+#+BEGIN_SRC Ruby
+r=0..100
+r.include? 99.9  #=>True
+a="AAA".."ZZZ"
+a.include? "ABCD"   #=>false
+a.conver? "ABCD"    #=>true
+#+END_SRC
+***** 比较符<=>							      
+如果能通过范围端点的<=>操作符对一个值进行比较，并且结果表明这个值位于两个端点之间，那么就可以认为这个值是该范围的一个成员
+**** 特殊说明
+1. 如果Range中的对象定义了succ方法（该方法返回下一个值），那么Range就可以表示一个离散列表，可用于迭代
+   1. 
+*** Object对象
+**** 字面量
+**** 操作符
+***** class方法和superclass方法					  
+$object.class()返回一个对象所属的类
+$object.class().superclass().superclass()返回对象的类继承结构
+***** instance_of?方法
+$object.instance_of?($class)判断对象是否属于类
+***** is_a?方法或者===操作符
+测试对象是否是某个类的子类。$object.is_a?($class)							      
+如果能通过范围端点的<=>操作符对一个值进行比较，并且结果表明这个值位于两个端点之间，那么就可以认为这个值是该范围的一个成员
+***** respond_to?方法
+测试对象是否有某方法或者某操作符，
+$object.respond_o? (用Symbol表示的操作符或方法)例如
+#+BEGIN_SRC Ruby
+o.respond_to?(:"<<")  #判断o是否有<<操作符
+#+END_SRC
+***** equal?方法和eql?
+测试两个值是否引用了同一个对象
+***** ==操作符
+一般为字面值相等
+***** ！=操作符
+Ruby只是简单的将==操作符的结果反转而已
+***** ===操作符
+===操作符通常被称为条件相等性操作符，用于测试一个case语句的目标值是否和某个when从句相匹配。默认会调用==操作符
+***** =~操作符和！~操作符
+1. String和Regexp定义了=~操作符用于进行模式匹配
+2. Object类中=~总是返回false。!~被定义为=~的相反结果
+***** <=>操作符
+类通过实现<=>操作符来定义其顺序性，返回-1、0、1、nil（若两个数测试无意义）
+***** clone和dup方法
+1. 返回一个对象的浅拷贝
+2. 如果拷贝的对象定义了一个initialize_copy方法（拷贝构造函数），那么会使用该方法来拷贝对象，可以通过该方法获得深度拷贝
+3. clone方法拷贝冻结状态，dup方法不拷贝冻结状态
+***** freeze方法和frozen?方法
+1. 调用freeze方法将热河对象冻结起来，其内部状态不能被更改，也无法向该类添加任何方法，一旦被冻结，就没有办法解冻该对象了。
+2. 用frozen?方法啦检查一个对象是否被冻结了
+***** taint、tainted?和untaint方法
+1. taint方法将对象标记为受污染的，即该对象有类似SQL注入攻击之类的安全风险
+2. 有用户输入的对象都会自动成为受污染的
+3. 可以用tainted?方法测试一个对象的受污染性
+4. 在检查了某对象的内容后，可以用untaint方法成为未受污染的状态
+***** 类方法Marshal.dump和Marshl.load
+1. Marshal.dump($obj[,$IOObject]):将对象序列化返回或者写入到第二个参数代表的IO流中
+2. Marshal.load($IOObject):将序列化的对象转成对象
+**** 特殊说明
+1. 如果Range中的对象定义了succ方法（该方法返回下一个值），那么Range就可以表示一个离散列表，可用于迭代
+   1. 
+
+
+* 语句
+ Ruby的语法是面向表达式的，控制语句其实是表达式，都有返回
+** case语句
+*** 语法
+*** 说明
+**** 1. cae语句中使用===来将它的表达式和每个可能的条件分支进行比较，例如
+#+BEGIN_SRC Ruby
+#Case 表达式用===进行测试
+generation=case birthyear
+    when 1946..1963:"Baby Boomer"
+    when 1964..1976:"Generation X"
+    when 1978..2000:"Generation Y"
+    else nil
+end
+#+END_SRC Ruby
+** 赋值语句=
+*** 语法
+*** 说明
+**** 可以同对多个变量赋值，如:
+#+BEGIN_SRC Ruby
+#交换值
+a,b=b,a
+#+END_SRC
+** 注释语句
+*** 语法
+1. 单行注释:
+以#为注释标志符
+2. 多行注释:嵌入式文档
+=begin ... =end
+3. 文档化注释：类似于java的/** ... */
+文档化的注释必须出现在文档、类、及方法之前，从而文档化他们的API。例如
+#+BEGIN_SRC Ruby
+# = 第一级目录
+# == 第二级目录
+# === 第三级目录
+# 以*或者-开头的文本，可以通过HTML标签或者标识来指定字体的特殊效果
+# * _斜体_ or <i>斜体</i>
+# * *粗体* or <b>粗体</b>
+# * +按原文显示的文本+ or <tt>按原文显示的文本</tt>
+# [item 1] This is a description of item 1
+#+END_SRC
+*** 说明
+1. Ruby中没有类似/*...*/的C风格注释
+2. 嵌入式文档通常会被一些后期处理工具使用，在=begin之后通常跟着一个标识符来表明希望用哪个工具来处理该注释 
+3. # coding:utf-8 这种方式来指定文件编码
+** __END__
+如果__END__单独出现在一行，没有任何前置和后置的空白，那么他将表示程序的结束，同时也是数据区的开始
+** require
+从外部文件中载入代码，类似Python的import 
+*** 语法
+require '模块名'
+*** 说明
+    require根据搜索路径来查找特定的代码模块，并且保证不会重复载入给定的模块
+* 规范

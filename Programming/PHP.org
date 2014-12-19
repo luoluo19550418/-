@@ -1,0 +1,1210 @@
+#+TITLE: PHP
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* PHP连接MySql的方式
+** PHP链接数据库的一般步骤
+   1. 建立连接
+      $db=mysql_connect(hostname,username,passwd)
+   2. 选择数据库
+      mysql_select_db(dbName,$db)
+   3. 修改连接字符集
+      mysql_query("set names utf8",$db);
+   4. 执行SQL查询
+      $result=mysql_query(sql,$db);
+   5. 查看某个域值
+      $field=mysql_result($result,line,filedName)
+   6. 获取行记录
+      1. 根据下标获取域值
+	 $row=mysql_fetch_row($result);//一般用于循环中，filed值放在$row[1],$row[2]中
+      2. 根据域名获取域值
+	 $row=mysql_fetch_array($result);//一般用于循环中，filed值放在$row["field1"],$row["field2"]中
+      3. mysql_fetch_array($result)
+	 返回混合数组
+      4. mysql_fetch_object($result)
+	 返回对象
+** 其他函数
+   1. mysql_errno($db) / mysql_error($db)
+      返回上次操作的错误编码/错误信息
+   2. $object = mysql_fetch_field($result,$db)
+      获取列的元信息
+   3. mysql_free_result($result)
+      释放结果集资源
+   4. mysql_insert_id()
+      取得上一步 INSERT 操作产生的 ID
+   5. mysql_affected_rows() // 该函数已经过时
+      取得前一次 MySQL 操作所影响的记录行数
+   6. mysql_num_fields($result)
+      取得结果集中字段的数目
+   7. mysql_num_rows($result)
+      取得结果集中行的数目
+* PHP中的变量
+** 变量说明
+*** PHP中变量都是以$开头
+    1. PHP 的全局变量和 C 语言有一点点不同，在 C 语言中，全局变量在函数中自动生效，除非被局部变量覆盖。而PHP在用户自定义函数中，一个局部函数范围将被引入，除非显式用global关键字申明为全局变量
+    2. 在全局范围内访问变量的第二个办法，是用特殊的 PHP 自定义 $GLOBALS 数组,在 $GLOBALS 数组中，每一个变量为一个元素，键名对应变量名，值对应变量的内容
+    3. 可以在函数内用static申明一个静态变量，静态变量仅在局部函数域中存在，但当程序执行离开此作用域时，其值并不丢失
+    4. 使用了两个美元符号（$）以后，就可以作为一个可变变量名的变量了，例如
+       $a='b';$$a='c';         #$a='b',${$a}='c';  #$a='b',$b='c'
+    5. 在获取外部变量时，PHP 将会自动将变量名中的点替换成下划线
+*** 变量名区分大小写,函数除外
+*** 变量类型
+    1. PHP 支持八种原始类型。 
+
+       四种标量类型： 
+       boolean（布尔型） 
+       integer（整型） 
+       float（浮点型，也作“double”） 
+       string（字符串） 
+
+       两种复合类型： 
+       array（数组） 
+       object（对象） 
+
+       最后是两种特殊类型： 
+       resource（资源） 
+       NULL 
+
+       
+    2. string类型
+       string 是一系列字符。
+       在 PHP 中，字符和字节一样，也就是说，一共有 256 种不同字符的可能性。这也暗示 PHP 对 Unicode 没有本地支持。
+       类似Perl，双引号字符串最重要的一点是其中的变量名会被变量值替代
+       php中string也可以用HERE-DOCUMNT的方式来定义（标识符为<<<而不是<<）,该方法的效果类似于双引号的定义方式，可以变量替换
+       变量替换时如果遇到美元符号（$），解析器会尽可能多地取得后面的字符以组成一个合法的变量名。如果想明示指定名字的结束，用花括号把变量名括起来
+       字符串中的字符可以通过在字符串之后用花括号指定所要字符从零开始的偏移量来访问和修改。（注意是花括号）
+       字符串可以用“.”（点）运算符连接。注意这里不能用“+”（加）运算符
+    3. 数组类型
+       PHP 中的数组实际上是一个有序图。图是一种把 values 映射到 keys 的类型（key可以为integer或字符串,value 可以是任何值）
+       可以用 array() 语言结构来新建一个 array。它接受一定数量用逗号分隔的 key => value 参数对。 
+       例如
+       <?php
+       $arr = array("foo" => "bar", 12 => true);
+       echo $arr["foo"]; // bar
+       echo $arr[12];    // 1
+       ?>
+       如果对给出的值没有指定键名，则取当前最大的整数索引值，而新的键名将是该值加一。如果指定的键名已经有了值，则该值会被覆盖。如果给一个当前最大键名是负值的数组添加一个新值，则新生成的的索引将为零
+       <?php
+       // This array is the same as ...
+       array(5 => 43, 32, 56, "b" => 12);
+       // ...this array
+       array(5 => 43, 6 => 32, 7 => 56, "b" => 12);
+       ?>
+       警告: 
+       自 PHP 4.3.0 起，上述的索引生成方法改变了。如今如果给一个当前最大键名是负值的数组添加一个新值，则新生成的的索引将为零（0）。以前新生成的索引为当前最大索引加一，和正值的索引相同。 
+       使用 TRUE 作为键名将使 integer 1 成为键名。使用 FALSE 作为键名将使 integer 0 成为键名。使用 NULL 作为键名将等同于使用空字符串。使用空字符串作为键名将新建（或覆盖）一个用空字符串作为键名的值，这和用空的方括号不一样。 
+       不能用数组和对象作为键名。这样做会导致一个警告：Illegal offset type。 
+       如果要删除一个键名／值对，要对它用 unset()。 
+       例如
+       <?php
+       $arr = array(5 => 1, 12 => 2);
+       $arr[] = 56;    // This is the same as $arr[13] = 56;
+       // at this point of the script
+       $arr["x"] = 42; // This adds a new element to
+       // the array with key "x"
+       unset($arr[5]); // This removes the element from the array
+       unset($arr);    // This deletes the whole array
+       ?>
+    4. 资源类型
+       资源是一种特殊变量，保存了到外部资源的一个引用。资源是通过专门的函数来建立和使用的（类似于句柄）
+*** 伪类型
+    1. mixed
+       mixed 说明一个参数可以接受多种不同的（但并不必须是所有的）类型。 
+       例如 gettype() 可以接受所有的 PHP 类型，str_replace() 可以接受字符串和数组。 
+    2. number
+       number 说明一个参数可以是 integer 或者 float。 
+    3. callback
+       有些诸如 call_user_function() 或 usort() 的函数接受用户自定义的函数作为一个参数。Callback 函数不仅可以是一个简单的函数，它还可以是一个对象的方法，包括静态类的方法。 
+       一个 PHP 函数用函数名字符串来传递。可以传递任何内置的或者用户自定义的函数，除了 array()，echo()，empty()，eval()，exit()，isset()，list()，print() 和 unset()。 
+       一个对象的方法以数组的形式来传递，数组的下标 0 指明对象名，下标 1 指明方法名。 
+       对于没有实例化为对象的静态类，要传递其方法，将数组 0 下标指明的对象名换成该类的名称即可。 
+       #+BEGIN_SRC perl
+       例 2.13. Callback 函数实例
+       copy to clipboard
+       <?php
+       // An example callback function
+       function my_callback_function() {
+       echo 'hello world!';
+       }
+
+       // An example callback method
+       class MyClass {
+       function myCallbackMethod() {
+       echo 'Hello World!';
+       }
+       }
+
+       // Type 1: Simple callback
+       call_user_func('my_callback_function');
+
+       // Type 2: Static class method call
+       call_user_func(array('MyClass', 'myCallbackMethod'));
+
+       // Type 3: Object method call
+       $obj = new MyClass();
+       call_user_func(array($obj, 'myCallbackMethod'));
+       ?>
+       #+END_SRC
+** 强制类型转换
+   1. 转换为布尔值
+      要明示地将一个值转换成 boolean，用 (bool) 或者 (boolean) 来强制转换。当运算符，函数或者流程控制需要一个 boolean 参数时，该值会被自动转换。 
+      当转换为 boolean 时，以下值被认为是 FALSE： 
+
+      布尔值 FALSE
+      整型值 0（零）
+      浮点型值 0.0（零）
+      空白字符串和字符串 "0" 
+      没有成员变量的数组
+      没有单元的对象（仅适用于 PHP 4）
+      特殊类型 NULL（包括尚未设定的变量）
+      所有其它值都被认为是 TRUE（包括任何资源）。 
+   2. 转换为整形
+      要明示地将一个值转换为 integer，用 (int) 或 (integer) 强制转换。当运算符，函数或流程控制需要一个 integer 参数时，值会自动转换。
+      可以通过函数 intval() 来将一个值转换成整型。
+
+      从布尔值转换
+      FALSE 将产生出 0（零），TRUE 将产生出 1（壹）。 
+
+      从浮点数转换
+      当从浮点数转换成整数时，数字将被取整（丢弃小数位）。 
+      如果浮点数超出了整数范围（通常为 +/- 2.15e+9 = 2^31），则结果不确定，因为没有足够的精度使浮点数给出一个确切的整数结果。在此情况下没有警告，甚至没有任何通知！ 
+      警告: 
+      决不要将未知的分数强制转换为 integer，这样有时会导致意外的结果。
+   3. 转换为字符串
+      可以用 (string) 标记或者 strval() 函数将一个值转换为字符串。当某表达式需要字符串时，字符串的转换会在表达式范围内自动完成。
+
+      从布尔值转换
+      TRUE 将被转换为字符串 "1"，而值 FALSE 将被表示为 ""（即空字符串）。
+
+      从数组转换
+      数组将被转换成字符串 "Array"，因此无法通过 echo() 或者 print() 函数来输出数组的内容
+
+      从对象转换
+      对象将被转换成字符串 "Object"。
+      如果希望得到该对象所依附的类的名称，请使用函数 get_class()。
+      自 PHP 5 起，如果合适可以用 __toString() 方法。
+
+      从资源转换
+      资源类型总是以 "Resource id #1" 的格式被转换成字符串，其中 1 是 PHP 在运行时给资源指定的唯一标识。
+      如果希望获取资源的类型，请使用函数 get_resource_type()。 
+
+      可以将 PHP 的值转换为字符串以永久地储存它们。这种方法被称为序列化，可以用函数 serialize() 来完成该操作。
+      如果在安装 PHP 时建立了 WDDX 支持，还可以将 PHP 的值序列化为 XML 结构。 
+
+      不要指望在将一个字符转换成整型时能够得到该字符的编码（可能也会在 C 中这么做）。如果希望在字符编码和字符之间转换，请使用 ord() 和 chr() 函数。 
+   4. 转换为数组
+      对于任何的类型：整型、浮点、字符串、布尔和资源，如果将一个值转换为数组，将得到一个仅有一个元素的数组（其下标为 0），该元素即为此标量的值。 
+      如果将一个对象转换成一个数组，所得到的数组的元素为该对象的属性（成员变量），其键名为成员变量名。 
+      如果将一个 NULL 值转换成数组，将得到一个空数组。 
+   5. 转换为对象
+      如果将一个对象转换成对象，它将不会有任何变化。如果其它任何类型的值被转换成对象，内置类 stdClass 的一个实例将被建立。如果该值为 NULL，则新的实例为空。数组转换成对象将使键名成为属性名并具有相对应的值。对于任何其它的值，名为 scalar 的成员变量将包含该值。
+
+
+
+** PHP的特殊变量
+   * $GLOBALS 
+     包含一个引用指向每个当前脚本的全局范围内有效的变量。该数组的键名为全局变量的名称。从 PHP 3 开始存在 $GLOBALS 数组。 
+   * $_SERVER 
+     变量由 web 服务器设定或者直接与当前脚本的执行环境相关联。类似于旧数组 $HTTP_SERVER_VARS 数组（依然有效，但反对使用）。 
+   * $_GET 
+     经由 URL 请求提交至脚本的变量。类似于旧数组 $HTTP_GET_VARS 数组（依然有效，但反对使用）。 
+   * $_POST 
+     经由 HTTP POST 方法提交至脚本的变量。类似于旧数组 $HTTP_POST_VARS 数组（依然有效，但反对使用）。 
+   * $_COOKIE 
+     经由 HTTP Cookies 方法提交至脚本的变量。类似于旧数组 $HTTP_COOKIE_VARS 数组（依然有效，但反对使用）。 
+   * $_FILES
+     经由 HTTP POST 文件上传而提交至脚本的变量。类似于旧数组 $HTTP_POST_FILES 数组（依然有效，但反对使用）。详细信息请参阅 POST 方法上传。 
+   * $_ENV
+     执行环境提交至脚本的变量。类似于旧数组 $HTTP_ENV_VARS 数组（依然有效，但反对使用）。 
+   * $_REQUEST
+     经由 GET，POST 和 COOKIE 机制提交至脚本的变量，因此该数组并不值得信任
+   * $_SESSION
+     当前注册给脚本会话的变量。类似于旧数组 $HTTP_SESSION_VARS 数组（依然有效，但反对使用）。
+   * DIRECTORY_SEPARATOR
+     目录的分隔符,如windows下为\
+   * PATH_SEPARATOR
+     命令分隔符,如windows下为;
+* 语法
+** 运算符
+   1. PHP 中没有整除的运算符。1/2 产生出 float 0.5。可以总是舍弃小数部分，或者使用 round() 函数
+   2. PHP支持引用赋值，使用引用赋值，简单地将一个 & 符号加到将要赋值的变量前（源变量）。
+   3. 取模 $a % $b 在 $a 为负值时的结果也是负值
+   4. 比较运算符仅用于比较数字
+      如果比较一个整数和字符串，则字符串会被转换为整数。如果比较两个数字字符串，则作为整数比较。此规则也适用于 switch 语句。 
+   5. 如果要比较字符串，需要用strcasecmp()，strcmp()
+   6. PHP 支持一个错误控制运算符：@。当将其放置在一个 PHP 表达式之前，该表达式可能产生的任何错误信息都被忽略掉。 
+      如果激活了 track_errors 特性，表达式所产生的任何错误信息都被存放在变量 $php_errormsg 中。此变量在每次出错时都会被覆盖，所以如果想用它的话就要尽早检查。 
+   7. PHP 支持一个执行运算符：反引号（``）。注意这不是单引号！PHP 将尝试将反引号中的内容作为外壳命令来执行，并将其输出信息返回
+   8. 数组运算符
+      例子          名称        结果 
+      $a + $b       联合       $a 和 $b 的联合。 
+      $a == $b      相等       如果 $a 和 $b 具有相同的键／值对则为 TRUE。 
+      $a === $b     全等       如果 $a 和 $b 具有相同的键／值对并且顺序和类型都相同则为 TRUE。 
+      $a != $b      不等       如果 $a 不等于 $b 则为 TRUE。 
+      $a <> $b      不等       如果 $a 不等于 $b 则为 TRUE。 
+      $a !== $b     不全等     如果 $a 不全等于 $b 则为 TRUE。 
+      +运算符把右边的数组附加到左边的数组后面，但是重复的键值不会被覆盖。
+   9. 类型运算符
+      PHP 只有一个类型运算符：instanceof 用来测定一个给定的对象，它的父对象或它们所实现的接口是否来自指定的对象类。
+** 常量
+   1. 可以用 define() 函数来定义常量。一个常量一旦被定义，就不能再改变或者取消定义。 
+   2. 常量只能包含标量数据（boolean，integer，float 和 string）。 
+   3. 可以简单的通过指定其名字来取得常量的值，不要在常量前面加上 $ 符号。如果常量名是动态的，也可以用函数 constant() 来读取常量的值。用 get_defined_constants() 可以获得所有已定义的常量列表。 
+*** 预定义常量
+    __LINE__       文件中的当前行号。  
+    __FILE__       文件的完整路径和文件名。如果用在包含文件中，则返回包含文件名。自 PHP 4.0.2 起，__FILE__ 总是包含一个绝对路径，而在此之前的版本有时会包含一个相对路径。  
+    __FUNCTION__   函数名称（PHP 4.3.0 新加）。自 PHP 5 起本常量返回该函数被定义时的名字（区分大小写）。在 PHP 4 中该值总是小写字母的。  
+    __CLASS__      类的名称（PHP 4.3.0 新加）。自 PHP 5 起本常量返回该类被定义时的名字（区分大小写）。在 PHP 4 中该值总是小写字母的。  
+    __METHOD__     类的方法名（PHP 5.0.0 新加）。返回该方法被定义时的名字（区分大小写）。  
+** 控制流程
+   1. 流程控制的替代语法
+      PHP 提供了一些流程控制的替代语法，包括 if，while，for，foreach 和 switch。替代语法的基本形式是把左花括号（{）换成冒号（:），把右花括号（}）分别换成 endif;，endwhile;，endfor;，endforeach; 以及 endswitch;。 
+      例如：
+     #+BEGIN_SRC PHP
+     <?php
+     if ($a == 5):
+       echo "a equals 5";
+       echo "...";
+     elseif ($a == 6):
+       echo "a equals 6";
+       echo "!!!";
+     else:
+       echo "a is neither 5 nor 6";
+     endif;
+     ?>
+     #+END_SRC
+   2. foreach
+      foreach (array_expression as $value){
+      statement}
+      第一种格式遍历给定的 array_expression 数组。每次循环中，当前单元的值被赋给 $value 并且数组内部的指针向前移一步（因此下一次循环中将会得到下一个单元）。 
+
+      foreach (array_expression as $key => $value)
+      statement
+      第二种格式做同样的事，只除了当前单元的键名也会在每次循环中被赋给变量 $key。
+      NOTE:
+      foreach 仅能用于数组，当试图将其用于其它数据类型或者一个未初始化的变量时会产生错误。
+      除非数组是被引用，foreach 所操作的是指定数组的一个拷贝，而不是该数组本身。因此数组指针不会被 each() 结构改变，对返回的数组单元的修改也不会影响原数组。不过原数组的内部指针的确在处理数组的过程中向前移动了。假定 foreach 循环运行到结束，原数组的内部指针将指向数组的结尾。 
+      自 PHP 5 起，可以很容易地通过在 $value 之前加上 & 来修改数组的单元。此方法将以引用赋值而不是拷贝一个值
+      foreach 不支持用“@”来抑制错误信息的能力
+      当 foreach 开始执行时，数组内部的指针会自动指向第一个单元。这意味着不需要在 foreach 循环之前调用 reset()。 
+   3. each()函数
+      each($array):返回数组中当前元素的键值对，并向后移动数组指针到下一个元素位置
+      键值对被返回为带有四个元素的关联和索引混合的数组，键名分别为01，key和value。
+      如果内部指针越过了数组的末端，则each返回FALSE
+   4. list()语言结构
+      list(var1,var2,...)=$array:对一组变量进行赋值
+      list()仅能用于数字索引的数组，并假定数组索引从0开始
+   5. reset()函数
+      设置指针返回数组头部
+   6. break
+      break 可以接受一个可选的数字参数来决定跳出几重循环。
+   7. continue
+      注意在 PHP 中 switch 语句被认为是可以使用 continue 的一种循环结构。 
+      continue 接受一个可选的数字参数来决定跳过几重循环到循环结尾。 
+   8. swtich
+      注意和其它语言不同，continue 语句作用到 switch 上的作用类似于 break。如果在循环中有一个 switch 并希望 continue 到外层循环中的下一个轮回，用 continue 2。 
+      switch 结构可以用字符串
+   9. return
+      如果当前脚本文件是被 include() 的或者 require() 的，则控制交回调用文件。
+      如果当前脚本是被 include() 的，则 return() 的值会被当作 include() 调用的返回值。
+   10. require()与include()
+       1. require() 和 include() 除了怎样处理失败之外在各方面都完全一样。include() 产生一个警告而 require() 则导致一个致命错误。
+       2. require()和include() 语句用来包含并运行指定文件。 
+       3. 寻找包含文件的顺序先是在当前工作目录的相对的 include_path 下寻找，然后是当前运行脚本所在目录相对的 include_path 下寻找
+       4. 当一个文件被包含时，其中所包含的代码继承了 include 所在行的变量范围。从该处开始，调用文件在该行处可用的任何变量在被调用的文件中也都可用。不过所有在包含文件中定义的函数和类都具有全局作用域。 
+	  如果 include 出现于调用文件中的一个函数里，则被调用的文件中所包含的所有代码将表现得如同它们是在该函数内部定义的一样。所以它将遵循该函数的变量范围。 
+	  当一个文件被包含时，语法解析器在目标文件的开头脱离 PHP 模式并进入 HTML 模式，到文件结尾处恢复。由于此原因，目标文件中应被当作 PHP 代码执行的任何代码都必须被包括在有效的 PHP 起始和结束标记之中。
+	  如果“URL fopen wrappers”在 PHP 中被激活（默认配置），可以用 URL而不是本地文件来指定要被包含的文件。
+	  远程文件可能会经远程服务器处理（根据文件后缀以及远程服务器是否在运行 PHP 而定），但必须产生出一个合法的 PHP 脚本，因为其将被本地服务器处理。如果来自远程服务器的文件应该在远端运行而只输出结果，那用 readfile() 函数更好。另外还要格外小心以确保远程的脚本产生出合法并且是所需的代码。 
+       5. include() 是一个特殊的语言结构，其参数不需要括号
+       6. 如果文件不能被包含，则返回 FALSE 并发出一个 E_WARNING 警告。
+       7. 由于这是一个语言结构而非函数，因此它无法被变量函数调用。
+   11. require_once()与include_once
+       类似require()与include(),唯一区别是如果该文件中的代码已经被包含了，则不会再次包含。
+       如果文件已被包含，函数返回 TRUE。
+** declare
+   declare 结构用来设定一段代码的执行指令。declare 的语法和其它流程控制结构相似： 
+   declare (directive){
+       statement
+   }
+   directive 部分允许设定 declare 代码段的行为。目前只认识一个指令：ticks（更多信息见下面 ticks 指令）。 
+   declare 代码段中的 statement 部分将被执行――怎样执行以及执行中有什么副作用出现取决于 directive 中设定的指令。 
+   declare 结构也可用于全局范围，影响到其后的所有代码。 
+*** Ticks
+    Tick 是一个在 declare 代码段中解释器每执行 N 条低级语句就会发生的事件。N 的值是在 declare 中的 directive 部分用 ticks=N 来指定的。 
+    在每个 tick 中出现的事件是由 register_tick_function() 来指定的。更多细节见下面的例子。注意每个 tick 中可以出现多个事件。
+    例如：评估一段PHP代码的执行时间
+    #+BEGIN_SRC PHP
+    <?php
+// A function that records the time when it is called
+function profile($dump = FALSE)
+{
+   static $profile;
+
+   // Return the times stored in profile, then erase it
+   if ($dump) {
+       $temp = $profile;
+       unset($profile);
+       return ($temp);
+   }
+
+   $profile[] = microtime();
+}
+
+// Set up a tick handler
+register_tick_function("profile");
+
+// Initialize the function before the declare block
+profile();
+
+// Run a block of code, throw a tick every 2nd statement
+declare(ticks=2) {
+   for ($x = 1; $x < 50; ++$x) {
+       echo similar_text(md5($x), md5($x*$x)), "<br />;";
+   }
+}
+
+// Display the data stored in the profiler
+print_r(profile (TRUE));
+?>
+    #+END_SRC
+* 函数
+** 函数定义
+   1. function [&]函数名(参数1,参数2...)
+      {
+        ....
+      }
+   2. 任何有效的 PHP 代码都有可能出现在函数内部，甚至包括其它函数和类定义。 
+   3. 函数定义可以放在条件控制语句中，有条件的定义函数
+   4. 可以在函数定义之前使用函数
+   5. PHP 中的所有函数和类都具有全局域，可以在内部定义外部调用，反之亦然。
+   6. PHP 不支持函数重载，也不可能取消定义或者重定义已声明的函数。
+   7. 函数名是非大小写敏感的，不过在调用函数的时候，通常使用其在定义时相同的形式。 
+** 函数参数
+   1. PHP 支持按值传递参数（默认），通过引用传递以及默认参数。
+   2. 如果想要函数的一个参数总是通过引用传递，可以在函数定义中该参数的前面预先加上符号 & 
+      function add_some_extra(&$string)
+   3. 函数可以定义 C++ 风格的标量参数默认值
+      function makecoffee($type = "cappuccino")
+   4. PHP 还允许使用数组和特殊类型 NULL 作为默认参数
+   5. 默认值必须是常量表达式，不是（例如）变量，类成员，或者函数调用。 
+   6. 请注意当使用默认参数时，任何默认参数必须放在任何非默认参数的右侧
+   7. 自 PHP 5 起，默认值可以通过引用传递。 
+   8. PHP 4 及更高版本已经在用户自定义函数中支持可变长度参数列表。这个真的很简单，用 func_num_args()，func_get_arg()，和 func_get_args() 函数。
+** 返回值
+   1. 任何类型都可以返回，其中包括列表和对象
+   2. 函数不能返回多个值，但为了获得简单的结果，可以返回一个列表。 
+   3. 从函数返回一个引用，必须在函数声明和指派返回值给一个变量时都使用引用操作符 & 
+      例如
+      #+BEGIN_SRC PHP
+      <?php
+      function &returns_reference()
+      {
+         return $someref;
+      }
+
+$newref =& returns_reference();
+?>
+      #+END_SRC
+** 变量函数
+   1. PHP 支持变量函数的概念。这意味着如果一个变量名后有圆括号，PHP 将寻找与变量的值同名的函数，并且将尝试执行它。除了别的事情以外，这个可以被用于实现回调函数，函数表等等。
+      例如
+      $func = 'foo';
+      $func();        // This calls foo()
+   2. 还可以利用变量函数的特性来调用一个对象的方法。
+      例如
+      #+BEGIN_SRC
+      $funcname = "Variable";
+      $foo->$funcname();   // This calls $foo->Variable()
+      #+END_SRC
+
+** 内置函数
+*** 数组函数
+    1. unset($array)
+       函数允许取消一个数组中的键名。要注意数组将不会重建索引
+    2. current($array)
+       取得目前指针 位置的内容资料
+    3. key($array)
+       读取目前指针所指向资料的索引值
+    4. next($array)
+       将数组中的内部指针移动到下一个单元
+    5. pre($array)
+       将数组的内部指针倒回一位
+    6. end($array)
+       将数组的内部质量指向最后一个元素
+    7. reset($array)
+       将指针无条件转移到第一条个索引位置
+    8. array_values($array)
+       返回数组中所有元素的值,返回的数组将使用顺序的数值键重新建立索引
+    9. array_keys($array[,$search_value[,isStrict]])
+       返回数组中所有的键名
+    10. in_array($value,$array[,isStrict])
+	检查数组是否存在某个值
+    11. array_search($value,$array)
+	返回指定值在数组中的索引值
+    12. array_key_exists($key,$array)
+	检查指定索引是否在数组中
+    13. array_flip($array)
+	交换数组中的键值对，返回一个反转后的数组
+    14. array_reverse($array[,isPreserveKeys])
+	将元数组中的元素顺序反转，创建新的数组并返回，
+    15. array_intersect($array1,$array2)
+	计算数组的交集
+    16. array_diff($array1,$array2[,$array...])
+	返回两个数组的差集数组
+    17. array_rand($arrayp[,nums])
+	随机选择nums个元素返回，默认为1
+    18. shuffle($array)
+	把数组中的元素按随机顺序排列，原key丢失
+    19. range($first,$last[,step])
+	创建并返回一个包含指定范围的元素的数组，包含从first到last（包含first和last）之间的整数或字符，step默认为1或者-1
+    20. preg_split($reg,$str)
+        使用$reg表示的正则表达式来拆分$str,并返回拆分的数组
+        这里$reg必须包含在//中,例如'/&|=/'
+*** 字符串函数
+    1. sprintf($fmt,...)
+       返回格式化的字符串
+    2. ltrim，rtrim，trim(string $str[,string $charlist])
+       去除空白字符或其他字符
+    3. str_pad($input,$len[,$fillStr[,$fillType]])
+       字符串填充
+    4. str_repeat($str,$repeatTimes)
+       重复$str多次组成的字符串
+    5. strlen(string $str)
+       返回字符串长度
+    6. strtoupper($str)
+       字符串转大写
+    7. strtolower($str)
+       字符串转小写
+    8. ucfirst($str)
+       首字母大写
+    9. ucwords($str)
+       首单词大写
+    10. strrev($str)
+        字符串翻转
+    11. md5($str)
+        计算md5
+    12. str_shuffle($str)
+        随机打乱字符串
+    13. number_format($number)
+        为数字添加千分位的分隔符,格式化数字字符串
+    14. strcasecmp($str1,$str2)
+        忽略大小写的比较
+    15. strnatcmp($str1,$str2),strnatccasecmp($str1,$str2)
+        字符串中的数字按自然数排序
+    16. substr($str,$offset,$len)
+        截取字符串
+    17. strpos($str,$substr[,$offset]
+        返回第一个$substr的位置
+    18. strrpos($str,$substr[,$offset]
+        返回最后一个$substr的位置
+    19. str_replace($search,$replace,$str[,$count])
+        将$str中的$search替换为$replace.
+        $search可以为数组,表示数组内所有匹配项都被替换.
+        $replace也可以为数组,表示与$search中一一对应的映射.
+    20. mb_substr($str,$offset,$len,$mb_code)
+        多字节的字符串截取,一个中文算一个长度,$mb_code指定了中文的编码
+    21. mb_xxx这里xxx表示上面的函数名,表示支持多字节的函数变体.
+*** 标签相关函数
+    1. nl2br($str)
+       将$str中的换行符转换为br标签
+    2. htmlspecialchars($str)
+       把html的特殊字符转换为实体形式,包括",<,>,&
+    3. addslashes($str) (默认已经开启)
+       在',",\前加上\进行转义
+    4. stripslashes($str)
+       去除上面的\
+    5. strip_tags($str[,$allowable_tags])
+       去除标签(也可以保留指定的标签),注意$allowable_tags的格式
+       #+BEGIN_SRC php
+         <?php
+         $text = '<p>Test paragraph.</p><!-- Comment --> <a href="#fragment">Other text</a>';
+         echo strip_tags($text);
+         echo "\n";
+         
+         // 允许 <p> 和 <a>
+         echo strip_tags($text, '<p><a>');
+         ?>    
+       #+END_SRC
+*** 字符串解析函数
+    1. pathinfo($url)
+    2. parse_url($url)
+    3. parse_str($queryStr,$arr)
+*** 日期函数
+    1. time()
+       返回自从 Unix 纪元（格林威治时间 1970 年 1 月 1 日 00:00:00）到当前时间的秒数
+    2. date($format[,$timestamp])
+       返回将整数 timestamp 按照给定的格式字串而产生的字符串。如果没有给出时间戳则使用本地当前时间。
+    3. strtotime($time)
+       本函数预期接受一个包含美国英语日期格式的字符串并尝试将其解析为 Unix 时间戳
+    4. date_default_timezone_set($DataTimeZone)
+       设置时区,这里$DataTimeZone是一个字符串,表示国家的简称.
+       也可以在php.ini中设置date.timezone的值.
+    5. microtime([$get_as_float_flag])
+       如果调用时不带可选参数，本函数以 "msec sec" 的格式返回一个字符串，其中 sec 是自 Unix 纪元（0:00:00 January 1, 1970 GMT）起到现在的秒数，msec 是微秒部分。字符串的两部分都是以秒为单位返回的。
+*** 其他函数
+    1. setcookie($key,$value[,$expire-time=0[,$path-scope='./']])
+       设置cookie,$expire-time=0表示关闭浏览器时失效,$expire-time为以前的时间时则会删除cookie
+    2. session_start()
+       开启session后，就可以使用$_SESSION数组注册全局变量
+    3. session_unset()
+       清空session
+    4. session_destroy()
+       销毁session
+    5. session_name()
+       session需要依靠cookie放置一个索引,该函数返回session索引的cookie名
+    6. session_id()
+       返回session索引的在cookie中的值
+    7. 
+** 函数的使用
+   1. 函数可以先使用后定义,这是因为php在语法检查阶段就开始加载函数代码段了.
+   2. 函数变量的形式很像字符串.
+      #+BEGIN_SRC php
+        <?php
+        $a = "sum";                     /* 看起来很像是字符串 */
+        $a(1,2);                        /* 但是在使用()时就变成了函数 */
+        ?>      
+      #+END_SRC
+
+* 数组
+** 定义
+   #+BEGIN_SRC php
+     $a = array(0,1,2);              /* 数组从0开始定义 */
+     $a = array("name"=>"darksun",0,"age"=>28,1,100=>100,101}; /* array支持关联数组,未定义key的数组项依然从0开始累加,但在强行定义了数字索引后,则后面的未定义key数组从定义的数字索引处开始累加 */
+     print_r($a);                                             
+     /* 输出为Array ( [name] => darksun [0] => 0 [age] => 28 [1] => 1 [100] => 100 [101] => 101 )  */
+     
+     /* 也可以用数组赋值的形式来定义数组 */
+     $b[] = 0;
+     $b["name"] = "darksun";
+     $b[10] = 10;
+     print_r($b);
+     /* 输出为 Array ( [0] => 0 [name] => darksun [10] => 10 )  */
+   #+END_SRC
+** 数组的遍历
+   1. 使用foreach语言结构
+      #+BEGIN_SRC php
+        foreach($array as $val){
+        }      
+        foreach($array as $key=>$val){
+        }
+      #+END_SRC
+   2. 使用list获取数组索引(该方式只适用于纯数字数组)
+      #+BEGIN_SRC php
+        $a = array(1,"k1"=>"v1", 2,3);
+        list($v1,$v2) = $a;
+        echo $v1;                       /* v1的值为1 */
+        echo $v2;                       /* v2的值为2 */
+        
+      #+END_SRC
+   3. 使用while...list...each遍历循环
+      #+BEGIN_SRC php
+        while(list($key,$val) = each($array)){
+        }
+      #+END_SRC
+** 多维数组
+   1. 多维数组的定义方式为定义元素为数组的数组
+      #+BEGIN_SRC php
+        $a = array(1,array(2,3));
+        $b[0][0] = 12;   
+        
+      #+END_SRC
+* PHP的正则表达式
+** PHP正则表达式格式
+   PHP的正则表达式必须放入//中.格式为/正则表达/模式修正符
+** 模式修正符
+   * i 
+     不区分大小写
+   * m
+     若字符串中有'\n',则将该字符串视为多行
+   * s
+     若字符串中有'\n',则将该字符串视为单行
+   * U
+     禁止使用正则匹配的贪婪算法进行匹配
+   * e
+     在正则替换后,对替换出来的字符串用eval进行执行,将eval的结果作为最终替换结果
+** 相关函数
+   1. preg_match($pattern,$str,$matchArray[,$flag[,$offset]])
+      从$str中匹配$pattern,将匹配结果放入matchArray中
+   2. preg_math_all
+   3. preg_replace($pattern,$match,$strs)
+      将$str中的$pattern替换为$match
+      $pattern和$match都可以是数组,表示一对一映射匹配
+      $strs也可以是数组,表示对数组内所有内容进行匹配,这时返回替换后的数组
+   4. preg_grep($pattern,$array)
+      返回给定数组input中与模式pattern 匹配的元素组成的数组. 而且能够保持数组下标不变.
+* php中的图像处理
+** php制作图像的一般步骤
+   1. 准备画布资源
+      #+BEGIN_SRC php
+        $img = imagecreatetruecolor(500,300);
+      #+END_SRC
+   2. 准备涂料
+      #+BEGIN_SRC php
+        $black = imagecolorallocate($img,0,0,0);
+        $white = imagecolorallocate($img,255,255,255);
+      #+END_SRC
+   3. 在画布上画图
+      #+BEGIN_SRC php
+        imagefill($img,0,0,$black);     /* 默认值也是黑色 */
+        imagefilledellipse($img,100,100,50,50,$white);
+      #+END_SRC
+   4. 输出画图
+      #+BEGIN_SRC php
+        header("content-type:image/png");
+        imagepng($img);
+      #+END_SRC
+   5. 保存图片
+      #+BEGIN_SRC php
+        imagepng($img,$file)
+      #+END_SRC
+   6. 在img标签中使用该图片
+      #+BEGIN_SRC html
+        <img src = "index.php"></img> <!-- 直接使用生成图片的php就行 -->
+      #+END_SRC
+
+   7. 释放画布资源
+      #+BEGIN_SRC php
+        imagedestroy($img);
+      #+END_SRC
+** 图像处理函数
+   1. GD库中的以image开头的函数,一般画图函数的格式为imagexxx($画布资源,$定位坐标...,$颜色)
+   2. imagestring($image,$font-size,$x-pointer,$y-pointer,$string,$color);
+      在x,y坐标以font-size作为字体来画一行字符串string
+   3. imagechar($image,$font-size,$x-pointer,$y-pointer,$char,$color);
+      在x,y坐标以font-size作为字体来画一个字符$char
+   4. imagettftext($image,$font-size,$旋转角度,$x,$y,$color,$字体文件,$string)
+   5. imagefontwidth($font-size) / imagefontwidth($font-size)
+      取得$font-size的文字的高度和宽度
+   6. imagecreatefromjpeg($imgFilePath)
+      从文件创建画图
+   7. getimagesize($imgFilePath)
+      获取图片文件的信息,返回一个数组包含了图片的大小,类型信息
+   8. imagesx($img) / imagesy($img)
+      获取画布资源的大小
+   9. imagecopyresampled($dstImg,$srcImg,$dstX,$dstY,$srcX,$srcY,$dstWidth,$dstHeight,$srcWidth,$srcheight)
+      从$srcImg上以($srcX,$srcY)坐标为起点,拷贝($srcWidth,$srcHeight)这么一块图片到$imgSrc中以($dstX,$dstY)为起点以($dstWidth,$dstHeight)大小的面积中,一般用于图片缩放和图片裁剪中.
+   10. imagecopy($dstImg,$srcImg,$dstX,$dstY,$srcX,$srcY,$srcWidth,$srcHeight)
+       将 src_im 图像中坐标从 src_x，src_y 开始，宽度为 src_w，高度为 src_h 的一部分拷贝到 dst_im 图像中坐标为 dst_x 和 dst_y 的位置上.一般用于做水印
+* PHP中的文件处理
+** 获取文件信息
+   * is_file($filename)
+   * is_dir($dirname)
+   * filesize($filename);
+     目录大小为0
+   * basename($filepath)
+     返回文件名称
+   * dirname($filepath)
+     返回文件所属目录
+   * realpath($relativePath)
+     扩展相对目录为绝对目录
+   * disk_free_space()
+   * disk_total_space()
+** 文件操作
+   * $file = fopen($filename,$mode)
+   * rename($oldFileName,$newFileName)
+   * copy()
+   * unlink()
+   * fclose()
+   * mkdir()
+   * rmdir()
+** 文件内容操作
+   * $string = fread($file,$len)
+     从资源$file中读入$len个字节的内容放入$string中
+   * $len = fwrite($file,$string)
+   * rewind($file)
+   * ftell($file)
+   * $arrayCotents = file($filename)
+     把整个文件读入一个数组中
+   * readfile($filename)
+     eaho整个文件内容
+   * $string = file_get_contents($filename)
+     读入整个文件内容放入$string中
+   * $string = fgets($file)
+     从资源$file中读取一行
+   * file_put_contents($filename,$string,$mode)
+     往$filename写$string
+   * opendir()
+   * readdir()
+   * closedir()
+   * scandir()
+   * bool move_uploaded_file ( string $filename , string $destination )
+     移动上传的文件$filename到$destination. 该函数对中文名称的文件支持也许有问题,可以考虑对中文文件名用hash算法算出签名代替原文件名
+** 文件下载
+   1. header("content-type:application/octet-stream");
+   2. header("content-disposition:attachment;filename=a.txt");
+   3. header("content-length:30kb");
+   4. readfile('a.txt');
+* 类与对象
+  1. 类也是一种类型，就是说，它们是实际变量的蓝图。必须用 new 运算符来创建相应类型的变量
+  2. 类定义的内部访问自身的函数和变量，可以使用伪变量 $this 来达到这个目的。$this 变量可以理解为“我自己的”或者“当前对象”。 
+  3. 伪变量 $this 通常未定义，如果其所在的方法是被静态调用的话。但这不是个严格规定：如果一个方法被从另一个对象内静态调用的话，则 $this 会被定义。此时 $this 的值是那个发出调用的对象。
+  4. 
+** 定义
+   [修饰类的关键字:abstract|final]class 类名{
+      类中成员;
+      在类中声明成员属性时，变量前面一定要使用一个关键字，例如public，private，static，如果不需要有特定意义的修饰，就用var关键字
+   }
+   #+BEGIN_SRC PHP
+   class Person{
+	public $name;
+	private $age;
+	static $sex;
+	var $weight;
+	public function say(){
+		echo "I'am $this->name<br>";
+	}
+	function eat($food){
+		echo "I'am eating $food<br>";
+	}
+	private function run(){
+		echo "I can't run>";
+	}
+   }
+   #+END_SRC
+   NOTE
+   1. 不管是在对象的外部还是在对象的内部，访问对象中的成员必须使用对象的引用变量,这就需要$this来访问自己对象内部的所有成员属性
+   2. 在类中声明成员属性时，变量前面一定要使用一个关键字，例如public，private，static，
+   3. 如果在成员属性前面使用了其他的关键字修饰，就不要再使用var关键字修饰了，如果不需要有特定意义的修饰，就用var关键字
+   4. 成员属性一旦被private关键字封装成私有之后，就只能在对象内部的成员方法中使用
+** 继承
+   1. PHP只支持单继承
+   2. 语法
+      class Student extends Person{
+          var $school;
+	  function study(){
+	  }
+      }
+   3. 在子类中使用父类被覆盖的方法
+      parent::方法名                     #parent为关键字
+   4. 在子类中重写父类的方法时，一定要高于或等于父类被覆盖的方法的访问权限
+   5. final关键字
+      final可以加载类或类方法千，但不能用来标识成员属性，其作用如下
+      使用final标识的类，不能被继承
+      在类中使用final标识的成员方法，在子类中不能被覆盖
+   6. static关键字
+      static可以将类中的成员标识为静态的，既可以用来标识成员属性也可以标识成员方法。
+      static成员是作为整个类的属性存在。
+      访问格式为
+      类名::静态成员属性名;
+      类名::静态成员方法名();
+      如果在类内部的成员方法中访问其他的静态成员，通常使用self的形式来访问，最好不要直接使用类名称
+      （不是用$self->count,而是使用self::$count的方式来获取）
+      静态方法中只能访问静态成员
+   7. const关键字
+      PHP中定义常量是通过调用define()函数来完成的，但是将类中的成员属性定义为常量则只能使用const关键字
+      const访问方式和static一样，都是通过类名或在成员方法中使用self关键字访问，也不能用对象来访问。
+      const声明的常量名称千不要使用$符号，而且常量名称通常都是大写的。
+      通过对象名称访问常量是不允许的
+** magic方法
+   1. 构造方法
+      function __construct(参数列表){
+          方法体
+      }
+      由于构造方法的方法名称是固定的，PHP又不能声明同名的两个函数，所以一个类只能声明一个构造方法
+   2. 析构方法
+      function __destruct(){
+      }
+      析构函数不能带有任何参数。
+      最后创建的对象引用会最先释放
+   3. __set()
+      用来完成对所有私有属性都能赋值的操作
+      void __set(string name,mixed value)
+      当用户为私有属性设置值时，自动调用__set方法，如果不在类中添加这个方法，则直接为私有属性赋值会出现不能访问私有属性的错误
+   4. __get()
+      用来完成对所用私有属性都能获取的操作
+      mixed __get(string name)
+      如果在类中声明了__get方法，则直接在对象的外部获取私有属性的值时，会自动调用此方法，返回私有属性的值
+   5. __isset()
+      检查私有属性是否存在
+      bool __isset(string name)
+      当在类外部使用isset()函数来测定对象里面的私有属性时，就会自动调用类中的__isset()方法帮助我们完成测定操作
+   6. __unset()
+      删除对象中私有属性的方法
+      void __unset(string name)
+      在对象外部用unset()删除对象中的成员属性时,自动调用对象中的__unset方法帮助我们间接地将私有的成员属性删除
+      为了防止用户主动调用这个方法，也需要使用private关键字修饰符将它封装在对象中
+   7. __clone()
+      __clone()在对象克隆时自动调用，可以通过此方法为克隆后的副本重新初始化
+      该方法不需要任何参数，自动包含了$this,$that两个对象的引用，$this是副本对象的引用，$that为原对象的引用
+   8. __toString()
+      被each时，自动调用
+   9. __call()
+      function __call($被调用的不存在方法名称,$传递给方法的参数数组)
+      调用对象不存在的方法时会自动调用该方法，并且调用不存在方法的程序可以继续向下执行
+      
+** 抽象类及抽象方法
+   抽象方法就是没有方法体的方法：abstract function fun1();
+   只要声明类时有一个方法时抽象方法，那么这个类就是抽象类，也要使用abstract关键字来修饰
+   abstract class class1{
+       abstract function fun1();
+       function say(){
+          echo "hello world";
+       }
+   }
+   抽象方法的访问权限不能为private，因为它需要被重载
+   
+** 接口技术
+   接口中声明的方法必须都是抽象方法，另外不能在接口中声明变量，只能使用const关键字声明为常量的成员属性，而且接口中所有的成员必须有public的访问权限
+   interface 接口名称{
+       //常量成员
+       //抽象方法
+   }
+   我们也可以使用extends关键字让一个接口去继承另一个接口，实现接口之间的扩展。
+   interface Two extends One{
+   }
+   类通过implements来继承接口，而不是extends
+   abstract class 类名 implements 接口{
+   }
+   一个类只能有一个父类，但是可以实现多个接口，多个接口之间使用逗号分隔开
+   class 类名 implements 接口1,接口2{
+   }
+   实现多个接口的同时还可以使用extends继承一个类，单一定要先试用extends继承一个类，再去implements多个接口
+   class 类名 extends 父类名 implements 接口1,接口2...接口n{
+   }
+   
+** 类的高级应用
+*** 克隆对象
+    $p2=clone $p1;
+*** 自动加载类
+    当你尝试使用一个PHP没有组织到的类时，它会寻找一个__autoload()的全局函数（不是在类中声明的函数）。如果存在这个函数，PHP会用一个参数来调用它，参数即类的名称
+    #+BEGIN_SRC PHP
+    function __autoload($className){
+        include("class_".$className.".php");
+    }
+    #+END_SRC
+*** 对象串行化
+    string serialize($obj)
+    Object unserialize($string)
+    __sleep()
+    在调用serialize函数将对象串行化时，会自动调用对象中的__sleep()函数，用来将对象中的部分成员串行化
+    __sleep()函数不需要接受任何参数，但需要返回一个数组，在数组中包含需要串行化的属性。未被包含在数组中的属性将在串行化时被忽略。
+    __wakeup()
+    在调用unserialize()函数反串行化对象时会自动调用对象的_wakeup()方法，用来在二进制串重新组成一个对象时，为新对象中的成员属性重新初始化
+*** 
+* 字符串
+** printf的字符串转换格式
+   %%      百分比符号
+   %b      二进制数
+   %e      科学计数法
+   %f      浮点数（local settings aware）
+   %F      浮点数（not local settings aware）
+** 字符串格式化函数
+   nl2br()  在字符串中的每个新行之前插入HTML换行符
+   htmlentities()      将字符串转换为HTML实体  
+   htmlspecialchars()  把一些预定义的字符转换为HTML实体
+   Stripslashes()      删除由addcslashes()函数添加的反斜杠
+   strip_tags()        剥去HTML，XML以及PHP的标签
+   number_format()     通过千分位分组来格式化数字
+   strrev()            反转字符串
+   md5()               将一个字符串进行MD5计算       
+   trim(string $str[,string $charlist]),ltrim(),rtrim()        去除空格和字符串填补函数
+   还可以使用..符号指定需要去除的一个范围，例如"0..9","a..z";
+   str_pad()           对字符串进行填补
+** 字符串比较
+   1. ==、>、>加以比较
+   2. strcmp()、strcasecmp()、strnatcmp等函数
+      int strcmp($str1,$str2)
+      int strcasecmp($str1,$str2)
+      按字节位的字典顺序进行比较
+      如果str==str2 返回0
+      如果str<str2 返回-1
+      如果str>str2 返回1
+      int strnatcmp($str1,$str2)
+      int strnatcasecmp($str1,$str2)
+      按照自然排序法对字符串进行比较，即字符串中的数字部分按照数字大小进行比较
+** 
+* 全局设置
+  error_reporting(E_ALL);
+  ini_set('display_errors', true);
+  ini_set('html_errors', false);
+
+* 异常处理
+** 语法
+   try{
+   ......               //在这里可以使用throw语句跑出一个异常对象
+   }catch(MyException $e){
+   .....
+   }catch(Exception $e){
+   ......
+   }
+   在PHP中，异常必须手动抛出。
+   虽然PHP为弱类型，但是必须在异常前指明异常的类型
+   
+* PDO
+** 构造函数
+   __construct(string dsn[,string username[,string password[,array driver_options]]])
+   #+BEGIN_SRC PHP
+   $dsn='mysql:dbname=test;host=127.0.9.1';
+   $user='dbuser';
+   $password='dbpass';
+   #+END_SRC
+   如果无法加载驱动程序，或者发生了连接失败，则会跑出PDOException
+** $driver_opts
+   * PDO::ATTR_AUTOCMMIT         确定PDO是否关闭自动提交功能，设置FALSE关闭
+   * PDO::ATTR_CASE              强制PDO获取的表字段字符的大小写转换，或原样使用列信息
+   * PDO::ATTR_ERRMODE           设置错误处理的模式
+     * PDO::ERRMODE_SILENT
+       错误发生时不进行任何操作，PDO只设置错误代码，开发人员可以通过errorCode()和errorInfo()来获取错误信息
+     * PDO::ERRMODE_WARNING
+       除了设置错误代码以外，PDO还将发出一条PHP传统的E_WARING信息，可以使用常规的PHP错误处理程序捕获该警告
+     * PDO::ERRMODE_EXCCEPTION
+       除了设置错误代码之外，PDO还将抛出一个PDOException
+   * PDO::ATTR_PERSISTENT        设置连接是否为持久连接，默认值为FALSE
+   * PDO::ATTR_ORACLE_NULLS      将返回的空字符转换为SQL的NULL
+   * PDO::ATTR_PREFECTCH         设置应用程序提前获取的数据大小，以K字节为单位
+   * PDO::ATTR_TIMEOUT           设置超时之前等待的时间，秒数
+   * PDO::ATTR_SERVER_INFO       包含数据库特有的服务器信息
+   * PDO::ATTR_SERVER_VERSION    包含与数据库服务器版本号相关的信息
+   * PDO::ATTR_CLIENT_VERSION    包含于数据库客户端版本号有关的信息
+   * PDO::ATTR_CONNECTION STATUS 包含数据库特有的与连接状态有关的信息
+   设置选项名为下表组成的关联数组，作为驱动程序特定的连接选项，传递给PDO构造方法的第四个参数。
+   
+** PDO的成员方法
+   PDO::getAttribute                获取一个数据库连接对象的属性（属性参见 $driver_opts）
+   PDO::setAttribute                为一个数据库连接对象设定属性
+   PDO::errorCode                   获取错误码
+   PDO::errorinfo                   获取错误的信息
+   PDO::exec                        处理一条SQL语句，并返回所影响的条目数
+   PDO::query                       处理一条SQL语句，并返回一个PDOStatement对象
+   PDO::quote                       为某个SQL中的字符串添加引号，常用于防止SQL注入
+   PDO::lastInsertId                获取插入到表中的最后一条数据的主键值
+   PDO::prepare                     负责准备要执行SQL语句
+   PDO::getAvailableDrivers         获取有效的PDO驱动器名称
+   PDO::beginTransaction            开始一个事物，并执行SQL
+   PDO::commit                      提交事物
+   PDO::rollback                    回滚事物
+
+** PDO对预处理语句的支持
+   * PDO::prepare($sql)
+     返回一个PDOStatement对象
+     #+BEGIN_SRC php
+       /* PDO中使用良种站位符语法：命名参数与问号参数 */
+       $dbh->prepare("Insert into contactInfo(name,address,phone) values(:name,:address,:phone)"); /* 命名参数 */
+       $dbh->prepare("Insert into contactInfo(name,address,phone) values(?,?,?)"); /* 问号参数 */
+     #+END_SRC
+** PDOStatement对象
+   如果通过执行PDO对象的query方法返回的PDOStatement类对象，就代表的是一个结果集对象。
+   如果通过执行PDO对象的prepare方法产生的PDOStatement类对象，则为一个查询对象
+*** 方法
+    * PDOStatement::bindParm($parameter,&$variable[,int data_type[,int length[,mixed driver_options]]])
+      #+BEGIN_SRC php
+        $stmt->bindParam(':name',$name); /* 如果使用命名站位符号，则第一个参数为名字参数 */
+        $stmt->bindParam(1,$name)        /* 如果使用问号参数，则地个参数为索引值 */
+      #+END_SRC
+      data_type显式地为绑定的参数设置数据类型
+      * PDO::PARAM:BOOL
+      * PDO::PARAM_NULL
+      * PDO::PARAM_INT
+      * PDO::PARAM_STR
+      * PDO::PARAM_LOB
+    * PDOStatement::execute([array $data])
+      #+BEGIN_SRC php
+        $stmt->execute();               /* 在bindParam之后执行execute方法执行SQL语句 */
+        $stmt->execute(array(":name"=>"darksun",":address"=>"place",":phone"=>"15820984397")); /* 也可以直接使用由准备查询中的命名参数站位符组成的数组，省去了bindParam这一步 */
+        $stmt->execute(array("darksun","place","15820984397");
+      #+END_SRC
+    * PDOStatement::fetch([int fetch_style[,int cursor_orientation[,int cursor_offset]]])
+      * fetch_style的值有
+        * PDO::FETCH_ASSOC
+        * PDO::FETCH_NUM
+        * PDO::FETCH_BOTH
+          默认值
+        * PDO::FETCH_OBJ
+        * PDO::FETCH_BOUND
+          将获得的列值赋值给bindParm方法中指定的相应变量
+        * PDO::FETCH_LAZY
+          创建关联数组，索引数组以及包含列属性的一个对象
+    * PDOStatement::fetchAll([int fetch_style[,int column_index]])
+    * PDOStatement::setFetchMode(int fetch_style)
+    * PDOStatement::bindColumn(mixed $column,mixed &param[,int type])
+      设置绑定列值到变量上，这样每次使用fetch方法获取记录时会自动赋值给变量，但必须fetch的第一个参数设置为PDO：：FETCH_BOTH
+    * PDOStatement::bindValue()
+    * PDOStatement::lastInsertId()
+    * PDOStatement::rowCount()
+* php.ini配置
+** 错误处理配置
+   #+BEGIN_SRC conf
+     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     ; Error handling and logging ;
+     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     
+     ; error_reporting is a bit-field.  Or each number up to get desired error
+     ; reporting level
+     ; E_ALL             - All errors and warnings (doesn't include E_STRICT)
+     ; E_ERROR           - fatal run-time errors
+     ; E_RECOVERABLE_ERROR  - almost fatal run-time errors
+     ; E_WARNING         - run-time warnings (non-fatal errors)
+     ; E_PARSE           - compile-time parse errors
+     ; E_NOTICE          - run-time notices (these are warnings which often result
+     ;                     from a bug in your code, but it's possible that it was
+     ;                     intentional (e.g., using an uninitialized variable and
+     ;                     relying on the fact it's automatically initialized to an
+     ;                     empty string)
+     ; E_STRICT          - run-time notices, enable to have PHP suggest changes
+     ;                     to your code which will ensure the best interoperability
+     ;                     and forward compatibility of your code
+     ; E_CORE_ERROR      - fatal errors that occur during PHP's initial startup
+     ; E_CORE_WARNING    - warnings (non-fatal errors) that occur during PHP's
+     ;                     initial startup
+     ; E_COMPILE_ERROR   - fatal compile-time errors
+     ; E_COMPILE_WARNING - compile-time warnings (non-fatal errors)
+     ; E_USER_ERROR      - user-generated error message
+     ; E_USER_WARNING    - user-generated warning message
+     ; E_USER_NOTICE     - user-generated notice message
+     ;
+     ; Examples:
+     ;
+     ;   - Show all errors, except for notices and coding standards warnings
+     ;
+     ;error_reporting = E_ALL & ~E_NOTICE
+     ;
+     ;   - Show all errors, except for notices
+     ;
+     ;error_reporting = E_ALL & ~E_NOTICE | E_STRICT
+     ;
+     ;   - Show only errors
+     ;
+     ;error_reporting = E_COMPILE_ERROR|E_RECOVERABLE_ERROR|E_ERROR|E_CORE_ERROR
+     ;
+     ;   - Show all errors except for notices and coding standards warnings
+     ;
+     error_reporting  =  E_ALL & ~E_NOTICE
+     
+     ; Print out errors (as a part of the output).  For production web sites,
+     ; you're strongly encouraged to turn this feature off, and use error logging
+     ; instead (see below).  Keeping display_errors enabled on a production web site
+     ; may reveal security information to end users, such as file paths on your Web
+     ; server, your database schema or other information.
+     ;
+     ; possible values for display_errors:
+     ;
+     ; Off        - Do not display any errors
+     ; stderr     - Display errors to STDERR (affects only CGI/CLI binaries!)
+     ;
+     ;display_errors = "stderr"
+     ;
+     ; stdout (On) - Display errors to STDOUT
+     ;
+     display_errors = On
+     
+     ; Even when display_errors is on, errors that occur during PHP's startup
+     ; sequence are not displayed.  It's strongly recommended to keep
+     ; display_startup_errors off, except for when debugging.
+     display_startup_errors = Off
+     
+     ; Log errors into a log file (server-specific log, stderr, or error_log (below))
+     ; As stated above, you're strongly advised to use error logging in place of
+     ; error displaying on production web sites.
+     log_errors = Off
+     
+     ; Set maximum length of log_errors. In error_log information about the source is
+     ; added. The default is 1024 and 0 allows to not apply any maximum length at all.
+     log_errors_max_len = 1024
+     
+     ; Do not log repeated messages. Repeated errors must occur in same file on same
+     ; line until ignore_repeated_source is set true.
+     ignore_repeated_errors = Off
+     
+     ; Ignore source of message when ignoring repeated messages. When this setting
+     ; is On you will not log errors with repeated messages from different files or
+     ; source lines.
+     ignore_repeated_source = Off
+     
+     ; If this parameter is set to Off, then memory leaks will not be shown (on
+     ; stdout or in the log). This has only effect in a debug compile, and if
+     ; error reporting includes E_WARNING in the allowed list
+     report_memleaks = On
+     
+     ;report_zend_debug = 0
+     
+     ; Store the last error/warning message in $php_errormsg (boolean).
+     track_errors = Off
+     
+     ; Disable the inclusion of HTML tags in error messages.
+     ; Note: Never use this feature for production boxes.
+     ;html_errors = Off
+     
+     ; If html_errors is set On PHP produces clickable error messages that direct
+     ; to a page describing the error or function causing the error in detail.
+     ; You can download a copy of the PHP manual from http://www.php.net/docs.php
+     ; and change docref_root to the base URL of your local copy including the
+     ; leading '/'. You must also specify the file extension being used including
+     ; the dot.
+     ; Note: Never use this feature for production boxes.
+     ;docref_root = "/phpmanual/"
+     ;docref_ext = .html
+     
+     ; String to output before an error message.
+     ;error_prepend_string = "<font color=ff0000>"
+     
+     ; String to output after an error message.
+     ;error_append_string = "</font>"
+     
+     ; Log errors to specified file.
+     ;error_log = filename
+     
+     ; Log errors to syslog (Event Log on NT, not valid in Windows 95).
+     ;error_log = syslog
+   #+END_SRC
+   * display_errors = On
+     是否显示php的错误信息
+   * error_reporting  =  E_ALL
+     显示错误的级别
+   * log_errors = Off
+     是否把错误信息转入到文件中
+   * error_log = filename/syslog
+     设置错误信息转入存放的地方
+* memcached
+** 选项
+   * -d
+     守护程序方式运行
+   * -m N
+     分配Nmb内存数量
+   * -u username
+     运行memcached的用户
+   * -l ip_addr
+     设置监听服务器IP地址
+   * -p port
+     这是监听端口，默认为11211
+   * -c N
+     最大连接数为N
+   * -P file
+     保存memcached的pid文件
+   * -vv
+     使用very verbose模式启动，调试信息和错误输出到控制台
+** 子命令
+   用telnet登陆后可以使用的常用命令为
+   * stats
+     当前所有memcached服务器运行的状态信息
+   * add 键 标记 有效期 数据长度
+     添加一个数据到服务器
+     * 键
+       保存在服务器上的唯一标示符号
+     * 标记
+       一个16位的无符号整形，用来设置服务器与客户端的一些交互操作
+     * 有效期
+       0表示数据永远有效，单位为秒
+     * 数据长度
+       在数据长度结束后的下一行跟着输入数据内容
+   * set 键 标记 有效期 数据长度
+     替换一个已经存在的数据，如果数据不存在，则和add一样
+   * get 键
+     从服务器端提取指定的数据
+   * delete 键
+     删除指定数据
+   * flush_all
+     清空数据
+** PHP接口
+   * Memcache::connect
+   * Memcache::pconnect()
+   * Memcache::addServer()
+   * Memcache::close()
+   * Memcache::getStats()
+   * Memcache::add()
+   * Memcache::set()
+   * Memcache::replace()
+   * Memcache::get()
+   * Memcache::delete()
+   * Memcache::flush()

@@ -1,0 +1,41 @@
+#+TITLE: F5基础
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+* F5基础概念
+  * Node
+	一个IP就是一个Node
+  * Pool Member
+	一个Node + Node开放的Port就是一个Pool Member
+  * Pool
+	Pool Member的集合
+  * virtual server
+	一个Pool的对外的接口,可以理解为一个代理
+* F5的Monitor检测类型
+  F5通过几种方法来检测应用是否alive
+  * Address check
+	通过ping ip的方式检测某台机是否alive
+  * Service check
+	通过telnet ip port的方式检测某服务是否alive
+  * Content check
+	常用于HTTP协议中,检测资源是否可获得,检测内容是否符合某个规范.
+  * Path check
+	低层的网络连通性检测
+* F5的配置步骤
+  1. 配置Monitor (Local Traffic -> Monitors)
+  2. 建立一个Pool (Local Traffic -> Pools)
+	 选择pool member与负载均衡算法,选择monitor
+  3. 配置virtual server (Local Traffic -> Virtual Servers)
+	 关联Pool,设置对外的IP和端口
+	 *SNAT Pool 需要选择AutoMap*
+	 *Address Translation    Enabled Port*
+     *Translation  Enabled*
+  4. 給Node分配Monitor(可选)
+* F5的高级功能
+** Persistence
+   若客户端一系列的请求需要作为一个整体请求到同一台服务器上(比如,要先验证身份,再作某些操作时,验证身份和那些操作必须作用到一台服务器上),就需要使用Persistence功能,将这些请求转发到同一台服务器上.
+** SSL加解密支持
+   为了提高效率,F5可以帮助实现client端与server端的自动加解密. 示意如下
+   Client  --加密(高加密)--  F5  --解密(低加密)-- Server
+** F5的HA切换
+   通过菜单High Availability配置

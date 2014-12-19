@@ -1,0 +1,892 @@
+#+TITLE: 一份不太简短的LaTeX2介绍
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* LaTex源文件
+** 空白距离
+   1. 多个连续的空白字符等同于一个空白字符.在句首的空白距离一般会被忽略,单个空行也被认为是一个空白距离.
+   2. 两行文本间的空白行标志着上段的结束和下端的开始.多个空白的作用等同于一个空白行.
+** 特殊字符
+   1. # $ % ^ & _ { } 这些都是特殊字符,要像输出这些字符,在字符前加上反斜线\
+   2. 反斜线\也是特殊字符,但是不能用\\来获得,这是一个换行的命令.
+   3. 其他一些特殊符号可以由数学环境中的特殊命令或重音命令得到.
+** LaTex命令
+   1. LaTex命令是大小写敏感的,有两种格式
+      * 以一个反斜线\开始,命令只由字母组成.命令名后的空格,数组或任何非字母都标志该命令结束
+      * 有一个反斜线\和非字母的字符组成.
+   2. LaTex忽略命令之后的空白字符,若你希望在命令后得到一个空格,可以在命令后加上{}和一个空格,{}表示命令结束,会组织LaTex吃掉命令后面的空格,或加上一个特殊的空格命令.
+   3. 命令的参数传入规则
+      * 有些命令需要一个参数,该参数用花括号{}扩住并写在命令的后面
+      * 有些命令支持可选参数,该参数用方括号[]扩住,然后写在命令的后面
+   4. 注释
+      * 行注释符%,LaTex将忽略%后的该行内容,换行符以及下一行前的空白字符.
+      * %因此也能用来断开不能含有空白字符或换行符的较长输入内容.
+** 源文件的结构
+   1. \documentclass{...}
+      每个源文件都要以这条命令开始,这条命令指明了你所写的源文档的类型.
+   2. \usepackage{...}
+      载入一个宏包
+   3. \begin{document}
+      开始文档的主体
+   4. \end{document}
+      结束文档的主体.LaTex会忽略此命令后的所有内容.
+** 一个典型的LaTex文档编译过程
+   1. 创建并编辑源文件,确保扩展名为tex
+   2. 编译tex为dvi文件
+      latex xxx.tex
+   3. 预览dvi文件
+      xdvi xxx.dvi
+   4. 用Ghostscript将dvi转换成PostScript文件来打印成预览.
+      dvips -Pcmz xxx.dvi -o xxx.ps
+   5. 可以直接将dvi转换成pdf文件
+      dvipdf xxx.dvi
+** 文档布局
+   1. 文档类
+      LaTex处理源文件时,首先需要知道的就是文档类型.指定命令如下
+      \documentclass[options]{class}
+      * class指定想要的文档类型
+	#+BEGIN_EXAMPLE
+	article 排版科学期刊、演示文档、短报告、程序文档、邀请函……
+	proc 一个基于article 的会议文集类。
+	minimal 非常小的文档类。只设置了页面尺寸和基本字体。主要用来查错。
+	report 排版多章节长报告、短篇书籍、博士论文……
+	book 排版书籍。
+	slides 排版幻灯片。该文档类使用大号 sansserif 字体。也可以选用 FoilTEX来得到相同的效果。
+	#+END_EXAMPLE
+      * options定制文档类的属性,不同的选项之间需用逗号,隔开.
+	#+BEGIN_EXAMPLE
+	10pt, 11pt, 12pt 设置文档中所使用的字体的大小。如果该项没有指定，默认使用10pt 字体。
+	a4paper, letterpaper,. . . 定义纸张的尺寸。缺省设置为letterpaper。此外，还可以使用a5paper, b5paper, executivepaper 以及legalpaper。
+	fleqn 设置行间公式为左对齐，而不是居中对齐。
+	leqno 设置行间公式的编号为左对齐，而不是右对齐。
+	titlepage, notitlepage 指定是否在文档标题(documenttitle) 后另起一页。article 文档类缺省设置为不开始新页，report 和book 类则相反。
+	onecolumn, twocolumn L ATEX 以单栏(onecolumn) 或双栏(two column)的方式来排版文档。
+	twoside, oneside 指定文档为双面或单面打印格式。article 和report 类为单面(singlesided) 格式，book 类缺省为双面(double sided) 格式。注意该选项只是作用于文档样式，而不会通知打印机以双面格式打印文档。
+	landscape 将文档的打印输出布局设置为 landscape 模式。
+	openright, openany 决定新的一章仅在奇数页开始还是在下一页开始。在文档类型为article 时该选项不起作用，因为该类中没有定义“章”(chapter)。report 类默认在下一页开始新一章而book 类的新一章总是在奇数页开始。
+	#+END_EXAMPLE
+   2. 宏包
+      LaTex用宏包来增强功能,调用宏包的命令为
+      \usepackage[options]{package}
+      * package是宏包的名称
+	#+BEGIN_EXAMPLE
+	doc 排版L ATEX 的说明文档。 
+	exscale 提供了按比例伸缩的数学扩展字体。
+	fontenc 指明使用哪种L ATEX 字体编码(fontencoding)。
+	ifthen 提供如下形式的命令 ‘if. . . thendo. . . otherwisedo. . . .’
+	latexsym 提供L ATEX 符号字体。
+	makeidx 提供排版索引的命令。
+	syntonly 编译文档而不生成dvi 文件（常用于查错）。
+	inputenc 指明使用哪种输入编码，
+	#+END_EXAMPLE
+      * options用来激活宏包特殊功能一组关键字
+   3. 页面样式
+      LaTex支持三种预定义的页眉/页脚样式,成为页面样式,命令为
+      \pagestyle{style}
+      * style参数确定使用哪一种页面样式
+	#+BEGIN_EXAMPLE
+	plain 在页脚正中显示页码。这是页面样式的缺省设置。
+	headings 在页眉中显示章节名及页码，页脚空白。
+	empty 将页眉页脚都设为空白。
+	#+END_EXAMPLE
+      * 可以用\thispagestyle{style}来改变当前页面的页面样式
+** 大型项目
+   1. \include{filename}
+      将名为filename.tex(参数中不需要写后缀)的文档内容插入到当前文档中.
+      需要注意的是,处理插入的filename.tex前,LaTex会另起一页
+   2. \includeonly{filename,filename}
+      该命令只能在导言区使用,它让LaTex仅读入某些\include文件.
+      注意,文档名和逗号之间不能有空格
+      如果不希望在新的一页上排版载入的文件,这时可以使用该命令
+   3. \input{filename}
+      \input命令知识简单的载入指定的文本,没有其他限制
+* 文本排版
+** 文本和语言结构
+   1. 一旦开始表达新的思想,就应该另起一段,否则换行就够了.
+   2. 使用空行来分段.
+   3. 使用\\来强迫换行.
+** 断行和分页
+   1. 对齐段落
+      LaTex在单词之间插入必要的断行点和间隙,如果一行的单词排不下,LaTex也会进行必要的断词.段落如何排版依赖于文档类别.
+      * \\
+	另起一行,而不另起一段
+      * \newline
+	另起一行,而不另起一段
+      * \\*
+	在强制断行后,还禁止分业
+      * \newpage
+	另起一页
+      * \sloppy
+	LaTeX 总是尽可能产生最好的断行效果。如果断行无法达到LaTeX的高标准，就让这一行在段落的右侧溢出。然后在处理源文件的同时，报告溢出的消息(“overfullhbox”)。这最有可能发生在L ATEX 找不到合适的地方断词的时候。
+	可以使用\sloppy 命令，告诉LaTeX降低一点儿标准。它通过增加单词之间的间隔，以防止出现过长的行，
+      * \fussy
+	把LaTex恢复为缺省状态
+   2. 断词
+      * \hyphenation{word-list}
+	告诉LaTex使word-list中的单词仅在注有"-"的地方断词.
+	#+BEGIN_SRC latex
+	%下面的例子允许对“hyphenation”和“Hyphenation”进行断词，却根本不允许“FORTRAN”,“Fortran”和“fortran”进行断词。
+	\hyphenation{FORTRAN Hy-phen-a-tion}
+	#+END_SRC
+      * \-
+	在单词中插入一个可能的断词点.它也就成为这个单词中允许出现的段词典的地方.对于包含特殊字符的单词,这个命令特别有用,因为对于他们,LaTex不会自动断词.
+      * \mbox{text}
+	保证把几个单词排在同一行上.在任何情况下,这个命令把它的参量排在一起.
+** 内置字符串
+   * \today
+      今日日期
+   * \Tex
+      Tex的符号
+   * \LaTeX
+      LaTex的符号
+   * \LaTeXe
+      LaTeX2的符号
+** 特殊字符和符号
+   1. 引号
+      * ``
+	两个`(重音符)产生左双引号"
+      * ''
+	两个'(直立引号)产生右双引号"
+      * `
+	一个`(重音符)产生左单引号'
+      * '
+	一个'(直立引号)产生右单引号'
+   2. 破折号和连字号
+      * -
+	一个"-"代表连字号
+      * --
+	两个"-"代表断破折号
+      * ---
+	三个"-"代表长破折号
+   3. 波浪号和约等号
+      * \~
+	小波浪号(波浪号)
+      * $\sim$
+	大波浪号(约等号)
+   4. 度的符号(°)
+      * ${\circ}
+	度的符号°
+      * ${\circ}\mathrm{C}$
+	摄氏度的符号℃
+   5. 省略号
+      \ldots
+      省略号(…)
+   6. 连字
+      对于两个字符构成的单个字符,可以在两个字符之间插入\mbox{},LaTex就会把前后两个字符合并成一个字符
+** 单词间隔
+   LaTex假定句子以句号,问好或感叹号结尾.如果句号紧跟一个大写字母,它就不视为句子的结尾而认为是缩写.
+   1.  \@
+       句号前的命令\@说明这个句号是句子的末尾,即时它紧跟一个大写字母.
+   2. \frenchspacing
+      禁止句号后插入额外的空白,它告诉LaTeX在句号后不要插入比正常字母更多的空白.
+** 标题,章和节
+   1. LaTex使用专门命令把文档划分为章,节和子节.
+      * \section[目录显示]{节的标题}
+      * \subsection[目录显示]{节的标题}
+      * \subsubsection[目录显示]{节的标题}
+      * \paragraph[目录显示]{节的标题}
+      * \subparagraph[目录显示]{节的标题}
+   2. 如果想把文档分成几个部分而不影响章节编号
+      \part[目录显示]{节标题}
+   3. report和book类的分章命令为
+      \chapter[目录显示]{章节标题}
+   4. 设置章,节的序号改为字母标记
+      \appendix
+   5. 插入目录,若分节命令中设置了可选参数目录显示,则用目录显示来代替实际的节标题
+      \tableofcontents
+   6. 分节命令的带星形式
+      “带星”的命令通过在命令名称后加* 来实现。它们生成的节标题既不出现于目录，也不带序号。
+      * \section*{节的标题}
+      * \subsection*{节的标题}
+      * \subsubsection*{节的标题}
+      * \paragraph*{节的标题}
+      * \subparagraph*{节的标题}
+      * \part*{节标题}
+      * \chapter*{章节标题}
+   7. 整片文档的标题的产生
+      \maketitle
+   8. 标题的内容必须在调用\maketitle之前,由命令
+      * \title{...}, \author{...} 和可选的\date{...}定义
+	在命令\author的参量中,可以输入几个用\and命令分开的名字
+   9. 其他用于book风格的文档的命令有
+      * \frontmatter
+	应接着命令\begin{document} 使用。它把页码更换为罗马数字，而且章节不计数。
+      * \mainmatter 
+	应出现在书的第一章前面。它启用阿拉伯数字的页码计数器，并对页码重新计数。
+      * \appendix
+	标志书中附录材料的开始。该命令后的各章序号改用字母标记。
+      * \backmatter
+	应该插入与书中最后一部分内容的前面，如参考文献和索引。在标准文档类型中，它对页面没有什么效果。
+** 交叉引用
+   1. 在书籍、报告和论文中，需要对图、表和文本的特殊段落进行交叉引用
+      和章节标题一样,使用的序号是前面编译所产生的.
+      * \label{标识符}
+	在节,子节,图,表或定理后面输入\lable命令标识标识符
+      * \ref{标识符}
+	LaTeX把\ref替换为\label相应的序号
+      * \pageref{标识符}
+	排印\label输入出的页码
+** 脚注
+   1. \footnote{脚注内容}
+      脚注命令总是放在其指向的单词或居住的后面.
+      #+BEGIN_SRC LaTeX
+      Footnotes\footnote{This is a footnote.}are often used by people using\LaTeX.
+      #+END_SRC
+** 强调
+   1. \underline{text}
+      用下划线来强调文本
+   2. \emph{text}
+      用斜体字强调文本
+** 环境
+   为了排版专用,LaTeX定义了各种不同格式的环境.
+   \begin{环境标志} text \end{环境标志}
+   只要保持调用顺序,环境可以嵌套
+   1. itemize环境适用于简单的列表,enumerate环境适用于有排列序号的列表,description环境用于带描述的列表
+      #+BEGIN_SRC LaTeX
+      \flushleft
+      \begin{enumerate}
+      \itemYoucanmixthelist
+      environmentstoyourtaste:
+      \begin{itemize}
+      \itemButitmightstartto
+      looksilly.
+      \item[-]Withadash.
+      \end{itemize}
+      \itemThereforeremember:
+      \begin{description}
+      \item[Stupid]thingswillnot
+      becomesmartbecausetheyare
+      inalist.
+      \item[Smart]things,though,
+      canbepresentedbeautifully
+      inalist.
+      \end{description}
+      \end{enumerate}
+      #+END_SRC
+   2. flushleft 和flushright 环境分别产生左对齐(left-aligned) 和右对齐(right-aligned) 的段落。center 环境产生居中的文本。
+      #+BEGIN_SRC LaTex
+      \begin{flushleft}
+      Thistextis\\left-aligned.
+      \LaTeX{}isnottryingtomake
+      eachlinethesamelength.
+      \end{flushleft}
+      \begin{flushright}
+      Thistextisright-\\aligned.
+      \LaTeX{}isnottryingtomake
+      eachlinethesamelength.
+      \end{flushright}
+      \begin{center}
+      Atthecentre\\oftheearth
+      \end{center}
+      #+END_SRC
+   3. quote 环境可以用于引文、语录和例子。
+      #+BEGIN_SRC LaTeX
+      Atypographicalruleofthumb
+      forthelinelengthis:
+      \begin{quote}
+      Onaverage,nolineshould
+      belongerthan66characters.
+      \end{quote}
+      Thisiswhy\LaTeX{}pageshave
+      suchlargebordersbydefault
+      andalsowhymulticolumnprint
+      isusedinnewspapers.
+      #+END_SRC
+   4. abstract环境用于引用摘要,常用于 article 类文档
+      #+BEGIN_SRC LaTeX
+      \begin{abstract}
+      Theabstractabstract.
+      \end{abstract}
+      #+END_SRC
+   5. verbatim环境表示原文打印
+      #+BEGIN_SRC LaTeX
+      \begin{verbatim}
+      10PRINT”HELLOWORLD”;
+      20GOTO10
+      \end{verbatim}
+      \begin{verbatim*}
+      thestarredversionof
+      the verbatim
+      environmentemphasizes
+      thespacesinthetext
+      \end{verbatim*}
+      #+END_SRC
+   6. tabular环境能用来排版带有水平和垂直表线的漂亮表格(table)。LATEX自动确定每一列的宽度。
+      * \begin{tabular}[pos]{tablespec}
+	参量tablespec 定义了表格的格式。用一个 l 产生左对齐的列，用一个 r 产生右对齐的列，用一个 c 产生居中的列；用 p{width} 产生相应宽度、包含自动断行文本的列； | 产生垂直表线。
+	如果一列里的文本太宽，LATEX 不会自动折行显示。使用 p{width} 你可以定义如一般段落里折行效果的列。
+	参量pos 设定相对于环绕文本基线的垂直位置。使用字母 t 、 b 和 c 来设定表格靠上、靠下或者居中放置。
+	在tabular 环境中，用& 跳入下一列，用\\ 开始新的一行，用\hline 插入水平表线。用\cline{j-i} 可添加部分表线，其中j 和 i 分别表示表线的起始列和终止列的序号。
+	#+BEGIN_SRC LaTex
+	\begin{tabular}{|r|l|}
+	\hline
+	7C0 & hexadecimal \\
+	3700 & octal \\ \cline{2-2}
+	11111000000 & binary \\
+	\hline \hline
+	1984 & decimal \\
+	\hline
+	\end{tabular}
+
+	\begin{tabular}{|p{4.7cm}|}
+	\hline
+	Welcome to Boxy’sparagraph.
+	We sincerely hopeyou’ll
+	all enjoy the show.\\
+	\hline
+	\end{tabular}
+	#+END_SRC
+* 专业功能
+** 插入EPS图形
+   LaTeX通过figure和table环境提供了处理图形图像等浮动体的基本工具.
+   在文档中使用图形,一个相对容易的办法就是使用专门的软件包生成图形文件,然后将最终的图形文件插入到文档中.
+   1. 插入EPS图形的步骤为:
+      1) 用图形软件输出EPS格式的文件
+      2) 在源文件的导言中载入graphicx宏包
+	 \usepackage[<driver>]{graphicx}
+	 这里<driver>是你使用的dvi到postscript的转换程序,最常用的是dvips
+      3) 把EPS图形文件加入LaTeX文档
+	 \includegraphics[<key=value>]{EPS格式的文件}
+	 #+BEGIN_EXAMPLE
+	 keys可以用来改变插图的宽度、高度以及旋转。
+	 width 把图形调整到指定的宽度
+	 height 把图形调整到指定的高度
+	 angle 逆时针旋转图形
+	 scale 缩放图形
+	 #+END_EXAMPLE
+** 参考文献
+   可以通过thebiblioraphy环境来产生一个参考文件.
+   1. 使用参考文献的步骤为
+      1) 定义thebibliography环境
+	 \begin{thebibliography}{最大的编号宽度}
+	 \end{thebibliography}
+      2) 在thebibliography环境中定义参考文献
+	 \bibitem[label]{<marker>}
+	 如果不使用参数label,参考文献条目的编号自动生成.
+      3) 在正文中引用文献
+	 \cite{<marker>}
+   2. 例子
+      #+BEGIN_SRC LaTeX
+      Partl \cite{pa} has
+      proposed that \ldots
+      \begin{thebibliography}{99}
+      \bibitem{pa} H.Partl:
+      \emph{German \TeX},
+      TUGboat Volume 9,Issue 1
+      (1988)
+      \end{thebibliography}
+      #+END_SRC
+** 索引
+   1. 使用makeindex生成索引的步骤
+      1) 在导言部分载入宏包makeidx
+	 \usepackage{makeidx}
+      2) 在导言中激活索引命令
+	 \makeindex
+      3) 指定索引的内容
+	 \index{<key>}
+	 这里key是索引项的关键字.可以在需要被索引的地方加入这条命令.
+	 当LaTeX 处理源文档时，每个\index 命令都会将适当的索引项和当前页码一个专门的文件中。这个文件的名字和LaTeX源文档相同，但扩展名为idx.
+      4) 使用makeindex程序处理\index生成的idx文件
+	 命令行环境下:makeindex <filename>
+	 makeindex程序生成一个与源文件同名的序列化索引文件,这个文件扩展名为ind
+      5) 在LaTeX文档中用\printindex,插入生成的ind文件
+	 \printindex
+** 定制页眉和页脚
+   fancyhdr宏包提供了一些简单的命令使得我们可以定制文档的页眉和页脚.
+   1. 在定义页眉和页脚时,可以使用\rightmark来代表当前的section名,使用\leftmark来代表当前的chapter名.
+   2. 也可以通过\chaptermark或\sectionmark来修改页眉页脚上显示的章节名称
+   3. 例子
+      #+BEGIN_SRC LaTeX
+      \documentclass{book}
+      \usepackage{fancyhdr}
+      \pagestyle{fancy}
+      with this we ensure that the chapter and section
+      headings are in lowercase.
+      \renewcommand{\chaptermark}[1]{%
+          \markboth{#1}{}}
+      \renewcommand{\sectionmark}[1]{%
+          \markright{\thesection\ #1}}
+      \fancyhf{} %delete current header and footer
+      \fancyhead[LE,RO]{\bfseries\thepage}
+      \fancyhead[LO]{\bfseries\rightmark}
+      \fancyhead[RE]{\bfseries\leftmark}
+      \renewcommand{\headrulewidth}{0.5pt}
+      \renewcommand{\footrulewidth}{0pt}
+      \addtolength{\headheight}{0.5pt }% spacefortherule
+      \fancypagestyle{plain}{%
+          \fancyhead{ } %getridofheadersonplainpages
+          \renewcommand{\headrulewidth}{0pt} % andtheline
+      }
+      #+END_SRC
+** Verbatim宏包
+   verbatim宏包重新实现了verbatim环境,并解决了原来的verbatim环境的一些限制,并新增了一些功能
+   1. verbatim宏包允许你把一个ASCII的文本文件包含在你的文档中来,就好像它们是在verbatim环境一样
+      \verbatiminput{<filename>}
+** 安装额外的宏包
+   1. 各种宏包的源文件,一般来说包含两个文件,一个扩展名为.ins,另一个扩展名为.dtx
+   2. 让LeX系统知道这个新的宏包
+      1) 对.ins文件允许LaTeX命令,生成一个.sty文件
+      2) 将.sty文件移到LaTeX系统能找到的地方,一般是在../localtexmf/tex/latex下
+      3) 属性系统的文件名数据库.具体命令取决于使用的LaTeX系统
+	 MikTeX -initexmf -update-fndb
+   3. 生成说明文件
+      1) 对.dtx文件允许LaTeX命令,这回生成一个dvi文件
+      2) 检查是否生成了.idx索引文件,若没有该文件则执行第6步
+      3) 若生成了.idx索引文件,运行shell命令
+	 makeindex -s gind.ist <filename>
+      4) 再次对.dtx文件运行LaTeX命令
+      5) 若生成一个.glo文件,运行命令
+	 makeindex -s gglo.ist -o <name.gls> <name.glo>
+      6) 生成.ps或pdf文件以方便阅读.
+** 使用pdfTeX
+   一般TeX生成DVI,而pdfTeX生成PDF
+   1. 生成PDF
+      pdflatex <file>.tex
+* 数学图形
+** picture环境
+   1. 创建picture环境
+      \begin{picutre}(<x>,<y>)...\end{picture}
+      或
+      \begin{picutre}(<x>,<y>)(<x0>,<y0>)...\end{picture}
+      (x,y)在文档中为图形保留一个矩阵区域.
+      (x0,y0)为矩阵左下角指派任意的坐标.
+   2. 绘图命令说明
+      大多数的绘图命令格式为
+      * \put(<x>,<y>){<object>}
+	这里object指的是下面介绍的子命令
+      * \multiput(<x>,<y>)(<x0>,<y0>){<n>}{<object>}
+	* (x,y)为初始点
+	* (x0,y0)为从一个对象到下一个的平移向量
+	* ({n}为对象的数目
+	* {object}为要绘制的对象
+	  #+BEGIN_SRC LaTeX
+	  \setlength{\unitlength}{2mm}
+	  \begin{picture}(30,20)
+	  \linethickness{0.075mm}
+	  \multiput(0,0)(1,0){26}%
+	  {\line(0,1){20}}
+	  \multiput(0,0)(0,1){21}%
+	  {\line(1,0){25}}
+	  \linethickness{0.15mm}
+	  \multiput(0,0)(5,0){6}%
+	  {\line(0,1){20}}
+	  \multiput(0,0)(0,5){5}%
+	  {\line(1,0){25}}
+	  \linethickness{0.3mm}
+	  \multiput(5,0)(10,0){2}%
+	  {\line(0,1){20}}
+	  \multiput(0,5)(0,10){2}%
+	  {\line(1,0){25}}
+	  \end{picture}
+	  #+END_SRC
+      * \qbezier(x1,y1)(x2,y2)(x3,y3)
+   3. 画线段
+      \put(<x>,<y>){\line(<x1>,<y1>){<length>}}
+      * 其中(x,y)为直线的起始位置
+      * (x1,y1)指定一个方向向量,其中方向向量的取值范围为[-6,6]的整数,且需要互质
+      * length指定一个长度,这个长度是相对于\unitlength来说的
+	#+BEGIN_SRC LaTeX
+	\setlength{\unitlength}{5cm}
+	\begin{picture}(1,1)
+	\put(0,0){\line(0,1){1}}
+	\put(0,0){\line(1,0){1}}
+	\put(0,0){\line(1,1){1}}
+	\put(0,0){\line(1,2){.5}}
+	\put(0,0){\line(1,3){.3333}}
+	\put(0,0){\line(1,4){.25}}
+	\put(0,0){\line(1,5){.2}}
+	\put(0,0){\line(1,6){.1667}}
+	\put(0,0){\line(2,1){1}}
+	\put(0,0){\line(2,3){.6667}}
+	\put(0,0){\line(2,5){.4}}
+	\put(0,0){\line(3,1){1}}
+	\put(0,0){\line(3,2){1}}
+	\put(0,0){\line(3,4){.75}}
+	\put(0,0){\line(3,5){.6}}
+	\put(0,0){\line(4,1){1}}
+	\put(0,0){\line(4,3){1}}
+	\put(0,0){\line(4,5){.8}}
+	\put(0,0){\line(5,1){1}}
+	\put(0,0){\line(5,2){1}}
+	\put(0,0){\line(5,3){1}}
+	\put(0,0){\line(5,4){1}}
+	\put(0,0){\line(5,6){.8333}}
+	\put(0,0){\line(6,1){1}}
+	\put(0,0){\line(6,5){1}}
+	\end{picture}
+	#+END_SRC
+   4. 箭头
+      \put(<x>,<y>){\vector(<x1>,<y1>){<length>}}
+      * 其中(x,y)指定箭头的起始位置
+      * (x1,y1)指定一个方向,其中方向向量的取值范围为[-4,4]的整数,且需要互质
+      * length指定一个长度,这个长度是相对于\unitlength来说的
+	#+BEGIN_SRC LaTeX
+	\setlength{\unitlength}{0.75mm}
+	\begin{picture}(60,40)
+	\put(30,20){\vector(1,0){30}}
+	\put(30,20){\vector(4,1){20}}
+	\put(30,20){\vector(3,1){25}}
+	\put(30,20){\vector(2,1){30}}
+	\put(30,20){\vector(1,2){10}}
+	\thicklines
+	\put(30,20){\vector(-4,1){30}}
+	\put(30,20){\vector(-1,4){5}}
+	\thinlines
+	\put(30,20){\vector(-1,-1){5}}
+	\put(30,20){\vector(-1,-4){5}}
+	\end{picture}
+	#+END_SRC
+   5. 圆
+      \put(<x>,<y>){\circle{<diameter>}}
+      * \circle*生成的是填充的圆形,\circle生成的空心的圆形
+      * 其中(x,y)指定圆心放置的位置
+      * <diameter>表示园的直径(*不是半径*)
+	允许的最大直径是14mm
+        #+BEGIN_SRC LaTeX
+	\setlength{\unitlength}{1mm}
+	\begin{picture}(60,40)
+	\put(20,30){\circle{1}}
+	\put(20,30){\circle{2}}
+	\put(20,30){\circle{4}}
+	\put(20,30){\circle{8}}
+	\put(20,30){\circle{16}}
+	\put(20,30){\circle{32}}
+	\put(40,30){\circle{1}}
+	\put(40,30){\circle{2}}
+	\put(40,30){\circle{3}}
+	\put(40,30){\circle{4}}
+	\put(40,30){\circle{5}}
+	\put(40,30){\circle{6}}
+	\put(40,30){\circle{7}}
+	\put(40,30){\circle{8}}
+	\put(40,30){\circle{9}}
+	\put(40,30){\circle{10}}
+	\put(40,30){\circle{11}}
+	\put(40,30){\circle{12}}
+	\put(40,30){\circle{13}}
+	\put(40,30){\circle{14}}
+	\put(15,10){\circle*{1}}
+	\put(20,10){\circle*{2}}
+	\put(25,10){\circle*{3}}
+	\put(30,10){\circle*{4}}
+	\put(35,10){\circle*{5}}
+	\end{picture}
+	#+END_SRC
+   6. 文本与公式
+      * 文本与公式可以使用\put命令按正常方式在picture环境中使用
+	#+BEIGN_SRC LaTeX
+	\setlength{\unitlength}{0.8cm}
+	\begin{picture}(6,5)
+	\thicklines
+	\put(1,0.5){\line(2,1){3}}
+	\put(4,2){\line(-2,1){2}}
+	\put(2,3){\line(-2,-5){1}}
+	\put(0.7,0.3){$A$}
+	\put(4.05,1.9){$B$}
+	\put(1.7,2.95){$C$}
+	\put(3.1,2.5){$a$}
+	\put(1.3,1.7){$b$}
+	\put(2.5,1.05){$c$}
+	\put(0.3,4){$F=
+	\sqrt{s(s-a)(s-b)(s-c)}$}
+	\put(3.5,0.4){$\displaystyle
+	s:=\frac{a+b+c}{2}$}
+	\end{picture}
+	#+END_SRC
+   7. 椭圆
+      \put(<x>,<y>){\oval(<w>,<h>)}
+      或
+      \put(<x>,<y>){\oval(<w>,<h>)[<position>]}
+      * (x,y)为椭圆的中心
+      * (w,h)为椭圆的寛和高
+      * [postion]可以取值b(仅绘制椭圆的下部),t(仅绘制椭圆的上部),l(仅绘制椭圆的左部),r(仅绘制椭圆的右部)
+   8. 控制线宽
+      * \linethickness{<length>}
+	仅对水平和垂直直线及Bezier曲线有作用
+      * \thinlines
+	可作用于倾斜的线段\圆和椭圆
+      * \thicklines
+	可作用于倾斜的线段\圆和椭圆
+   9. 重复使用预定义的图形盒子
+      1) 声明图形盒子
+	 \newsavebox{<name>}
+      2) 然后定义盒子
+	 \savebox{<name>}(<width>,<height>)[<postion>]{<content>}
+	 可选参数position 的作用是定义图形存放盒子的“锚点”。取值为b,l,t,r
+      3) 使用盒子
+	 \put(x,y)\usebox{<name>}
+      4) 例如
+	 #+BEGIN_SRC LaTeX
+	 \setlength{\unitlength}{0.5mm}
+	 \begin{picture}(120,168)
+	 \newsavebox{\foldera}
+	 \savebox{\foldera}
+	 (40,32)[bl]{%definition
+	 \multiput(0,0)(0,28){2}
+	 {\line(1,0){40}}
+	 \multiput(0,0)(40,0){2}
+	 {\line(0,1){28}}
+	 \put(1,28){\oval(2,2)[tl]}
+	 \put(1,29){\line(1,0){5}}
+	 \put(9,29){\oval(6,6)[tl]}
+	 \put(9,32){\line(1,0){8}}
+	 \put(17,29){\oval(6,6)[tr]}
+	 \put(20,29){\line(1,0){19}}
+	 \put(39,28){\oval(2,2)[tr]}
+	 }
+	 \newsavebox{\folderb}
+	 \savebox{\folderb}
+	 (40,32)[l]{% definition
+	 \put(0,14){\line(1,0){8}}
+	 \put(8,0){\usebox{\foldera}}
+	 }
+	 \put(34,26){\line(0,1){102}}
+	 \put(14,128){\usebox{\foldera}}
+	 \multiput(34,86)(0,-37){3}
+	 {\usebox{\folderb}}
+	 \end{picture}
+	 #+END_SRC
+* 定制LaTeX
+  新建命令,环境的内容,必须写到文档的导言部分.
+** 新建命令
+   1. 新建命令
+      \newcommand{<name>}[<num>]{<definition>}
+      * name是你想要建立的命令的名字
+      * definition是命令的定义
+      * 可选的num用于定义新命令所需要的参数数目(最多9个,默认0个)
+      * 在命令中#1...#9将被知道那个的参数所代替.
+	#+BEGIN_SRC LaTeX
+	\newcommand{\txsit}[1]
+	{This is the\emph{#1}Short
+	Introduction to \LaTeXe}
+	%in the document body:
+	\begin{itemize}
+	\item \txsit{notso}
+	\item \txsit{very}
+	\end{itemize}
+	#+END_SRC
+   2. 重定义已存在的命令
+      \renewcommand{<name>}[<num>]{<definition>}
+      * name是你想要建立的命令的名字
+      * definition是命令的定义
+      * 可选的num用于定义新命令所需要的参数数目(最多9个,默认0个)
+      * 在命令中#1...#9将被知道那个的参数所代替.
+   3. 定义新命令,若命令已经存在则覆盖之
+      \providecommand{<name>}[<num>]{<definition>}
+      * name是你想要建立的命令的名字
+      * definition是命令的定义
+      * 可选的num用于定义新命令所需要的参数数目(最多9个,默认0个)
+      * 在命令中#1...#9将被知道那个的参数所代替.
+** 新建环境
+   1. 新建环境
+      \newenvironment{<name>}[<num>]{<before>}{<after>}
+      * before中的内容将在此环境包含的文本之前处理
+      * after中的内容将在遇到\end{name}时处理
+      * 可选的num用于定义新命令所需要的参数数目(最多9个,默认0个)
+	#+BEGIN_SRC LaTeX
+	\newenvironment{king}
+	{\rule{1ex}{1ex}%
+	\hspace{\stretch{1}}}
+	{\hspace{\stretch{1}}%
+	\rule{1ex}{1ex}}
+	\begin{king}
+	My humble subjects\ldots
+	\end{king}
+	#+END_SRC
+   2. 改变一个现有的环境
+      \renewenvironment{<name>}[<num>]{<before>}{<after>}
+      * before中的内容将在此环境包含的文本之前处理
+      * after中的内容将在遇到\end{name}时处理
+      * 可选的num用于定义新命令所需要的参数数目(最多9个,默认0个)
+** 新建宏包
+   新建宏包的步骤为
+   1. 将定义的新命令和新环境的内容拷贝到一个.sty的文件中
+   2. 在.sty文件的最前面加上
+      \ProvidesPackage{包名称}
+      #+BEGIN_SRC LaTeX
+      %DemoPackagebyTobiasOetiker
+      \ProvidesPackage{demopack}
+      \newcommand{\tnss}{The not so Short Introduction
+      to\LaTeXe}
+      \newcommand{\txsit}[ 1 ]{The\emph{#1}Short
+      Introductionto\LaTeXe}
+      \newenvironment{king}{\begin{quote}}{\end{quote}}
+      #+END_SRC
+** 字体和字号变换命令
+   1. 使用字体命令的时候，大括号(curlybraces) 扮演了一个重要角色。它们被用于建立所谓的组 (group)。组限制了大多数L ATEX 命令的作用范围
+      * 表 6.1 – 字体。
+	#+BEGIN_EXAMPLE
+	\textrm{...} roman 
+	\textsf{...} sans serif
+	\texttt{...}typewriter
+	\textmd{...} medium 
+	\textbf{...} boldface
+	\textup{...} upright
+	\textit{...} italic
+	\textsl{...} slanted 
+	\textsc{...} SmallCaps
+	\emph{...} emphasized 
+	\textnormal{...} document font
+	#+END_EXAMPLE
+      * 表 6.2 – 字号
+	#+BEGIN_EXAMPLE
+	大小 10pt（默认） 11pt 选项 12pt 选项
+	\tiny 5pt 6pt 6pt
+	\scriptsize 7pt 8pt 8pt
+	\footnotesize 8pt 9pt 10pt
+	\small 9pt 10pt 11pt
+	\normalsize 10pt 11pt 12pt
+	\large 12pt 12pt 14pt
+	\Large 14pt 14pt 17pt
+	\LARGE 17pt 17pt 20pt
+	\huge 20pt 20pt 25pt
+	\Huge 25pt 25pt 25pt
+	#+END_EXAMPLE
+      * 例子
+	#+BEGIN_SRC LaTex
+	{\smallThesmalland
+	\textbf{bold}Romans ruled}
+	{\Large all of great big
+	\textit{Italy}.}
+	#+END_SRC
+   2. 字体变换命令的环境语法
+      * \begin{字体/字号}...\end{字体/字号}
+** 间距
+   1. 行距
+      要想改变文档的行距,可以使用如下命令设置
+      \setlength{\basiclineskip}{<factor>\baselineskip}
+      * factor定义几倍的默认行距.缺省情况下的行距为1
+	#+BEGIN_SRC LaTeX
+	{\setlength{\baselineskip}%
+	{1.5\baselineskip}
+	This paragraph is typeset with
+	the baseline skip set to 1.5 of
+	what it was before.Note the par
+	command at the end of the
+	paragraph.\par}
+	This paragraph has a clear
+	purpose,it shows that after the
+	curly brace has been closed,
+	everything is back to normal.
+	#+END_SRC
+   2. 段落格式
+      * 在LaTeX中,有两个参数可以影响段落的布局.通过如下的定义来改变段落间距
+        * \setlength{\parindent}{宽度}
+        * \setlength{\parskip}{宽度}
+      * 如果想缩进一个本来没有缩进的段落,可以在段落的开始使用命令
+	\indent
+      * 为了创建一个不缩进的段落,可以在段落的开始部分使用\noindent
+   3. 水平间距
+      * 一般LaTeX系统自动决定单词和句子之间的距离.为了修改水平距离,使用命令
+	\hspace{<length>}
+      * 如果这个水平间距即时在行首或者行末也应该保持的话,用命令
+	\hspace*{<length>}
+	#+BEGIN_SRC LaTeX
+	This\hspace{1.5cm}is a space of 1.5cm.
+	#+END_SRC
+      * 如果\hspace中的length是通过命令
+	\stretch{<n>}
+	来指定的,则会产生一个特殊的长度:这个长度能把行内剩余的空白填满.
+	这里n代表伸缩因子.
+      * 如果多个\hspace{\stretch{n}}位于同一行,那么它们将根据n来分配各自的空间
+	#+BEGIN_SRC LaTeX
+	x\hspace{\stretch{1}}
+	x\hspace{\stretch{3}}x
+	%会按照1:3的比例分配距离
+	#+END_SRC
+   4. 垂直间距
+      * 在段落,节,小结之间的距离是由LaTeX自动决定的.如果必要的话,可以在两段之间增加额外的距离.使用命令为
+	\vspace{<length>}
+      * 如果这个额外的行距应该在页的顶部和尾部也保留下来,那么用命令
+	\vspace*{<length>}
+      * 同一段或同一个表格中两行的距离可以用如下命令指定
+	\\[<length>]
+      * 使用命令\bigskip和\smallskip,可以获得一个预定义的垂直间距.
+** 页面布局
+   LaTeX提供了两个命令来设置页面布局
+   1) 第一个命令给某参数一个固定的值
+      \setlength{<parameter>}{<length>}
+   2) 第二个命令给某些参数增加一个长度
+      \addtolength{<parameter>}{<length>}
+      #+BEGIN_SRC LaTeX
+      \addtolength{\hoffset}{-0.5cm}
+      \addtolength{\textwidth}{1cm}
+      #+END_SRC
+** 更有趣的长度
+   只要可能,就应该避免在LaTeX使用绝对长度.下面三个命令允许你获得一个文本串的高度,深度和寛度
+   1. \settoheight{<variable>}{<text>}
+   2. \settodepth{<variable>}{<text>}
+   3. \settowidth{<variable>}{<text>}
+   4. 例子
+      #+BEGIN_SRC LaTeX
+      \flushleft
+      \newenvironment{vardesc}[1]{%
+      \settowidth{\parindent}{#1:\}
+      \makebox[0pt][r]{#1:\}}{}
+      \begin{displaymath}
+      a^2+b^2=c^2
+      \end{displaymath}
+      \begin{vardesc}{Where}$a$,
+      $b$--are adjoin to the right
+      angle of a right-angled triangle.
+      $c$--is the hypotenuse of
+      the triangle and feels lonely.
+      $d$--finally does not show up
+      here at all.Isn’t that puzzling?
+      \end{vardesc}
+      #+END_SRC
+** 盒子
+   LaTeX使用盒子来建立页面,每个字符都是一个小盒子.。不是只有字母才能成为盒子，你几乎可以把任何东西包括其他盒子放到一个盒子中。然后LATEX 将会像处理单个字母一样处理这个盒子。
+   1. 如tabular 环境和\includegraphics 命令就都产生了一个盒子。这就意味着你可以轻松的将两个表格或图像并列。你唯一需要保证的就是它们宽度的总和不大于文本宽度。
+   2. 使用如下命令可以把一个段落放置在盒子中
+      * \parbox[<pos>]{<width>}{<text>}
+      * \begin{minipage}[<pos>]{<width>}
+	<text>
+	\end{minipage}
+      * 参数pos 可以取以下字符中的一个c、t 或b，这个参数用于控制盒子相对周围文本基线的垂直方向对齐。
+	width 是一个长度参量用于调整盒子的宽度。
+      * minipage 和\parbox 的区别在于你可能无法在一个parbox 中使用所有的命令或者环境.
+	而几乎任何东西都可以在minipage 中使用。
+   3. LaTeX可以使用\makebox来控制盒子的水平方向长度.
+      * \makebox[<width>][<pos>]{<text>}
+	width 定义了生成的盒子的外部宽度5。除了长度表达式，你也可以传递\width、\height、\depth 和\totalheight 给width。这几个值是测量盒子内部文本来获得的。
+	参数pos 接受一个字符值：c – 居中、l – 靠左、r – 靠右和s – 将文本均匀分布到整个盒子中。
+      * 命令\framebox 和\makebox 完成同样的工作，不同之处在于它在内部文本的周围画出一个矩形框。
+	#+BEGIN_SRC LaTeX
+	\makebox[\textwidth]{%
+	central}\par
+	\makebox[\textwidth][s]{%
+	spread}\par
+	\framebox[1.1\width]{GuessI’m
+	framed now!}\par
+	\framebox[0.8\width][r]{Bummer,
+	I am too wide}\par
+	\framebox[1cm][l]{never
+	mind,so am I}
+	Can you read this?
+	#+END_SRC
+      * 命令\raisebox{<lift>}[<extend-above-baseline>][<extend-below-baseline>] {text}
+	在前面的三个参数中，你可以使用\width、\height、\depth 和\totalheight，这样可以使得盒子的参数能够与盒子内部的文本匹配.
+	#+BEGIN_SRC LaTeX
+	\raisebox{0pt}[0pt][0pt]{\Large%
+	\textbf{Aaaa\raisebox{-0.3ex}{a}%
+	\raisebox{-0.7ex}{aa}%
+	\raisebox{-1.2ex}{r}%
+	\raisebox{-2.2ex}{g}%
+	\raisebox{-4.5ex}{h}}}
+	he shouted but not even the next
+	one in line noticed that something
+	terrible had happened to him.
+	#+END_SRC
+** 标尺和支撑
+   1. 可以用\rule来输出一个简单的黑色盒子
+      \rule[<lift>]{<width>}{<height>}
+      #+BEGIN_SRC LaTeX
+      \rule{3mm}{.1pt}%
+      \rule[-1mm]{5mm}{1cm}%
+      \rule{3mm}{.1pt}%
+      \rule[1mm]{1cm}{5mm}%
+      \rule{3mm}{.1pt}
+      #+END_SRC
+   2. 一种特殊的例子是没有宽度只有高度的标尺。在专业的出版中，这被称为支撑(Struts)。它被用来保证页面的某个元素具有一个确定的高度最小值。

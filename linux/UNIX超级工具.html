@@ -1,0 +1,1637 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>UNIX超级工具</title>
+<!-- 2014-09-26 星期五 07:05 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="DarkSun" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">UNIX超级工具</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. shell</a>
+<ul>
+<li><a href="#sec-1-1">1.1. shell分类</a></li>
+<li><a href="#sec-1-2">1.2. 如何判断用户从不同终端登录</a></li>
+<li><a href="#sec-1-3">1.3. 如何在sh退出时自动执行命令</a></li>
+<li><a href="#sec-1-4">1.4. 如何防止shell意外退出</a></li>
+<li><a href="#sec-1-5">1.5. shell解释命令行的步骤是怎样的</a></li>
+<li><a href="#sec-1-6">1.6. 如何使用echo信息到标准错误中</a></li>
+<li><a href="#sec-1-7">1.7. 如何强制bash执行外置/内置命令?</a></li>
+<li><a href="#sec-1-8">1.8. 如何禁止here Document中的变量替换和命令替换呢?</a></li>
+<li><a href="#sec-1-9">1.9. shell中通配符与{}模式的区别</a></li>
+<li><a href="#sec-1-10">1.10. ksh和bash中的变量编辑</a></li>
+<li><a href="#sec-1-11">1.11. bash中的进程替换</a></li>
+<li><a href="#sec-1-12">1.12. shell中的历史替换机制</a></li>
+<li><a href="#sec-1-13">1.13. 比较文件差异</a></li>
+<li><a href="#sec-1-14">1.14. shell的作业控制</a></li>
+<li><a href="#sec-1-15">1.15. shell的IO重定向</a></li>
+<li><a href="#sec-1-16">1.16. ksh的文件通配符说明</a></li>
+<li><a href="#sec-1-17">1.17. tar命令</a></li>
+<li><a href="#sec-1-18">1.18. find命令</a>
+<ul>
+<li><a href="#sec-1-18-1">1.18.1. 提高find的性能</a></li>
+</ul>
+</li>
+<li><a href="#sec-1-19">1.19. ln命令</a></li>
+<li><a href="#sec-1-20">1.20. cat命令</a></li>
+<li><a href="#sec-1-21">1.21. tail命令</a></li>
+<li><a href="#sec-1-22">1.22. su命令</a></li>
+<li><a href="#sec-1-23">1.23. 其他</a></li>
+</ul>
+</li>
+<li><a href="#sec-2">2. 环境变量</a>
+<ul>
+<li><a href="#sec-2-1">2.1. 常用的环境变量</a></li>
+<li><a href="#sec-2-2">2.2. 如何显示其他地区现在的时间?</a></li>
+<li><a href="#sec-2-3">2.3. 环境变量和shell变量的区别</a></li>
+<li><a href="#sec-2-4">2.4. 使用CDPATH变量为用户改变目录节省时间</a></li>
+<li><a href="#sec-2-5">2.5. 获取路径中目录信息的几种方法</a></li>
+</ul>
+</li>
+<li><a href="#sec-3">3. 组织$HOME目录</a></li>
+<li><a href="#sec-4">4. vi</a></li>
+<li><a href="#sec-5">5. 设置终端</a>
+<ul>
+<li><a href="#sec-5-1">5.1. 登录时设置终端类型</a></li>
+<li><a href="#sec-5-2">5.2. 登录时,若挂起怎么办?</a></li>
+<li><a href="#sec-5-3">5.3. 使用stty设置删除,终止和终端字符</a></li>
+<li><a href="#sec-5-4">5.4. 从哪里寻找可能可以使用的终端类型</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> shell</h2>
+<div class="outline-text-2" id="text-1">
+</div><div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> shell分类</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li>()操作符又称为subshell操作符,它会启动一个当前shell的另一个实例,而且不会读取任何设置文件,相反它继承当前shell的环境变量
+</li>
+
+<li>shell分为登录shell(提供給用户交互)和非登录shell(給脚本运行用). 只有登录shell会读.login或.profile文件..
+</li>
+
+<li>为了区分是否为登录shell,可以在.profile或.login中设置一个`loginshell=yes`,然后就可以通过`if [ -n "$loginshell" ]`来判断shell的类型
+</li>
+
+<li>有些为了方便用户而设置的信息,用非交互式shell来读取是相当浪费时间的.
+
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a020f0;">if</span> [ -n <span style="color: #8b2252;">"$loginshell"</span> ]
+<span style="color: #a020f0;">then</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">&#30331;&#24405;shell&#30340;&#30456;&#20851;&#35774;&#32622;</span>
+<span style="color: #a020f0;">fi</span>
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> 如何判断用户从不同终端登录</h3>
+<div class="outline-text-3" id="text-1-2">
+<ul class="org-ul">
+<li>不同终端设置的TERM环境变量不同
+</li>
+
+<li>如何从其他主机登录,那么who am i命令会显示主机名
+</li>
+
+<li>有些系统会根据登录方式的不同(rlogin,telnet,ssh),tty运行结果也不同
+</li>
+
+<li>有些系统会设置确定的环境变量. 例如X window系统设置了DISPLAY环境变量
+</li>
+
+<li>/etc/motd中包含了UNIX系统的登录信息
+</li>
+
+<li>在许多UNIX中若存在$HOME/.hushlogin文件,则登录过程会不显示/etc/motd中的登录信息. 因此可以使用如下脚本来让只有/etc/motd中信息修改过后才显示
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a0522d;">files</span>=$(ls -t /etc/motd ~/.hushlogin )
+<span style="color: #a0522d;">newerFile</span>=$(<span style="color: #483d8b;">echo</span> $<span style="color: #a0522d;">files</span>|cut -d <span style="color: #8b2252;">" "</span> -f1) 
+<span style="color: #a020f0;">if</span>[ $<span style="color: #a0522d;">newerFile</span> == /etc/motd ]
+<span style="color: #a020f0;">then</span>
+cat /etc/motd
+touch ~/.hushlogin
+<span style="color: #a020f0;">fi</span>
+
+<span style="color: #483d8b;">unset</span> files
+<span style="color: #483d8b;">unset</span> newerFile
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> 如何在sh退出时自动执行命令</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+在C shell中有一个名为.logout的设置文件. 当用户退出时.logout中的命令被执行. 但是Bourne 和Korn shell中都没有退出文件. 可以使用一下方式模拟
+</p>
+
+<ol class="org-ol">
+<li>在用户的.profile加入一行
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a020f0;">trap</span> <span style="color: #8b2252;">'. ~/.sh_logout;exit'</span> 0
+</pre>
+</div>
+</li>
+
+<li>将退出时想运行的命令放入~/.sh_logout中
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4"><span class="section-number-3">1.4</span> 如何防止shell意外退出</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+可以通过设置ignoreeof这个shell变量来解决问题:
+</p>
+
+<p>
+对于C shell执行
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">set</span> ignoreeof
+</pre>
+</div>
+
+<p>
+对于bash或ksh使用
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">set</span> -o ignoreeof
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5"><span class="section-number-3">1.5</span> shell解释命令行的步骤是怎样的</h3>
+<div class="outline-text-3" id="text-1-5">
+<ol class="org-ol">
+<li>对命令进行历史替换
+</li>
+
+<li>将命令根据空格分割成词
+</li>
+
+<li>将命令放入历史列表中
+</li>
+
+<li>解释单引号`和双引号"
+</li>
+
+<li>shell对命令进行别名替换
+</li>
+
+<li>输入输出的重定向(&gt;,&gt;&gt;,&lt;,|)
+</li>
+
+<li>shell将变量替换为值
+</li>
+
+<li>shell将``或$()内的命令替换为结果
+</li>
+
+<li>文件名的通配符扩展
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-sec-1-6" class="outline-3">
+<h3 id="sec-1-6"><span class="section-number-3">1.6</span> 如何使用echo信息到标准错误中</h3>
+<div class="outline-text-3" id="text-1-6">
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"something error"</span> 1&gt;&amp;2
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-7" class="outline-3">
+<h3 id="sec-1-7"><span class="section-number-3">1.7</span> 如何强制bash执行外置/内置命令?</h3>
+<div class="outline-text-3" id="text-1-7">
+<ol class="org-ol">
+<li>如何让bash不执行shell函数,只执行内部/外部命令
+
+<p>
+在命令前输入command即可以禁止shell函数查找
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">cd</span> ()
+{
+    command cd <span style="color: #8b2252;">"$@"</span>             <span style="color: #b22222;"># </span><span style="color: #b22222;">&#36825;&#37324;&#21482;&#20250;&#25191;&#34892;&#21629;&#20196;shell&#32780;&#19981;&#20250;&#25191;&#34892;cd&#20989;&#25968;</span>
+    setvars
+}
+</pre>
+</div>
+</li>
+
+<li>如何强制bash使用内部命令呢
+
+<p>
+在命令前输入builtin
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">builtin echo -n <span style="color: #8b2252;">"this should be the builtin command echo"</span> <span style="color: #b22222;"># </span><span style="color: #b22222;">&#20351;&#29992;&#20869;&#32622;&#21629;&#20196;echo</span>
+</pre>
+</div>
+</li>
+
+<li>如何强制bash使用外置命令呢?
+
+<p>
+只需要给出外部命令的全路径即可.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">/bin/echo hi                    <span style="color: #b22222;"># </span><span style="color: #b22222;">&#26126;&#30830;&#25351;&#26126;&#20351;&#29992;&#21738;&#20010;&#22806;&#37096;&#21629;&#20196;</span>
+</pre>
+</div>
+
+<p>
+或者也可以使用enable -n将某个/某几个内置bash命令无效化. enable的影响将一直持续到用户退出shell为止.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">enable -n echo ls               <span style="color: #b22222;"># </span><span style="color: #b22222;">&#31105;&#29992;&#20869;&#32622;&#21629;&#20196;echo&#21644;ls</span>
+enable ls                       <span style="color: #b22222;"># </span><span style="color: #b22222;">&#37325;&#26032;&#21551;&#21160;&#20869;&#32622;&#21629;&#20196;ls</span>
+enable -a                       <span style="color: #b22222;"># </span><span style="color: #b22222;">&#21015;&#20986;&#25152;&#26377;bash&#20869;&#32622;&#21629;&#20196;&#30340;&#29366;&#24577;</span>
+</pre>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-sec-1-8" class="outline-3">
+<h3 id="sec-1-8"><span class="section-number-3">1.8</span> 如何禁止here Document中的变量替换和命令替换呢?</h3>
+<div class="outline-text-3" id="text-1-8">
+<p>
+可以在EOF标识前放一个反斜杠
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">&#19979;&#38754;&#21629;&#20196;&#20250;&#26174;&#31034;$PATH</span>
+cat &lt;&lt;\EOF
+<span style="color: #ffa54f;">$PATH</span>
+<span style="color: #ffa54f;">EOF</span>
+
+<span style="color: #b22222;"># </span><span style="color: #b22222;">&#19979;&#38754;&#21629;&#20196;&#20250;&#26174;&#31034;$PATH&#30340;&#20540;</span>
+cat &lt;&lt;EOF
+<span style="color: #ffa54f;">$PATH</span>
+<span style="color: #ffa54f;">EOF</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-1-9" class="outline-3">
+<h3 id="sec-1-9"><span class="section-number-3">1.9</span> shell中通配符与{}模式的区别</h3>
+<div class="outline-text-3" id="text-1-9">
+<p>
+通配符匹配只对已经存在的文件名作扩展.
+</p>
+
+<p>
+而{}模式,则可以对任意文本进行扩展,{}的用法为{扩展1,扩展2,扩展3&#x2026;}. 例如
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">cp filename{,.bak}              <span style="color: #b22222;"># </span><span style="color: #b22222;">&#30456;&#24403;&#20110;</span>
+cp filename filename.bak
+
+vi /tmp/file{a,b,c,d,e}         <span style="color: #b22222;"># </span><span style="color: #b22222;">&#30456;&#24403;&#20110;</span>
+vi /tmp/filea /tmp/fileb  /tmp/filec  /tmp/filed  /tmp/filee
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-10" class="outline-3">
+<h3 id="sec-1-10"><span class="section-number-3">1.10</span> ksh和bash中的变量编辑</h3>
+<div class="outline-text-3" id="text-1-10">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">操作符</th>
+<th scope="col" class="left">解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">${variable#pattern}</td>
+<td class="left">删除匹配variable值头部的pattern的最短部分</td>
+</tr>
+
+<tr>
+<td class="left">${variable##pattern}</td>
+<td class="left">删除匹配variable值头部的pattern的最长部分</td>
+</tr>
+
+<tr>
+<td class="left">${variable%pattern}</td>
+<td class="left">删除匹配variable值尾部的pattern的最短部分</td>
+</tr>
+
+<tr>
+<td class="left">${variable%%pattern}</td>
+<td class="left">删除匹配variable值尾部的pattern的最长部分</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+其中pattern采取的是通配符模式,而不是正则表达式. 例如
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a0522d;">var</span>=/home/tmp/work/file.a.el&#21017;
+<span style="color: #483d8b;">echo</span> ${<span style="color: #a0522d;">var</span>#/*/}                 <span style="color: #b22222;"># </span><span style="color: #b22222;">tmp/work/file.a.el</span>
+<span style="color: #483d8b;">echo</span> ${<span style="color: #a0522d;">var</span>##/*/}                <span style="color: #b22222;"># </span><span style="color: #b22222;">file.a.el</span>
+<span style="color: #483d8b;">echo</span> ${<span style="color: #a0522d;">var</span>%.*}                  <span style="color: #b22222;"># </span><span style="color: #b22222;">/home/tmp/work/file.a</span>
+<span style="color: #483d8b;">echo</span> ${<span style="color: #a0522d;">var</span>%%.*}                 <span style="color: #b22222;"># </span><span style="color: #b22222;">/home/tmp/work/file</span>
+<span style="color: #483d8b;">echo</span> ${<span style="color: #a0522d;">var</span>%/*}                  <span style="color: #b22222;"># </span><span style="color: #b22222;">/home/tmp/work&#21487;&#20197;&#29992;&#20110;&#21462;&#20986;&#30446;&#24405;&#20540;</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-11" class="outline-3">
+<h3 id="sec-1-11"><span class="section-number-3">1.11</span> bash中的进程替换</h3>
+<div class="outline-text-3" id="text-1-11">
+<p>
+bash中的&lt;(process)被用来执行process并将输出送到一个命令的命名管道中. 
+</p>
+
+<p>
+可以把它想象成一个文件名参数,文件的内容就是process执行的结果.
+</p>
+
+<p>
+若使用的shell没有这个功能,可以用一个shell脚本来代替,该脚本执行一个命令,并将其输出保持到一个临时文件中,然后将临时文件名放到它的标准输出中.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #0000ff;">p</span>()
+{
+    <span style="color: #483d8b;">eval</span> <span style="color: #8b2252;">"$@"</span> &gt;tmp.$<span style="color: #a0522d;">$</span> 2&gt;&amp;1
+    <span style="color: #483d8b;">echo</span> tmp.$<span style="color: #a0522d;">$</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-12" class="outline-3">
+<h3 id="sec-1-12"><span class="section-number-3">1.12</span> shell中的历史替换机制</h3>
+<div class="outline-text-3" id="text-1-12">
+<ul class="org-ul">
+<li>如何设置历史命令的数量
+
+<p>
+ksh和bash中,设置变量HISTSIZE的值即可
+</p>
+</li>
+
+<li>如何列出已保存的历史命令
+
+<p>
+使用history [N]列出所有/后N个命令
+</p>
+</li>
+
+<li>bash/csh中的历史替换
+
+<ul class="org-ul">
+<li>使用`!N`来执行编号为N的命令
+</li>
+
+<li>使用!:N*来从前面的命令中获取参数,从参数N一直到最后一个参数. 其中N是0-9的数字
+</li>
+
+<li>!*是!:1*的缩写,获取命令所有参数
+</li>
+
+<li>!:N* 给出从第N个知道最后的参数
+</li>
+
+<li>!:0 仅替换命令名称,不替换参数(第0个参数为命令名称)
+</li>
+
+<li>!:N-M 替换第N到第M个参数
+</li>
+
+<li>!:-M 替换第0到第M个参数(第0个参数为命令名称)
+</li>
+
+<li>使用!$来获取前一命令行中的最后一项内容. 例如
+<div class="org-src-container">
+
+<pre class="src src-sh">ls /tmp
+<span style="color: #483d8b;">echo</span> !$                         <span style="color: #b22222;"># </span><span style="color: #b22222;">&#31561;&#20110;</span>
+<span style="color: #483d8b;">echo</span> /tmp
+</pre>
+</div>
+</li>
+
+<li>!^替换第1个参数,与!:1一样
+</li>
+
+<li>!!重复最后一个命令
+</li>
+
+<li>!:s/被替换/替换 重复执行最后一个命令,但预先作替换
+</li>
+
+<li>!so 重复最近的以so开头的命令
+</li>
+
+<li>!?fn? 重复最近的含有fn的命令
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-13" class="outline-3">
+<h3 id="sec-1-13"><span class="section-number-3">1.13</span> 比较文件差异</h3>
+<div class="outline-text-3" id="text-1-13">
+<ul class="org-ul">
+<li>diff file1 file2
+
+<p>
+输出的结果为如何将file1变成file2的过程,描述使用了ed的命令说明(c为修改行,d为删除行,a为添加行)
+</p>
+
+<p>
+可以使用-e选项来输出供ex/ed使用的脚本
+</p>
+</li>
+
+<li>diff3 file1 file2 file3
+
+<p>
+输出的结果为如何将file2和file3变成file1的过程,描述使用了ed的命令说明(c为修改行,d为删除行,a为添加行)
+</p>
+
+<p>
+可以使用-e选项来输出供ex/ed使用的脚本
+</p>
+</li>
+
+<li>ediff file1 file2
+
+<p>
+diff的输出大量使用了ed的命令来说明,难以理解,可以使用ediff,它会将说明翻译为英文
+</p>
+</li>
+
+<li>comm [-1] [-2] [-3] file1 file2
+
+<p>
+file1和file2必须是已经排过序的
+</p>
+
+<p>
+comm命令显示三列信息
+</p>
+<ol class="org-ol">
+<li>第一列只在file1中的行
+</li>
+
+<li>第二列只在file2中的行
+</li>
+
+<li>第三列同时在file1和file2中的行
+</li>
+</ol>
+<p>
+要想不显示那一列的信息,使用-N选项即刻.
+</p>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-14" class="outline-3">
+<h3 id="sec-1-14"><span class="section-number-3">1.14</span> shell的作业控制</h3>
+<div class="outline-text-3" id="text-1-14">
+<ul class="org-ul">
+<li>使用stty tostop停止后台输出
+
+<p>
+正常情况下,后台运行的作业也会把输出输出到用户的屏幕上,这样容易搞乱屏幕. 可以使用stty tostop命令来让试图对终端写入的后台作业停止运行.
+</p>
+
+<p>
+若后台作业因为输出到终端而停止,则shell会打印出一条信息:`+ stopped (tty output) somejob`
+</p>
+</li>
+
+<li>标识作业的几种方法
+
+<ul class="org-ul">
+<li>%作业号 
+
+<p>
+%1表示第1号作业.
+</p>
+</li>
+
+<li>%命令名的头几个字母 
+
+<p>
+%vi表示匹配以vi开头的命令行的作业
+</p>
+</li>
+
+<li>%?作业命令行的任何唯一部分.
+
+<p>
+%?fn表示命令行中包含fn的作业
+</p>
+</li>
+</ul>
+</li>
+
+<li>作业控制的快捷方式
+
+<ul class="org-ul">
+<li>fg %N 可以缩写为 %N
+<div class="org-src-container">
+
+<pre class="src src-sh">fg %2                           <span style="color: #b22222;"># </span><span style="color: #b22222;">&#31561;&#20110;</span>
+%2
+</pre>
+</div>
+</li>
+
+<li>bg %N 可以缩写为 %N &amp;
+<div class="org-src-container">
+
+<pre class="src src-sh">bg %2                           <span style="color: #b22222;"># </span><span style="color: #b22222;">&#31561;&#20110;</span>
+%2 &amp;
+</pre>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-15" class="outline-3">
+<h3 id="sec-1-15"><span class="section-number-3">1.15</span> shell的IO重定向</h3>
+<div class="outline-text-3" id="text-1-15">
+<ul class="org-ul">
+<li>如何仅将标准错误发送給管道?
+
+<p>
+默认情况下,只有命令的表示输出才回发送到管道中,若要仅将标准错误发送給管道可以使用subshell. 如下所示
+(command1 &gt;/dev/null) 2&gt;&amp;1 |command2
+</p>
+</li>
+
+<li>使用noclobber确保IO重定向的安全性
+
+<p>
+在bash/ksh中设置`set -o noclobber`后,则shell将不允许IO重定向破坏一个已经存在的文件. 除非在重定向的符号之后添加一个!来显式的通知他. 
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">set</span> -o noclobber
+ls
+<span style="color: #b22222;"># </span><span style="color: #b22222;">filea fileb</span>
+ls &gt;filea
+<span style="color: #b22222;"># </span><span style="color: #b22222;">bash: filea: Cannot clobber existing file</span>
+ls &gt;|filea
+<span style="color: #b22222;"># </span><span style="color: #b22222;">&#27809;&#38382;&#39064;,filea&#34987;&#35206;&#30422;&#20102;</span>
+</pre>
+</div>
+</li>
+
+<li>使用subshell来组合几个命令的输出整合起来实现IO重定向
+<div class="org-src-container">
+
+<pre class="src src-sh">(cat filea1;<span style="color: #483d8b;">echo</span> .bp;cat file2) |nroff
+
+(date;who;ls) &gt;log
+</pre>
+</div>
+</li>
+
+<li>使用{}列表来组合几个命令的输出,实现整体的IO重定向
+<div class="org-src-container">
+
+<pre class="src src-sh">{
+    date
+    who
+    ls
+} &gt; log
+</pre>
+</div>
+
+<p>
+使用{}列表与sushell的不同在与,{}的所有操作都是基于当前shell来操作的.
+</p>
+</li>
+
+<li>使用tee命令将输出发送到多个地方
+
+<p>
+若希望一个程序的输出重定向到一个文件的同时也在屏幕上输出,则可以使用tee命令.
+</p>
+
+<p>
+tee命令会将它的标准输入写入到一个文件中,并将相同的文本写入到他的标准输出中.它的格式为:tee [-a] file
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">ls |tee ls.log                  <span style="color: #b22222;"># </span><span style="color: #b22222;">&#23558;ls&#30340;&#32467;&#26524;&#20445;&#23384;&#21040;ls.log&#20013;,&#21516;&#26102;&#36755;&#20986;&#21040;&#23631;&#24149;&#19978;</span>
+ls |tee -a ls.log               <span style="color: #b22222;"># </span><span style="color: #b22222;">tee -a&#30340;&#24847;&#24605;&#26159;&#23558;&#32467;&#26524;&#28155;&#21152;&#21040;ls.log&#20013;</span>
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1-16" class="outline-3">
+<h3 id="sec-1-16"><span class="section-number-3">1.16</span> ksh的文件通配符说明</h3>
+<div class="outline-text-3" id="text-1-16">
+<ul class="org-ul">
+<li>?(abc)
+
+<p>
+匹配0个或1个abc
+</p>
+</li>
+
+<li>*(abc)
+
+<p>
+匹配0个或多个abc
+</p>
+</li>
+
+<li>+(abc)
+
+<p>
+匹配1个或多个abc
+</p>
+</li>
+
+<li>!(abc)
+
+<p>
+匹配不包含abc的任何字符串
+</p>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-17" class="outline-3">
+<h3 id="sec-1-17"><span class="section-number-3">1.17</span> tar命令</h3>
+<div class="outline-text-3" id="text-1-17">
+<ul class="org-ul">
+<li>使用tar实现目录树的拷贝
+
+<p>
+使用tar打包目录到标准输出|从标准输出tar解包
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">tar cf - . | (<span style="color: #483d8b;">cd</span> ~/backup &amp;&amp; tar xBf -) <span style="color: #b22222;"># </span><span style="color: #b22222;">&#38656;&#35201;&#27880;&#24847;,&#36825;&#37324;tar -cf&#19981;&#33021;&#21152;&#21442;&#25968;v,&#22240;&#20026;&#26377;&#20123;tar&#21629;&#20196;&#30340;v&#36873;&#39033;&#20250;&#20351;&#24471;&#35814;&#32454;&#36755;&#20986;&#36755;&#20986;&#21040;&#26631;&#20934;&#36755;&#20986;&#32780;&#19981;&#26159;&#26631;&#20934;&#38169;&#35823;&#20013;,&#20174;&#32780;&#30772;&#22351;tar&#30340;&#27969;</span>
+</pre>
+</div>
+</li>
+
+<li>tar文件解压缩时,会保持文件的UID,若UID不是你的,那么tar解压出来的文件你可能无法使用,使用o选项可以保证解压缩的文件属于你
+</li>
+
+<li>使用tar的X标识可以指定哪些文件不包含在打包/解包的范围内
+
+<p>
+tar的X标志后接一个文件,文件的内容就是排除打包的文件路径列表
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">echo</span> *~ &gt;/tmp/ExcludeTar
+tar -cvf e.tar -X /tmp/ExcludeTar .          <span style="color: #b22222;"># </span><span style="color: #b22222;">&#25490;&#38500;&#25152;&#26377;&#20197;~&#32467;&#23614;&#30340;&#25991;&#20214;</span>
+tar -xvf e.tar -X /tmp/ExcludeTar            <span style="color: #b22222;"># </span><span style="color: #b22222;">&#35299;&#21253;&#26102;&#25490;&#38500;&#25152;&#26377;&#20197;~&#32467;&#23614;&#30340;&#25991;&#20214;</span>
+</pre>
+</div>
+</li>
+
+<li>请注意tar打包时是使用的相对路径还是绝对路径
+
+<p>
+使用-C标识,可以指定tar在打包前先进入指定目录,然后就可以指定相对路径打包了
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">cd</span>
+tar -cvf t.tar dir1 -C /tmp/dir2 . <span style="color: #b22222;"># </span><span style="color: #b22222;">&#25171;&#21253;&#30340;&#20869;&#23481;&#21253;&#25324;~/dir1 /tmp/dir2&#30340;&#20869;&#23481;,</span>
+tar -tvf t.tar                     <span style="color: #b22222;"># </span><span style="color: #b22222;">&#20294;&#36335;&#24452;&#37117;&#20026;./</span>
+</pre>
+</div>
+</li>
+
+<li>使用tar将多个小文件打包以节约空间的想法是行不通的.
+
+<p>
+这是因为,tar实际上是为磁带归档所设计的. 它会在每个文件的末尾加上垃圾空字符以沾满一个块的空间,因此实际上一个大的tar文件和里面单独小文件所占用的磁盘块差不多.
+</p>
+
+<p>
+但是可以通过对tar包进行压缩的方式来解决这个问题,因为大量的空字符实际上非常适用于压缩算法.
+</p>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-18" class="outline-3">
+<h3 id="sec-1-18"><span class="section-number-3">1.18</span> find命令</h3>
+<div class="outline-text-3" id="text-1-18">
+<ul class="org-ul">
+<li>find命令会修改目录的访问时间,因此想用find来找出没有被访问过的目录是不行的.
+</li>
+
+<li>find命令中的逻辑表达式可以包含括号
+<div class="org-src-container">
+
+<pre class="src src-sh">find . -atime +5 <span style="color: #8b2252;">\(</span> -name <span style="color: #8b2252;">"*.o"</span> -o -name <span style="color: #8b2252;">"*.tmp"</span> <span style="color: #8b2252;">\)</span> -print <span style="color: #b22222;"># </span><span style="color: #b22222;">&#36825;&#37324;&#30340;&#35201;&#29992;\(\),&#22240;&#20026;()&#26159;subshell&#30340;&#25805;&#20316;&#31526;</span>
+</pre>
+</div>
+</li>
+
+<li>find命令的atime/ctime/mtime的时间是以天为参数的,那么如何找出某个具体时间到几分几秒(比如找出比3月20日4pm更晚的文件)呢? 使用touch和find -newer可以实现这个目的
+
+<ol class="org-ol">
+<li>使用touch -t 让一个文件回溯到过去/将来的任何一点.
+</li>
+
+<li>使用-newer操作符进行比较
+</li>
+</ol>
+</li>
+
+<li>find的-exec也能作为匹配测试条件,当它所执行的命令返回一个0退出状态时,返回真. 例如
+<div class="org-src-container">
+
+<pre class="src src-sh">find . -exec myTest {} <span style="color: #8b2252;">\;</span> -print <span style="color: #b22222;"># </span><span style="color: #b22222;">&#21482;&#26377;&#36890;&#36807;myTest&#30340;&#25991;&#20214;&#25165;&#20250;&#36755;&#20986;</span>
+</pre>
+</div>
+</li>
+
+<li>find的-exec只认识独立的{}. 若{}和其他字符结合,则不再被替换为查找到的文件. 例如
+<div class="org-src-container">
+
+<pre class="src src-sh">find. -type d -exec mkdir /usr/project/{} <span style="color: #8b2252;">\;</span> <span style="color: #b22222;"># </span><span style="color: #b22222;">&#36825;&#37324;&#30340;{}&#19981;&#20250;&#34987;&#25193;&#23637;</span>
+<span style="color: #b22222;"># </span><span style="color: #b22222;">&#38656;&#35201;&#25913;&#20026;</span>
+find . -type d -print |sed <span style="color: #8b2252;">'s@^@/usr/project/@'</span> |xargs mkdir <span style="color: #b22222;"># </span><span style="color: #b22222;">&#20808;&#29992;sed&#36716;&#25442;,&#20877;&#20256;&#32473;mkdir&#26469;&#21019;&#24314;&#30446;&#24405;</span>
+</pre>
+</div>
+</li>
+
+<li>使用find删除名字特殊的文件
+<ol class="org-ol">
+<li>使用ls －i查看奇特文件的inode索引号
+</li>
+
+<li>使用find命令查找特定的inode索引号，并使用－exec执行rm或mv操作
+<div class="org-src-container">
+
+<pre class="src src-sh">ls -i
+find . -inum 9620 -exec rm {} <span style="color: #8b2252;">\;</span>
+find . -inum 9620 -exec mv {} ordinaryname <span style="color: #8b2252;">\;</span>
+</pre>
+</div>
+</li>
+</ol>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-sec-1-18-1" class="outline-4">
+<h4 id="sec-1-18-1"><span class="section-number-4">1.18.1</span> 提高find的性能</h4>
+<div class="outline-text-4" id="text-1-18-1">
+<ul class="org-ul">
+<li>出于性能方面的原因,将-exec操作符放的越靠后越好. 这样可以避免不要的进程
+</li>
+
+<li>find命令需要读取它所搜索的目录树中的每个索引节点,因此最好尽可能地把多个内容组合到单个find命令中. 方法为
+<div class="org-src-container">
+
+<pre class="src src-sh">find . <span style="color: #8b2252;">\(</span> -type d    -a -exec chmod 771 {} <span style="color: #8b2252;">\;</span> <span style="color: #8b2252;">\)</span> -o <span style="color: #8b2252;">\</span>
+    <span style="color: #8b2252;">\(</span> -name <span style="color: #8b2252;">"*.BAK"</span> -a -exec chmod 600 {} <span style="color: #8b2252;">\;</span> <span style="color: #8b2252;">\)</span> -o <span style="color: #8b2252;">\</span>
+    <span style="color: #8b2252;">\(</span> -name <span style="color: #8b2252;">"*.sh"</span> -a -exec chmod 755 {} <span style="color: #8b2252;">\;</span> <span style="color: #8b2252;">\)</span> -o <span style="color: #8b2252;">\</span>
+    <span style="color: #8b2252;">\(</span> -name <span style="color: #8b2252;">"*.txt"</span> -a -exec chmod 644 {} <span style="color: #8b2252;">\;</span> <span style="color: #8b2252;">\)</span> -o <span style="color: #8b2252;">\</span>
+</pre>
+</div>
+</li>
+
+<li>为了提高find的效率,可以考虑创建自己的find数据库
+
+<p>
+创建find数据库
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">cd</span>
+find . -print |sed <span style="color: #8b2252;">"s@^./@@"</span> &gt; ~/.fastfinddb <span style="color: #b22222;"># </span><span style="color: #b22222;">&#23384;&#20648;~/&#19979;&#30340;&#25152;&#26377;&#25991;&#20214;&#20449;&#24687;,&#24182;&#26367;&#25442;&#21040;./</span>
+</pre>
+</div>
+
+<p>
+创建cron定时运行该脚本.
+</p>
+
+<p>
+创建一个shell脚本来使用这个数据库
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #0000ff;">ffind</span>()
+{
+    egrep <span style="color: #8b2252;">"$1"</span> ~/.fastfinddb |sed <span style="color: #8b2252;">"s@^@$HOME/@"</span> <span style="color: #b22222;"># </span><span style="color: #b22222;">&#22312;&#26597;&#35810;&#32467;&#26524;&#21069;&#28155;&#21152;$HOME</span>
+}
+</pre>
+</div>
+</li>
+<li></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-1-19" class="outline-3">
+<h3 id="sec-1-19"><span class="section-number-3">1.19</span> ln命令</h3>
+<div class="outline-text-3" id="text-1-19">
+<ul class="org-ul">
+<li>不能对目录建立硬连接
+</li>
+
+<li>ln的最后一个参数可以是一个目录,表示建立与之前参数的同名连接存放在目录中.
+<div class="org-src-container">
+
+<pre class="src src-sh">ln f1 f2 f3 /tmp                <span style="color: #b22222;"># </span><span style="color: #b22222;">&#22312;/tmp&#19979;&#21019;&#24314;&#21517;&#20026;f1 f2 f3&#30340;&#38142;&#25509;</span>
+</pre>
+</div>
+</li>
+
+<li>ln可以只带一个参数,表示在当前目录建立与第一个参数同名的链接
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">cd</span> /tmp
+ln ~/bin/file                       <span style="color: #b22222;"># </span><span style="color: #b22222;">&#22312;/tmp&#21019;&#24314;&#19968;&#20010;&#21517;&#20026;file&#30340;&#38142;&#25509;,&#38142;&#25509;&#21040;~/bin/file&#19979;</span>
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-20" class="outline-3">
+<h3 id="sec-1-20"><span class="section-number-3">1.20</span> cat命令</h3>
+<div class="outline-text-3" id="text-1-20">
+<ul class="org-ul">
+<li>cat -v 使用可打印的方式来显示不可打印的字符
+</li>
+<li>cat -vt 则TAB字符被显示成^I
+</li>
+<li>cat -ve 则用$来标示每行的行尾
+</li>
+<li>cat -n 显示的时候加上行号
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-21" class="outline-3">
+<h3 id="sec-1-21"><span class="section-number-3">1.21</span> tail命令</h3>
+<div class="outline-text-3" id="text-1-21">
+<ul class="org-ul">
+<li>tail -n 显示倒数n行
+</li>
+<li>tail +n 显示第n行直到结尾的内容
+</li>
+<li>tail -c N 显示倒数N个字节
+</li>
+<li>tail -b N 显示倒数N块的内容
+</li>
+<li>tail -r 从最后一行开始逆序显示文件内容
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-22" class="outline-3">
+<h3 id="sec-1-22"><span class="section-number-3">1.22</span> su命令</h3>
+<div class="outline-text-3" id="text-1-22">
+<ul class="org-ul">
+<li>使用su命令切换到其他用户后,使用who am i显示的还是原用户登录的.
+</li>
+<li>因为su命令是在subshell上运行的,所以会继承原shell的环境变量,除非用su -切换
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1-23" class="outline-3">
+<h3 id="sec-1-23"><span class="section-number-3">1.23</span> 其他</h3>
+<div class="outline-text-3" id="text-1-23">
+<ul class="org-ul">
+<li>使用pushd和popd实现目录的快速跳转
+</li>
+<li>用户在进入/退出目录时,自动执行脚本
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #483d8b;">cd</span> (){
+    <span style="color: #483d8b;">test</span> -r .exit.sh &amp;&amp; . .exit.sh
+    builtin cd <span style="color: #8b2252;">"$1"</span>
+    <span style="color: #483d8b;">test</span> -r .enter.sh &amp;&amp;. .enter.sh
+}
+</pre>
+</div>
+</li>
+<li>使用grep -c 可以统计每个文件匹配模式的数量,通过这种方法可以抽取出不匹配模式的那些文件
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #0000ff;">vgrep</span>()
+{
+    <span style="color: #a020f0;">case</span> $<span style="color: #a0522d;">#</span><span style="color: #a020f0;"> in</span>
+        0|1) <span style="color: #483d8b;">echo</span> <span style="color: #8b2252;">"Usage: `basename $0` pattern file [files...]"</span> 1&gt;&amp;2
+            ;;
+        *) pattern = $<span style="color: #a0522d;">1</span>
+            <span style="color: #483d8b;">shift</span>
+            grep -c $<span style="color: #a0522d;">pattern</span> <span style="color: #8b2252;">"$@"</span> |sed -n <span style="color: #8b2252;">'s/:0$//p'</span>
+            ;;
+        <span style="color: #a020f0;">esac</span>
+}
+</pre>
+</div>
+</li>
+<li>使用ls -t -u来查找最老/最新的文件
+
+<ul class="org-ul">
+<li>ls -t 按修改时间排序
+</li>
+
+<li>ls -tu 按访问时间排序
+</li>
+</ul>
+</li>
+
+<li>如何区分change time和modification time
+
+<p>
+change time是对文件的inode进行修改,比如文件名,权限等
+</p>
+
+<p>
+modification time是对文件的内容进行修改
+</p>
+</li>
+
+<li>使用dircmp/diff可以对比两个目录的不同
+</li>
+
+<li>一般情况下,使用mv移动一个文件时,并不改变所有权. 
+
+<p>
+但若是跨文件系统移动文件,那么被移动的文件的所有者将改为你.
+</p>
+
+<p>
+这时因为,在跨文件系统移动时,mv实际上必须拷贝该文件,并删除原文件
+</p>
+</li>
+
+<li>使用目录的sticky位保护文件
+
+<p>
+一般情况下,若一个用户又对某目录的写权限,则它可以对该目录中的文件进行重命名或者删除操作&#x2013;即使文件并不属于该用户.
+</p>
+
+<p>
+通过设置目录的sticky位(1000)可以使得只有文件的所有者,目录的所有者和超级用户才能对文件进行重命名或删除.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">chmod 1777 ~/tmp
+chmod +t ~/tmp
+ls -l ~/tmp                     <span style="color: #b22222;"># </span><span style="color: #b22222;">/tmp&#30340;&#23646;&#24615;&#26174;&#31034;&#20026;drwxrwxrwt,&#26368;&#21518;&#30340;t&#26631;&#35782;sticky&#20301;</span>
+</pre>
+</div>
+</li>
+<li>如何清空其他终端上的屏幕
+
+<p>
+终端的标准输出被映射成了/dev/中的tty文件了,而clear清除屏幕的方法是通过TERMINFO查询终端的清除键序列,然后输出该键序列到标准输出中.
+</p>
+
+<p>
+因此,若终端类型一致,且用户具有对/dev/tty文件的写权限的化,可以通过clear&gt;/dev/tty来实现清空其他终端上内容
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">who |grep darksun       <span style="color: #b22222;"># </span><span style="color: #b22222;">darksun  pts/6   9&#26376;24 20&#26102;2   (10.8.201.68) </span>
+clear &gt;/dev/pts/6       <span style="color: #b22222;"># </span><span style="color: #b22222;">&#28165;&#31354;/dev/pts/6&#30340;&#23631;&#24149;&#26174;&#31034;</span>
+</pre>
+</div>
+</li>
+<li>使用/dev/null链接为无用的日志文件可以节省空间
+
+<p>
+假设某个进程会不断的写日志到~/logfile中，而该日志并无用处，则可以
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">ln /dev/null ~/logfile
+</pre>
+</div>
+</li>
+<li>使用strip去掉程序的调试信息时要注意,对一个setuid的文件使用strip会去掉setuid位.
+</li>
+<li>使用cat -v或od -c来显示非打印字符
+</li>
+<li>如何为file增加文件类型的识别
+
+<p>
+通过修改/etc/magic能够增加可识别的文件类型
+</p>
+
+<p>
+/etc/magic有四个字段:
+</p>
+
+<p>
+offset data-type value file-type
+</p>
+
+<ul class="org-ul">
+<li>offset
+
+<p>
+文件中的偏移量,从0开始计算. 表示file从该偏移量开始匹配
+</p>
+</li>
+
+<li>data-type
+
+<p>
+测试类型. 文本比较用string,字节比较用offset,两字节比较用short,四字节比较用long
+</p>
+</li>
+
+<li>value
+
+<p>
+用户希望的值,若datea-type为串比较,则可以是任何字符串,可以包括UNIX转义序列. 若为字节比较则必须是一个数字
+</p>
+</li>
+
+<li>file-type
+
+<p>
+若测试成功,file会打印的值
+</p>
+</li>
+</ul>
+</li>
+
+<li>crush:一个略过所有空白行的cat
+
+<p>
+使用sed将所有空白行删掉
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #b22222;">#</span><span style="color: #b22222;">!/bin/</span><span style="color: #a020f0;">sed</span><span style="color: #b22222;"> -f</span>
+/^[     ]*$/d
+</pre>
+</div>
+</li>
+
+<li>如何在每行输出后增加1/N行的空白间距?
+
+<p>
+使用sed的G命令可以实现功能. sed的G命令附加了一个换行符和sed所保留空格的内容.
+</p>
+
+<p>
+增加一行空白间距的方法为
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a020f0;">exec</span> /bin/sed G $<span style="color: #a0522d;">@</span>
+</pre>
+</div>
+
+<p>
+同理,增加2行空白间距的方法为
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a020f0;">exec</span> /bin/sed <span style="color: #8b2252;">'G;G'</span> $<span style="color: #a0522d;">@</span>
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> 环境变量</h2>
+<div class="outline-text-2" id="text-2">
+</div><div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1"><span class="section-number-3">2.1</span> 常用的环境变量</h3>
+<div class="outline-text-3" id="text-2-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">变量名</th>
+<th scope="col" class="left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">PATH</td>
+<td class="left">用户的命令搜索路径,其中空记录项(::)表示当前目录</td>
+</tr>
+
+<tr>
+<td class="left">EDITOR</td>
+<td class="left">用户喜好的编辑器名称</td>
+</tr>
+
+<tr>
+<td class="left">PRINTER</td>
+<td class="left">默认的打印机名称</td>
+</tr>
+
+<tr>
+<td class="left">PWD</td>
+<td class="left">用户当前目录的绝对路径</td>
+</tr>
+
+<tr>
+<td class="left">HOME</td>
+<td class="left">用户主目录的绝对路径</td>
+</tr>
+
+<tr>
+<td class="left">SHELL</td>
+<td class="left">用户登录shell的绝对路径</td>
+</tr>
+
+<tr>
+<td class="left">USER/LOGNAME</td>
+<td class="left">用户名</td>
+</tr>
+
+<tr>
+<td class="left">TERM</td>
+<td class="left">终端类型名称</td>
+</tr>
+
+<tr>
+<td class="left">ENV</td>
+<td class="left">启动一个新ksh时需要执行的初始化文件的名称</td>
+</tr>
+
+<tr>
+<td class="left">PAGER</td>
+<td class="left">用户喜好的分页屏幕显示程序名称</td>
+</tr>
+
+<tr>
+<td class="left">EXINIT</td>
+<td class="left">vi或ex编辑器初始化脚本的位置</td>
+</tr>
+
+<tr>
+<td class="left">PS1</td>
+<td class="left">主提示符</td>
+</tr>
+
+<tr>
+<td class="left">PS2</td>
+<td class="left">第二提示符</td>
+</tr>
+
+<tr>
+<td class="left">MANPATH</td>
+<td class="left">搜索参考手册页的路径</td>
+</tr>
+
+<tr>
+<td class="left">TZ</td>
+<td class="left">时间区域.这是一个位于/usr/lib/zoneinfo中的文件名</td>
+</tr>
+
+<tr>
+<td class="left">DISPLAY</td>
+<td class="left">X Window系统所用,用来标识X应用程序将会使用的输入和输出的显示服务器</td>
+</tr>
+
+<tr>
+<td class="left">SHLVL</td>
+<td class="left">位于当前shell的第几层,一个subshell增加一层</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-sec-2-2" class="outline-3">
+<h3 id="sec-2-2"><span class="section-number-3">2.2</span> 如何显示其他地区现在的时间?</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+可以通过临时设置环境变量TZ的值,然后执行date的方式,来获得其他地区的时间. 例如
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">(<span style="color: #a0522d;">TZ</span>=Japanf9;date)               <span style="color: #b22222;"># </span><span style="color: #b22222;">&#33719;&#21462;&#26085;&#26412;&#29616;&#22312;&#30340;&#26102;&#21051;</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-2-3" class="outline-3">
+<h3 id="sec-2-3"><span class="section-number-3">2.3</span> 环境变量和shell变量的区别</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+export后的shell变量就是环境变量. subshell会从shell中继承所有的环境变量,但不会继承shell变量
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2-4" class="outline-3">
+<h3 id="sec-2-4"><span class="section-number-3">2.4</span> 使用CDPATH变量为用户改变目录节省时间</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+执行cd foo时,shell会先尝试进入当前目录的foo目录下,若失败,则会遍历CDPATH中的各目录,并一一尝试进入其中的foo目录下
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a0522d;">CDPATH</span>=:~                       <span style="color: #b22222;"># </span><span style="color: #b22222;">&#27880;&#24847;&#26368;&#24320;&#22987;&#30340;:,&#23427;&#26159;&#19968;&#20010;&#31354;&#35760;&#24405;&#39033;,&#34920;&#31034;&#24403;&#21069;&#30446;&#24405;,&#33509;&#27809;&#26377;&#36825;&#20010;&#24403;&#21069;&#30446;&#24405;&#30340;&#35760;&#24405;,&#21017;&#26080;&#35770;&#26159;sh&#36824;&#26159;ksh&#37117;&#26080;&#27861;cd&#21040;&#24403;&#21069;&#30446;&#24405;&#30340;&#23376;&#30446;&#24405;&#20013;!!bash&#19981;&#23384;&#22312;&#36825;&#20010;&#38382;&#39064;</span>
+<span style="color: #483d8b;">cd</span> ~/bin
+<span style="color: #483d8b;">cd</span> bin                          <span style="color: #b22222;"># </span><span style="color: #b22222;">&#33509;&#19981;&#23384;&#22312;~/bin/bin&#30446;&#24405;,&#21017;&#36827;&#20837;~/bin&#30446;&#24405;&#19979;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-2-5" class="outline-3">
+<h3 id="sec-2-5"><span class="section-number-3">2.5</span> 获取路径中目录信息的几种方法</h3>
+<div class="outline-text-3" id="text-2-5">
+<ol class="org-ol">
+<li>使用dirname函数
+</li>
+<li>使用
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> 组织$HOME目录</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>~/bin存放程序和shell脚本
+</li>
+<li>其他类型的脚本分类存放,例如~/sedsrc存放sed脚本
+</li>
+<li>~/private存放私人文件,将权限设为700
+</li>
+<li></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> vi</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>~/.exrc初始化vi或者ex编辑器
+
+<p>
+启动vi或ex编辑器时,会自动执行保存在~/.exrc内的初始化命令. 
+</p>
+
+<p>
+初始化命令可以是set,ab和map. 注释由双引号"开头.
+</p>
+
+<p>
+由于该文件实际上是进入vi前由ex读取的,因此exrc中的命令不应该有前置的冒号
+</p>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> 设置终端</h2>
+<div class="outline-text-2" id="text-5">
+</div><div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> 登录时设置终端类型</h3>
+<div class="outline-text-3" id="text-5-1">
+<ul class="org-ul">
+<li>通过设置变量TERM的值来设定
+</li>
+<li>通过tset对终端类型进行测试,并初始化
+</li>
+<li>使用程序qterm查询用户终端类型
+
+<p>
+在.profile中放入下面一句:
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh"><span style="color: #a0522d;">TERM</span>=<span style="color: #ff00ff;">`qterm`</span>;<span style="color: #483d8b;">export</span> TERM
+</pre>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> 登录时,若挂起怎么办?</h3>
+<div class="outline-text-3" id="text-5-2">
+<ol class="org-ol">
+<li>检查shell的初始化文件
+</li>
+<li>在shell的初始化文件顶部加上`set -xv`,让shell进入调试模式
+</li>
+<li>检查/etc/passwd文件中的记录,以确认它具有正确数目的域. 同时查看一下是否有另一个用户使用了相同的登录名
+</li>
+<li>检查账户是否使用了远程安装的目录
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-sec-5-3" class="outline-3">
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> 使用stty设置删除,终止和终端字符</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+通过输入stty erase {控制字符} 可以将{控制字符}设定为删除键.
+</p>
+
+<p>
+stty让用户用两个字符的组合<sup>char</sup>来代表一个控制键. 其中^就是键^本身,而{char}是任意的单个字符. 可能需要在{char}前放入一个\,以防止shell将其解释为一个通配符
+</p>
+
+<p>
+例如
+</p>
+<div class="org-src-container">
+
+<pre class="src src-sh">stty erase ^h
+stty erase ^<span style="color: #8b2252;">\?</span>
+</pre>
+</div>
+
+<p>
+stty可以改变的功能包括:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<caption class="t-above"><span class="table-number">Table 1:</span> 用stty设置的键</caption>
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">字符</th>
+<th scope="col" class="left">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">erase</td>
+<td class="left">删除先前的字符</td>
+</tr>
+
+<tr>
+<td class="left">kill</td>
+<td class="left">删除整行</td>
+</tr>
+
+<tr>
+<td class="left">werase</td>
+<td class="left">删除先前的字</td>
+</tr>
+
+<tr>
+<td class="left">intr</td>
+<td class="left">终止当前作业</td>
+</tr>
+
+<tr>
+<td class="left">quit</td>
+<td class="left">终止当前作业,生成一个core文件</td>
+</tr>
+
+<tr>
+<td class="left">susp</td>
+<td class="left">停止当前作用</td>
+</tr>
+
+<tr>
+<td class="left">rprnt</td>
+<td class="left">重新显示当前行</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+用stty -a会显示用户当前所有终端的设置. werase和rprnt字符有些UNIX版本未实现.
+</p>
+</div>
+</div>
+<div id="outline-container-sec-5-4" class="outline-3">
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> 从哪里寻找可能可以使用的终端类型</h3>
+<div class="outline-text-3" id="text-5-4">
+<p>
+可以通过搜索/etc/termcap文件内容或者通过列出在/usr/lib/terminfo目录结构中的文件名来寻找终端名,以方便地设置TERM
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: DarkSun</p>
+<p class="date">Created: 2014-09-26 星期五 07:05</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.7b)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

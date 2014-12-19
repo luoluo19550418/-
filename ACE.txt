@@ -1,0 +1,570 @@
+一、域
+定义
+FIELD         应用名:域名
+LABEL         域标识， 位置      // 保留
+VALUE TYPE    值类型
+EDIT PATTERN  域的 Mask 	
+DEFAULT VALUE 缺省值             // 保留
+SIZE          行数， [列数]      // 域的实际大小,保留
+DISPSIZE      行数， 列数        // 域在屏幕上显示的大小,保留
+SHOW          逻辑值             // 是否在屏幕显示,保留
+AUTOSKIP      逻辑值
+	      // 当光标到域尾时， 是否自动跳到下一域，
+	      // FALSE时， 必须按<CR>或<Tab>键才能下跳
+ECHO          逻辑值
+	      // 键入数据于该域时是否同时在屏幕原样显示
+INPUT         逻辑值	
+         // 是否必须在该域输入， 该项值为真表明该域必须输入，
+         // 否则可以输入，也可以不输入
+	//若值为NO则,该域不能编辑,是一个不可以进入的域
+HELP          帮助信息           // 保留
+PRE FIELD     过程名             // 光标进入该域时自动执行
+POST FIELD    过程名             // 光标离开该域时自动执行
+PICK FIELD    过程名
+	      // 拾取过程， 光标进入该域后随输入过程自动执行。
+SCRCLEAN      逻辑值
+	      // 屏幕执行完成时， 是否自动清除该域的值
+TRANCLEAN     逻辑值
+	      // 交易执行完时， 是否自动清除该域的值
+REVERSE TRUE | FALSE
+
+ALWAYS TRUE | FALSE
+
+END FILED
+说明
+域的名字必须和当前文件名前缀相同
+域总是嵌入到屏幕或表格资源中一起被调用，没有其单独的操作语句。
+域可以当成变量使用。
+语法:
+刷新屏幕上的域(只能在屏幕的事件驱动器中使用，并且刷新的域在当前的屏幕上。):
+	DISPLAY FIELD <域名>一般用在对域进行赋值后使用该语句来刷新刚对域的赋值。
+清除域为缺省值:
+	CLEANFLD <域名>
+跳转到屏幕中的上一个域:
+	PREFLD
+(在屏幕驱动器中使用。且在KEY事件和AFTER FIELD事件中使用，在BEFORE FIELD事件中使用无效。 )
+跳转到屏幕下一个域:
+	NEXTFLD
+(在屏幕驱动器中使用)
+跳转到屏幕指定域:
+	GOTOFLD <域名>
+(在屏幕驱动器中使用)
+跳转到当前域:
+	CONTFLD [域名]
+(在屏幕驱动器中使用,只在KEY、AFTER FIELD事件中有效。)
+设置域的属性：
+	SET FIELD <域名> [NO] <属性>
+(属性为AUTOSKIP、ECHO、REQUIRE INPUT、ENTRY、RESERVE、ALWAYS)
+(有NO表示属性值为TRUE，否则属性值为FALSE（？？？）)
+设置域的缺省值和PATTERN:
+	SET FIELD <域名> PATTERN <PATTERN串>
+	SET FIELD <域名> DEFAULT VALUE <值>
+获取域的属性:
+	GET FIELD <域名> <属性> TO <变量>
+(<属性>为：ALWAYS、RESERVE 、ENTRY,<变量>的类型为integer,TURE=1,FLASE=0)
+设置光标到当前域的最后位置:
+	SET CURSOR END
+设置光标到域的指定位置
+	SET CURSOR AT <位置>
+取当前域名的名字
+	CALL FLDNAME（）=> <变量>
+取当前域的域尾坐标:
+	CALL GET_FLD_END_POS（VAR：<变量1> , VAR：<变量2>）
+(将当前光标所在域的最后位置取到变量中；变量1是横坐标，变量2是纵坐标。)
+取指定域的长度
+	call get_fld_len(fldname) => fldlen
+	let fldlen=get_bit(fldname)
+
+
+二、屏幕
+定义
+SCREEN             应用名
+TITLE              标题	            // 保留 
+SIZE       m,n                      // 设置屏幕行数和列数
+DEFAULT DISPLAY AT x，y             //                           
+SET NORMALFORE     颜色             // 显示前景色,保留，颜色用汉字表示
+SET NORMALBACK     颜色             // 显示背景色,保留
+SET REVERSFORE     颜色             // 反常显示前景色,保留
+SET REVERSBACK     颜色             // 反常显示背景色,保留
+SCREEN HELP        帮助信息         // 保留
+DRAW BOX x1， y1， x2， y2
+DISPLAY TEXT “ “ AT x， y
+DRAW LINE x1， y1， x2， y2
+DISPLAY FIELD fld_var AT x， y
+DISPLAY FORM formname SIZE 行数,列数 AT x,y[UPDATE|READONLY]
+SET PRE SCREEN            
+SET POST SCREEN           
+SET PICK SCREEN           
+END SCREEN
+说明：
+各颜色项均用汉字描述， 例如“红”， “白”系统提供16种颜色供选择， 它们是: “红”， “兰”， “绿”， “黄”， “棕”， “黑”， “白”， “青”， “深红”， “淡灰”， “浅兰”， “浅洋”（保留）。
+x， x1， x2 表示行坐标，y， y1， y2 表示列坐标；DRAW BOX 中的两个点坐标分别表示左上角和右下角坐标。
+标记(LABEL)和线框(BOX)的定义顺序与射生成的屏幕没有影响，   但域的定义顺序将块定生成的屏幕上光标的移动顺序，  光标按域定义的顺序在域间移动。
+SET PRE SCREEN， SET POST SCREEN， SET PICK SCREEN的过程名可有可无，但这三条语句必须写上。
+语法：
+打开屏幕：
+	OPEN SCREEN screen_name [WITH EVENTLIST IN 事件列表名]
+运行屏幕：
+	RUN SCREEN screen_name [ WITH EVENTLIST [ AS 事件说明 | IN 事件列表名 ] ]
+刷新屏幕：
+	DISPLAY SCREEN 屏幕名 [ AT 行号，列号 ] [WITH BORDER | WITH MAXMIUM ]
+(刷新的屏幕将成为当前屏幕)
+清空屏幕:
+	CLEAR SCREEN <屏幕名称>
+(将屏幕上的所有域的值和属性清为缺省值。适用于图形客户端的控制台)
+关闭屏幕：
+	CLOSE SCREEN screen_name
+浏览屏幕
+	BROWSE SCREEN <屏幕名称>
+(浏览屏幕，屏幕上的所有域不可进入，但表格可以进入并浏览)
+建立屏幕组或增加屏幕到屏幕组中
+	ADD SCREEN <屏幕名称> [WITH DRIVER <屏幕驱动器>] TO <屏幕组名>
+(不能对已打开的屏幕组执行该语句)
+打开屏幕组
+	OPEN SCREEN GROUP <屏幕组名称> 
+(在打开屏幕组之前必须执行增加屏幕到屏幕组语句建立该屏幕组)
+运行屏幕组
+	RUN SCREEN GROUP <屏幕组名称> [ WITH EVENTLIST IN <屏幕组驱动器名> ] 
+显示屏幕组
+	DISPLAY SCREEN GROUP <屏幕组名称>
+(只能浏览不能编辑)
+设置屏幕组边框
+	REFRESH SCREEN GROUP <屏幕组名称> [WITH BORDER]
+浏览屏幕组
+	BROWSE SCREEN GROUP <屏幕组名称>
+关闭屏幕组
+	CLOSE SCREEN GROUP <屏幕组名称>
+在屏幕上写字符串
+	WRITE STRING scrstr AT X ，Y
+屏幕组中翻页
+	GOTO PAGE N
+取当前屏幕的页码
+	call getpageno() => result
+	let result=getpageno()
+运行文本窗
+	RUN TEXTWIN WITH FILENAME|STRVAL str1 TITLE str2 SIZE width, high AT row, col
+(str1为文件名（跟在filename后面）或要显示在文本窗中的字符串（跟在strval后面）)
+(打开一个文本窗浏览文件或字符串内容。)
+
+
+说明
+打开屏幕语句在运行和关闭屏幕前执行。
+刷新屏幕语句重刷当前屏幕，以便反应程序执行过程中所作的修改。
+事件说明包括键盘事件（ON EVENT KEY）、屏幕前事件（ON EVENT BEFORE SCREEN）、屏幕后事件（ON EVENT	AFTER SCREEN）以及对屏幕中的域的操作事件，包括域前（BEFORE FIELD 域名）和（AFTER FIELD 域名）事件。
+一个事件说明的例子如下：
+ON EVENT KEY ESC  //当屏幕交互输入时，按ESC键即退出交互屏幕
+BEGIN
+EXIT 
+END
+
+
+
+三、菜单
+定义
+MENU  菜单名      
+MENU  TITLE        标题	
+MENU  DISPSIZE     行数    m,n         // 决定了菜单的大小
+MENU  HELP         帮助信息      // 在帮助区显示
+ITEM  NUMBER       项数          // 菜单所包括的可选项数
+[ ITEM  BODY ]+
+END   MENU
+
+ITEM BODY 的格式为:
+MENU ITEM  名称
+ITEM TITLE  “ “
+ITEM HELP   “ “              // 帮助信息
+ITEM ACCELKEY  “ “                 // 加速键	
+ITEM PRIORITY  数值
+{
+ITEM ACTION   过程名 [ （ 常字符串参数）]| ITEM ACTMENU	子菜单名 AT  行，列
+}
+END ITEM
+(nullitem和exitmenu是系统的保留字，分别表示空菜单项和退出菜单项)
+说明：
+MENU DISPSIZE， 和ITEM NUMBER 后必须写具体的菜单名， 行数， 列数和项数， 其它可有可无。
+项数决定了该菜单的总项数， 如果写出项数而未定义具体项， 则系统自动将所有菜单项定义为空; 如果定义的菜单项不足项数， 则其余部分系统自动定义为空。
+行数决定每屏幕显示的菜单项数，  超过行数的菜单项自动翻至下一屏显示。
+语法：
+RUN MENU 菜单名， AT 行号， 列号
+
+
+四、选择列表
+定义
+PICKLIST [应用名:]列表名
+TITLE  标题
+DISPSIZE  行数， 列数         	// 列表区大小
+HELP  帮助信息
+      可选值集| 数据库记录       //PITEM
+ENDPICKLIST
+
+其中：
+可选值集的格式为：
+         VALUE TYPE   值类型  
+         ITEM NUMBER  可选项数	// 列表中项的总数
+         [ITEM  值， 值说明]
+			// 项定义， 光标移到该处按选择键，则将值送上屏幕。
+
+数据库记录格式为:
+          TABLE  数据库表名
+          FIELD  字段名1（值）， 字段名2（值说明） 
+          [ CONDITION  “条件语句” ]
+              字段名1为一代码， 字段名2即该代码所指内容。
+说明
+列表中的数据来源有两种， 即可选值集， 数据库记录，一个列表只能选择一种数据来源。
+可选值集中值的类型有: char， decimal， integer， date， float。
+通常可选项数为几， 就应该定义几个PITEM， 不可以超过， 如果ITEM项不足可选项数， 则以空项补齐。
+列表中的数据可以直接取自数据库， 可以取数据库中的所有记录， 也可以通过查询只取一部分记录放入列表。不论哪种方式都只能选择两个字段， 一个作为值， 一个作为值说明。
+语法
+运行选择列表
+	RUN PICKLIST 选择列表名 TO 变量1|域1， 变量2|域2  AT  行号， 列号
+指定值是否在列表中
+	CALL INPICKLIST(表达式，选择列表名)=> bIn
+	let bIn=INPICKLIST(表达式,选择列表名)
+(1表示存在，0表示不存在)
+值到描述的转换
+	CALL TRANPKLIST(值，选择列表名)=>bStr
+	let bStr=TRANPKLIST(值,选择列表名)
+(空值表示选择列表中无指定值)
+
+说明
+在(行号， 列号)所指定的位置显示指定的选择列表， 选中值则放入TO后的两个变量|域中( 该变量必须正确定义，其中变量1存放选择值，变量2存放相应的说明)
+
+
+五、表格（？？）
+定义
+FORM		[应用名：]表格名
+SIZE		行坐标，列坐标
+DISPSIZE		显示行坐标，显示列坐标
+TITLE  LENGTH	标题长度（可不写）
+COMMENTLEN		注释长度（可不写）
+LABEL		〈起始行坐标，起始列坐标〉显示文本	
+MATRIX		〈起始行坐标，起始列坐标〉
+栏目名：〈栏目起始行坐标，栏目起始列坐标〉TITLE	栏目标题，栏目宽度
+〈栏目字段起始行坐标，栏目字段起始列坐标〉。。。
+.
+.
+.
+[SUM]
+END  MATRIX
+EVENTLIST<事件驱动器名>
+RECORDNUM <初始化记录条数>
+END  FORM
+或:
+FORM formname
+[LABEL ‘<’ <起始行坐标>，<起始列坐标> ‘>’ <显示文本>
+MATRIX ‘<’ <列间距>，<行间距> ‘>’ ‘<’ <起始行坐标>，<!~
+END FORM
+
+说明：
+指定某一格单元格时:表格名[行].域名(这里的域名也就是列属性)
+formname为标识符，和该资源文件的文件名前缀一致。
+栏目宽度指两列字段之间的距离，两条记录之间的行间隔由第一个栏目字段起始行坐标与第二个栏目字段起始行坐标的差决定。栏目起始行坐标与栏目起始列坐标在新版本中保留，栏目字段起始列坐标保留，SIZE保留。
+语法：
+激活表格
+	ACTIVE { ARRAY arrayname | TABLE tablename FIELDS field1，field2 …fieldn }USING FORM formname at x，y { READONLY | UPDATE | APPEND }[WITH EVENTLIST IN 事件表名  ] [ WITH EVENTLIST AS 事件说明 ]
+释放表格
+	DEACTIVE { ARRAY arrayname | TABLE tablename [SAVE] }
+设置表格记录条数
+	SET FRM：<表格名称> RECORDNUM <记录条数> [RESERVE]
+获取表格定义记录条数
+	call size_of_form()=>formsize
+	let formsize=size_of_form()
+(本函数仅限于在表格驱动器中使用。)
+设置表格可编辑浏览记录数
+	set arr_count(<表格名>,nMaxRecNum)
+(nMaxRecNum不能大于表格定义的记录条数,本函数仅限于在表格驱动器中使用)
+获取当前表格总记录数
+	total_rec_no()
+(本函数仅限于在表格驱动器中使用。)
+获取当前行号
+	cur_rec_no()
+(本函数仅限于在表格驱动器中使用。)
+设置表格栏目属性
+	SET FRM ：<表格名称>.<域名> [ PATTERN 掩码 | ENTRY | NO ENTRY |REQUIRED|NO REQUIRED]
+(必输入（REQUIRED）、非必输入（NO REQUIRED）.这里的域名可以看成是列属性吧??)
+跳转到指定行
+	GOTOROW <行号>
+(本函数仅限于在表格驱动器中使用,<行号>为负数或超过表格最大记录数时，该语句相当于空语句)
+跳转到指定列
+	GOTOCOL <列号>
+(本函数仅限于在表格驱动器中使用,<列号>为负数或超过表格最大列数时，该语句相当于空语句)
+跳转到下一行
+	GOTONEXTROW
+(本函数仅限于在表格驱动器中使用,当处于最后一行时，该语句相当于空语句)
+刷新表格
+	REFERSH FORM <表格名>
+跳转到指定表格
+	GOTOFORM <表格名>
+(只限于在屏幕（或屏幕组）驱动器中使用。)
+退出表格
+	EXIT
+(使屏幕输入焦点离开屏幕中当前表格，到下一个可输入域。)
+设置表格属性
+	SET FRM：〈表格名〉 READONLY|UPDATE
+(动态设置表格是否可以修改)
+
+
+
+说明：
+激活表格语句使数组或数据库表处于活动状态，用于浏览、修改与添加，当一个对象(表格)处于睡眠状态，再次使用ACTIVE语句将使该对象从内存中激活。可重复调用该语句，与屏幕或其他对象相互切换。
+为表格提供的事件包括了键盘事件（ON EVENT KEY）、列前（BEFORE COLUMN)、列后（AFTER COLUMN)事件、表格前（ON EVENT BEFORE SCREEN)和表格后事件（ON EVENT AFTER SCREEN）事件以及行前事件（ON EVENT BEFORE ROW）、行后事件（ON EVENT AFTER ROW）。
+释放表格语句释放FORM资源且对数据库表的修改做COMMIT，清除处于睡眠状态的对象。SAVE选项是使数据库表的修改是否COMMIT的标志。
+
+
+
+弹出选择窗口让客户做选择：
+	CALL PROMPT(提示信息)=>ans
+	let ans=prompt(提示信息)
+
+
+设备号定义如下：
+0——服务器通讯方式
+1——直接通讯方式
+2——打印机
+3——磁条读写器
+4——密码键盘
+其它设备号保留
+
+
+内部变量与内部函数：
+ACE支持如下内部变量
+_currentfld		// 指示光标所在域
+_currentscr		// 当前屏幕
+_sqlcode		// 整数，指示SQL语句执行状态。0为成功；
+_stmtcode		//语句执行状态，0为成功，< 0失败；
+ACE支持如下内部函数
+prompt(str)
+	弹出对话框， 提示信息， 用户同“y”或“n”键进行选择
+	str——提示信息
+getdate()
+	无参， 返回系统当前日期；
+gettime()
+	无参， 返回系统当前时间；
+fmtdate（date,str)
+	返回格式化的日期串
+	date——日期型变量
+	str——字符串
+day( Date )
+	取日期的天数部分
+	date——日期型变量
+month( Date )	
+	取日期的月数部分
+	date——日期型变量	
+year( date )
+	取日期的年数部分
+	date——日期型变量
+substr (str，first，len)
+	返回子串
+	str——字符串
+	first——子串起始位置
+	len——子串长度
+strlen (str)
+	返回串长，不计结尾的连续的空格
+	str——字符串
+isblankstr( str )
+	判断字符串是否为空串
+	str——字符串
+isblank( FIELD )
+	判断一个域的值是否为空(对于STRING类型域)或是否为0(其他类型域)
+	FIELD——域
+inpicklist( exp， pklist )
+	判断exp的值是否在选择列表中
+	exp——表达式
+	pklist——选择列表
+money2capital( exp )
+		数字转为汉字大写金额
+exp——表达式
+data2string( exp1 ， [ exp2， [exp3， [ exp4 ] ] ] )
+	ACE数据转换为字符串
+	exp1  ----  被转换的数据
+	exp2  ----  串长， 如不给出， 则取转换后的实际长度
+	exp3  ----  对齐方式， 如不给出， 则左对齐
+	0 ---- 左对齐
+	1 ---- 右对齐
+	exp4  ----  模式串， 当前暂不支持
+beep( )
+	响铃功能
+system command
+	调用一条UNIX命令
+	command——命令字符串或变量
+set_scrpswd(STRING， INTEGER1， INTEGER2 )
+	用于系统键盘密码函数。在系统规定的时间内，如果未按键盘，系统将弹出密码窗等待用户输入	，直至密码输入正确方可继续其它操作。
+	STRING——为密码字符串
+	INTEGER1——为密码字符串的长度
+	INTEGER2——为密码窗被激活的时间
+set_ebcdic_on( )
+	设置系统通讯传输格式为EBCDIC。
+set_edcdic_off()
+	设置系统通讯传输格为式ASCII，关闭EBCDIC格式。
+gettty()
+	取终端号
+	返回值为字符串型，存放终端号；
+set_des_on()
+	选用DES加密方式进行数据通讯；
+set_des_off()
+	解除DES加密数据传送方式；
+set_term_type(type)
+	设定终端子设备类型
+	type——子设备号
+bits_or( var1, var2 )
+	返回var1与var2 位或的结果,结果是ACE整数。
+	var1——INTEGER 类型变量
+	var2——INTEGER 类型变量
+bits_and( var1, var2 )
+	返回var1与var2 位与的结果，结果是ACE整数。
+	var1——INTEGER 类型变量
+	var2——INTEGER 类型变量
+bits_xor( var1, var2 )
+	返回var1与var2 逐位异或的结果，结果是ACE整数。
+	var1——INTEGER 类型变量
+	var2——INTEGER 类型变量
+bits_not( var )
+	返回var1逐位取反的结果。结果是ACE整数。
+	var——INTEGER 类型变量
+get_ascii_value( var )
+	返回该字符串第一个字符的ASCII码值，结果是ACE整数。
+	var——是一个ACE字符串
+convert_value_to_ascii( var )
+	返回var的值对应的ASCII字符，结果是一个ACE字符串。
+	var 是 INTEGER 类型变量。
+get_comm_data（ pos，len ）
+	从通讯缓冲区中取出指定数据
+	pos——INTEGER型，起始位置；
+	len——INTEGER型，长度；
+get_plist_item（ lable，plist ）
+	从选择列表中取出相应项
+	lable——标号，INTEGER型；
+	plist——选择列表名；
+des_encrypt（ key，IOstring ）
+	返回输入字符串的加密密文；
+	key——密钥，字符串；
+	IOstring——输入明文，字符串；
+des_decrypt（ key，IOstring ）
+	返回输入字符串的解密明文；
+	key——密钥，字符串；
+	IOstring——输入密文，字符串；
+
+
+
+
+
+自定义类型：
+typedef record 
+变量：类型名
+{变量：类型名}
+end record
+类型名称
+
+
+
+
+
+SWITCH ( <表达式1> )
+{CASE <表达式2>:
+{<执行语句>}+
+[BREAK] }+
+[DEFAULT:
+{<执行语句>}+]
+ENDSWITCH
+NOTE:其中<表达式1>和<表达式2>的类型只能为INTEGER或CHAR(n)变量，不能为内部函数。
+
+读键语句：
+read key [to <变量名> ]
+
+调用系统命令：
+system <命令>
+NOTE:命令的执行过程不涉及标准输入/输出。
+
+跟踪语句:(程序运行时参数项包含-d filename才能调用)
+start debug
+stop debug
+
+使用头文件：
+#include <头文件>
+
+宏定义的使用：(声明一个标志或定义一个标志代替定义项)(只能在文件开始位置使用)
+#define <标志> <定义项>
+#define <标志>
+
+交易开始界定语句:(只能在过程定义中的执行语句体中使用该语句。)
+BEGINTRAN
+
+清除连动标志语句（？？）
+CLEAR LINKMARK
+
+交易结束界定语句
+ENDTRAN
+
+交易数据的现场保护(一般在交易嵌套中使用)
+PUSH TRAN
+
+交易数据现场恢复(不恢复具有RESERVE属性的域)
+POP TRAN
+
+定义过程
+PROC <过程名> ( <参数列表> ) [ : <返回值类型>]
+<参数列表>定义如下：
+{<形参列表>：<形参类型>{，<形参列表>：<形参类型>}}
+<形参列表> 定义为： <形参名> | VAR ：<形参名> {，<形参名> | VAR：<形参名>}
+过程中定义参数列表时，如果用VAR：参数名的方式来定义，说明该参数是变参
+
+调用过程(对自定义类型，必须是VAR类型.可以在PROC和EVENTLIST中使用)
+CALL <函数名>(<参数列表>) [=> ret_val]
+
+后台函数调用(可以调用一个耗时很长的过程（自定义函数），并且把它转换为另外一个进程，而本身直接返回，另外一个进程执行完毕后自动消失，不再占用系统资源；被调用函数的返回参数都无效，包括返回值；)
+BCALL <函数名>（<参数列表>）：<基本类型>(这里没有=> ret_val!!!!!!!)
+
+
+定义事件列表
+EVENTLIST <事件列表名>
+{define <VariableDec> : <ValueType>}
+{ 
+	[ON EVENT BEFORE SCREEN |ON EVENT AFTER SCREEN ]
+	[ON EVENT AFTER LAST FIELD |ON EVENT BEFORE FIRST FIELD]
+	[ON EVENT BEFORE FIELD <域名> |ON EVENT AFTER FIELD <域名> ]
+	[ON EVENT BEFORE FORM |ON EVENT AFTER FORM ]
+	[ON EVENT BEFORE ROW |ON EVENT AFTER ROW ]
+	[ON EVENT BEFORE COLUMN <列号> |ON EVENT AFTER COLUMN <列号> ]
+	ON EVENT KEY <热键>
+	BEGIN
+		{ <执行语句> }+
+	END
+}+
+END EVENTLIST
+(屏幕前事件通常用来给域赋初值或隐藏某些域的显示等。屏幕后事件用来清除/保存域值等)
+
+
+
+
+屏幕事件执行次序：
+屏幕事前事件
+--------------------------------------------------------------------------------
+第一域前事件
+--------------------------------------------------------------------------------
+域前事件
+--------------------------------------------------------------------------------
+域后事件
+--------------------------------------------------------------------------------
+最后域后事件
+--------------------------------------------------------------------------------
+屏幕事后事件
+
+表格事件执行次序：
+表格前事件
+--------------------------------------------------------------------------------
+行/列前事件
+--------------------------------------------------------------------------------
+行/列后事件
+--------------------------------------------------------------------------------
+表格后事件
+
+
+
+
+
+
+
+LFD:域名==变量
+CALL[LFD:域名]()=>rst	条用域名中的值所表示的过程，把返回值给rst
+LET FLD:SYS_DUMY="DUMMY":把交易方式设为DUMMY方式,交易直接提交后台,不显示输入输出屏幕.
+在定义游标的select语句中，用$变量名的方法引用select语句外的变量值。(即该变量不是数据库中表的属，而是在过程中定义的变量)

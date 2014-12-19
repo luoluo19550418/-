@@ -1,0 +1,131 @@
+#+TITLE: c
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 构造函数和析构函数
+  1. 可以用单个实参来调用的构造函数定义了从形参类型到该类类型的一个隐式转换
+  2. 可以通过将构造函数声明为explicit来防止使用构造函数来进行隐式转换
+  3. 在析构函数中抛异常,会造成程序调用terminate().使用标准的set_terminate()函数,可以设置自己的terminate()函数.
+  4. 构造函数没有正常结束的类,不会调用相关的析构函数
+  5. 不要让析构函数抛出异常!
+  6. 不理会构造函数中出现的故障继续运行,肯定会导致灾难性的后果,所以构造函数是抛出异常最重要的位置之一.然而在构造函数抛出异常时,用户必须注意队形内部的指针和它的清理方式
+  7. 通过基类指针释放在堆上分配的派生类对象是错误的,除非基类有1个虚析构函数.任何想成为基类的类,都应该有一个虚的析构函数.
+* 异常处理
+  1. 想使用恢复的异常处理模型,通常的做法是重新调用发生错误的函数.将try块放到while循环中,不断重新执行try块中的程序,直到产生满意的结果
+  2. 匹配异常时,一个对象或引用会与其基类相匹配(然而,如果异常处理器是针对对象的,那么这个异常对象就被切割,截取成基类对象.除了丢失派生类包含的所有附加信息外,并无什么危害).因此最好使用引用而不是通过值来捕获异常.
+  3. 在匹配过程中,不会将一种异常类型自动转换成另一种异常类型.
+  4. 通常的做法是,先捕获派生类异常,并将基类放到最后.应该在异常处理器中使用引用参数而不是值参数,防止异常对象包含的信息被切割掉.
+  5. 用...代替异常处理器的参数列表就能捕获所有异常.
+** 函数级try块
+   1. 作为构造函数初始化部分的try块是构造函数的函数体,而相关的catch块紧跟着构造函数的函数体
+   2. 初始化列表放在关键字try和构造函数的函数体之间.
+      #+BEGIN_SRC C++
+      class Sub:public Base
+      {
+         Sub()try:Base()
+	 {
+	    cout<<"This won't print"<<endl;
+	 }catch(...)
+	 {
+	    cout<"Base subobject threw"<<endl;
+	 }
+      }
+      #+END_SRC
+   3. c++允许在所有函数中使用函数级try块,这种情况下,catch块中的代码可以像函数体中的代码一样正常返回.这种形式的函数级try与在函数中添加try-catch来环绕代码没什么区别.
+      #+BEGIN_SRC C++
+      int main() try
+      {
+         throw "main";
+      }catch(const char* msg)
+      {
+         cout<<msg<<endl;
+	 return 1;
+      }
+      #+END_SRC
+** 标准异常
+   1. exception类:<exception>
+      * logic_error:<stdexcept>:描述程序中出现的逻辑错误.
+	* domain_error:报告违反了前置条件
+	* invalid_argument:接收到一个无效的参数
+	* length_error:表明程序试图产生一个长度大于等于npos的对象(语境长度的最大可能值为std::size_t)
+	* out_of_range:报告一个参数越界错误
+	* bad_cast:在运行时类型识别中发现程序执行了一个无效的动态类型转换
+	* bad_typeid:当表达式typeid(*p)中的参数p是一个空指针的时候抛出这个异常
+      * runtime_error:<stdexcept>:指那些无法预料的事情所照成的错误.
+	* range_error:报告违反了前置条件
+	* overflow_eror:高爆一个算出溢出错误
+	* bad_alloc:报告一个失败的存储分配
+   2. logic_error和runtime_error都提供了一个参数类为std::string的构造函数.
+   3. 可以通过exception::what()函数来获取exception中保持的消息.
+   4. std::exception并未提供一个参数为std::string的构造函数
+** 异常规格说明
+   1. 异常规格说明再次使用了关键字throw,函数可能抛出的所有异常类型应该被卸载throw之后的括号中
+      #+BEGIN_SRC C++
+      void f() throw(exceptionClass1,exceptionClass2...)
+      #+END_SRC
+   2. 传统的没有throw的声明,意味着可能抛出任何异常
+   3. throw()表示函数不会抛出任何异常.
+   4. 如果函数所抛出的异常没有列在异常规格说明的异常集中,那么一个特殊的函数unexpected()将会调用,默认的unexpected()函数会调用terminate()函数
+   5. 跟set_terminate()类似,可以通过set_unexpected()函数设置调用的unexpected函数.新的unexpected函数不能有return语句.
+   6. terminated函数可以抛出另外一个异常,若抛出的异常不再违反异常说明,那么程序恢复到这个程序被调用的位置重新开始异常匹配.
+      如果unexpected函数抛出的异常还是不符合函数的异常规格说明,则
+      * 若异常规格说明包含std::bad_exception,则unexpected处理器所抛出的异常会替换成std::bad_exception对象,然后程序恢复到这个函数被调用的位置重新开始异常匹配
+      * 如果函数的异常规格说明不包括std::bad_exception,程序调用terminate()函数.
+   7. 任何时候如果要使用异常规格说明,或调用使用异常规格说明的函数,最好编写自己的unexpected函数.
+   8. 如果为用户自己的特定类创建异常类,最好把这个异常类作为特定类的嵌套类.这就给使用者提供了一个明确的信息._这个异常类仅在用户自己的特定类中使用.,也避免了污染全局名字空间.
+* 宏
+  1. #
+     #运算符用于创建字符串，#运算符后面跟一个形参（中间可以有空格或Tab），职能用于函数式宏定义
+     #+BEGIN_SRC C
+     #define STR(s) $ s        
+     STR(hello      world)           //=="hello world"
+     #+END_SRC
+     自动用"把实参括起来成为一个字符串，并且实参中的连续多个空白字符被替换成一个空格
+  2. ##
+     ##运算符把前后两个预处理Token连接成一个预处理Token，##不仅限于函数式宏定义，变量式宏定义也可以用
+     #+BEGIN_SRC C
+     #define CONCAT(a,b) a##b
+     CONCAT(con,cat)                    //==concat
+     #+END_SRC
+     要定义一个宏展开成两个#，可以这样定义
+     #+BEGIN_SRC C
+     #define HASH_HASH # ## #
+     #+END_SRC
+     中间的##是运算符，宏展开前后两个#被连接在一起，注意中间的两个空格不可少，如果写成####，会被划分为##和##两个Token
+  3. 可变参数
+     函数式宏定义也可以带可变参数，同样是在参数列表中用...表示可变函数，函数体中用__VA_ARGS__表示。
+     #+BEGIN_SRC C
+     #define showlist(...) printf(#__VA__ARGS__)
+     #define report(test,...)((test)?printf(#test):printf(__VA_ARGS__))
+     #+END_SRC
+  4. 空参数
+     调用函数式宏定义可以传空参数
+     #+BEGIN_SRC C
+     #define FOO(a) foo##a
+     FOO()             //==foo
+     #+END_SRC
+     FOO在定义时带一个参数，在调用时必须传一个参数给它，如果不传参数表示传了一个空参数
+     #+BEGIN_SRC C
+     #+define FOO(a,b,c) a##b##c
+     FOO(1,,3)         //==13
+     FOO(,,3)          //==3
+     #+END_SRC
+     FOO在定义时带三个参数，在调用时也必须传入三个参数给它，空参数的位置可以空着，但必须给够三个参数
+     #+BEGIN_SRC C
+     #define FOO(a,...) a##__VA_ARGS__
+     FOO(1)            //==1
+     FOO(1,2,3)        //==12,3
+     #+END_SRC
+  5. 宏展开的步骤
+   * 宏的嵌套替换是从上替换到下的，哪个宏先定义，先替换哪个 
+   * 除了带#和##运算符的参数之外，其他参数在替换之前要对实参本身做充分的展开。
+     6. #if
+   * #if defined  x             == #ifdef x
+   * #if !defined x             == #ifndef x
+   * 如果x有定义，则#define x替换成1，否则替换成0
+     7. 其他预处理特性
+   * #pragma预处理指示供编译器实现一些非标准的特性，如果编译器在代码中遇到不认识的#pragma指示则忽略它
+   * __FILE__：展开为当前源文件的文件名，是一个字符串
+   * __LINE__：展开为当前代码行的行号，是一个整数
+   * C99引入一个特殊的标识符__func__标识当前函数名。这个标示符应该是一个变量名而不是宏定义，不属于预处理的范畴，但作用和__FILE__，__LINE__类似

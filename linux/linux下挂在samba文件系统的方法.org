@@ -1,0 +1,35 @@
+#+TITLE: linux下挂在samba文件系统的方法
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 手工挂载
+  有两个命令可以用来手工挂载samba文件系统，一个是mount，一个是smbmount。
+** 使用mount命令挂载
+   mount就是用于挂载文件系统的，SMB做为网络文件系统的一种，也能用mount挂载
+   一般挂载的用法为：
+   #+BEGIN_SRC sh
+     mount -t smbfs -o codepage=cp936,username=用户名,password=密码 , -l //ip地址/共享文件夹名 挂载点   
+     
+     或
+     
+     mount -t smbfs -o codepage=cp936,username=用户名,password=密码 , -l //计算机名/共享文件夹名 挂载点 
+   #+END_SRC
+   若没有设置用户名和密码，则可以简化为:
+   #+BEGIN_SRC sh
+     mount -t smbfs -o codepage=cp936 //ip地址或计算机名/共享文件夹名 挂载点 
+   #+END_SRC
+** 使用smbmount命令挂载
+   smbmount说到底也是用mount的一个变种,因此，类似于mount命令，smbmount的用法为：
+   #+BEGIN_SRC sh
+     smbmount -o username=用户名,password=密码 , -l //ip地址/共享文件夹名 挂载点
+     
+     smbmount -o username=用户名,password=密码 , -l //计算机名/共享文件夹名 挂载点
+     
+     smbmount //ip地址或计算机名/共享文件夹名 挂载点 
+   #+END_SRC
+* 自动挂载
+  要相让linux在启动时自动挂载samba文件系统，就需要用root用户编辑/etc/fstab文件，在其中加入一行
+  #+BEGIN_EXAMPLE
+    //ip地址或计算机名/共享文件夹名 挂载点  smbfs   username=用户名,password=密码,dmask=777,fmask=777       0       0
+  #+END_EXAMPLE

@@ -1,0 +1,88 @@
+#+TITLE: x-window
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 最终用户的x-window
+** x-application的几个通用参数
+   * -name "$name"
+     设置应用的名称,会以这个名字来从.Xresource中读取资源.
+   * -geometry $xoff$yoff
+     $xoff和$yoff为正数时,分别是对屏幕左边和上边的偏移. 
+     $xoff和$yoff为负数时,分别是对屏幕右边和下边的便宜.
+   * -bw $width
+     设置框架边框的宽度,以像素为单位,可能无法用于所有的客户.
+   * -fg /-bg
+     设置前景/背景色
+   * -font/-fn
+     设置字体
+   * -iconic
+     以图标方式启动应用
+   * -rv / -reverse
+     交换前景和背景色
+   * -title
+     设置标题
+   * -display $RemoteMachine:$DisplayName.$ScreenName
+     在远程机器上显示.$DisplayName和$ScreenName是可选的,默认为0.0
+     #+BEGIN_SRC sh
+       # 在远程机器alma上显示xterm
+       xterm -display alma:0.0 &
+     #+END_SRC
+     
+** 定制资源
+*** 文件.Xresources / .Xdefauls
+    X在启动时会读取配置文件中对资源的配置
+    * 资源文件的格式为
+      客户端程序名.构建层级.属性:属性值.
+      这里构建层次可以为父构建.子构建层级这样的层级表达,也可以为*星号表示任意的层级关系.
+      #+BEGIN_QUOTE
+      XTerm*foreground:white
+      Xterm*scrollbar:true
+      myWorld.mainForm.PushButton:blue
+      #+END_QUOTE
+      此外,!为注释符
+      #+BEGIN_QUOTE
+      !This is a comment
+      #+END_QUOTE
+      还能使用CPP预处理器的伪指令#if,#ifdef,#else和#endif
+    * 资源生效
+      在改变.Xresource文件后,不会立刻看到修改的结果,必须使用xrd命令来通知所有的服务有关修改.
+      #+BEGIN_SRC sh
+        xrdb -load .Xresources 
+      #+END_SRC
+      如果想保留以前的设置不改变,则使用-merge参数
+      #+BEGIN_SRC sh
+        xrdb -merge .myOwnResources      
+      #+END_SRC
+** 定制X的工具
+*** xsetroot
+    该工具定制root窗口的特征,一些可使用的选项有
+    * -cursor cursorfile maskfile
+      把光标改为一个显示的值.这里光标文件是指一个用工具bmtoa将位图转换后的ASCII文件.
+    * -fg color foregrond
+      设置root窗口的前景色
+    * -bg color background
+      设置root窗口的背景色
+    * -rv
+      交换前景色和背景色
+    * -solid color
+      把root窗口设置为单一的颜色.    
+*** xset
+    xset命令设置X环境的基本选项.
+    * xset -b on /off
+      打开/关闭PC扬声器,产生bell声音
+    * xset -s seconds /off
+      激活屏幕保护,off表示关闭屏幕保护
+    * xset -q
+      查询x的配置信息
+    * xset fp
+      设置字体信息
+*** xdpyinfo
+    列出X服务器的信息和预设的参数
+*** xmodmap
+    改变X下键盘和鼠标中,物理按键与按钮代码的映射关系
+    * xmodmap -pp
+      显示当前映射
+*** xlsfonts
+    列出系统中的字体,格式为
+    -foundary-family-wt-sl-wd-p-pts-hr-vr-sp-ave-charset-style

@@ -1,0 +1,634 @@
+#+TITLE: Python
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 语法
+** 序列
+*** 分片操作
+    "abcdefg"[1:3]      #=[bc]
+*** 序列可以通过+合并，或*重复
+    s="abc"
+    print s+"123"       #="abc123"
+    print s*2           #="abcabc"
+** 列表
+*** 列表是序列的一种，它可以被改变
+*** 列表与数组类似，但列表没有固定类型的约束
+*** 
+* Note
+1. 数字、字符串和元组是不可变的；列表和字典是可变的
+2. 可作用于多种类型的通用型操作都是以内置函数或表达式的形式出现的；但是类型特定的操作是以方法调用的形式出现的。
+3. 方法也是函数属性
+4. 可以调用内置的dir函数，将会返回一个列表，其中包含了对象的所有属性（方法也是属性）
+5. dir函数简单地给出了方法的名称。查询他们做什么，可以传递给help函数
+6. 实地改变对象并不会把变量划分为本地变量，实际上只有对变量名赋值才可以。
+   例如，如果变量名L在模块顶端被赋值为一个列表，
+   在函数内部的像L.append(X)这样的语句并不会将L划分为本地变量，
+   而L=X却可以
+7. 变量名引用分为四个作用域进行查找：本地-》函数内-》全局-》内置
+8. 每个子类最好定义自己的构造器，不然基类的构造器会被调用。然而，如果子类重写基类的构造器，基类的构造器就不会自动调用了，这样基类的构造器就必须显式写出才会被执行
+9. 内建类型没有__dict__属性
+10. python中实例可以访问类中的属性，但是无法更新类属性。因为一旦尝试在实例中更新类属性，python会在实例的命名空间内新建一个属性而屏蔽了类属性
+11. 在类中，一般不直接调用类名，而是使用self.__class__代替
+12. python不支持重载
+13. __getattribute__()与__getattr__()类似，不同在于前者在每一次属性访问时都会调用，而后者只当属性访问不到是调用.如果类同时定义了__getattribute__()及__getattr__()方法,除非明确从__get-attribute__()调用，或__getattribute__()引发了 AttributeError 异常,否则后者不会被调用. 
+14. input()=eval(raw_input())
+15. execfile(filename,global=globals(),local=locals())不保证不会修改局部名字空间，因此比较安全的做法是传入一个虚假的locals字典并检查是否有副作用
+16. python -m 库名称（不用接后缀.py）  ，可以将库当做代码来执行，自动会通过python的导入机制找到库的地址，然后用__main__=='__main__'的方式执行库代码
+17. startfile(filePath) ,使用默认的关联程序打开文件
+18. os.spawn()家族函数=fork()+exec()家族函数
+19. 现在一般用subprocess取代os模块来调用子进程
+20. commands.getoutput(cmd),在子进程中执行文件，以字符串返回所有的输出，但该方法只能在UNIX下调用
+21. 当调用sys.exit()时，就会引发systemExit()异常
+22. sys.exitfunc()默认是不可用的，但你可以改写它以提供额外的功能。当调用了sys.exit()并在解释器退出之前，就会调用这个函数了，这个函数不带任何参数，所以你创建的函数也应该是无参的
+23. os._exit(status)参数与平台有关，该函数与sys.exit()和exitfunc()不同，它根本不执行任何清理就立即退出，而且状态参数是必须得
+24. os.kill()函数模拟传统的 unix 函数来发送信号给进程。kill()参数是进程标识数(PID)和你想要发送到进程的信号。发送的典型信号为 SIGINT, SIGQUIT,或更彻底地，SIGKILL,来使进程终结。 
+25. SocketServer的请求处理器的默认行为是接受连接，得到请求，然后就关闭连接，这使得我们不能在程序的运行时，一直保持连接状态，要每次发送数据到服务器的时候都要创建一个新的套接字
+26. 在向 CGI脚本返回结果时，须先返回一个适当的 HTTP头文件后才会返回结果 HTML 页面。 进一步说， 为了区分这些头文件和结果 HTML 页面， 需要在头与HTML页面之间多插入一个换行符。例如：
+    #+BEGIN_SRC
+    import cgi
+
+    reshtml='''Content-Type:text/html\n            #这里多了一个换行
+    <html>
+    <head>
+	<title>Friends CGI Demo</title>
+    </head>
+    <body>
+	Your name is <B>%s</B><P>
+	You have <B>%s</B> friends
+    </body>
+    </html>'''
+
+    form=cgi.FieldStorage()
+    name=form['name'].value
+    howmany=form['howmany'].value
+    print reshtml %(name,howmany)
+    #+END_SRC
+27. 读取密码时，可以用getpass模块的getpass()方法来获取
+28. __开头的变量会被python重命名为带有类名前缀的名称。该特性被用来避免继承带来的命名冲突，但是在实践中，从不使用__。当表示一个属性非公开时，惯例是用一个_前缀。这不会调用任何改编算法，而只是证明这个特性是该类的私有元素
+29. 
+* 高级应用
+** 偏函数应用
+1. currying 的概念将函数式编程的概念和默认参数以及可变参数结合在一起。一个带 n 个参数， curried 的函数固化第一个参数为固定参数，并返回另一个带 n-1 个参数函数对象，分别类似于 LISP 的原始函数 car 和 cdr 的行为。Currying 能泛化成为偏函数应用（PFA）， 这种函数将任意数量（顺 序）的参数的函数转化成另一个带剩余参数的函数对象。 
+2. 你可以通过使用 functional 模块中的 partial（）函数来创建 PFA:
+3. 例如
+   #+BEGIN_SRC Python
+   from functools import partial
+   def add(a,b):return a+b
+   add100=partial(add,100)
+   add100(1)            #=101
+   baseTwo=partial(int,base=2)
+   baseTwo('10010')       #=18   要注意的是这里需要关键字参数 base 
+                          #baseTwo=int(x,base=2)
+   #+END_SRC
+** 特殊的类属性
+   #+CAPTION:特殊类属性
+   | C.__name__   | 类C的名字（字符串）     |
+   |--------------+-------------------------|
+   | C.__doc__    | 类C的文档字符串         |
+   |--------------+-------------------------|
+   | C.__dict__   | 类C的所有父类构成的元组 |
+   |--------------+-------------------------|
+   | C.__module__ | 类C定义所在的模块       |
+   |--------------+-------------------------|
+   | C.__class__  | 实例C对应的类           |
+   |--------------+-------------------------|
+** __new__构造器方法
+   由于__init__方法是在对象构造完成后，再调用__init__方法来对对象进行初始化的，这就使得构造出来的对象进行了改变。
+   那么如何构造不可变对象呢？这就需要__new__方法。
+   python在实例化不可变类型时会调用类的__new__方法，这是一个静态方法，并且传入的参数是在类实例化操作时生成的。__new__会调用父类的__new__来创建对象
+   __new__必须返回一个合法的实例，并且__new__和__init__在类创建时，都传入了相通的参数
+** 特殊的实例属性
+   #+CAPTION:特殊的实例属性
+   | I.__calss__ | 实例化I的类 |
+   |-------------+-------------|
+   | I.__dict__  | I的属性     |
+   |-------------+-------------|
+   |             |             |
+   |-------------+-------------|
+** super()内建方法
+   1. super()内建函数可以自动捕获对应的父类
+   2. super()不但能找到基类方法，而且还为我们传进self，这样我们就不用显示写父类的名称了
+   3. super()语法为：super(type[,obj]).如果你希望父类被绑定，可以传入obj参数，否则父类不会被绑定，obj参数也可以是一个类型，但它应当是type的一个子类
+   #+BEGIN_SRC Python
+   class C(P):
+       def foo(self):
+           super(C,self).foo()
+	   print 'Hi, I am C-foo()'
+   #+END_SRC
+   事实上，super()是一个工厂函数，它创造了一个super object，为一个给定的类使用__mro__去查找相应的父类。很明显，它从当前所找到的类开始搜索MRO
+** __new__方法
+   1. 所有的__new__方法都是类方法，我们要显示传入类左右第一个参数
+** dir()方法
+   1. dir()作用在实例上（经典类或新式类）时，显示实例变量，还有在实例所在的类及所有它的基类中定义的方法和类属性。 
+   2. dir()作用在类上（经典类或新式类）时，则显示类以及它的所有基类的__dict__中的内容。但它不会显示定义在元类（metaclass）中的类属性。 
+   3. dir()作用在模块上时，则显示模块的__dict__的内容。（这没改动）。 
+   4. dir()不带参数时，则显示调用者的局部变量。（也没改动）。 
+   5. 关于更多细节:对于那些覆盖了__dict__或__class__属性的对象，就使用它们；出于向后兼容的考虑，如果已定义了__members__和__methods__，则使用它们。 
+** 类的特殊方法
+   #+CAPTION:类的特殊方法
+   | 特殊方法                       | 描述                                             |
+   |--------------------------------+--------------------------------------------------|
+   | C.__init__                     | 构造器                                           |
+   |--------------------------------+--------------------------------------------------|
+   | C.__new__                      | 构造器，通常用在设置不变数据类型的子类           |
+   |--------------------------------+--------------------------------------------------|
+   | C.__del__(self)                | 解构器                                           |
+   |--------------------------------+--------------------------------------------------|
+   | C.__str__(self)                | 可打印的字符输出；内建str()以及print语句         |
+   |--------------------------------+--------------------------------------------------|
+   | C.__repr__(self)               | 运行时的字符串输出，内建repr()和``操作符         |
+   |--------------------------------+--------------------------------------------------|
+   | C.__unicode__(self)            | Unicode字符串输出，内建unicode()                 |
+   |--------------------------------+--------------------------------------------------|
+   | C.__call__(self,*args)         | 表示可调用的实例，任何在实例调用中给出的参数都会被传入到__call__中    |
+   |--------------------------------+--------------------------------------------------|
+   | C.__nonzero__(self)            | 为object定义False值，内建bool()                  |
+   |--------------------------------+--------------------------------------------------|
+   | C.__len__*self)                | 长度（可用于类）；内建len()                      |
+   |--------------------------------+--------------------------------------------------|
+   | 对象值比较                     |                                                  |
+   |--------------------------------+--------------------------------------------------|
+   | C.__cmp__(self,obj)            | 对象比较；内建cmp()                              |
+   |--------------------------------+--------------------------------------------------|
+   | C.__lt__(self,obj)             | 小于，小于等于；对应</<=操作符                   |
+   |--------------------------------+--------------------------------------------------|
+   | C.__gt__(self,obj)             | 大于，大于等于；对应>/>=操作符                   |
+   |--------------------------------+--------------------------------------------------|
+   | C。__eq__(self,obj)            | 等于，不等于；对应==，！=以及<>操作符            |
+   |--------------------------------+--------------------------------------------------|
+   | 属性                           |                                                  |
+   |--------------------------------+--------------------------------------------------|
+   | C.__getattr__(self, attr)      | 获取属性；内建 getattr()；仅当属性没有找到时调用 |
+   |--------------------------------+--------------------------------------------------|
+   | C.__setattr__(self, attr, val) | 设置属性                                         |
+   |--------------------------------+--------------------------------------------------|
+   | C.__delattr__(self, attr)      | 删除属性                                         |
+   |--------------------------------+--------------------------------------------------|
+   | C.__getattribute__(self, attr) | 获取属性；内建 getattr()；总是被调用             |
+   |--------------------------------+--------------------------------------------------|
+   | C.__get__(self, attr)          | （描述符）获取属性                               |
+   |--------------------------------+--------------------------------------------------|
+   | C.__set__(self, attr, val)     | （描述符）设置属性                               |
+   |--------------------------------+--------------------------------------------------|
+   | C.__delete__(self, attr)       | 述符）删除属性                                   |
+   |--------------------------------+--------------------------------------------------|
+   #+BEGIN_EXAMPLE
+   定制类/模拟类型 
+   数值类型：二进制操作符 
+   C.__*add__(self, obj)             加；+操作符 
+   C.__*sub__(self, obj)             减；-操作符 
+   C.__*mul__(self, obj)             乘；*操作符 
+   C.__*div__(self, obj)             除；/操作符 
+   C.__*truediv__(self, obj)         True 除；/操作符 
+   C.__*floordiv__(self, obj)        Floor 除；//操作符 
+   C.__*mod__(self, obj)             取模/取余；%操作符 
+   C.__*divmod__(self, obj)          除和取模；内建 divmod()                        |                                          |
+   C.__*mod__(self, obj)             取模/取余；%操作符 
+   C.__*divmod__(self, obj)          除和取模；内建 divmod() 
+   C.__*pow__(self, obj[, mod])      乘幂；内建 pow();**操作符 
+   C.__*lshift__(self, obj)          左移位；<<操作符 
+ 
+   表 13.4 可定制类的特殊方法（续） 
+ 
+   特殊方法                          描述 
+   定制类/模拟类型 
+   数值类型：二进制操作符 
+   C.__*rshift__(self, obj)         右移；>>操作符 
+   C.__*and__(self, obj)            按位与；&操作符 
+   C.__*or__(self, obj)             按位或；|操作符 
+   C.__*xor__(self, obj)            按位与或；^操作符 
+   数值类型：一元操作符 
+   C.__neg__(self)                  一元负 
+   C.__pos__(self)                  一元正 
+   C.__abs__(self)                  绝对值；内建 abs() 
+   C.__invert__(self)              按位求反；~操作符 
+   数值类型：数值转换 
+   C.__complex__(self, com)        转为 complex(复数);内建 complex() 
+   C.__int__(self)                 转为 int;内建 int() 
+   C.__long__(self)                转为 long；内建 long() 
+   C.__float__(self)               转为 float；内建 float() 
+   数值类型：基本表示法（String） 
+   C.__oct__(self)                八进制表示；内建 oct() 
+   C.__hex__(self)                十六进制表示；内建 hex() 
+   数值类型：数值压缩 
+   C.__coerce__(self, num)        压缩成同样的数值类型；内建 coerce() 
+   C.__index__(self)              在有必要时,压缩可选的数值类型为整型（比如：用于切片索引等等） 
+   －－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－ 
+   续 
+   
+   表 13.4 定制类的特殊方法（续） 
+ 
+   序列类型 
+   C.__len__(self)               序列中项的数目 
+   C.__getitem__(self, ind)      得到单个序列元素 
+   C.__setitem__(self, ind,val)   设置单个序列元素 
+   C.__delitem__(self, ind)      删除单个序列元素 
+   特殊方法                           描述 
+   序列类型 
+   C.__getslice__(self, ind1,ind2)   得到序列片断 
+   C.__setslice__(self, i1, i2,val)  设置序列片断 
+   C.__delslice__(self, ind1,ind2)   删除序列片断 
+   C.__contains__(self, val)         测试序列成员；内建 in 关键字 
+   C.__*add__(self,obj)              串连；+操作符 
+   C.__*mul__(self,obj)              重复；*操作符 
+   C.__iter__(self)                  创建迭代类；内建 iter() 
+   映射类型 
+   C.__len__(self)                   mapping 中的项的数目 
+   C.__hash__(self)                  散列(hash)函数值 
+   C.__getitem__(self,key)           得到给定键(key)的值 
+   C.__setitem__(self,key,val)       设置给定键(key)的值 
+   C.__delitem__(self,key)           删除给定键(key)的值 
+   C.__missing__(self,key)           给定键如果不存在字典中，则提供一个默认值 
+
+   NOTE:
+   用星号通配符标注的数值二进制操作符则表示这些方法有多个版本，在名字上有些许不同。星号可代表在字符串中没有额外的字符，或者一个简单的“r”指明是一个右结合操作，或者是一个“i”指明是一个自操作符号
+   重载一个__i*__()方法的唯一秘密是它必须返回self。
+   #+END_EXAMPLE
+** __slots__类属性
+   1. 如果你有一个属性数量很少的类，但有很多实例，那么为节省内存，可以用__slots__属性代替__dict__
+   2. __slots__是一个类变量，由一序列型对象组成，由所有合法标识构成的实例属性的集合来表示。它可以是一个列表，元组或可迭代对象。也可以是标识实例能拥有的唯一的属性的简单字符串。 任何试图创建一个其名不在__slots__中的名字的实例属性都将导致AttributeError异常：
+      #+BEGIN_SRC
+      class SlottedClass(object): 
+      __slots__ = ('foo', 'bar')             #只有有foo和bar属性
+      >>> c = SlottedClass() 
+      >>> 
+      >>> c.foo = 42 
+      >>> c.xxx = "don't think so" Traceback (most recent call last): 
+      File "<stdin>", line 1, in ? 
+      AttributeError: 'SlottedClass' object has no attribute 
+      'xxx' 
+      #+END_SRC
+   3. 带__slots__属性的类定义不会存在__dict__了（除非你在__slots__中增加'__dict__'元素）
+** TODO 描述符
+   1. __get__,__set__,__delete__特殊方法
+   补完
+   #+BEGIN_SRC
+   >>> class DevNull(object):
+	def __get__(self,obj,typ=None):
+		pass
+	def __set__(self,obj,val):
+		pass
+
+	
+   >>> class C1(object):
+	foo=DevNull()
+
+	
+   >>> c1=C1()
+   >>> c1.foo='bar'
+   >>> c1.foo
+   >>> print c1.foo
+   None
+   #+END_SRC
+** property()函数
+   1. 可以写一个和属性有关的函数来处理实例属性的获取(getting),赋值(setting),和删除(deleting)操作，而不必再使用那些特殊的方法了
+   2. property()内建函数有四个参数，它们是 ： 
+      #+BEGIN_EXAMPLE
+      property(fget=None, fset=None, fdel=None, doc=None) 
+      #+END_EXAMPLE
+   3. 请注意 property()的一般用法是，将它写在一个类定义中，property()接受一些传进来的函数(其实是方法)作为参数。实际上，property()是在它所在的类被创建时被调用的，这些传进来的(作为参数的)方法是非绑定的，所以这些方法其实就是函数！
+   4. 例子
+      #+BEGIN_EXAMPLE
+      class ProtectAndHideX(object): 
+        def __init__(self, x): 
+            assert isinstance(x, int), \ 
+                '"x" must be an integer!' 
+        self.__x = ~x 
+ 
+        def get_x(self): 
+            return ~self.__x 
+ 
+        x = property(get_x) 
+        #+END_SRC
+
+      我们来运行这个例子，会发现它只保存我们第一次给出的值， 而不允许我们对它做第二次修改： 
+
+	>>> inst = ProtectAndHideX('foo')  
+	Traceback (most recent call last): 
+	File "<stdin>", line 1, in ? 
+	File "prop.py", line 5, in __init__ 
+	assert isinstance(x, int), \  
+	AssertionError: "x" must be an integer! 
+	>>> inst = ProtectAndHideX(10) 
+	>>> print 'inst.x =', inst.x  
+	inst.x = 10 
+	>>> inst.x = 20 
+	Traceback (most recent call last):  
+	File "<stdin>", line 1, in ? 
+	AttributeError: can't set attribute 
+      #+END_EXAMPLE
+
+** 原类
+   1. 创建的元类用于改变类的默认行为和创建方式
+   2. 你可以通过定义一个元类来迫使程序员按照某种方式实现目标类，这既可以简化他们的工作，也可以使所编写的程序更符合特定标准
+   3. 原类通常传递三个参数（到构造器）：类名，从基类继承数据的元组，和类的属性字典
+      #+BEGIN_EXAMPLE
+      1. 创建一个类时，显示时间标签
+
+	 from time import ctime
+	 class MetaC(type): 
+         def __init__(cls, name, bases, attrd): 
+            super(MetaC, cls).__init__(name, bases, attrd) 
+            print '*** Created class %r at: %s' % (name, ctime()) 
+ 
+	 print '\tClass "Foo" declaration next.' 
+ 
+	 class Foo(object): 
+            __metaclass__ = MetaC 
+            def __init__(self): 
+               print '*** Instantiated class %r at: %s' % ( 
+               self.__class__.__name__, ctime()) 
+ 
+	 print '\tClass "Foo" instantiation next.' 
+	 f = Foo() 
+	 print '\tDONE' 
+      2. 创建一个元类，要求程序员在他们写的类中提供一个__str__方法的实现
+	 from warning import warn
+	 class ReqStrSugRepr(type): 
+	 
+	 def __init__(cls, name, bases, attrd): 
+	    super(ReqStrSugRepr, cls).__init__(name, bases, attrd) 
+ 
+	    if '__str__' not in attrd: 
+            raise TypeError("Class requires overriding of __str__()") 
+ 
+	    if '__repr__' not in attrd: 
+            warn('Class suggests overriding of __repr__()\n', stacklevel=3) 
+      #+END_EXAMPLE
+   4. 从上面例子可以看出，元类在类创建时被调用，可以使用传入元类的信息对类进行规范性检查
+** 函数属性
+   1. 内建函数
+      #+CAPTION:内建函数BIFs
+      | BIF属性      | 描述                           |
+      |--------------+--------------------------------|
+      | bif.__doc__  | 文档字符串或None               |
+      |--------------+--------------------------------|
+      | bif.__name__ | 字符串类型的文档名称           |
+      |--------------+--------------------------------|
+      | bif.__self__ | 设置为None，保留给built-in方法 |
+      |--------------+--------------------------------|
+      | bif.module__ | 存放bif定义的模块名字或None    |
+      |--------------+--------------------------------|
+   2. 用户自定义函数
+      #+CAPTION:用户定义函数
+      | UDF属性           | 描述                                                                  |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.__doc__       | 文档字符串，也可以用udf.func_doc                                      |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.__name__      | 字符串类型的函数名称，也可以用udf.func_name                           |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.func_code     | 字节编译的代码对象                                                    |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.func_defaults | 默认的参数元组                                                        |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.func_globals  | 全局名字空间字典:和从函数内部调用globals(x)一样                       |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.func_dict     | 函数属性的名字空间                                                    |
+      |-------------------+-----------------------------------------------------------------------|
+      | udf.func_closure  | 包含了自由变量的引用的单元对象元组，自用变量在UDF中使用，但在别处定义 |
+      |-------------------+-----------------------------------------------------------------------|
+   3. 内建方法
+      #+CAPTION:内建方法属性
+      | BIM属性      | 描述                 |
+      |--------------+----------------------|
+      | bim.__doc__  | 文档字符串           |
+      |--------------+----------------------|
+      | bin.__name__ | 字符串类型的函数名称 |
+      |--------------+----------------------|
+      | bim.__self__ | 绑定的对象           |
+      |--------------+----------------------|
+   4. 用户自定义方法
+      #+CAPTION:用户自定义方法
+      | UDM属性        | 描述                                                            |
+      |----------------+-----------------------------------------------------------------|
+      | udm.__doc__    | 文档字符串                                                      |
+      |----------------+-----------------------------------------------------------------|
+      | udm.__name__   | 字符串类型的方法名字                                            |
+      |----------------+-----------------------------------------------------------------|
+      | udm.__module__ | 定义udm的模块的名字或none                                       |
+      |----------------+-----------------------------------------------------------------|
+      | udm.im_class   | 方法相关联的类（对于绑定方法：如果是非绑定，那么为要求udm的类） |
+      |----------------+-----------------------------------------------------------------|
+      | udm.im_func    | 方法的函数对象                                                  |
+      |----------------+-----------------------------------------------------------------|
+      | udm.im_self    | 如果绑定的话为相关联的实例，如果非绑定为none                                        |
+   5. 函数对象仅是代码对象的包装，方法则是给函数对象的包装
+    
+** compile()
+   1. compile的三个参数都是必须得，
+      1. 第一个参数代表要编译的python代码
+      2. 第二个字符串虽然必须得，但通常设置为空串。该参数代表了存放代码对象的文件的名字
+      3. 最后的参数是个字符串，它用来表明代码对象的类型。有三个可能得值
+	 #+CAPTION:compile()第三个参数的可能值
+         | 'eval'   | 可求值的表达式，和eval()一起使用 |
+         |----------+----------------------------------|
+         | 'single' | 单一可执行语句，和exec一起使用   |
+         |----------+----------------------------------|
+         | ‘exec'  | 可执行语句组，与exec一起使用     |
+         |----------+----------------------------------|
+
+** re
+   1. 正则表达式
+      \b匹配一个单词的边界，\B匹配一个单词的中间模式
+      \d匹配十进制数组
+      \w表示字符和数组的集合
+      ？非贪婪操作符，可以用在*、+、？的后面。它的作用是要求正则表达式引擎匹配的字符越少越好。
+   3. 当要从字符串头部开始匹配的时候，不要用re.search('^xxx')的方式，而用re.match('xxx')的方式来匹配
+   4. re.search与re.match如果匹配失败，则返回None
+   5. subn()和sub()一样，但它还返回一个表示替换次数的数字，替换后的字符串和表示替换次数的数字作为一个元组的元素返回
+   6. re模块和正则表达式对象的方法split()与字符串的split()方法相似，前者是根据正则表达式分割字符串，后者是根据固定的字符串分割
+   7. 需注意，\w和\W这两个表示字母或数字的字符受Unicode标志符号影响
+   8. 
+
+** Tkinter
+   1. 对packer没有其他指令时，组件式按垂直顺序放置的。要水平放置则需要创建一个框架对象，再用它来添加按钮
+   2. 由于偏函数也能作用于类上，所以对于有许多待调对象，并且许多调用都反复使用相同参数的情况，用偏函数将预存并冻结这些预存参数是比较好的，此时可以看做是生成了新类
+   3. 
+** 数据库
+*** Python DB-API
+    1. 模块属性
+       #+BEGIN_EXAMPLE
+       DB-API 模块属性 
+       属性名          描述 
+       apilevel        DB-API 模块兼容的 DB-API 版本号 
+       threadsafety    线程安全级别 
+       paramstyle      该模块支持的 SQL 语句参数风格 
+       connect()       连接函数 
+
+       connect()   函数 属性 
+       参数            描述 
+       user            Username  
+       password        Password  
+       host            Hostname 
+       database        Database name 
+       dsn             Data source name         
+       注意不是所有的接口程序都是严格按照规范实现的. MySQLdb 就使用了 db 参数而不是规范推荐的 database 参数来表示要访问的数据库.例如：
+       MySQLdb.connect(host='dbserv', db='inv', user='smith') 
+       连接对象方法 
+       Method Name     Description 
+       close()         关闭数据库连接 
+       commit()        提交当前事务                  #在commit()之前close()的话，会自动rollback()
+       rollback()      取消当前事务 
+       cursor()        使用这个连接创建并返回一个游标或类游标的对象 
+       errorhandler (cxn, cur,errcls, errval) 
+
+       游标对象的属性 
+       对象属性                描述
+       arraysize       使用 fechmany()方法一次取出多少条记录, 默认值为 1 
+       connectionn     创建此游标对象的连接(可选) 
+       description     返回游标活动状态(一个包含七个元素的元组):  (name, type_code, display_size, internal_ size, precision, scale, null_ok); 只有 name 和 type_code 是必须提供的.  
+       lastrowid       返回最后更新行的 id (可选), 如果数据库不支持行 id, 默认返回 None) 
+       rowcount        最后一次 execute() 操作返回或影响的行数.  
+       callproc(func[,args])  调用一个存储过程 
+       close()             关闭游标对象 
+       execute(op[,args])    执行一个数据库查询或命令 
+       executemany(op,args)  类似 execute() 和 map() 的结合, 为给定的每一个参数准备并执行一个数据库查询/命令
+       fetchone()      得到结果集的下一行 
+       fetchmany([size=cursor. 
+       arraysize])      得到结果集的下几行 (几 = size) 
+       fetchall()      返回结果集中剩下的所有行 
+       __iter__()      创建一个迭代对象 (可选; 参阅 next()) 
+       messages        游标执行后数据库返回的信息列表 (元组集合) (可选) 
+       next()      使用迭代对象得到结果集的下一行(可选; 类似 fetchone(), 参阅 __iter__()) 
+       nextset()       移到下一个结果集 (如果支持的话) 
+       rownumber       当前结果集中游标的索引 (以行为单位, 从 0 开始) (可选) 
+       setinput- sizes(sizes) 设置输入最大值 (必须有, 但具体实现是可选的) 
+       setoutput- size(size[,col]) 设置大列的缓冲区大写(必须有, 但具体实现是可选的) 
+
+       异常类 
+       异常                描述 
+       Warning            警告异常基类 
+       Error              错误异常基类 
+       InterfaceError     数据库接口错误 
+       DatabaseError      数据库错误 
+       DataError           理数据时出错 
+       OperationalError    数据库执行命令时出错 
+       IntegrityError      数据完整性错误 
+       InternalError      数据库内部出错 
+       ProgrammingError    SQL 执行失败 
+       NotSupportedError   试图执行数据库不支持的特性
+
+       类型对象和构造器                #，对于Python DB-API的开发者来说，你传递给数据库的参数是字符串形式的，但数据库需要将它转换为多种不同的形式，该方式用来将Python的字符串参数转换为SQL类型的参数
+       类型对象        描述 
+       Date(yr,mo,dy)      日期值对象 
+       Time(hr,min,sec)   时间值对象 
+       Timestamp(yr,mo,dy,hr, min,sec)      时间戳对象 
+       DateFromTicks(ticks) 通过自 1970-01-01 00:00:01 utc 以来的 ticks 秒数得到日期 
+       TimeFromTicks(ticks) 通过自 1970-01-01 00:00:01 utc 以来的 ticks 秒数得到时间值对象 
+       TimestampFromTicks(ticks) 通过自 1970-01-01 00:00:01 utc 以来的 ticks 秒数得到时间戳对象 
+       Binary(string)  对应二进制长字符串值的对象 
+       STRING        描述字符串列的对象, 比如 VARCHAR 
+       BINARY        描述二进制长列的对象 比如 RAW, BLOB 
+       NUMBER        描述数字列的对象 
+       DATETIME      描述日期时间列的对象 
+       ROWID          描述 “row ID” 列的对象
+       #+END_EXAMPLE
+    2. 某些接口程序的连接对象拥有query()方法可以执行SQL查询，但不建议使用这个方法，或者事先检查该方法在当前接口程序当中是否可用。因为这不规范，正常来说应该使用游标对象cursors的execute()方法
+    3. sqlite被Python集成进了标准库，import sqlite3
+       #+BEGIN_SRC
+       >>> import sqlite3 
+       >>> cxn = sqlite3.connect('sqlite_test/test') 
+       >>> cur = cxn.cursor() 
+       >>> cur.execute('CREATE TABLE users(login VARCHAR(8), uid 
+       INTEGER)') 
+       >>> cur.execute('INSERT INTO users VALUES("john", 100)') 
+       >>> cur.execute('INSERT INTO users VALUES("jane", 110)') 
+       >>> cur.execute('SELECT * FROM users') 
+       >>> for eachUser in cur.fetchall(): 
+       ...     print eachUser 
+       ... 
+       (u'john', 100) 
+       (u'jane', 110) 
+       >>> cur.execute('DROP TABLE users') 
+       <sqlite3.Cursor object at 0x3d4320> 
+       >>> cur.close() 
+       >>> cxn.commit() 
+       >>> cxn.close() 
+       #+END_SRC
+*** TODO 对象-关系管理器(ORMs)
+** Python扩展
+   1. 为python创建扩展需要三个主要步骤：
+      1. 创建应用程序代码
+      2. 利用样板来包装代码
+      3. 编译与测试
+   2. 我们的样板主要分为 4 步： 
+      1. 包含 Python 的头文件。 
+      2. 为每个模块的每一个函数增加一个型如 Python对象指针 模块名称_函数名称(PyObject *self,PyObject *args)的包装函数。 
+	 你需要为所有想被 Python 环境访问的函数都增加一个静态的函数，函数的返回值类型为 PyObject*，函数名前面要加上模块名和一个下划线(_)。
+	 包装函数的用处就是先把 Python 的值传递给 C，然后调用我们想要调用的相关函数。当这个函数完成要返回 Python 的时候，把函数的计算结果转换成 Python 的对象，然后返回给 Python。
+	 在从 Python对象转换到C对象的转换就用PyArg_Parse*系列函数。在从 C 转到 Python 的时候，就用 Py_BuildValue()函数 
+	 PyArg_Parse 系列函数的用法跟 C 的 sscanf 函数很像，都接受一个字符串流，并根据一个指定的格式字符串进行解析，把结果放入到相应的指针所指的变量中去。它们的返回值为 1 表示解析成功，返回值为 0 表示失败。 
+	 Py_BuildValue 的用法跟 sprintf 很像，把所有的参数按格式字符串所指定的格式转换成一个Python 的对象。 
+ 
+      3. 为每个模块增加一个型如 PyMethodDef 模块名Methods[]的数组。 
+	 这个数组由多个数组组成。其中的每一个数组都包含了一个函数的信息。最后放一个 NULL 数组表示列表的结束。例如:
+	 #+BEGIN_SRC C
+	 static PyMethodDef 
+	 ExtestMethods[] = { 
+	 { "fac", Extest_fac, METH_VARARGS }, 
+	 { "doppel", Extest_doppel, METH_VARARGS }, 
+	 { NULL, NULL }, 
+	 }; 
+	 #+END_SRC
+	  
+	 每一个数组都包含了函数在 Python 中的名字，相应的包装函数的名字以及一个 METH_VARARGS常量。
+	 其中，METH_VARARGS 常 量 表 示 参 数 以 tuple 形 式 传 入 。
+	 如果我们要使用PyArg_ParseTupleAndKeywords()函数来分析命名参数的话，我们还需要让这个标志常量与METH_KEYWORDS 常量进行逻辑与运算常量。
+	 最后，用两个 NULL 来结束我们的函数信息列表。 
+      4. 增加模块初始化函数 void init模块名()
+	 所有工作的最后一部分就是模块的初始化函数。这部分代码在模块被导入的时候被解释器调用。在这段代码中，我们需要调用 Py_InitModule()函数，并把模块名和 ModuleMethods[]数组的名字传递进去，以便于解释器能正确的调用我们模块中的函数。
+	 #+BEGIN_SRC C
+	 void initExtest() { 
+	 Py_InitModule("Extest", ExtestMethods); 
+	 } 
+	 #+END_SRC
+   3. 编译
+      使用 distutils 包的时候我们可以方便的按以下步骤来做： 
+      1. 创建 setup.py 
+	 #+BEGIN_EXAMPLE
+	 下一步就是要创建一个 setup.py 文件。编译最主要的工作由 setup()函数来完成。在这个函数调用之前的所有代码，都是一些预备动作。为了能编译扩展，你要为每一个扩展创建一个 Extension实例，在这里，我们只有一个扩展，所以只要创建一个 Extension 实例： 
+	 Extension('Extest', sources=['Extest2.c']) 
+	 第一个参数是（完整的）扩展的名字，如果模块是包的一部分的话，还要加上用'.'分隔的完整的包的名字。我们这里的扩展是独立的，所以名字只要写"Extest"就好了。sources 参数是所有源代码的文件列表。同样，我们也只有一个文件：Extest2.c。 
+	 现在，我们可以调用 setup()了。setup 需要两个参数:一个名字参数表示要编译哪个东西，一个列表列出要编译的对象。由于我们要编译的是一个扩展，我们把 ext_modules 参数的值设为扩展模块的列表。语法如下： 
+	 setup('Extest', ext_modules=[...]) 
+ 
+	 例 22.2 编译脚本(setup.py) 
+	 
+	 这个脚本会把我们的扩展编译到 build/lib.*子目录中。 
+	 
+	 #!/usr/bin/env python 
+	 
+	 from distutils.core import setup, Extension 
+	 MOD = 'Extest' 
+	 setup(name=MOD, ext_modules=[Extension(MOD, sources=['Extest2.c'])])
+	 #+END_EXAMPLE
+      2. 通过运行 setup.py 来编译和连接您的代码 
+	 现在，我们已经有了 setup.py 文件。运行 setup.py build 命令就可以开始编译我们的扩展了
+      3. 从 Python 中导入您的模块 
+	 你的扩展会被创建在你运行 setup.py 脚本所在目录下的 build/lib.*目录中。你可以切换到那个目录中来测试你的模块，或者也可以用以下命令把它安装到你的 Python 中：
+      4. 测试功能
+   4. 引用计数
+      当创建扩展时，你必需对如何操作 Python 对象要格外的小心。你时时刻刻都要注意是否要改变某个对象的引用计数
+      #+CAPTION:用于Python对象引用计数的宏
+      | 函数           | 说明                    |
+      |----------------+-------------------------|
+      | Py_INCREF(obj) | 增加对象 obj 的引用计数 |
+      |----------------+-------------------------|
+      | Py_DECREF(obj) | 减少对象 obj 的引用计数 |
+      |----------------+-------------------------|
+   5. 线程和全局解释锁（GIL）
+      编译扩展的人必须要注意，他们的代码有可能会被运行在一个多线程的 Python 环境中。
+      由两个 C 宏Py_BEGIN_ALLOW_THREADS 和 Py_END_ALLOW_THREADS 包裹的代码，保证了运行和非运行时的安全性。将会允许其他线程的运行。
+ 
+
+
+* 模块说明
+** cmd
+   1. 继承cmd.Cmd类
+      * 以do_xxx命名的成员函数为xxx的命令的命令执行体
+      * 以help_xxx命名的函数为xxx命令的帮助说明执行体
+   2. 运行时
+      * help命令会显示所有有帮助说明的xxx命令
+      * ? xxx会调用help_xxx来输出xxx命令的帮助
+      * 直接运行xxx,会调用do_xxx函数

@@ -1,0 +1,239 @@
+#+TITLE:Git教程笔记
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+* Git基础说明
+** Git与subversion的区别
+   * Git只关注文件数据的整体内容是否发生改变,而不关心文件内容的具体差异
+   * Git是分布式的版本控制系统,因此大多数的操作不需要网络环境
+   * 所有保存在Git数据库中的东西都是通过对内容的SHA-1计算的hash值作为索引而不是靠文件名
+   * 当把本地工作推送到服务器上时,Git必须服务器上的更新合并到本地后才能推送,而Subversion会在服务器端自动合并提交的更新
+** Git文件状态变化表
+   对于任何文件,在Git内部只有三种状态:已提交(表示已经保存在本地数据库中),已修改(修改了某个文件)和已暂存(把已修改的文件放在下次提交时要保存的清单中)
+   
+   #+CAPTION: Git文件状态变化表
+   | 初始状态 | 操作       | 目标状态 |
+   |----------+------------+----------|
+   | 未跟踪   | git add    | 未修改   |
+   | 未修改   | 编辑文件   | 已修改   |
+   | 已修改   | git add    | 已暂存   |
+   | 已暂存   | git commit | 未修改   |
+   | 未修改   | git rm     | 未跟踪      |
+* Git获取帮助
+  * git help <verb>
+  * git <verb> --help
+  * man git-<verb>
+* Git的配置
+** git配置存放点
+   git配置有三个级别的配置存放点,每个级别的配置会覆盖上层的相同配置
+   * /etc/gitconfig
+
+     其中的配置对整个系统起作用,通过git config --system来设定
+
+   * ~/.gitconfig
+
+     用户目录下的配置文件只适用于该用户,使用git config --global来设定
+
+   * work-dirctory/.git/config文件
+
+     这里的配置仅针对当前项目有效,使用git config来设定
+** 常用的git配置项
+*** 用户名称和email
+    这两条配置很重要,git提交时都会引用这两条信息,说明是谁提交了更新.
+    #+BEGIN_SRC sh
+      git config --global user.name "darksun"
+      git config --global user.email "lujun9972@gmail.com"
+    #+END_SRC
+*** 默认文本编辑器
+    当git需要你输入一些额外消息时,会自动调用一个默认外部文件编辑器.默认为操作系统指定的默认编辑器
+    #+BEGIN_SRC sh
+      git config --global core.editor emacs    
+    #+END_SRC
+*** 差异分析工具
+    Git可用理解kdiff3,tkdiff,meld,xxdiff,vimdiffgvimdiff,ecmerge和opendiff等合并工具的输出信息
+    #+BEGIN_SRC sh
+      git config --global merge.tool vimdiff    
+    #+END_SRC
+*** 查看配置信息
+    #+BEGIN_SRC sh
+      # 查看所有的配置项
+      git config --list               # 有时候会看到重复的变量名,说明它们来自不同的配置文件
+      # 直接查看某个变量的设定,只要把特定名称跟在后面即可.
+      git config user.name
+    #+END_SRC
+*** 定义git命令的别名
+    #+BEGIN_SRC sh
+      # 设置别名
+      git config --global alias.co checkout # 设置git co为git checkout的别名
+      git config --global alias.visual "!gitk" # 设置git visual为执行命令gitk
+    #+END_SRC
+* Git的使用
+** Git的一般用法
+      #+BEGIN_SRC sh
+        ###############初始化操作##############
+        # 1. 初始化当前目录,为git版本控制作准备
+        git init
+        git clone $仓库url              # 1. 克隆已有的仓库到本地
+        
+        ###############版本控制##############
+        # 2. 检查当前文件的状态
+        git status
+        
+        # [编辑忽略文件清单]
+        # 在名为.gitignore的文件中列出要忽略的文件模式
+        
+        # 3. 跟踪新文件,此时文件加入跟踪列表,但状态为未修改
+        git add $要跟踪的文件路径       # 若文件路径为目录,则递归跟踪目录下的所有文件.
+        
+        # 4. 修改已跟踪文件
+        # 删除已跟踪文件
+        git rm
+        # 移动已跟踪文件
+        git mv $from_file $to_file      # 相当于mv $from_file $to_file;git rm $from_file;git add $to_file
+        
+        # 5. 将已修改的文件放入暂存区
+        git add $要暂存的文件路径       # git add命令会根据目标文件的状态不同而产生不同的效果
+        # [查看暂存后那些文件进行了改变]
+        git diff                        # 比较的是当前文件和暂存区域快照之间的差异
+        
+        # 6. 提交暂存区的快照
+        git commit                      # 使用-a选项可用跳过暂存这一步,自动把已经跟踪的文件暂存起来并提交
+        # [查看已经暂存起来的文件和上次提交时的快照之间的差异]
+        git diff --cached
+        
+        # 7. 修改最后一次提交
+        git commit --amend              # 使用当前的暂存快照来替代最后一次提交
+        # 7. 取消最后一次暂存/取消对文件的修改
+        # 使用git status会提示怎么做
+        
+      #+END_SRC
+** 远程仓库命令   
+   同他人协作开发某个项目时,需要管理远程仓库,以便推送/拉取数据,分享各自的工作进展. 
+      #+BEGIN_SRC sh
+        ###############远程仓库操作##############
+        # 查看当前的远程仓库
+        git remote                      # 列出每个远程仓库的别名
+        git remote -v                   # 列出每个远程仓库的别名和对应的URL
+        
+        # 添加远程仓库
+        git remote add $远程仓库别名 $远程仓库url
+        
+        # 从远程仓库更新本地数据
+        git fetch $remote_name          # 从远程仓库拉取所有本地仓库没有的数据,但不会自动合并本地仓库的数据
+        git pull                        # 默认将远程仓库origin的master分支合并到当前的master分支
+        
+        # 推送数据到远程仓库
+        git push                        # 默认将本地master分支推送到远程仓库的origin的master分支
+        git push $remote_name $branch_name # 将本地的分支$branch_name推送到远程仓库$remote_name中
+        
+        # 重命名远程仓库别名
+        git remote rename $old_alias $new_alias
+        
+        # 删除远程仓库别名
+        git remote rm $远程仓库别名
+        
+        # 查看远程仓库信息
+        git remote show $remote_name
+      #+END_SRC
+** tag命令
+   git中的标签有两种:轻量级的标签和带附注的标签
+   #+BEGIN_SRC sh
+     ###############标签操作##############
+     # 添加轻量级标签
+     git tag $标签名
+     
+     # 添加带附注的标签
+     git tag -a $标签名
+     git tag -a $标签名 -m $标签说明
+     git tag -s $标签名 -m $标签说明 # 使用GPG来签署标签
+     git tag -a $标签名 $早前某次提交的检验和(或者前几位字符) # 为早前的某次提交作tag
+     
+     # 查看标签信息
+     git show $标签名
+     
+     # 验证标签
+     git tag -v $标签名              # 调用GPG来验证签名,需要有签署者的公钥,存放在keyring中
+     
+     # 推送tag
+     git push $remote_name $tag名称  # 推送标签到远程仓库
+     git push $remote_name --tags    # 一次推送所有的标签
+   #+END_SRC
+** log命令
+   1. git log选项
+      | 选项             | 说明                                                                                 |
+      |------------------+--------------------------------------------------------------------------------------|
+      | -p               | 按patch格式显示每个更新之间的更新                                                    |
+      | --stat           | 显示更新的统计信息                                                                   |
+      | --shortstat      | 只显示--stat中最后的行数修改添加移除统计                                             |
+      | --name-only      | 仅在提交信息后显示已修改的文件清单                                                   |
+      | --name-status    | 显示新增,修改,删除的文件清单                                                         |
+      | --abbrecv-commit | 近显示SHA-1的前几个字符,而非所有的40个字符                                           |
+      | --relative-date  | 使用相对时间显示                                                                     |
+      | --pretty=...     | 使用其他格式显示历史提交信息,可用选项包括oneline,short,full,fuller,format:格式标示符 |
+      | -n(n为数字)      | 仅显示最后提交的n条记录                                                              |
+      | --since/--after  | 仅显示指定日期之后的修改                                                             |
+      | --until/--before | 仅显示指定日期之前的提交                                                             |
+      | --author         | 仅显示指定作者相关的提交                                                             |
+      | --committer      | 仅显示指定提交者相关的提交                                                           |
+   2. git log --pretty=format:格式说明符
+      | 选项 | 说明                     |
+      |------+--------------------------|
+      | %H   | 提交对象的完整hash字符串 |
+      | %h   | 提交对象的简短hash字符串 |
+      | %T   | 树对象的完整hash字符串   |
+      | %t   | 树对象的简短hash字符串   |
+      | %P   | 父对象的完整hash字符串   |
+      | %p   | 父对象的简短hash字符串   |
+      | %an  | 作者名字                 |
+      | $ae  | 作者的email              |
+      | %ad  | 作者修订的绝对日期       |
+      | %ar  | 作者修订的相对日期       |
+      | %cn  | 提交者名字               |
+      | %ce  | 提交者的email            |
+      | %cd  | 提交的绝对日期           |
+      | %cr  | 提交的相对日期           |
+      | %s   | 提交说明                     |
+** 分支命令
+   远程分支的格式一般为"远程仓库名/分支名"
+   #+BEGIN_SRC sh
+     # 新建分支
+     git branch $分支名              # 但并未切换到该分支
+     
+     # 切换分支
+     git checkout $分支名            
+     git checkout -b $分支名         # 新建并切换到分支处
+     
+     # 跟踪分支:一种跟远程分支有直接联系的本地分支,在跟踪分支中输入git push 和git pull会自动推断相关的远程分支
+     git checkout -b $分支名 $远程仓库名/$远程分支名 # 新建指定分支,并绑定为指定远程分支的跟踪分支
+     git checkout --track $远程仓库名/$远程分支名    # 新建指定远程分支的跟踪分支
+     
+     # 合并分支
+     git merge $分支名               # 将分支名的分支合并到当前分支处
+     
+     # 删除分支
+     git branch -d $分支名           # 若指定分支包含当前分支未合并的工作,则删除会失败
+     git branch -D $分支名           # 强制删除分支
+     
+     # 冲突的合并
+     git status                      # unmerged处显示哪几个文件有冲突
+     git mergetool                   # 使用自定义的图形化工具合并文件,当然也可以用vi来手工合并
+     git add $合并后的文件           # 将合并后的文件标记为冲突已解决
+     
+     # 显示本地分支
+     git branch                      # 显示当前所有分支的清单
+     git branch --merge              # 查看那些分支已经合并入当前分支,这些分支可用被del了
+     git branch --no-merged          # 查看尚未合并的分支
+     
+     # 推送分支
+     git push $远程仓库名 $本地分支名 # 推送指定本地分支到远程仓库中
+     git push $远程仓库名 $本地分支名:$远程分支名 # 推送指定的本地分支到远程仓库中,并命名为指定的远程分支名
+     
+     # 删除远程分支
+     git push $远程仓库名 :$远程分支名 # 可用理解为将本地的空白分支推送到远程仓库覆盖远程分支
+     
+     # 衍合,所谓衍合就是把一个分支里提交的改变在另一个分支里重放一遍
+     git rebase $分支                # 把指定分支的改变在当前分支重作一边形成新的版本
+     git rebase $主分支 $特征分支    # 把特征分支的改变在主分支中重做一边形成新的版本
+     git rebase master server client # 找出client分支从它与server分支的祖先相分离之后的改变在master分支上重新做一遍.
+     # 注意!!永远不要衍合那些已经推送到公共仓库的更新!!
+   #+END_SRC

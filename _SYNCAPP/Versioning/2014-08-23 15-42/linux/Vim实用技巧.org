@@ -1,0 +1,20 @@
+#+TITLE: Vim实用技巧
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* Vim决问题的方式
+  * >G命令会增加当前行到文档末尾的缩进层次
+
+  * Vim中可重复的操作及回退
+	#+CAPTION:Vim中可重复的操作及回退
+    | 目的                     | 操作                  | 重复        | 回退 |
+    |--------------------------+-----------------------+-------------+------|
+    | 做出修改                 | {edit}                | .           | u    |
+    | 在行内查找下一指定字符   | f{char}/t{char}       | ;           | ,    |
+    | 在行内查找上一指定字符   | F{char}/T{char}       | ;           | ,    |
+    | 在文档中查询下一处匹配项 | /pattern<CR>          | n           | N    |
+    | 在文档中查询下一处匹配项 | ?pattern<CR>          | n           | N    |
+    | 执行替换                 | :s/target/replacement | &           | u    |
+    | 宏操作                   | q{register}{changes}q | @{register} | u    |
+
+  * 

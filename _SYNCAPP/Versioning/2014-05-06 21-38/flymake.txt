@@ -1,0 +1,109 @@
+                               flymake
+                               =======
+
+Author: 
+Date: 2014-01-27 19:26:52 中国标准时间
+
+
+Table of Contents
+=================
+1 快速入门
+2 配置
+    2.1 配置变量
+    2.2 扩展支持新的语法检查工具
+
+
+1 快速入门 
+-----------
+  * 要想当打开能够进行语法检查的文件时自动开启flymake,需要进行如下配置
+
+
+  (add-hook 'find-file-hook 'flymake-find-file-hook)
+
+  * 当进入flymake-mode后,语法检查会在出现以下情况时自动进行
+    * 加载buffer后
+    * 回车后
+    * 改变buffer内容后过了一定的时间(默认为0.5s)
+  * 如果想手工运行语法检查,则执行函数`flymake-start-syntax-check-for-current-buffer`
+  * 如果语法检查出错误/警告,则会高亮出错的行,并在mode-line上显示总共的错误和警告的数量
+  * 使用`flymake-goto-next-error`和`flymake-goto-prev-error`移动到下一个/下一个错误行
+  * 要查看当前行的错误信息,使用命令`flymake-display-err-menu-for-current-line`
+  * 语法检查完成后,会在mode-line上显示检查的结果. 说明如下
+      Flymake*       Flymake正在运行,暂时没找到错误                                  
+      Flymake:E/W*   Flymake正在运行,已经找到E个错误和W个警告                        
+      Flymake        Flymake运行结束,没有找到错误                                    
+      Flymake:E/W    Flymake运行结束,已经找到E个错误和W个警告                        
+      Flymake:!      Flymake无法找到当前buffer的主文件                               
+      CFGERR         语法检查进程返回非0值,但是分析不出错误/警告信息,可能是配置错误  
+      NOMASTER       不能找到当前buffer的主文件                                      
+      NOMK           不能找到当前buffer的构建文件,比如makefile                       
+      PROCESS        Flymake无法运行语法检查进程                                     
+  * 若Flymake出现错误,可以切换到*Message* buffer查看日志,变量`flymake-log-level`定义了记录日志的级别,-1表示不记录日志
+
+2 配置 
+-------
+
+2.1 配置变量 
+=============
+   * flymake-log-level
+     日志输出的级别
+   * flymake-allowed-file-name-masks
+     该变量配置语法检查工具,列表的元素格式为(filename-regexp, init-function, cleanup-function
+     getfname-function).
+   * flymake-buildfile-dirs
+     搜寻构建文件(通常为makefile文件)的目录(相对路径)列表
+   * flymake-master-file-dirs
+     搜索主文件(master file)的目录列表
+   * flymake-get-project-include-dirs-function
+     该变量的值为一个函数,函数的作用是接收一个basedir参数,返回项目的include目录列表
+   * flymake-err-line-patterns
+     错误/警告信息的模式匹配,列表元素格式为(regexp file-idx line-idx col-idx err-text-idx)
+   * flymake-compilation-prevents-syntax-check
+     该值说明了对同一个文件是否可以编译与语法检查同时进行
+   * flymake-no-changes-timeout
+     设置对buffer修改了多长时间后,开始进行语法检查
+   * flymake-start-syntax-check-on-newline
+     是否在回车后开始进行语法检查.
+   * flymake-errline
+     显示出现错误的行的显示方式(face)
+   * flymake-warnline
+     显示出现警告的行的显示方式(face)
+
+2.2 扩展支持新的语法检查工具 
+=============================
+   通过配置flymake-allowed-file-name-masks变量,可以扩展新的语法检查工具,该列表元素为(regexp file-idx line-idx col-idx err-text-idx),现在对元素中各内容进行一些说明
+   * filename-regexp
+     Flymake将buffer filename跟filename-regexp作匹配,如果没有匹配,则关闭flymake-mode,否则使用第一个匹配到的信息进行语法检查
+   * init-function
+     init-function被用来进行语法检查前的初始化动作, 通常通过复制一份buffer内容的临时拷贝来完成. 
+     该函数必须返回(cmd-name arg-list)这样的格式.
+     如果init-function返回null,则不会进行语法检查,而flymake-mode也不会被关闭
+   * cleanup-funcition
+     cleanup-function被用来进行语法检查后的清理动作,通常会删除init-function创建的临时拷贝.
+   * getfname-function
+     该函数被用来将语法检查工具所报告的文件名(它只是一个由init-function所创建的临时拷贝)转换成真正的文件名. 大多数时候可以使用函数`flymake-get-real-file-name`
+     
+   如果新语法检查工具的输出无法被Flymake识别的话,则需要配置`flymake-err-line-patterns`变量.该列表元素格式为(regexp file-idx line-idx col-idx err-text-idx)
+   下面是一些例子
+
+
+  (defun flymake-perl-init ()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-inplace))
+           (local-file (file-relative-name
+                        temp-file
+                        (file-name-directory buffer-file-name))))
+      (list "perl" (list "-wc " local-file)))) 
+  
+  (setq flymake-allowed-file-name-masks
+        (cons '(".+\\.pl$"
+                flymake-perl-init
+                flymake-simple-cleanup
+                flymake-get-real-file-name)
+              flymake-allowed-file-name-masks)) 
+  
+  (setq flymake-err-line-patterns
+        (cons '("\\(.*\\) at \\([^ \n]+\\) line \\([0-9]+\\)[,.\n]"
+                2 3 nil 1)
+              flymake-err-line-patterns))
+

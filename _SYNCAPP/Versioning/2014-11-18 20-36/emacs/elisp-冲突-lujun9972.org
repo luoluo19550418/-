@@ -1,0 +1,1034 @@
+* 变量本地化
+  * 普通变量通过make-localvariable或make-variable-buffer-local变为buffer－local的
+	* make-variable-buffer-local使指定的变量在每个buffer中都是独立的
+	* make-local-variable使变量在当前buffer是独立的，而其他buffer依然共享全局变量
+  * hook变量智能通过make-local-hook变为buffer-local的
+* 有三种方式可以加载文件：
+  * load
+  * autoload
+  * require
+* 使用eval-after-load可以推迟一段代码的执行
+  (eval-after-load "触发条件的文件" 待执行的代码)
+  这里，第一个参数的值必须跟上面三种方式加载文件时的值一模一样
+* 可以直接使用(a . b)产生一个cons，注意a . b之间的空格
+* MAX值
+  * most-positive-fixnum和most-negative-fixnum定义了整数的范围
+  * 
+* 和C语言类似，如果参数都是整数，做除法时要记4(/ 5 6)是会等于0的，这跟common lisp不同
+* elisp中，字符的读入语法为?字符，而common lisp中是#\字符.
+  字符前也可以加上\来转义,如?\a表示控制字符
+  另外,\M-代表Meta建,\C-代表control建
+* 没有charp,因为字符就是整数,但是有char-or-string-p函数
+* 使用char-equal比较字符时,需要注意case-fold-search变量的值,t表示忽略大小写
+* 转换函数
+  * char-to-string / string-to-char
+  * number-to-string / string-to-number
+  * concat可以将序列转换成字符串
+	#+BEGIN_SRC elisp
+      (concat '(?a ?b ?c ?d ?e)) ; => "abcde"
+      (concat [?a ?b ?c ?d ?e]) ; => "abcde"
+	#+END_SRC
+  * vconcat可以把字符串转换成向量
+	#+BEGIN_SRC elisp
+    (vconcat "abdef") ; => [97 98 100 101 102]
+	#+END_SRC
+  * append可以把字符串转换成一个列表
+	#+BEGIN_SRC elisp
+    (append "abcdef" nil) ; => (97 98 99 100 101 102)
+	#+END_SRC
+  * downcase / upcase
+* length不能对点列表和环形列表求长度,但是可以用safe-length代替
+* copy-sequence不能用于点列表和环形列表,可以用copy-tree函数拷贝点列表,但无法复制环形列表
+* 使用elt取序列中第n个元素,nth取列表中第n个元素,aref取数组的第n个元素
+* 使用aref和aset访问或修改数组元素时,下标超出数组长度的话,会产生错误,所以要先确定数组的长度
+* elisp中,使用一个名为obarray的向量来存放符号,lisp每读入一个符号都会intern到obarray中,如果想避免,可以在符号名前加上#::
+  #+BEGIN_SRC elisp
+    (intern-soft "abc") ; => nil
+    'abc ; => abc
+    (intern-soft "abc") ; => abc
+    (intern-soft "abcd") ; => nil
+    '#:abcd ; => abcd
+    (intern-soft "abcd") ; => nil
+  #+END_SRC
+  obarray也是一种类型名称
+* obarray类似common lisp中的package,我们也可以使用其他向量代替obarray,相关函数有
+  * intern
+  * intern-soft
+  * unintern
+  * mapatoms
+* 列表的第一个表达式如果是一个符号,解释器会查找这个表达式的函数值.如果函数值是另一个符号,则会继续查找这个符号的函数值
+* emacs中的变量作用域
+** buffer-local变量
+*** 声明buffer-local变量
+   	* make-variable-buffer-local
+	  各个缓冲区都有各自的buffer-local变量
+   	* make-local-variable
+	  当前缓冲区产生一个局部变量,其他缓冲区仍然使用全局变量(推荐使用)
+*** buffer相关函数
+**** with-current-buffer
+   	 #+BEGIN_SRC elisp
+       ;使其中的body表达式在指定的缓冲区里执行(使用指定buffer的配置信息执行body表达式)
+       (with-current-buffer buffer
+       body)
+   	 #+END_SRC
+**** get-buffer
+	 #+BEGIN_SRC elisp
+       ;得到缓冲区名字的对应缓冲区对象,如果没有这个名字的缓冲区,返回nil
+       (get-buffer buffer-name)
+	 #+END_SRC
+**** default-value
+	 #+begin_src elisp
+       ;访问符号的全局变量的值
+       (default-value symbol)
+	 #+end_src
+**** setq-default
+	 #+begin_src elisp
+       ;修改符号作为全局变量的值
+       (setq-default symbol-name)
+	 #+end_src
+**** local-variable-p
+	 #+begin_src elisp
+       ;测试变量是不是buffer-local的
+       (local-variable-p symbol [buffer对象])
+	 #+end_src
+**** buffer-local-value
+	 #+begin_src elisp
+       ;得到其他缓冲区内的buffer-local变量值
+       (buffer-local-value 符号 buffer对象)    
+	 #+end_src
+**** default-boundp
+	 #+begin_src elisp
+       ;判断符号是否有全局值
+       (default-boundp 符号)    
+	 #+end_src
+**** makunbound
+	 #+begin_src elisp
+       ;使一个变量的值重新为空
+       (makunbound 符号)
+	 #+end_src
+**** kill-local-variable
+	 #+begin_src elisp
+       ;清除一个buffer-local变量
+       (kill-local-variable 符号)    
+	 #+end_src
+**** kill-all-local-variables
+	 #+begin_src elisp
+       ;清除所有的buffer-local变量,但是带有属性permanent-local的不会清除,带有这些标记的变量一般都是和缓冲区模式无关的
+       (kill-all-local-variables)    
+	 #+end_src
+*** 文件中的本地变量列表
+   	* "本地变量列表"可以位于任何文件的结尾位置,它的形式如下所示
+	  #+begin_src elisp
+       	Local variables:
+       	var1 : value1
+       	var2 : value2
+       	...
+       	eval : form1
+       	eval : form2
+       	...      
+       	End:
+	  #+end_src
+	  这里定义的var自动是buffer-local的,类似宏一样,value被认为是被引用的
+	  这里的form则会自动执行.
+   	* 可以通过在.emacs中加入
+	  #+begin_src elisp
+       	(setq enable-local-variables 'query)     
+	  #+end_src
+	  来阻止"本地变量列表"生效
+* elisp中的数据类型
+** vector
+   vecotr是sequence的一个子类型
+   * 如何创建一个vector
+
+     * 使用读入语法:[val1 val2 val3...]
+
+	 * 使用函数(vector val1 val2 val3...)
+
+   * 获取vector的长度
+
+	 (length myVector)
+
+   * 获取element
+
+	 (elt mySeq index)    # index从0开始
+
+   * 设置element
+
+	 (aset mySeq index value)
+
+   * 将多个Sequence组合成一个vector
+
+	 (voncat seq1 seq2 ...)
+
+   * 将vector转换成list
+	 
+	 (append myVector nil)
+	 
+** List
+   list是sequence的一个子类型
+   * 创建一个list
+
+	 * 使用list函数:(list v1 v2...)
+
+	 * 使用字面表达式'(v1 v2...)
+
+   * 获取element
+    | Function       | Purpose                     |
+    |----------------+-----------------------------|
+    | (car ℓ)        | first element               |
+    | (nth n ℓ)      | nth element (start from 0)  |
+    | (car (last ℓ)) | last element                |
+    | (cdr ℓ)        | 2nd to last elements        |
+    | (nthcdr n ℓ)   | nth to last elements        |
+    | (butlast ℓ n)  | without the last n elements |
+
+   * 获取list的长度
+
+	 (length mySeq)
+
+   * 在list头添加element
+
+	 (cons x myList)
+
+   * 合并两个list
+
+	 (append list1 list2)
+
+	 由此可以得出,在list尾部添加element的方法为
+
+	 (append myList (list myVal))
+
+   * 修改list的函数
+     | Function       | Purpose                                                                          |
+     | (pop ℓ)        | Remove first element from the variable. Returns the removed element.             |
+     | (nbutlast ℓ n) | Remove last n elements from the variable. Returns the new value of the variable. |
+     | (setcar ℓ x)   | replaces the first element in ℓ with x. Returns x.                               |
+     | (setcdr ℓ x)   | replaces the rest of elements in ℓ with x. Returns x.                            |
+
+** alist
+   alist中的item是顺序的,且可以有重复键值
+
+   * 创建
+** hash table
+   hash table中的的item是非排序的,不能有重复键值
+   
+   * 创建hash-table
+	 
+	 (make-hash-table )
+
+   * 添加item
+
+	 (puthash myKey myVal myHash)
+
+   * 修改item的值
+
+	 (puthash myKey myNewVal myHash)
+
+   * 删除item
+
+	 (remhash myKey myHash)
+
+   * 获取某item的值
+
+	 (gethash myKey myHash)  ;若没key为myKey的item,则返回nil
+
+	 (gethash myKey myHash defaultVal)   ;若没key为myKey的item,则返回defaultVal
+
+   * 获取hash中的item个数
+
+	 (hash-table-count myHash)
+
+   * 为hash-map中的所有键值对调用函数处理
+
+	 (maphash myFunc myHash)  ;myFunc接收两个参数,一个key,一个value
+
+   * 获取hash-map中的所有key值 / value值
+
+	 * 在emacs24.4之后,可以使用
+	   #+BEGIN_SRC elisp
+         ;; get all keys
+         (require 'subr-x)
+         (hash-table-keys myHash) ; 
+         (hash-table-values myHash) ;
+	   #+END_SRC
+
+	 * 在emacs24.3可以自定义函数
+
+	   #+BEGIN_SRC elisp
+         (defun get-hash-keys (hashtable)
+           "Return all keys in hashtable."
+           (let (allkeys)
+             (maphash (lambda (kk vv) (setq allkeys (cons kk allkeys))) hashtable)
+             allkeys
+           )
+         )
+         
+         (defun get-hash-values (hashtable)
+           "Return all values in HASHTABLE."
+           (let (allvals)
+             (maphash (lambda (kk vv) (setq allvals (cons vv allvals))) hashtable)
+             allvals
+           )
+         )
+	   #+END_SRC
+** symbol
+   Lisp中symbol类似于其他语言中的变量,但是它不仅仅只存储一个值.
+*** 符号的组成
+   	* 一个符号既可以有value,也可以有function
+   	* 符号名称:symbol-name
+   	* 符号值:  symbol-value
+	  * 使用boundp测试符号是否有值
+   	* 函数:    symobl-function
+	  * 使用fboundp测试符号是否设置了函数
+   	* 属性列表:symbol-plist
+	  * 使用get/put来访问/修改某个属性值
+	  * 使用plist-get/plist-put来访问/设置属性列表中的属性
+	  * 属性列表是一个形如(prop1 value1 prop2 value2)的关联列表,但无法删除一个属性
+	  * 可用使用属性列表来存储function的状态
+* 变量名命名习惯
+  * -hook 一个在特定情况下调用的函数列表，比如关闭缓冲«时，进入某个模式时。
+  * -function值为一个函数
+  * -functions 值为一个函数列表
+  * -flag 值为nil或non-nil
+  * -predicate 值是一个作判断的函数，返回nil或non-nil
+  * -program 或-command 一个程序或shell名令名
+  * -form 一个表达式
+  * -forms 一个表达式列表。
+  * -map 一个按键映射（keymap）
+  * 命名以空格开头的缓冲区是临时的,用户不需要关系的缓冲区
+* docstring
+  * docstring的第一行最好独立的,因为apropos命令只显示第一行的文档
+  * docstring中参数最好用大些字母
+  * docstring以*开头的defvar变量被认为是用户选项（user option）
+	* 用户选项可以通过命令set-variable交互设置
+	* 可以使用edit-options命令编辑*scratch*
+  * '符号名'生成一个链接
+  * \\{major-mode-map}可以显示扩展成按键的说明
+  * docstring最后那个的\[ command ]会被command的绑定键所代替
+  * 如果不想要这种代替，需要用\=转义，当然，在Emacs的docstring中，真正的写法应该是
+    #+begin_src elisp
+      "\\=\\{major-mode-map}"
+      "\\=\\[command]"
+    #+end_src
+* 获取参数的几种方法
+** 变量`argv`获取command-line 参数
+
+   当使用emacs --script xxx.el args时,为了获取command-line参数,可以在xxx.el中使用变量`argv`获取参数列表
+** 变量`current-prefix-arg`获取universal-argument
+   
+   emacs命令可以使用C-u传递universal-argument.
+   | Key Input                | Value of current-prefix-arg |
+   |--------------------------+-----------------------------|
+   | No universal arg called. | nil                         |
+   | 【Ctrl+u -】             | Symbol -                    |
+   | 【Ctrl+u - 2】           | Number -2                   |
+   | 【Ctrl+u 1】             | Number 1                    |
+   | 【Ctrl+u 4】             | Number 4                    |
+   | 【Ctrl+u】               | List '(4)                   |
+   | 【Ctrl+u Ctrl+u】        | List '(16)                  |
+** interactive
+   * 若interactive的参数以*开头，则意义是，如果当前buffer是只读的，则不执行该函数
+   * interactive可以后接字符串,表示获得参数的方式
+	 * p 接收C-u的数字参数
+
+	   也可以不用P参数,直接在代码中判断current-prefix-arg的值
+	 * r region的开始/结束位置
+	 * n 提示用户输入数字参数,n后面可用接着提示符
+	 * s 提示用户输入字符串参数
+	 * 若函数接收多个input,需要用\n来分隔
+   * interactive可以后接一个form,form的求值结果应该是一个list,这个list的值作为参数的实参
+
+	 在form中一般会用到如下几个函数用于获取用户输入
+	 * read-string
+	 * read-file-name
+	 * read-directory-name
+	 * read-regexp
+	 * y-or-n-p
+	 * read-from-minibuffer
+	 * 使用变量`current-prefix-arg`来判断是否有universal-argument
+* 光标位置
+** 函数
+   * 获取光标当前位置
+
+	 (point)
+
+   * 获取region的开始和结束位置
+
+	 (region-beginning) / (region-end)
+
+   * 当前行的开始/结束位置
+
+	 (line-beginning-position) / (line-end-position)
+
+   * 获取当前buffer的开始/结束位置
+
+	 (point-min) / (point-max)
+
+   * 得到行号
+
+     line-number-at-pos
+
+   * 测试是否在buffer头/尾
+
+     bobp(beginning of buffer predicate)和eobp(end of buffer predicate)
+
+   * 测试是否在行首/尾
+
+     bolp(beginning of line predicate)和eolp(end of line predicate)
+	 
+* 光标移动
+** 函数
+   * 按单个字符移动
+	 
+     goto-char /forward-char /backward-char
+
+   * 跳转到指定字符串的位置
+	 
+     (search-forward myStr)  ;光标位于myStr的尾部
+
+     (search-backward myStr) ;光标位于myStr的头部
+
+   * 正则查询
+
+	 (re-search-forward myRegex) / (search-forward-regexp myRegex)
+
+	 (re-search-backward myRegex) / (search-backward-regexp myRegex)
+
+   * 跳到第一个不是"a"-"z"的位置
+	 
+	 (skip-chars-forward "a-z")
+	 
+	 (skip-chars-backward "a-z")
+
+   * 跳到buffer的开头/末尾
+
+     beginning-of-buffer / end-of-buffer
+
+   * 按词移动
+
+     forward-word /backward-word
+
+   * 按行移动
+
+     没有backward-line,而且每次移动都是移动到行首的,所以(forward-line 0)可以移动到当前行的行首
+
+     (forward-line N) N可以为负数,表示backward-line
+
+   * 移动到行首/尾
+
+	 (beginning-of-line)
+
+	 (end-of-line)
+* 字符串说明
+  * Emacs的字符串可以有自己的属性,这些属性标明了该字符串显示的颜色,表示的链接等.
+  * Emacs中,对字符串作比较的函数只有string=,string<函数,没有string>函数
+  * 
+
+* 字符串处理相关函数
+  Emacs has only very few functions that takes a string as argument. Any non-trivial string processing is done with a buffer. Use with-temp-buffer, then insert your string, process it, then use
+buffer-string to get the whole buffer content.
+** 获取字符串的函数
+   * 从buffer获取字符串
+
+	 (buffer-substring myStartPos myEndPos)
+
+	 (buffer-substring-no-properties myStartPos myEndPos)
+
+   * 获取光标所在位置的内容
+
+	 (thing-at-point THING),这里THING指明了各种类型:
+
+	 (thing-at-point 'word) // 光标所在位置的单词
+
+	 (thing-at-point 'symbol) // 光标所在位置的单词(包括连字符和下划线)
+
+	 (thing-at-point 'line) // 光标所在位置的行, *一般情况下它获取一行及行结束符,然而若光标处于行的最后一个字符,则不获取行结束符*
+
+	 (thing-at-point 'sexp) // 光标所在位置的s表达式
+
+	 (thing-at-point 'sentence) // 光标所在位置的句子
+
+	 (thing-at-point 'defun) // 光标所在位置的函数
+
+	 (thing-at-point 'url) // 光标所在位置的url, *若url不以http开头,则会自动加上http*
+
+	 ...还有很多类型
+
+   * 获取光标所在THING的开始/结束位置
+
+	 (bounds-of-thing-at-point THING)
+** 字符串操作
+   * 获取字符串长度
+
+	 (length myStr)
+
+   * 截取子字符串
+
+	 (substring myStr startIndex endIndex)
+
+   * 从报文中截取字符串
+
+	 (setq myStr (buffer-substring startPos endPos))
+
+   * 组合字符串
+
+	 (concat str1 str2 ...) 返回连接多个字符串的字符串
+
+   * 判断字符串是否匹配某正则表达式
+
+	 (string-match myRegex myStr)
+
+   * 获取捕获到的分组内容
+
+	 (match-string N myStr) ,这里myStr可以忽略,表示在buffer中作的查询. 但若上一次的匹配使用string-match函数作的,则需要该参数
+
+   * 对字符串进行正则替换
+
+	 (replace-regexp-in-string myRegex myReplacement myStr)  ;这里myReplacement可以是一个函数,该函数接收匹配的字符串,然后返回要替换的字符串
+
+   * split字符串
+
+	 (split-string myStr mySepeartor)
+
+   * 字符串与数字之间的相互转换
+
+	 (strinig-to-number "N") 
+
+	 (number-to-string N)
+
+	 (format "%d" N)
+
+   * 字符串正则替换
+
+	 (replace-regexp-in-string myRegxp myReplace myStr)
+
+   * 
+* Region/Mark相关函数
+  * 设置mark
+
+	(set-mark-command)
+
+  * 删除region
+
+	(kill-region)
+
+  * 注释region
+
+	(comment-region)
+
+  * 重新格式化region
+
+	(fill-region)
+
+  * 缩进region
+
+	(indent-region)
+
+  * 判断Region是否是active的
+
+	(region-active-p) 该函数还要求Transient-mark-mode
+* 缓冲区
+** 获取buffer对象
+   * 得到当前buffer对象
+
+     current-buffer(*当前buffer不一定是在屏幕上显示的哪个缓冲区,另外,当命令执行完成后,光标所在的buffer自动成为当前buffer* )
+
+   * 若缓冲区存在则返回该缓冲区对象,否则新建缓冲池对象返回
+
+     get-buffer-create
+
+   * 若有同名缓冲区存在,则新建的缓冲区后会加上后缀
+
+     generate-new-buffer
+
+   * 获得所有buffer的列表
+
+     buffer-list
+
+   * 获得窗口对应的buffer
+
+     window-buffer
+
+** buffer操作
+   * 返回当前buffer的文件全路径
+
+     buffer-file-name
+    
+   * 获得指定/当前buffer的名字
+
+     buffer-name
+	 #+begin_src elisp
+       (buffer-name [buffer对象])
+	 #+end_src
+   * 重命名缓冲区
+
+     rename-buffer
+
+   * 产生一个唯一的缓冲区名
+     generate-new-buffer-name
+
+   * 设置指定buffer为当前buffer
+
+     (set-buffer myBuffer)
+
+   * 保存当前buffer到文件
+
+     save-buffer
+
+   * 在不改变当前状态下,临时用另一buffer的变量代替现有变量执行语句
+
+     with-current-buffer
+	 #+begin_src elisp
+       (with-current-buffer buffer对象或buffer名称
+         表达式)
+	 #+end_src
+
+   * 关闭缓冲区
+
+     (kill-buffer myBuffer) ;如果要用户确认是否要关闭缓冲区，可以加到kill-buffer-query-functions里。如果要作善后处理，可以用kill-buffer-hook
+
+   * 关闭当前buffer
+
+     (kill-this-buffer)
+
+   * 确认缓冲区是否存在
+
+     buffer-live-p
+
+   * 使用临时buffer执行相应代码
+
+     with-temp-buffer
+	 #+BEGIN_SRC elisp
+       ;; use a temp buffer to manipulate string
+       (with-temp-buffer
+         (insert myStr)
+         ;; manipulate the string here
+         (buffer-string) ; get result
+       )
+	 #+END_SRC
+
+   * 创建新的空标记
+
+     make-marker
+	 #+begin_src elisp
+      (make-marker)    
+	 #+end_src
+
+   * 设置标记的位置和缓冲区
+
+     set-marker
+	 #+begin_src elisp
+      (set-marker foo (point))     
+	 #+end_src
+
+   * 得到point处的标记
+
+     point-marker
+	 #+begin_src elisp
+      (point-marker)    
+	 #+end_src
+   * 复制标记或直接用位置生成一个标记
+
+     copy-marker
+	 #+begin_src elisp
+      (copy-marker 位置/marker对象)    
+	 #+end_src
+
+   * 得到一个marker的内容
+
+     maker-position / marker-buffer
+	 #+begin_src elisp
+      (maker-position marker对象)
+      (marker-buffer marker对象)
+	 #+end_src
+
+   * buffer大小
+
+     buffer-size
+
+   * mark-marker
+
+     point /point-max /point-min
+	返回当前缓冲区的mark(*注意mark与marker的区别,mark是用来与point一起定义一个region的,而marker是一个标记位置*)
+
+   * 设置mark的值,并激活mark
+
+     set-mark
+
+   * 加入/删除mark-ring的元素
+
+     push-mark / pop-mark
+
+   * 取得region的起点和终点
+
+     region-beginning / region-end
+
+   * 让某个缓冲区可见
+
+     display-buffer
+
+   * 判断buffer是否被修改
+
+	 (buffer-modified-p)
+
+   * 选中的window切换到上一个/下一个buffer
+
+	 (previous-buffer)
+
+	 (next-buffer)
+   * 
+** 获取缓冲区内容
+   * 得到整个缓冲区的文本
+
+     buffer-string
+   * 得到buffer某个区间的文本
+
+     buffer-substring
+   * 得到point附件的字符
+
+     char-after / char-before
+   * point处的词
+
+     current-word
+   * 得到point处的其他类型的文本
+
+     thing-at-point
+
+** buffer内容处理相关函数
+*** 删除操作
+   	* 删除从当前光标开始的N个字符
+
+	  (delete-char N)
+
+	* 删除光标前的N个字符
+	  
+	  (delete-backward-char N)
+
+   	* 删除region
+
+	  (delete-region sartPos endPos)
+
+   	* 清空整个buffer
+
+	  (erase-buffer)
+*** 插入操作
+   	* 在光标处插入文字
+
+	  (insert str)
+
+   	* 在光标处插入某buffer的一部分文本
+
+	  (insert-buffer-substring-no-properties myBuffer myStartPos myEndPos)
+
+	  * 插入文件中某部分到当前缓冲区中
+	   
+       	(insert-file-contents myPath)
+       	#+BEGIN_SRC elisp
+       	 (insert-file-contents filename &optional visit beg end replace)
+       	#+END_SRC
+       	如果指定visit则会标记缓冲区的修改状态并关联缓冲区到文件，一般是不用的。
+       	replace是指是否要删除缓冲区里其它内容，这比先删除缓冲区其它内容后插入文件内容要快一些，但是一般也用不上。
+       	insert-file-contents会处理文件的编码，如果不需要解码文件的话，可以用insert-file-contents-literally。
+*** 查找/替换操作
+   	* 改变大小写
+
+	  (capitalize-region startPos endPos)
+
+   	* 替换操作
+	  
+	  变量`case-fold-search`决定是否大小写敏感
+
+      replace-match,需要与其他的search类函数配合,它替代上次search匹配的文本
+	  
+	  (replace-match 字符串) 表示用字符串替代上次search匹配的文本呢
+
+	* 获取上次正则查询的分组内容
+
+	  (match-string N) 返回上次正则查询的第N个分组的内容
+
+	* 获取上次正则查询分组的起始/结束电
+
+	  (match-beginning N)
+
+	  (match-end N)
+
+	* 
+** 保存现场
+   * 保存当前buffer,执行其中的表达式,然后回复为原来的buffer
+
+     save-current-buffer
+	 #+begin_src elisp
+       (save-current-buffer
+         表达式)
+	 #+end_src
+
+   * 保存narrow-to-region
+
+	 (save-restriction
+        (narrow-to-region pos1 pos2)
+        lisp代码)
+
+* 窗口
+** 获得窗口对象
+   * 得到当前光标所在的窗口对象
+
+     selected-window
+   * 得到当前frame里的所有窗口
+
+     window-list
+   * window-lists里排在某个window之后/之前的窗口对象
+
+     next-window / previous-window
+   * 查找符合某个条件的窗口
+
+     get-window-with-predicate
+   * 根据buffer获得window(如果有多个窗口显示同一个缓冲区,那么函数由window-list决定返回哪个).
+
+     get-buffer-window
+   * 根据buffer获得全部的相应window
+
+     get-buffer-window-list
+   * 根据给定的文件名,返回缓冲区
+
+     find-buffer-visiting
+** 窗口操作
+   * 分割window
+
+     split-window
+   * 删除当前选中的窗口
+
+     delete-window
+   * 删除其他窗口
+
+     delete-other-windows
+   * 得到当前窗口配置信息,可以用setq保存起来
+
+     current-window-configuration
+   * 设置当前窗口配置信息
+
+     set-window-configuration
+   * 使某个窗口对象变成选中的窗口
+
+     select-window
+   * 执行的语句结束后,选择的窗口仍留在执行语句之前的窗口
+
+     save-selected-window / with-selected-window
+   * 遍历窗口操作
+
+     walk-windows
+   * 让某个窗口显示某个缓冲区
+
+     set-window-buffer
+   * 让选中的窗口显示某个缓冲区
+
+     switch-to-buffer
+** 窗口信息
+   * 得到当前窗口的结构
+
+     window-tree
+   * 判断窗口对象是否存在
+
+     window-live-p
+   * 获得窗口的高度(包括了mode line和 header line)
+
+     window-height
+   * 获得窗口的高度(排除了mode line和 header line)
+
+     window-body-height
+   * 窗口的宽度,不包括滚动条和边缘
+
+     window-width
+   * 返回各顶点的坐标信息(包括滚动条,边缘,mode line ,header line)
+
+     window-edges
+   * 返回窗口的文本区域的坐标信息
+
+     window-inside-edges
+   * 用像素表示的window位置
+
+     window-pixel-edges / window-inside-pixel-edges
+* 文件
+** 文件读写
+   * 打开一个文件
+	 
+     (find-file myPath)
+
+   * 改变缓冲区关联的文件
+	 
+     set-visited-file-name
+
+   * 保存当前文件
+	 
+     (save-buffer)
+
+   * 另存为文件
+	 
+     (write-file myPath)
+
+   * 把文本块追加到文件后
+
+	 (append-to-file startPos endPos filePath)
+	 
+   * 把缓冲区当中的一部分写入到指定文件中
+	 
+     wirte-region
+     #+BEGIN_SRC elisp
+       (write-region start end filename &optional append visit lockname mustbenew)
+     #+END_SRC
+     如果指定append则是添加到文件末尾。
+     visit参数也会把缓冲区和文件关联，
+     lockname 则是文件锁定的名字
+     mustbenew(保文件存在时会要求用户确认操作。
+
+** 文件信息
+   * 判断文件是否存在,对于目录和一般文件都能用这个函数进行判断,但是符号链接只有当目标文件存在时才返回t
+	 
+     file-exists-p
+   * 文件属性判断
+	 
+     file-readable-p / file-writable-p / file-executable-p / file-modes
+   * 判断文件类型是普通文件/目录/符号链接,其中file-symlink-p返回目标文件名
+	 
+     file-regular-p / file-directory-p / file-symlink-p
+   * 文件的详细信息
+	 
+     file-attributes
+   * 设置文件修改时间
+	 
+     set-file-times
+   * 设置文件位模式
+	 
+     set-file-modes
+
+   * 除去链接后的真实文件名
+	 
+     file-truename
+
+** 文件名相关函数
+   * 分解文件路径各部分
+	 
+     file-name-directory / file-name-nodirectory / file-name-sans-extension / file-name-extension / file-name-sans-versions
+     #+BEGIN_SRC elisp
+      (file-name-directory "~/temp/test.txt") ; => "~/temp/"
+      (file-name-nondirectory "~/temp/test.txt") ; => "test.txt"
+      (file-name-sans-extension "~/temp/test.txt") ; => "~/temp/test"
+      (file-name-extension "~/temp/test.txt") ; => "txt"
+      (file-name-sans-versions "~/temp/test.txt~") ; => "~/temp/test.txt"
+      (file-name-sans-versions "~/temp/test.txt.~1~") ; => "~/temp/test.txt"
+     #+END_SRC
+
+   * 测试一个路径是否是绝对路径
+	 
+     file-name-absolute-p
+
+   * 得到绝对路径
+	 
+     (expand-file-name myFilePath)
+
+   * 把绝对路径转换成相对路径
+	 
+     (file-relative-name myFilePath dirPath)
+
+   * 把路径转换为目录形式,也就是确保它是以路径分隔符结束的
+	 
+     file-name-as-directory
+     #+BEGIN_SRC elisp
+      (file-name-as-directory "~rms/lewis") ; => "~rms/lewis/"
+     #+END_SRC
+
+   * 获得目录名
+	 
+     directory-file-name
+     #+BEGIN_SRC elisp
+      (directory-file-name "~lewis/") ; => "~lewis"
+     #+END_SRC
+   * 得到所在系统使用的文件名
+	 
+     convert-standard-filename
+     #+BEGIN_SRC elisp
+      (convert-standard-filename "c:/windows") ;=> "c:\\windows"
+     #+END_SRC
+   * 得到某个目录的全部或者符合某个正则表达式的文件名,directory-files-attributes返回的列表包含了file-attributes得到的信息
+	 
+     directory-files / directory-files-attributes
+   * 得到某个文件在目录中的所有版本
+	 
+     file-name-all-versions
+   * 得到通配符扩展厚的文件列表
+	 
+     file-expand-wildcards
+** 文件操作
+   * 重命名 拷贝 删除文件
+	 
+     (rename-file fileName newName)
+   
+     (copy-file sourcName desName)
+     
+     (delete-file fileName)
+
+	 (copy-directory dirPath newDirPath)
+
+   * 删除目录
+	 
+     (delete-directory dirPath 是否循环删除子目录的标记 是否放入Trash的标记)
+
+   * 设置文件MODE
+
+	 (set-file-mode FILE MODE)
+
+   * 获取目录中的文件列表
+
+	 (directory-files DIR &optional FULL MATCH NOSORT)
+
+   * 创建目录
+
+	 (make-dirctory DIR &optional PARENTS)
+
+   * 
+** 临时文件
+   * 这个函数按给定前缀产生一个不和现有文件冲突的文件，并返回它的文件名。如果给定的名字是一个相对文件名，则产生的文件名会用temporary-file-directory 进行扩展。也可以用这个函数产生一个临时文件夹。
+	 
+     make-temp-file
+     #+BEGIN_SRC elisp
+      (make-temp-file "foo") ; => "/tmp/foo5611dxf"
+     #+END_SRC
+   * 产生一个不存在的文件名
+	 
+     make-temp-name
+     #+BEGIN_SRC elisp
+      (make-temp-name "foo") ; => "foo5611q7l"
+     #+END_SRC
+** 神奇的handler
+   * 在Emacs里，底层的文件操作函数都可以托管给elisp中的函数，这样只要用elisp实现了某种类型文件的基本操作，就能像编辑本地文件一样编辑其它类型文件了
+* Dired-mode相关函数
+  * 获取dired中marked file
+
+	使用函数`dired-get-marked-files`
+* 执行命令
+  * 执行shell命令并等待shell命令结束
+
+	(shell-command "shell命令")
+
+  * 执行shell命令,等待shell命令结束,并获得命令的输出
+
+	(shell-command-to-string "shell命令")
+
+  * 使用外部命令对所选择Region进行处理
+
+	shell-command-on-region
+
+  * 执行shell命令,但是不等待shell命令结束
+
+	start-process
+	
+	start-process-shell-command
+
+	call-process-region
+* Register函数
+  * 将内容复制到Register中
+
+	(copy-to-register ?1 startPos endPos)
+
+  * 从Register中取出内容
+
+	(insert-register ?1 t)

@@ -1,0 +1,28 @@
+#+TITLE: 正则表达式
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 用来进行大小写转换的元字符
+** 将之间的匹配文档转换为大|小写
+\[U|L].....\E
+** 将后一个字母转换成大|小写
+\[u|l].
+* 向前、向后查找
+只匹配，但是不消费
+** 向前查找
+向前查找指定了一个必须匹配但不在结果中返回的模式，模式匹配前面的文本
+向前表达式为一个以?=开头的字表达式，即(?=匹配文字)|(?!匹配文字)
+** 向后查找
+向后查找指定了一个必须匹配但不在结果中返回的模式，模式匹配后面的文本
+向后表达式为一个以?<=开头的字表达式，即(?<=匹配文字)|(?<!匹配文字)
+* 正则表达式中的条件
+** 回溯引用
+(?(backreference)true-regex)
+backreference:是一个回溯引用，可以使用向前向后查找
+true-regex:是一个只在backreference存在时才会被执行的字表达式
+
+(?(backreference)true-regex|false-regex)
+backreference:是一个回溯引用，可以使用向前向后查找
+true-regex:是一个只在backreference存在时才会被执行的字表达式
+false-regex:如果backreference不存在时执行的字表达式

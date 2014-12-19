@@ -1,0 +1,151 @@
+#+TITLE: linuxHacks101
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+1) 在两目录之间切换
+   cd -
+2) 在ssh环境下，暂时切换到本地环境下
+   ~C-z
+3) 用grep在所有子目录中查找
+   grep -r
+4) 查看文件或目录的状态和熟悉
+   stat 文件/目录
+5) 显示用户总的连接时间
+   ac [选项] [用户]
+   -d：输出时间按天显示
+   -p：所有用户的连接时间
+6) zip文件的密码保护
+   zip -P 密码 zip文件名 要压缩的文件或目录列表
+7) tar中使用bzip2
+   tar cvfj ...
+   tar xvfj ...
+   tar tvfj ...
+8) 格式化分区
+   mke2fsk /dev/xxx
+   -m 指示文件系统保留给根用户的块的比例
+   -b 每个块多少字节
+   mkfs.ext3 /dev/xxx：创建ext3文件系统
+   mke2fs -j /dev/xxx：创建ext3文件系统
+9) 分区调整
+   tune2fs -l /dev/xxx：查看分区信息
+   tune2fs -L 卷名 /dev/xxx：文件系统改卷名
+10) 创建交换分区
+    mkswap 文件名
+    swapon 文件名
+11) 在 OpenSSH中设置 SSH的无密码登陆
+    1. 用  ssh-key-gen  在本地主机上创建公钥和密钥 
+       ssh-key-gen
+    2. 用  ssh-copy-id 把公钥复制到远程主机上 
+       ssh-copy-id -i ~/.ssh/id_rsa.pub remote-host
+       [注: ssh-copy-id 把密钥追加到远程主机的 .ssh/authorized_key 上.]  
+    3.  直接登录远程主机 
+	ssh remote-host
+12) ：用 Magic SysRq键实现Linux 安全重启   
+    Magic SysRq 是 Linux 内核中一个组合键（key combination），它允许用户可以忽略系统的状
+    态而执行一些低级指令。它常被用来从系统冻结状态中恢复过来或者重启电脑而不会破坏文件系统。组合键由 
+    Alt+SysRq 再加上一个相应的键 组成。在大多数系统中 SysRq 键就是 Print Screen 键.  
+    首先，你需要像下面那样使 SysRq 键生效。 
+    echo "1" > /proc/sys/kernel/sysrq  
+    
+    SysRq 对应的组合键列表 
+    
+    以下是对 Alt+SysRq+commandkey 有效的 Commandkeys.  
+    ‘k’- 杀死所有在当前虚拟控制台（virtual console）运行的进程 。 
+    ‘s’- 尝试同步所有挂载的文件系统。 
+    ‘b’- 不卸载分区也不做同步的情况下立即重启系统 
+    ‘e’- 向除了init 外的所有进程发送 SIGTERM 信号。  
+    ‘m’- 将当前的内存信息输出到控制台。 
+    ‘i’- 向除了init 外的所有进程发送 SIGKILL 信号。 
+    ‘r’- 把键盘从raw模式（一种被像X11 这样的程序调用的模式）转换为 XLATE模式。 
+    ‘s’– 使所有挂载的文件系统同步。  
+    ‘t’– 将当前任务的清单以及它们的信息输出到控制台。 
+    ‘u’– 以只读方式重新挂载所有已挂载的文件系统。 
+    ‘o’– 立刻关闭系统。 
+    ‘p’– 将当前的寄存器和标志信息输出到控制台。  
+    ‘0-9′- 设置控制台的日志级别，从而控制输出到控制台的内核信息。  
+    ‘f’– 将会调用 oom_kill 来杀死占用较多内存的进程。 
+    ‘h’– 用来显示帮助说明。但是除了上述列出的键外其他键也可以打印出帮助说明。
+13) bash配置文件的执行顺序
+    1. 交互式登录 shell的执行顺序 
+       下面的伪代码将说明这些文件的执行顺序
+        #+BEGIN_SRC shell
+       execute /etc/profile  
+       IF ~/.bash_profile exists THEN  
+       execute ~/.bash_profile  
+       ELSE  
+       IF ~/.bash_login exist THEN  
+       execute ~/.bash_login  
+       ELSE  
+       IF ~/.profile exist THEN  
+       execute ~/.profile  
+       END IF  
+       END IF  
+       END IF 
+	#+END_SRC  
+       当你从交互式 shell 中注销，以下是执行顺序： 
+        #+BEGIN_SRC shell
+       IF ~/.bash_logout exists THEN  
+       execute ~/.bash_logout  
+       END IF 
+	#+END_SRC
+       请注意 /etc/bashrc 是通过~/.bashrc 执行，如下所示：
+        #+BEGIN_SRC shell 
+       if [ -f /etc/bashrc ]; then  
+       . /etc/bashrc  
+       Fi 
+	#+END_SRC
+    2. 非交互式登录的shell执行顺序
+      #+BEGIN_SRC shell
+       IF ~/.bashrc exists THEN  
+       execute ~/.bashrc  
+       END IF 
+      #+END_SRC
+14) bash中产生随机数
+    bash内置的$RANDOM可以产生0-32767之间的随机数
+15) 设定文件分隔符
+    IFS=分隔符
+    设定分隔符后，就可以用read key1 key2 key3<values.txt的方式依次读入N个域的值
+16) top命令查看系统实时状态
+    top模式下：
+    F：设定按哪个变量排序
+    f：设定显示那几个变量
+    c：显示进程的绝对路径
+    1：查看每个cpu的信息
+17) ps命令
+    ps axuf|ps -ejH：显示进程树
+    ps U 用户名：显示指定用户的进程
+    ps axl    ：显示nice值
+18) lsof命令
+    lsof会列出系统中所有打开的文件。包括网络连接，设备和目录
+    lsof 文件名：列出打开指定文件的用户
+19) netstat显示带进程ID和程序名的活动连接
+    netstat -tap
+20) 配置内核参数
+    1. 显示内核参数
+       sysctl -a
+    2. 永久修改内核参数
+       在/etc/sysctl.conf修该完内核参数以后，执行sysctl –p提交改动
+    3. 临时修改内核参数
+       sysctl –w {variable-name=value} 
+21) 让bash的自动补全命令对大小写不敏感
+    bind "set completion-ignore-case on"
+22) 使用ssh的controlmaster，在建立多次链接时只在第一次连接时输入密码
+    vi ~/.ssh/config
+23) 从CD或DVD创建ISO文件
+    1. 获取 CD 或者 DVD 的容量大小，块大小这些信息，可以使用 isoinfo 命令获取：
+       isoinfo -d -i $DEVICE-Of-CD-DVD
+       注意Logical block size is:xxx,Volume size is: yyy
+    2. 按如下方法使用 dd 命令将 CD 或者 DVD 的镜像复制为 ISO 文件： 
+       dd if=/dev/cdrom bs=xxx count=yyy of=mydata.iso 
+24) 使用gpg命令制作私人或公共密钥来对文件进行加解密
+    1. 创建一个新的GPG密钥对
+       gpg --gen-key
+    2. 导出你的公钥
+       gpg --export $user-name >$key-file
+    3. 导入其他的公钥
+       gpg --import $key-file
+    4. 发送加密的信息
+       gpg --recipient $reciver --encrypt $fileToSend  #需要有reciver的公钥
+    5. 读取加密的消息
+       gpg --decrypt $fileToSend

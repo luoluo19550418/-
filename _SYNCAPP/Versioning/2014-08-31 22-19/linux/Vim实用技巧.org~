@@ -1,0 +1,7 @@
+#+TITLE: Vim实用技巧
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* Vim决问题的方式
+  * >G命令会增加当前行到文档末尾的缩进层次
+  * 

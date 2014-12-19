@@ -1,0 +1,6 @@
+#+TITLE: 沟通力
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 目标：建立有效处理分歧的关系

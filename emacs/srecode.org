@@ -1,0 +1,258 @@
+#+TITLE: srecode
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 快速入门
+** 切换SRecode模式
+   进入SRecode minor mode后,进入progn-mode会在菜单上显示一个SRecode菜单
+   * M-x srecode-minor-mode
+   * M-x global-srecode-minor-mode
+   * (srecode-minor-mode 1) / (srecode-minor-mode -1)
+   * (global-srecode-minor-mode 1) / (global-srecode-minor-mode -1)
+** 自定义template搜索路径
+   * 可以把自定义的template放到~/.srecode中
+   * 或者更改srecode-map-load-path选项
+** 插入template
+   * 通过菜单插入template
+   * 执行函数(srecode-insert template-name &rest dict-entries)
+
+	 插入指定名称的template到当前buffer的光标处. dict-entries需要添加的附加目录值?
+   * M-x srecode-insert
+
+	 srecode-insert会提示输入template名称. 每隔major mode有不同的template名称列表. 一般来说template名称的格式为CONTEXT:NAME. 这里CONTEXT可能是一些类似file或declaration这样的值. 不同的CONTEXT可以有相同值的NAME
+* 用户自定义的Templates
+  SRecode创建并维护一份major-mode与template文件的映射关系,该映射关系存储在一份文件中,该文件路径由变量`srecode-map-save-file`设定
+
+  每个自定义template文件都已一个major mode相关联. 在自定义template文件中,你可以使用与核心template文件相同的name和context. 通过设置优先级关系,你可以优先使用自定义的template而不是核心自带的template
+
+  Template文件是以.srt为后缀名. 当打开srt文件时,会自动进入SRecode template写作模式, 可以使用SRecode菜单插入内容到这个空的template文件中. 也可以使用"Edit Template"菜单项来修改已近存在的template. 
+
+  如果你在自定义Template中更新了`declaration:function`的内容,则该部分内容会覆盖sRecode自带的内容. Higher level applications should always use declaration:function when generating their own code, so higher level templates will then adopt your changes to declaration:function into themselves. 
+
+  You can also override variables. Core variables are stored in the SRecode root template file default.srt, and that contains the copyright usually used, and some basic file setup formats. Override variables like this by specifying a mode of default like this: 
+  #+BEGIN_SRC srt
+    set mode "default"
+  #+END_SRC
+* SRecode的组成部分
+  SRecode由多个层次组成
+** Template Layer
+   这个层次负责编写,编译template, 它定义了template的语法规范.
+
+   template需要保存在.srt文件中
+
+   虽然SRecode template是为以SRecode为基础的程序而设计出来的,但是它也可以用在普通的编辑过程中.
+** Template Manager
+   Template Manager负责为当前buffer选择和加载template文件. Template Manager优先选择用户自定义的template,最后选择系统级别的默认template. 同时Template Manager为每个application层次保存自己的template,使之不与通用template混合在一起.
+** Dictionary
+   Dictionary存储了变量的值. 变量常常用于template的宏定义中. 使用变量可以使得通用template变得特化.
+
+   变量的值可以有三种类型:字符串,一个dictionary的列表或srecode-dictionary-compound-value对象的子类.
+** Template Insertion
+   Template Insertion提供了对Template Layer的扩展功能.  A wide range of custom variables are available for mixing derived data as macros into the plain text of a template.
+
+   此外,template还有一些预定义的变量,这些变量提供了类似当前文件名,用户名,当前时间等值. 此外,有些变量是与major-mode相关的,例如参数`:el`或`:cpp`
+** Template Insertion Context
+   可以为文件中的template提供context(上下文环境)的信息. 通过该功能使得可以通过名字自动选择template, 也可以让template在不同的上下文环境中有相同的名字.
+
+   标准的上下文标识有file,declaraion和classdecl.
+
+   上下文环境信息也可以自动从Semantic的解析状态中推导出来.
+** Applications
+   完成具体用户任务的命令也涉及到编写Emacs Lisp代码. Application是最高的层次了. 每个application都他们自己的template文件和逻辑,这些template文件和逻辑被用来填充dictionary层次和定位光标.
+
+   SRecode自带了一个application的例子`srecode-document`,它可以为Semantic标签自动创建注释. 
+** Field Editing
+   如果变量`srecode-insert-ask-variable-method`的值为`'field`,则该变量的值会通过在buffer中创建域的方式来获取,而不是用问问题的方式来获取. 
+
+   多个域可以关联起来,这样的话,更新一个域的值,会同时更新其他关联域的值
+   
+* SRecode Minor Mode
+  SRecode Minor Mode定义了一系列以C-c /开头的键序列来调用不同的template和template applications
+
+  如果变量`srecode-takeover-INS-key`设置为t,则可以使用<Insert>按键来插入模板
+
+  最重要的命令是`srecode-insert`,它的键绑定为`C-c / /`或者是<insert insert>
+
+  常用的键绑定有:
+  * C-c / /
+	
+	该命令在minibuffer提示你输入template名字,然后插入指定名字的template
+
+  * C-c / 小写字母
+	
+	预留給插入template的键绑定
+
+  * C-c / 大写字母
+
+	预留給template application的键绑定
+
+  * C-c / E
+	
+    编辑template代码
+
+  * C-c / .
+	
+	再插入一次上次插入的template
+
+* 编写Template
+  打开SRecode文件(后缀名为srt),则会进入srecode-template-mode,在这里可以设计template. SRecode文件由变量设置和模板声明组成.
+
+  下面是一些编写template时要用到的术语
+
+  * template file
+	
+	后缀名为.srt的文件,包含有setting,variable和template等内容
+
+  * template
+	
+	代表了一块带插入文本的有名项, 这块文本被编译成一系列的可插入项. 这些可插入项可以是字符串常量和宏(macro).
+
+  * macro
+	
+	宏是在模板文件中将被替换成其他值的那些文本.
+
+  * dictionary
+	
+	一份包含键值对的表格
+
+  * subdictionary
+	
+	一个dictionary内的值也可以是dictionary,则第二个dictionary被称为subdictionary.
+
+  * variable
+	
+	所谓变量指的dictionary中的键.
+
+** Variables
+
+   变量可以被设值,然后在template中使用. 多数的变量通过template参数来被设值,少部分的变量可以是在system template设置的参数.
+
+   当扩展template时,会把变量存储在dictionary中,每项dictionary entry就是一个变量. template中定义的variable可以拥有类字符串的值.
+
+   可以用类似下面的语句来设置一个variable的值
+   #+BEGIN_SRC srt
+     set VARNAME "some value"   
+   #+END_SRC
+   
+*** String Values
+	变量的值可以是字符串,字符串中可以包含包括换行符在内的任何字符. 字符串由Emacs Lisp reader负责解析,因此\n,\t和\"都被支持
+
+	template中的字符串不会被解析,such as template escape characters.
+	
+*** Multi-string Values
+	变量的值可以是多个字符串.  设置的方法类似于string value,只是有多个string value而用:
+	#+BEGIN_SRC srt
+      set NAME "this" "-mode"    
+	#+END_SRC
+	这两个字符串会拼接在一起.
+
+	一个常用法是从dictionary中取出指定变量的值并拼接到一个字符串上. 使用`macro`关键字取出变量中的值. 例如
+	#+BEGIN_SRC srt
+      set NAME macro "MODE" "-mode"
+	#+END_SRC
+	会从dictionary中抽取出名为`MODE`的变量值,然后在尾部接上字符串"-mode"
+*** Section Show
+	使用variable来展示template section. 所谓Section是一段用section macro包围的template片段. 
+	*作者声称2008年5月11日后就再也没有使用该功能了,它也不确定这个功能是否能正常使用,因此还是不要使用该功能为好*
+*** Special Variables
+	有一些变量具有特殊的含义,他们的值的改变能够影响模板在编译时的属性:
+	* escape-start
+
+	  该变量的值是一个字符序列,它标识了template macro name的开始. 
+	  #+BEGIN_SRC srt
+        set escape_start "$"
+	  #+END_SRC
+	  
+	* escape-end
+
+	  该变量的值是一个字符序列,它标识了template macro name的结束. 
+	  #+BEGIN_SRC srt
+        set escape_end "$"      
+	  #+END_SRC
+
+	  如果你需要插入变量`escape_start`和`escape_end`中的字符,则你需要为这些字符专门设置一个变量,例如
+	  #+BEGIN_SRC srt
+        set escape_start "$"
+        set escape_end "$"
+        set DOLLAR "$"
+	  #+END_SRC
+
+	* mode
+	  
+	  它的值是一个个major mode的名字,它表示文件中所有模板都与该major mode相挂钩.
+
+	  一个major mode可以有多个模板文件. 
+	  #+BEGIN_SRC srt
+        set mode "emacs-lisp-mode"
+	  #+END_SRC
+
+	* priority
+	  
+	  该变量的值是一个数字,决定了在搜索template时的顺序. 系统template模式使用低优先级,自定义template模式使用高优先级. 你也可以使用这个变量来指定优先级.
+
+	  若多个template拥有同样的CONTEXT和NAME,则使用最高优先级的template
+
+	  若多个文件拥有同样的优先级,则调用的顺序是未知的. 如果没有template name匹配,则无所谓优先级
+	  
+	  #+BEGIN_SRC srt
+        set priority "35"      
+	  #+END_SRC
+
+	* application
+
+	  若想标识template文件中的模板只能给某个特定的application使用,则指定该变量的值. 某个application特定的template file被保存在template仓库中,在一般的模板插入时不会被调用.
+
+	  The application with a particular name will access these templates from Lisp code.  
+	  
+	  #+BEGIN_SRC srt
+        set application "document"
+	  #+END_SRC
+
+	* project
+	  
+	  如果模板文件中的某些template只有在某个特定目录下才有用,则可以为该模板文件设置所属的"project".
+
+	  为project变量设置某个目录路径名,则只有在该目录下的文件才能使用该模板文件中的template
+
+	  peoject所属的模板文件,其优先级介于SRecode基础模板和用户自定义模板之间.
+
+	  #+BEGIN_SRC srt
+        set project "/tmp/testproject"      
+	  #+END_SRC
+*** Automatic Loop Variables
+
+	若用到了section macro,则 that section is repeated for each subdictionary bound to the loop variable. 
+	
+	Each dictionary added will automatically get values for positional macros which will enable different sections. 常用的automatic section variables有:
+	* first—The first entry in the table. 
+	* notfirst—Not the first entry in the table. 
+	* last—The last entry in the table 
+	* notlast—Not the last entry in the table
+	  
+*** Compound Variable Values
+	
+	变量可以有复合值. 所谓复合值的意思是,该变量的值是一个EIEIO对象,它是`srecode-dictionary-compound-value`的子类.
+
+	只能通过Lisp代码来创建复合值变量.
+** Templates
+   所谓template是指可以插入buffer的一段文本模式. 一个最基本的template看起来像这样:
+   #+BEGIN_SRC srt
+      template TEMPLATENAME :arg1 :arg2
+      "Optional documentation string"
+      ----
+      The text to your template goes here.
+      ----
+      bind "a"
+   #+END_SRC
+   
+   template存储在一个template表格中,并且用TEMPLATENAME作为索引.
+
+   上面例子中,documentation string是可选的. 该说明字符串会帮助使用者知道在什么情况下使用该模板比较好.
+
+   两行'----'之间所包含的代码则为一段template代码
+*** Template Section Dictionaries
+*** Template Macro
+** Contexts
+
+** Prompts

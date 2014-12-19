@@ -1,0 +1,163 @@
+#+TITLE: c++编程剖析-问题,方案和设计准则
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+#+OPTIONS: ^:{}
+* vector的使用
+  * 我们只可以使用operator[]和at()去改动那些已经存在于容器中的东西. 而
+    用reserve()函数不会使得容器中充满函数,需要用resize()函数代替
+  * 当不对容器内的元素做任何改动时,记得使用const_iterator
+* 关于标准成员函数
+  * C++标准库的实现中的成员函数签名并不要求与标准中说明的函数签名一模一样,它可以具有额外的默认函数.
+    这意味着,不同的标准库的成员函数签名可能不一致.
+    这也意味着,不存在一个可移植的指向标准库成员函数的指针.
+    同时也意味着不可能可移植地对标准库成员函数使用mem_func和mem_func_ref仿函数
+* 当使用泛型来定义泛型时,注意被用来定义的那个泛型是否足够泛化
+  #+BEGIN_SRC c++
+    template<class T>               
+    void destroy(T* p)              // 注意这里的泛型要求是一个指针
+    {
+      p->~T();
+    }
+    
+    template<class Fwdlter>
+    void destroy(Fwdlter first,Fwdlter last) // 注意这里的泛型只要求是个迭代器就行
+    {
+      while(first != last)
+        {
+          destroy(first);           // 这里的泛化就不够
+          ++first;
+        }
+    }
+  #+END_SRC
+* 函数匹配的规则
+  1. 在参数匹配一样好的情况下优先使用普通函数. 这里要注意的是只有在 *参数匹配一样好的情况下* 才会选择普通函数.例如
+     #+BEGIN_SRC c++
+       /* 
+       有一个Base类,有Sub1和Sub2子类,这两个子类有一个共同的属性
+       public string sName;
+       现在我定义一个模板函数
+       ,,*/
+       template<class T>
+       void say(T t)
+       {
+           cout<<t.sName;
+       }
+       //但是同时我可能也定义了一个函数
+       void say(const string& sName)
+       {
+           cout<<sName;
+       }
+       /*
+       这时,如果我用一个字符数组调用函数say("darksun");
+       这时C++会匹配模板函数,而不是const string的这个函数.
+       ,*/
+     #+END_SRC
+  2. 选择匹配性最好的主函数模板
+  3. 在 *选择好了的主函数模板中* 查看是否有特化的函数模板. 这里要注意的是, *只有在某个主模版被选定的情况下,其特化版本才可能被使用,也就是说,模板特化并不参与重载选择*
+     #+BEGIN_SRC c++
+       template<class T>
+       void f(T);                      // 主模板a
+       
+       template<>
+       void f<int*>(int*);             // 对主模板a的特化模板b
+       
+       template<T>
+       void f(T*);                     // 主模板c,是主模板a的重载
+       
+       int *p;
+       f(p);                           // 这时会调用主模板c! ,因为在第2步挑选主模板是,就选择了该重载的模板
+     #+END_SRC
+* 关于export
+  * 目前大多数的编译器实现都不支持export，因此要编写可移植的代码，就别用export
+  * export的最初目的是想实现分离式的模板编译，然而现阶段编译器的实现无法做到这一点，实际上还是需要提供模板的实现代码。
+* 异常规格
+  * 编译器会自动对待了异常规格的函数添加try catch代码，而这增加了运行时开销。 例如
+    #+BEGIN_SRC c++
+      int Hunc throw(A,B)
+      {
+        return Junc();
+      }
+      // 实际上编译器会自动生成类似如下的代码
+      int Hunc
+      {
+        try{
+          return Junc();
+        }
+        catch(A)
+          {
+            throw;
+          }
+        catch(B)
+          {
+            throw;
+          }
+        catch(...)
+          {
+            std::unexpected();
+          }
+      }
+    #+END_SRC
+    而且即使函数体内实际上并不会抛出异常，编译器也会生成try catch块，因此， *永远不要为函数加上异常规格*
+* 类成员函数的查找规则
+  1. 选择作用域.
+
+     编译器先寻找一个至少包含指定名函数的作用域,并将其中的所有同名函数列出作为候选列表. 这意味着 *在子类中重载父类的方法会掩盖父类的所有同名方法*
+
+  2. 在候选的同名函数中选择适当的最佳匹配
+
+  3. 最后进行可访问性的检查. *这意味着即使父类中有可访问的同名函数,也不会被访问到*
+* NVI(Nonvirtual Interface,非虚接口)模式
+  * NVI模式是指类的接口应该是稳定的,因此可以定义为非虚函数的形式. 而接口的实现是可变的,因此定义接口实现函数为虚函数. 在非虚的接口中调用虚拟的接口实现函数. 
+    这样的设计类似于设计模式中的模板方法,其好处在于提供了一个统一的入口可以方便在一个单一的地方实施接口的前置条件和后置条件.
+* 关于new操作符
+** new操作符的几种形式
+   #+CAPTION: 标准版new的相互比较
+   | new类型       | 定义形式                                                               | 是否进行内存分配 | 是否可能失败 | 是否抛出异常   | 是否可替换 |
+   |---------------+------------------------------------------------------------------------+------------------+--------------+----------------+------------|
+   | 简单new       | void* ::operator new(std::size_t size) throw(std::bad_alloc);          | 是               | 是,抛出异常  | std::bad_alloc | 是         |
+   | nothrow new   | void* ::operator new(std::size_t size,const std::nothrow_t &) throw(); | 是               | 是,返回null  | 否             | 是         |
+   | 定位new       | void* ::operator new(std::size_t size,void* ptr)throw();               | 否               | 否           | 否             | 否         |
+   | 其他类型的new | void* ::operator new(std::size_t size,其他任意参数...);                |                  |              |                |            |
+   | 类相关的new   | void* Class::new(std:size_t size,...)                                  |              |              |                |            |
+   
+** new操作符的选择机制(类似类成员函数的查找机制)
+   1. 选择作用域
+
+      编译器先从子类作用域中查找operator new,再从基类,然后全局查找. 一旦找到有任何一种operator new定义就停止查找,而只在该作用域内查找operator new操作. 这意味着再往外层的作用域就不予考虑了.
+
+   2. 选择合适的重载operator new函数
+
+   3. 检查合适的operator new函数的访问规则是否允许访问.
+
+** 避免使用nothrow new
+
+   这是因为:
+   1. 可能会忽略检查nothrow new的返回值,从而掩盖失败
+   2. 在某些操作系统实现上,直到内存实际被使用时才会申请. 这是new永远不会返回失败,但是在后面对内存的操作语句中,每一句都可能失败.
+   3. 在拥有虚拟内存的系统上,new几乎不会失败,因为在虚拟内存耗尽之前,系统就已经很慢了,然后系统操作员就开始杀掉一些进程了.
+   4. 即使真的检测到了new失败,由于内存已经所剩不对了,你也几乎做不了什么,只能让程序退出.
+* 类定义中using语句的局限
+
+  在一个类的定义内部,你只可以通过using声明来带入基类中的名字,而不能带入诸如全局名字或其他类中的名字.
+* 如果一段代码能够解释为声明,他就被解释成声明
+  #+BEGIN_QUOTE
+    在声明和表达式语句这两者的语法形式之间可能会出现二义性:一个函数风格的显式类似转换(_exp.type.conv_)作为其最左端的子表达式的表达式语句和一个其第一个声明子(declarator)以"("开头的声明语句可能无法区分开. 在这种情况下,该语句被解释为声明.
+  #+END_QUOTE
+  例如
+  #+BEGIN_SRC c++
+    deque<string> coll2(coll1.begin(),coll1.end());
+    deque<string> coll3(istream_iterator<string>(cin),istream_iterator<string>());
+    // 上面这句话本意是定义一个coll3,类型为deque<string>,其初始值从cin取得.
+    
+    // 然而编译器会认为这是声明了一个名为coll3的函数,其返回deque<string>. 他有两个参数,一个参数名为cin,类型为istream_iterator<string>. 另一个参数没有名字,类型也为isteram_iterator<string>
+  #+END_SRC
+* 当心注释中的三字符组和二字符组
+
+  所谓三字符组(trigraph)是指3个字符组成的转义符,比如"??/"="\","??!"="~". 类似的还有二字符组,比如":>" = "]"
+  举个例子:
+  #+BEGIN_SRC c++
+    // 这里的注释,包含了几行的内容??/
+    第二行其实也被注释了,因为第一行的"??/"被解释为"/",这个转义符把接下来的换行符吃掉了...
+  #+END_SRC

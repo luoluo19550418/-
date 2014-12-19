@@ -1,0 +1,80 @@
+#+TITLE: tramp
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 变量
+** 设置默认访问方法
+   * tramp-default-method
+	 设置tramp的默认方法
+	 #+begin_src elisp
+       (setq tramp-default-method "ssh")           
+	 #+end_src
+   * tramp-default-method-alist
+	 为不同的用户/主机设置不同的方法
+	 #+begin_src elisp
+       (add-to-list 'tramp-default-method-alist '("主机" "户名" "方法")) ;主机与户名可以为空
+	 #+end_src	 
+** 设置默认用户
+   默认情况下,tramp使用登录系统的用户名来作为访问远程文件的用户名,但可以通过设置来修改该设定
+   * tramp-default-user 
+	 #+begin_src elisp
+     (setq tramp-default-user "root")    ;该变量已被标记为废弃,不建议使用
+	 #+end_src
+   * tramp-default-user-alist
+	 #+begin_src elisp
+       (add-to-list 'tramp-default-user-alist
+                    '("ssh" ".*\\.somewhere\\.else\\'" "john")) ;ssh方法,somewhere.else域名,以john作为用户名
+       (add-to-list 'tramp-default-user-alist '(nil nil "jonas") t) ;设置默认用户名
+       
+	 #+end_src
+** 设置默认的host
+   * tramp-default-host 
+	 #+begin_src elisp
+       (setq tramp-default-host "target.host")     ;
+	 #+end_src
+* 其他
+  * 确定shell-prompt-pattern变量能够正确识别shell的prompt
+  * 确定tramp-password-prompt-regexp变量能够正确识别出密码提示信息
+	#+begin_src elisp
+       (setq
+        tramp-password-prompt-regexp
+          (concat
+            "^.*"
+            (regexp-opt
+              '("passphrase" "Passphrase"
+                ;; English
+                "password" "Password"
+                ;; Deutsch
+                "passwort" "Passwort"
+                ;; Français
+                "mot de passe" "Mot de passe") t)
+            ".*:? *"))
+         
+	#+end_src
+  * 确定tramp-wrong-passwd-regexp能够正确识别错误密码的出错信息
+  * 若在登录shell时,除了输入用户名,密码还需要回答一些问题,需要配置变量tramp-actions-before-shell
+  * 登录远程时,tramp默认调用exec /bin/sh
+* 使用
+** 访问远程文件
+   * 访问URL格式的远程文件
+	 通过设置tramp-syntax的值为'url后,就可以用格式"/method://user@machine:port/path/to.file"来访问远程文件了.
+	 需要注意的是,tramp-syntax的值只能设置为'ftp(默认格式),或者'url,且需要在(require 'tramp)之前使用
+** 通过代理访问远程文件
+   有时候无法直接访问远程文件,需要通过代理访问
+   * default-proxies-alist
+	 #+begin_src elisp
+       (add-to-list 'tramp-default-proxies-alist
+                   	(host user proxy))                 ;访问user@host上的文件时,使用proxy作为代理.user和host为正则表达式或者nil,nil标识匹配任何表达式
+       
+       (add-to-list 'tramp-default-proxies-alist
+                   	'("\\." nil "/ ssh:bird@proxy.com:"))    ;proxy为一个tramp文件名,但没有localname部分,其中在method和user设置了默认值的情况下可以省略,而且method只能为inline或gateway方法 
+       
+       (add-to-list 'tramp-default-proxies-alist
+                   	'("\\.your\\.domain\\'" nil nil)) ;proxy为nil表示无需代理
+       
+       (add-to-list 'tramp-default-proxies-alist
+                   	'("\\.your\\.domain\\'" "\\`root\\'" "/ssh:%u@proxy%h")) ;可以用%u和%h来替换host和user的字符串
+       
+	 #+end_src
+   * 

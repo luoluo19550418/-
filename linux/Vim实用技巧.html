@@ -1,0 +1,1864 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Vim实用技巧</title>
+<!-- 2014-09-01 星期一 23:08 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="DarkSun" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+<script type="text/javascript" src="http://orgmode.org/mathjax/MathJax.js"></script>
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+    MathJax.Hub.Config({
+        // Only one of the two following lines, depending on user settings
+        // First allows browser-native MathML display, second forces HTML/CSS
+        //  config: ["MMLorHTML.js"], jax: ["input/TeX"],
+            jax: ["input/TeX", "output/HTML-CSS"],
+        extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js",
+                     "TeX/noUndefined.js"],
+        tex2jax: {
+            inlineMath: [ ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"], ["\\begin{displaymath}","\\end{displaymath}"] ],
+            skipTags: ["script","noscript","style","textarea","pre","code"],
+            ignoreClass: "tex2jax_ignore",
+            processEscapes: false,
+            processEnvironments: true,
+            preview: "TeX"
+        },
+        showProcessingMessages: true,
+        displayAlign: "center",
+        displayIndent: "2em",
+
+        "HTML-CSS": {
+             scale: 100,
+             availableFonts: ["STIX","TeX"],
+             preferredFont: "TeX",
+             webFont: "TeX",
+             imageFont: "TeX",
+             showMathMenu: true,
+        },
+        MMLorHTML: {
+             prefer: {
+                 MSIE:    "MML",
+                 Firefox: "MML",
+                 Opera:   "HTML",
+                 other:   "HTML"
+             }
+        }
+    });
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Vim实用技巧</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Vim决问题的方式</a></li>
+<li><a href="#sec-2">2. 普通模式</a></li>
+<li><a href="#sec-3">3. 插入模式</a></li>
+<li><a href="#sec-4">4. 可视模式</a></li>
+<li><a href="#sec-5">5. 命令行模式</a>
+<ul>
+<li><a href="#sec-5-1">5.1. 操作文本的Ex命令</a></li>
+<li><a href="#sec-5-2">5.2. range服务说明</a></li>
+<li><a href="#sec-5-3">5.3. 补全</a></li>
+<li><a href="#sec-5-4">5.4. 命令行窗口&#x2013;使用vim的编辑能力编辑Ex命令</a></li>
+<li><a href="#sec-5-5">5.5. 执行外部命令</a></li>
+</ul>
+</li>
+<li><a href="#sec-6">6. 管理多个文件</a>
+<ul>
+<li><a href="#sec-6-1">6.1. 缓冲区列表管理</a></li>
+<li><a href="#sec-6-2">6.2. 参数列表</a></li>
+<li><a href="#sec-6-3">6.3. 窗口操作</a></li>
+<li><a href="#sec-6-4">6.4. 标签页操作</a></li>
+</ul>
+</li>
+<li><a href="#sec-7">7. 打开及保存文件</a>
+<ul>
+<li><a href="#sec-7-1">7.1. 打开文件</a></li>
+<li><a href="#sec-7-2">7.2. 使用find查找文件</a></li>
+<li><a href="#sec-7-3">7.3. 使用netrw管理文件系统</a></li>
+</ul>
+</li>
+<li><a href="#sec-8">8. 寄存器</a></li>
+<li><a href="#sec-9">9. 宏</a></li>
+<li><a href="#sec-10">10. 模式匹配</a>
+<ul>
+<li><a href="#sec-10-1">10.1. 调整大小写敏感</a></li>
+<li><a href="#sec-10-2">10.2. 调整正则表达式的匹配模式</a></li>
+<li><a href="#sec-10-3">10.3. 特殊匹配符</a></li>
+<li><a href="#sec-10-4">10.4. 统计当前模式的匹配个数</a></li>
+</ul>
+</li>
+<li><a href="#sec-11">11. 查找功能</a></li>
+<li><a href="#sec-12">12. 替换功能</a>
+<ul>
+<li><a href="#sec-12-1">12.1. 标志位总结</a></li>
+<li><a href="#sec-12-2">12.2. 替换域中的特殊字符</a></li>
+<li><a href="#sec-12-3">12.3. 使用寄存器内容</a></li>
+<li><a href="#sec-12-4">12.4. 重复上一次substitute命令</a></li>
+</ul>
+</li>
+<li><a href="#sec-13">13. Quckfix列表与位置列表</a></li>
+<li><a href="#sec-14">14. 与外部程序的交互</a></li>
+<li><a href="#sec-15">15. Vim中的补全功能</a></li>
+<li><a href="#sec-16">16. 拼写检查</a>
+<ul>
+<li><a href="#sec-16-1">16.1. Vim拼写检查器的基本命令</a></li>
+<li><a href="#sec-16-2">16.2. 使用其他拼写字典</a></li>
+<li><a href="#sec-16-3">16.3. 在插入模式下更正拼写错误</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Vim决问题的方式</h2>
+<div class="outline-text-2" id="text-1">
+<ul class="org-ul">
+<li>&gt;G命令会增加当前行到文档末尾的缩进层次
+</li>
+
+<li>Vim中可重复的操作及回退
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">目的</th>
+<th scope="col" class="left">操作</th>
+<th scope="col" class="left">重复</th>
+<th scope="col" class="left">回退</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">做出修改</td>
+<td class="left">{edit}</td>
+<td class="left">.</td>
+<td class="left">u</td>
+</tr>
+
+<tr>
+<td class="left">在行内查找下一指定字符[前一个字符]</td>
+<td class="left">f{char}/t{char}</td>
+<td class="left">;</td>
+<td class="left">,</td>
+</tr>
+
+<tr>
+<td class="left">在行内查找上一指定字符[后一个字符]</td>
+<td class="left">F{char}/T{char}</td>
+<td class="left">;</td>
+<td class="left">,</td>
+</tr>
+
+<tr>
+<td class="left">在文档中查询下一处匹配项</td>
+<td class="left">/pattern&lt;CR&gt;</td>
+<td class="left">n</td>
+<td class="left">N</td>
+</tr>
+
+<tr>
+<td class="left">在文档中查询下一处匹配项</td>
+<td class="left">?pattern&lt;CR&gt;</td>
+<td class="left">n</td>
+<td class="left">N</td>
+</tr>
+
+<tr>
+<td class="left">执行替换</td>
+<td class="left">:s/target/replacement</td>
+<td class="left">&amp;</td>
+<td class="left">u</td>
+</tr>
+
+<tr>
+<td class="left">宏操作</td>
+<td class="left">q{register}{changes}q</td>
+<td class="left">@{register}</td>
+<td class="left">u</td>
+</tr>
+
+<tr>
+<td class="left">执行Ex命令</td>
+<td class="left">:Ex命令</td>
+<td class="left">@:(:寄存器总是存储最后一次的Ex命令)</td>
+<td class="left">u</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> 普通模式</h2>
+<div class="outline-text-2" id="text-2">
+<ul class="org-ul">
+<li>学会把d{motion}与/查找动作一起使用,可以极大提高效率
+</li>
+
+<li>改变大小写
+
+<ul class="org-ul">
+<li>gU{motion} 修改为大写
+</li>
+
+<li>gu{motion} 修改为小写
+</li>
+
+<li>g~{motion} 大小写翻转
+</li>
+
+<li>gUgU 修改当前行为大写
+</li>
+
+<li>gugu 修改当前行为小写
+</li>
+
+<li>g~g~ 当前行大小写翻转
+</li>
+</ul>
+</li>
+
+<li>缩进
+
+<ul class="org-ul">
+<li>&gt;{motion} 增加缩进
+</li>
+
+<li>&lt;{motion} 减少缩进
+</li>
+
+<li>={motion} 自动缩进
+</li>
+</ul>
+</li>
+
+<li>数字运算
+
+<ul class="org-ul">
+<li>C-a +1
+</li>
+
+<li>C-x -1
+</li>
+</ul>
+</li>
+
+<li>虚拟替换模式
+
+<ul class="org-ul">
+<li>gR 进入虚拟连续替换模式,它把tab当成一组空格来处理
+</li>
+
+<li>gr 进入虚拟单词替换模式,它把tab当成一组空格来处理
+</li>
+</ul>
+</li>
+
+<li>移动
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">操作</th>
+<th scope="col" class="left">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">j k</td>
+<td class="left">按照实际行向下向上移动</td>
+</tr>
+
+<tr>
+<td class="left">gj和gk</td>
+<td class="left">按照屏幕行向下向上移动</td>
+</tr>
+
+<tr>
+<td class="left">ge</td>
+<td class="left">反向移动到上一个单词的结尾</td>
+</tr>
+
+<tr>
+<td class="left">gf</td>
+<td class="left">跳转到光标所在字符串所表示的文件,通过配置suffixesadd选项,允许省略文件后缀名,通过配置path属性可以省略部分目录信息</td>
+</tr>
+
+<tr>
+<td class="left">``</td>
+<td class="left">当前文件中上次跳转动作之前的位置</td>
+</tr>
+
+<tr>
+<td class="left">`.</td>
+<td class="left">上次修改的位置</td>
+</tr>
+
+<tr>
+<td class="left">`^</td>
+<td class="left">上次插入的地方</td>
+</tr>
+
+<tr>
+<td class="left">`[</td>
+<td class="left">上次修改或复制的起始位置</td>
+</tr>
+
+<tr>
+<td class="left">`]</td>
+<td class="left">上次修改或复制的结束位置</td>
+</tr>
+
+<tr>
+<td class="left">`&lt;</td>
+<td class="left">上次高亮选区的起始位置</td>
+</tr>
+
+<tr>
+<td class="left">`&gt;</td>
+<td class="left">上次高亮选区的结束位置</td>
+</tr>
+
+<tr>
+<td class="left">H</td>
+<td class="left">跳转到屏幕最上方</td>
+</tr>
+
+<tr>
+<td class="left">M</td>
+<td class="left">跳转到屏幕正中间</td>
+</tr>
+
+<tr>
+<td class="left">L</td>
+<td class="left">跳转到屏幕最下方</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>按子串移动
+
+<p>
+子串比单词的范围更大,它仅仅以空白字符作为分隔依据.
+</p>
+
+<ul class="org-ul">
+<li>W 类似w,移动到下一个字串
+</li>
+
+<li>B 类似b,移动到上一个字串
+</li>
+
+<li>E 类似e,移动到子串的字部
+</li>
+
+<li>gE 类似ge,移动到上一个字串的尾部
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> 插入模式</h2>
+<div class="outline-text-2" id="text-3">
+<ul class="org-ul">
+<li>更正错误
+
+<ul class="org-ul">
+<li>C-h 删除前一个字符
+</li>
+
+<li>C-w 删除前一个单词
+</li>
+
+<li>C-u 删除到行首
+</li>
+</ul>
+</li>
+
+<li>返回普通模式
+
+<ul class="org-ul">
+<li>ESC 或者 C-[  切换到普通模式
+</li>
+
+<li>C-o 切换到插入-普通模式
+</li>
+</ul>
+</li>
+
+<li>寄存器
+
+<ul class="org-ul">
+<li>C-r {register} 访问寄存器中的内容
+</li>
+
+<li>C-r C-p {register} 访问寄存器中的内容
+</li>
+
+<li>C-r = 访问表达式寄存器,通过访问该特殊寄存器可以执行计算式甚至一段Vim脚本
+</li>
+</ul>
+</li>
+
+<li>插入特殊字符
+
+<ul class="org-ul">
+<li>C-v u {1234} 以4为16进制编码来输入字符
+</li>
+
+<li>普通模式下ga  显示光标所在的字符编码
+</li>
+
+<li>C-v 非数字键  插入这个按键本身所代表的字符
+</li>
+
+<li>C-k{char1}{char2}  以二合字母插入非常用字符
+</li>
+
+<li>:digraphs 查看可用的二合字母列表
+</li>
+
+<li>:digraph-table 查看另一个更为有用的列表
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> 可视模式</h2>
+<div class="outline-text-2" id="text-4">
+<ul class="org-ul">
+<li>gv 重选上次的高亮选区
+</li>
+
+<li>o  切换高亮选区的活动端
+</li>
+
+<li>当实用命令.重复对高亮选区所做的修改时,此修改会重复作用域相同范围的文本
+</li>
+
+<li>在windows下使用C-q进入列块编辑模式,而在linux下使用C-v进入列块编辑模式,在emacs的evil-mode下,也使用C-v进入列块模式
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> 命令行模式</h2>
+<div class="outline-text-2" id="text-5">
+</div><div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> 操作文本的Ex命令</h3>
+<div class="outline-text-3" id="text-5-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">:[range]delete [register]</td>
+<td class="left">删除指定范围的行到register中</td>
+</tr>
+
+<tr>
+<td class="left">:[range]yank [register]</td>
+<td class="left">赋值指定范围的行到register中</td>
+</tr>
+
+<tr>
+<td class="left">:[line]put [register]</td>
+<td class="left">在指定行后粘贴register的内容</td>
+</tr>
+
+<tr>
+<td class="left">:[range]copy {address}</td>
+<td class="left">将指定范围的行拷贝到{address}所指定的行之下</td>
+</tr>
+
+<tr>
+<td class="left">:[range]move {address}</td>
+<td class="left">将指定范围的行移动到{address}所指定的行之下</td>
+</tr>
+
+<tr>
+<td class="left">:[range]join</td>
+<td class="left">连接指定范围的行</td>
+</tr>
+
+<tr>
+<td class="left">:[range]normal {commands}</td>
+<td class="left">对指定范围的每一行执行普通命令</td>
+</tr>
+
+<tr>
+<td class="left">:[range]substitute/{pattern}/{string}/{flag}</td>
+<td class="left">正则替换</td>
+</tr>
+
+<tr>
+<td class="left">:[range]global/{pattern}/{cmd}</td>
+<td class="left">对给定范围内匹配的行,在上面执行Ex命令</td>
+</tr>
+
+<tr>
+<td class="left">:[range]vglobal/{pattern}/{cmd}</td>
+<td class="left">global的取反</td>
+</tr>
+
+<tr>
+<td class="left">:[range]global!/{pattern}/{cmd}</td>
+<td class="left">global的取反</td>
+</tr>
+
+<tr>
+<td class="left">:grep /vimgrep</td>
+<td class="left">搜索关键字</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> range服务说明</h3>
+<div class="outline-text-3" id="text-5-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">符号</th>
+<th scope="col" class="left">地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">N</td>
+<td class="left">文件的第N行</td>
+</tr>
+
+<tr>
+<td class="left">$</td>
+<td class="left">文件的最后一行</td>
+</tr>
+
+<tr>
+<td class="left">0</td>
+<td class="left">虚拟行,位于文件第一行的上方</td>
+</tr>
+
+<tr>
+<td class="left">.</td>
+<td class="left">光标所在行</td>
+</tr>
+
+<tr>
+<td class="left">'m</td>
+<td class="left">包含位置标记m的行</td>
+</tr>
+
+<tr>
+<td class="left">'&lt;</td>
+<td class="left">高亮选区的起始行</td>
+</tr>
+
+<tr>
+<td class="left">'&gt;</td>
+<td class="left">高亮选区的结束行</td>
+</tr>
+
+<tr>
+<td class="left">%</td>
+<td class="left">整个文件(:1,$的简写形式)</td>
+</tr>
+
+<tr>
+<td class="left">&#xa0;</td>
+<td class="left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-5-3" class="outline-3">
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> 补全</h3>
+<div class="outline-text-3" id="text-5-3">
+<ul class="org-ul">
+<li>C-d 显示可用的补全列表
+</li>
+<li>Tab 自动补全
+</li>
+<li>C-r C-w 插入光标下的单词
+</li>
+<li>C-r C-a 插入光标下的子串
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-5-4" class="outline-3">
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> 命令行窗口&#x2013;使用vim的编辑能力编辑Ex命令</h3>
+<div class="outline-text-3" id="text-5-4">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">q/</td>
+<td class="left">打开查找命令历史的命令行窗口</td>
+</tr>
+
+<tr>
+<td class="left">q:</td>
+<td class="left">打开Ex命令历史的命令行窗口</td>
+</tr>
+
+<tr>
+<td class="left">C-f</td>
+<td class="left">从命令行模式切换到命令行窗口</td>
+</tr>
+
+<tr>
+<td class="left">:help cmdwin</td>
+<td class="left">查看命令行帮助</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-5-5" class="outline-3">
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> 执行外部命令</h3>
+<div class="outline-text-3" id="text-5-5">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">:shell</td>
+<td class="left">启动shell</td>
+</tr>
+
+<tr>
+<td class="left">:!{cmd}</td>
+<td class="left">在shell中执行cmd</td>
+</tr>
+
+<tr>
+<td class="left">:read !{cmd}</td>
+<td class="left">在shell中执行cmd,并把标准输出插入到光标下方</td>
+</tr>
+
+<tr>
+<td class="left">[range]write !{cmd}</td>
+<td class="left">在shell中执行{cmd},以[range]作为其标准输入</td>
+</tr>
+
+<tr>
+<td class="left">[range]!{fiter}</td>
+<td class="left">使用外部命令{filter}过滤指定的[range]</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> 管理多个文件</h2>
+<div class="outline-text-2" id="text-6">
+</div><div id="outline-container-sec-6-1" class="outline-3">
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> 缓冲区列表管理</h3>
+<div class="outline-text-3" id="text-6-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">:ls</td>
+<td class="left">列出缓冲区列表</td>
+</tr>
+
+<tr>
+<td class="left">:bnext</td>
+<td class="left">上一个缓冲区</td>
+</tr>
+
+<tr>
+<td class="left">:bprev</td>
+<td class="left">下一个缓冲区</td>
+</tr>
+
+<tr>
+<td class="left">:bfirst</td>
+<td class="left">列表开头的buffer</td>
+</tr>
+
+<tr>
+<td class="left">:blast</td>
+<td class="left">列表结尾的buffer</td>
+</tr>
+
+<tr>
+<td class="left">:buffer N</td>
+<td class="left">第N号buffer</td>
+</tr>
+
+<tr>
+<td class="left">:buffer {bufname}</td>
+<td class="left">匹配bufname的buffer</td>
+</tr>
+
+<tr>
+<td class="left">:bdelete N1 N2&#x2026;</td>
+<td class="left">删除buffer</td>
+</tr>
+
+<tr>
+<td class="left">:N,M bdelete</td>
+<td class="left">删除buffer</td>
+</tr>
+
+<tr>
+<td class="left">:bufdo</td>
+<td class="left">在:ls列出的所有缓冲区执行Ex命令</td>
+</tr>
+
+<tr>
+<td class="left">&#xa0;</td>
+<td class="left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-6-2" class="outline-3">
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> 参数列表</h3>
+<div class="outline-text-3" id="text-6-2">
+<p>
+参数列表记录了在启动时作为参数传递給Vim的文件列表. 通过设置参数列表,可以通过:nexthe :prev来打开下一个/上一个文件
+</p>
+
+<ul class="org-ul">
+<li>:args 显示当前参数列表的内容
+</li>
+
+<li>:args {filelist} 设置文件列表
+</li>
+
+<li>:args {文件通配符} 设置符合文件通配的文件列表
+
+<p>
+其中,
+</p>
+<ol class="org-ol">
+<li>*符号用于匹配0到多个字符,但范围仅限于指定的目录
+</li>
+
+<li>** 也匹配0到多个字符,范围递归进入目录的子目录
+</li>
+</ol>
+</li>
+
+<li>:args `shell命令` 以shell命令的输出作为参数列表的值
+</li>
+
+<li>:argdo命令在列表中的每个缓冲区上执行同一条命令
+</li>
+
+<li>在使用:argdo/:bufdo前,最好启用'hidden'设置.
+
+<p>
+启用hidden选项后,如果活动的缓冲区的内容发生了变化,Vim会在离开该缓冲区时自动将其隐藏. 否则Vim会阻止离开该缓冲区. 这样我们就无法用:argdo或:bufdo命令来修改一组缓冲区.
+</p>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> 窗口操作</h3>
+<div class="outline-text-3" id="text-6-3">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">操作</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">C-w s</td>
+<td class="left">水平分割当前窗口</td>
+</tr>
+
+<tr>
+<td class="left">C-w v</td>
+<td class="left">垂直分割当前窗口</td>
+</tr>
+
+<tr>
+<td class="left">:split {file}</td>
+<td class="left">水平分割当前窗口,并在新窗口载入file</td>
+</tr>
+
+<tr>
+<td class="left">:vsplit {file}</td>
+<td class="left">垂直分割当前窗口,并在新窗口载入file</td>
+</tr>
+
+<tr>
+<td class="left">C-w w</td>
+<td class="left">在窗口间循环切换</td>
+</tr>
+
+<tr>
+<td class="left">C-w c或:close</td>
+<td class="left">关闭活动窗口</td>
+</tr>
+
+<tr>
+<td class="left">C-w o或:only</td>
+<td class="left">只保留活动窗口,关闭其他所有窗口</td>
+</tr>
+
+<tr>
+<td class="left">C-w =</td>
+<td class="left">使所有窗口等宽,等高</td>
+</tr>
+
+<tr>
+<td class="left">C-w _</td>
+<td class="left">最大化活动窗口的高度</td>
+</tr>
+
+<tr>
+<td class="left">[N]C-w _</td>
+<td class="left">将活动窗口的高度设为N行</td>
+</tr>
+
+<tr>
+<td class="left">C-w 竖线</td>
+<td class="left">类似C-w _,但设置窗口的宽</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-6-4" class="outline-3">
+<h3 id="sec-6-4"><span class="section-number-3">6.4</span> 标签页操作</h3>
+<div class="outline-text-3" id="text-6-4">
+<p>
+Vim的标签页是可以容纳一系列窗口的容器,它类似于Linux中的虚拟桌面的概念
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">:tabedit {filename}</td>
+<td class="left">在新标签页打开{filename}</td>
+</tr>
+
+<tr>
+<td class="left">C-w T</td>
+<td class="left">把当前窗口移到一个新标签页</td>
+</tr>
+
+<tr>
+<td class="left">:tabclose</td>
+<td class="left">关闭当前标签页</td>
+</tr>
+
+<tr>
+<td class="left">:tabonly</td>
+<td class="left">只保留当前标签页,关闭其他标签页</td>
+</tr>
+
+<tr>
+<td class="left">:tabnext{n}或{N}gt</td>
+<td class="left">切换到编号为{N}的标签页</td>
+</tr>
+
+<tr>
+<td class="left">:tabnext或gt</td>
+<td class="left">切换到下一个标签页</td>
+</tr>
+
+<tr>
+<td class="left">:tabprevious或gT</td>
+<td class="left">切换到上一个标签页</td>
+</tr>
+
+<tr>
+<td class="left">:tabmove [N]</td>
+<td class="left">将当前标签页移动到第N个位置,默认为最后一个位置</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> 打开及保存文件</h2>
+<div class="outline-text-2" id="text-7">
+</div><div id="outline-container-sec-7-1" class="outline-3">
+<h3 id="sec-7-1"><span class="section-number-3">7.1</span> 打开文件</h3>
+<div class="outline-text-3" id="text-7-1">
+<ul class="org-ul">
+<li>:pwd          查看当前工作目录,所谓工作目录只的是vim启动时的那个目录,该目录 <b>不随着</b> buffer路径的不同而不同
+</li>
+
+<li>:edit %&lt;TAB&gt;  %符号代表缓冲区中的完整路径
+</li>
+
+<li>:edit %:h     :h修饰符会去除文件名,但保留路径部分,使用这种方式可以快速打开与活动缓冲区中文件属于同一个目录的文件
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-7-2" class="outline-3">
+<h3 id="sec-7-2"><span class="section-number-3">7.2</span> 使用find查找文件</h3>
+<div class="outline-text-3" id="text-7-2">
+<p>
+:find命令运行我们通过文件名打开一个文件,而无需输入该文件的完整路径. 
+</p>
+
+<p>
+在使用该功能前先需要配置path选项
+</p>
+
+<ol class="org-ol">
+<li>:set path+=app/**
+</li>
+<li>:find recvfrommb&lt;tab&gt;
+</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-sec-7-3" class="outline-3">
+<h3 id="sec-7-3"><span class="section-number-3">7.3</span> 使用netrw管理文件系统</h3>
+</div>
+</div>
+
+<div id="outline-container-sec-8" class="outline-2">
+<h2 id="sec-8"><span class="section-number-2">8</span> 寄存器</h2>
+<div class="outline-text-2" id="text-8">
+<ul class="org-ul">
+<li>使用寄存器
+
+<p>
+"{register}复制/删除操作
+</p>
+</li>
+
+<li>无名寄存器
+
+<p>
+若没有指定寄存器,则Vim缺省使用无名寄存器,可以使用""表示. 它是极其易变的
+</p>
+</li>
+
+<li>复制专用寄存器
+
+<p>
+使用y{motion}时,不仅会把内容存入无名寄存器,而会存入复制专用寄存器,可用"0来表示
+</p>
+</li>
+
+<li>有名寄存器
+
+<p>
+用小些字母a-z引用寄存器,会覆盖原寄存器内容. 而用大写字母A-Z引用寄存器,则会将新内容添加到该寄存器的原有内容之后
+</p>
+</li>
+
+<li>黑洞寄存器
+
+<p>
+使用"_来引用,该寄存器不保存任何内容
+</p>
+</li>
+
+<li>系统剪贴板
+
+<p>
+使用"+来引用,该寄存器与系统剪贴板相关联
+</p>
+</li>
+
+<li>主剪贴板
+
+<p>
+X11视窗支持另一种叫做主剪贴板的剪贴板(primary),它高村者上次被高亮选中的文本,可用用鼠标中键把他们粘贴出来. 使用"*来引用
+</p>
+
+<p>
+Windows/Mac OS没有主剪贴板的概念,因此"*也代表系统剪贴板
+</p>
+</li>
+
+<li>其他寄存器
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">寄存器</th>
+<th scope="col" class="left">内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">"=</td>
+<td class="left">表达式寄存器</td>
+</tr>
+
+<tr>
+<td class="left">"%</td>
+<td class="left">当前文件名</td>
+</tr>
+
+<tr>
+<td class="left">"#</td>
+<td class="left">轮换文件名</td>
+</tr>
+
+<tr>
+<td class="left">".</td>
+<td class="left">上次插入的文本</td>
+</tr>
+
+<tr>
+<td class="left">":</td>
+<td class="left">上次执行的Ex命令</td>
+</tr>
+
+<tr>
+<td class="left">"/</td>
+<td class="left">上次查找的模式</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-9" class="outline-2">
+<h2 id="sec-9"><span class="section-number-2">9</span> 宏</h2>
+<div class="outline-text-2" id="text-9">
+<ul class="org-ul">
+<li>对多行同时执行某个宏
+
+<ul class="org-ul">
+<li>[range]normal @{register}
+</li>
+
+<li>global/pattern/@{register}
+</li>
+</ul>
+</li>
+
+<li>对多个文件同时执行宏
+
+<ul class="org-ul">
+<li>:argdo normal @{register}
+</li>
+
+<li>:bufdo normal @{register}
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-10" class="outline-2">
+<h2 id="sec-10"><span class="section-number-2">10</span> 模式匹配</h2>
+<div class="outline-text-2" id="text-10">
+</div><div id="outline-container-sec-10-1" class="outline-3">
+<h3 id="sec-10-1"><span class="section-number-3">10.1</span> 调整大小写敏感</h3>
+<div class="outline-text-3" id="text-10-1">
+<ul class="org-ul">
+<li>匹配式中任何地方出现\C则表示开启大小写敏感模式
+</li>
+
+<li>匹配式中任何地方出现\c则表示大小写不敏感模式
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-10-2" class="outline-3">
+<h3 id="sec-10-2"><span class="section-number-3">10.2</span> 调整正则表达式的匹配模式</h3>
+<div class="outline-text-3" id="text-10-2">
+<ul class="org-ul">
+<li>\v表示开启very magic搜索模式,即假定除_,大小写字符和数字之外的所有字符都具有特殊含义
+</li>
+
+<li>\V表示开启very nomagic原义开关,即默认消除大多数字符上的特殊含义.
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-10-3" class="outline-3">
+<h3 id="sec-10-3"><span class="section-number-3">10.3</span> 特殊匹配符</h3>
+<div class="outline-text-3" id="text-10-3">
+<ul class="org-ul">
+<li>&lt;匹配左定界符
+</li>
+
+<li>&gt;匹配右定界符
+</li>
+
+<li>\_s匹配空格或者回车符
+</li>
+
+<li>%()只使用括号的分组功能,不捕获其内容
+</li>
+
+<li>\ze和\zs对匹配进行裁剪
+
+<p>
+一个匹配的边界通常对应于一个模式的起始与结尾. 但我们可以使用元字符\zs和\ze对匹配进行裁剪,使其成为这个完成模式的一个子集.
+</p>
+
+<p>
+\zs标志着一个匹配的起始,\ze用来界定匹配的结束
+</p>
+</li>
+
+<li></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-10-4" class="outline-3">
+<h3 id="sec-10-4"><span class="section-number-3">10.4</span> 统计当前模式的匹配个数</h3>
+<div class="outline-text-3" id="text-10-4">
+<p>
+使用:%s///gn就可以统计当前模式的匹配个数
+</p>
+
+<p>
+标志位n会抑制正常的替换动作. 该命令不会对每次匹配进行替换,而是简单地统计匹配的次数
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-11" class="outline-2">
+<h2 id="sec-11"><span class="section-number-2">11</span> 查找功能</h2>
+<div class="outline-text-2" id="text-11">
+<ul class="org-ul">
+<li>/pattern//e 定位到查找匹配的结尾
+</li>
+
+<li>// 将查找域留空,则Vim将重用上一次的查找模式
+</li>
+
+<li>类似的s//中将查找域留空,Vim也会重用上一次的查找模式
+</li>
+
+<li>normal模式下q/打开查询历史的命令行窗口
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-12" class="outline-2">
+<h2 id="sec-12"><span class="section-number-2">12</span> 替换功能</h2>
+<div class="outline-text-2" id="text-12">
+</div><div id="outline-container-sec-12-1" class="outline-3">
+<h3 id="sec-12-1"><span class="section-number-3">12.1</span> 标志位总结</h3>
+<div class="outline-text-3" id="text-12-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">标志位</th>
+<th scope="col" class="left">功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">g</td>
+<td class="left">修改一行内的所有匹配</td>
+</tr>
+
+<tr>
+<td class="left">c</td>
+<td class="left">让我们有机会可以确认或拒绝每一处修改</td>
+</tr>
+
+<tr>
+<td class="left">n</td>
+<td class="left">不真正作替换,而只报告本次substitute命令匹配的个数</td>
+</tr>
+
+<tr>
+<td class="left">e</td>
+<td class="left">屏蔽错误提示</td>
+</tr>
+
+<tr>
+<td class="left">&amp;</td>
+<td class="left">指示Vim重用上一次substitute命令所用过的标志位</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-12-2" class="outline-3">
+<h3 id="sec-12-2"><span class="section-number-3">12.2</span> 替换域中的特殊字符</h3>
+<div class="outline-text-3" id="text-12-2">
+<p>
+具体可用过:h sub-replace-special来查询完整的列表
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">符号</th>
+<th scope="col" class="left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">\r</td>
+<td class="left">插入一个换行符</td>
+</tr>
+
+<tr>
+<td class="left">\t</td>
+<td class="left">插入一个制表符</td>
+</tr>
+
+<tr>
+<td class="left">\\</td>
+<td class="left">插入一个反斜杠</td>
+</tr>
+
+<tr>
+<td class="left">\{数字}</td>
+<td class="left">插入第N个子匹配</td>
+</tr>
+
+<tr>
+<td class="left">\0</td>
+<td class="left">插入匹配模式的所有内容</td>
+</tr>
+
+<tr>
+<td class="left">&amp;</td>
+<td class="left">插入匹配模式的所有内容</td>
+</tr>
+
+<tr>
+<td class="left">~</td>
+<td class="left">使用上一次调用substitute时的替换域</td>
+</tr>
+
+<tr>
+<td class="left">\={Vim Script}</td>
+<td class="left">插入{Vim Script}表达式的结果</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-12-3" class="outline-3">
+<h3 id="sec-12-3"><span class="section-number-3">12.3</span> 使用寄存器内容</h3>
+<div class="outline-text-3" id="text-12-3">
+<p>
+在命令模式下也能通过C-r{register}的方式来将寄存器内容插入命令行.
+</p>
+
+<p>
+因此在输入查询域时可以用C-r\来代替
+</p>
+</div>
+</div>
+<div id="outline-container-sec-12-4" class="outline-3">
+<h3 id="sec-12-4"><span class="section-number-3">12.4</span> 重复上一次substitute命令</h3>
+<div class="outline-text-3" id="text-12-4">
+<ul class="org-ul">
+<li>使用g&amp;在整个文件范围内重复substitute命令
+</li>
+
+<li>使用[range]&amp;&amp;在指定范围内重新执行替换操作.
+</li>
+
+<li>normal模式下的&amp;命令是:s的同义词,用于重复上一次的替换操作.但它不包含替换的标志位.
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-13" class="outline-2">
+<h2 id="sec-13"><span class="section-number-2">13</span> Quckfix列表与位置列表</h2>
+<div class="outline-text-2" id="text-13">
+<p>
+对于每一条用于填充quickfix列表的命令都有一条对应的命令,把结果保存到位置列表. 
+</p>
+
+<p>
+:make,:grep以及:vimgrep会实用quickfix列表,而:lmake,:lgrep,:lvimgrep实用位置列表.
+</p>
+
+<p>
+这两者的区别在于在任一特定的时刻,只能有一个quickfix列表,而位置列表却可以有多个.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">:cnext</td>
+<td class="left">跳转到下一项</td>
+</tr>
+
+<tr>
+<td class="left">:cprev</td>
+<td class="left">跳转到上一项</td>
+</tr>
+
+<tr>
+<td class="left">:cfirst</td>
+<td class="left">跳转到第一项</td>
+</tr>
+
+<tr>
+<td class="left">:clast</td>
+<td class="left">跳转到最后一项</td>
+</tr>
+
+<tr>
+<td class="left">:cnfile</td>
+<td class="left">跳转到下一个文件的第一项</td>
+</tr>
+
+<tr>
+<td class="left">:cpfile</td>
+<td class="left">跳转到上一个文件的最后一项</td>
+</tr>
+
+<tr>
+<td class="left">:cc N</td>
+<td class="left">跳转到第N项</td>
+</tr>
+
+<tr>
+<td class="left">:copen</td>
+<td class="left">打开quickfix窗口</td>
+</tr>
+
+<tr>
+<td class="left">:cclose</td>
+<td class="left">关闭quickfix窗口</td>
+</tr>
+
+<tr>
+<td class="left">:colder</td>
+<td class="left">quickfix的前一个版本</td>
+</tr>
+
+<tr>
+<td class="left">:cnew</td>
+<td class="left">quickfix的后一个版本</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+位置窗口的操作,只需要把quickfix的命令起始字符改为l即可
+</p>
+</div>
+</div>
+<div id="outline-container-sec-14" class="outline-2">
+<h2 id="sec-14"><span class="section-number-2">14</span> 与外部程序的交互</h2>
+<div class="outline-text-2" id="text-14">
+<ul class="org-ul">
+<li>makeprg选项允许我们指定运行:make时所调用的程序
+</li>
+
+<li>errorformat选项允许我们告诉Vim如何解析:make产生的结果
+</li>
+
+<li>grepprg选项允许我们指定允许:grep所调用的程序
+</li>
+
+<li>grepformat选项指示Vim如何解析来自:grep命令的输出结果
+</li>
+
+<li>:vimgrep命令允许我们实用Vim自带的正则表达式引擎,实现跨越文件的查找功能
+
+<p>
+:vimgrep[!] /{pattern}/[g][j] {files}
+</p>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-15" class="outline-2">
+<h2 id="sec-15"><span class="section-number-2">15</span> Vim中的补全功能</h2>
+<div class="outline-text-2" id="text-15">
+<ul class="org-ul">
+<li>ignorecase选项会影响到补全时的大小写敏感问题
+</li>
+
+<li>触发自动补全的方法
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">补全类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">C-n</td>
+<td class="left">普通关键字,可以通过设置complete选项来定制普通关键字补全时所扫描的位置</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-n</td>
+<td class="left">当前缓冲区关键字</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-i</td>
+<td class="left">包含文件关键字,Vim本身就理解C语言的包含方式,但通过设置include选项,我们也可以让它了解其他语言的对应提示符</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-]</td>
+<td class="left">tag文件关键字</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-k</td>
+<td class="left">字典查找,可以通过dictionary选项来指定一个或多个含有单词列表的文件</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-l</td>
+<td class="left">整行补全</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-f</td>
+<td class="left">文件名补全,需要注意的是,Vim的文件自动补全功能只相对于工作目录的路径进行扩展,而不是相对于当前编辑文件的路径. 可以通过:cd命令来却换工作目录,:cd -切换到之前的工作目录</td>
+</tr>
+
+<tr>
+<td class="left">C-x C-o</td>
+<td class="left">全能补全</td>
+</tr>
+</tbody>
+</table>
+</li>
+
+<li>与自动补全的弹出式菜单相互交互
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">按键</th>
+<th scope="col" class="left">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">C-n / C-p</td>
+<td class="left">实用下一个/上一个匹配项</td>
+</tr>
+
+<tr>
+<td class="left">C-y</td>
+<td class="left">确认选用当前选中的匹配项</td>
+</tr>
+
+<tr>
+<td class="left">C-e</td>
+<td class="left">还原最少输入的文本</td>
+</tr>
+
+<tr>
+<td class="left">C-h /BackSpace</td>
+<td class="left">从当前匹配项删除一个字符</td>
+</tr>
+
+<tr>
+<td class="left">C-l</td>
+<td class="left">从当前匹配项增加一个字符</td>
+</tr>
+
+<tr>
+<td class="left">{char}</td>
+<td class="left">中止补全,并插入字符</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-16" class="outline-2">
+<h2 id="sec-16"><span class="section-number-2">16</span> 拼写检查</h2>
+<div class="outline-text-2" id="text-16">
+</div><div id="outline-container-sec-16-1" class="outline-3">
+<h3 id="sec-16-1"><span class="section-number-3">16.1</span> Vim拼写检查器的基本命令</h3>
+<div class="outline-text-3" id="text-16-1">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">命令</th>
+<th scope="col" class="left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">:set spell</td>
+<td class="left">开启检查</td>
+</tr>
+
+<tr>
+<td class="left">[s 或 ]s</td>
+<td class="left">在拼写错误间响应地进行反向及正向的跳转</td>
+</tr>
+
+<tr>
+<td class="left">z=</td>
+<td class="left">来获取Vim提供的更正建议列表,也可以使用N z=来跳过提示,直接采纳第N个更正建议</td>
+</tr>
+
+<tr>
+<td class="left">zg</td>
+<td class="left">把当前单词添加到拼写文件</td>
+</tr>
+
+<tr>
+<td class="left">zw</td>
+<td class="left">将当前单词从拼写文件中删除</td>
+</tr>
+
+<tr>
+<td class="left">zug</td>
+<td class="left">撤销对当前单词的zg或zw命令</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-16-2" class="outline-3">
+<h3 id="sec-16-2"><span class="section-number-3">16.2</span> 使用其他拼写字典</h3>
+<div class="outline-text-3" id="text-16-2">
+<p>
+Vim默认以英文字典作为拼写字典,通过配置spelllang选项可以让我们更改 <b>本地缓冲区</b> 的缺省设置.
+</p>
+
+<p>
+如果我们试着加载某个尚未支持的拼写文件,Vim会自动为我们提供下载和安装的方法
+</p>
+
+<p>
+通过配置spellfile选项,我们可以指定一个文件路径,用于保存由zg和zw命令所添加,删除的单词
+</p>
+
+<p>
+spellfile可以设置多个文件,在zg前加上数字标号能指定添加到那个文件中
+</p>
+</div>
+</div>
+<div id="outline-container-sec-16-3" class="outline-3">
+<h3 id="sec-16-3"><span class="section-number-3">16.3</span> 在插入模式下更正拼写错误</h3>
+<div class="outline-text-3" id="text-16-3">
+<p>
+在插入模式下按C-x s 或C-x C-s会触发一个特殊的自动补全(参见compl-spelling). 
+</p>
+
+<p>
+Vim会从光标位置开始进行反向扫描,直到发现一处拼写错误为止;然后提供更正建议.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: DarkSun</p>
+<p class="date">Created: 2014-09-01 星期一 23:08</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.3.1 (<a href="http://orgmode.org">Org</a> mode 8.2.7b)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

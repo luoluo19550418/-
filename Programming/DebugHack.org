@@ -1,0 +1,448 @@
+#+TITLE: DebugHack
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 关于内核转储
+** 如何开启内核转储
+   大多数Linux发行版默认情况下都关闭了内核转储功能。可以使用ulimit命令查看是否开启了内核转储功能。
+   #+BEGIN_SRC sh
+     ulimit -c # -c表示内核转储文件的大小限制
+     # 0 表示内核转储无效
+   #+END_SRC
+
+   可以使用下列命令开启内核转储
+   #+BEGIN_SRC sh
+     ulimit -c unlimited
+     
+     ulimit -c 1073741824
+   #+END_SRC
+
+** 如何设置内核转储的存放目录和名称
+   通过设置变量sysctl(/etc/sysctl.conf)中的kernel.core_pattern
+   #+BEGIN_EXAMPLE
+     kernel.core_pattern = /var/core/%t-%e-%p-%c.core
+     
+     # 还可以设置为管道符后接程序名的格式
+     
+     kernel.core_pattern = |/usr/local/sbin/core_helper %t %e %p %c
+     
+     # 这里core_helper的内容可以为
+     # exec gzip - > /var/core/$1-$2-$3-$4.core.gz
+   #+END_EXAMPLE
+   #+CAPTION: kernel.core_pattern中可以设置的格式符
+   | 格式符 | 说明                 |
+   |--------+----------------------|
+   | %%     | %字符本身            |
+   | %p     | 被转储进程的PID      |
+   | %u     | 被转储进程的real UID |
+   | %g     | 被转储进程的real GID |
+   | %s     | 引发转储的信号编号   |
+   | %t     | 转储的时间戳         |
+   | %h     | 主机名               |
+   | %e     | 可执行文件名         |
+   | %c     | 转储文件的大小上线            |
+** 如何利用内核转储掩码指定转储的内存区段
+   通过设置/proc/<PID>/coredump_filter的内容来设置
+   #+CAPTION: 比特掩码对应的内存类型
+   | 比特掩码 | 内存类型            |
+   |----------+---------------------|
+   |        0 | 匿名专用内存        |
+   |        1 | 匿名共享内存        |
+   |        2 | file-backed专用内存 |
+   |        3 | file-backed共享内存 |
+   |        4 | ELF文件映射             |
+   
+* GDB的使用
+** GDB基础命令
+   1. 编译时带调试选项
+
+	  gcc -g -o test test.c
+
+   2. 启动调试器
+
+	  gdb test
+
+   3. 设置断点
+
+	  * b 函数名
+
+	  * b 行号
+
+	  * b文件名:行号
+
+	  * b文件名:函数名
+
+	  * b +偏移量
+
+	  * b -偏移量
+
+	  * b *地址
+
+   4. 通过info break确认断点
+
+   5. 在gdb中运行程序
+
+	  run 传递給程序的参数
+
+   6. 使用backtrace显示栈帧
+
+	  * 显示所有栈帧
+
+	   	bt
+
+	  * 只显示开头N个栈帧
+
+	   	bt N
+
+	  * 只显示最有N个栈帧
+
+	   	bt -N
+
+	  * 不仅显示backtrace,还显示局部变量
+
+	   	bt full 
+
+	   	bt full N
+	   	
+	   	bt full -N
+
+   7. 使用print命令显示变量
+
+	  p 变量
+
+   8. 使用info registers显示寄存器内容
+
+	  info reg
+
+   9. 使用print $寄存器显示各个寄存器的内容
+
+	  p $eax
+
+	  p/格式 变量
+
+	  #+CAPTION: 显示寄存器可使用的格式
+      | 格式 | 说明               |
+      |------+--------------------|
+      | x    | 显示为16进制       |
+      | d    | 显示为10进制       |
+      | u    | 显示为无符号10进制 |
+      | o    | 显示为8进制        |
+      | t    | 显示为2进制        |
+      | a    | 地址               |
+      | c    | 显示为字符         |
+      | f    | 浮点小数           |
+      | s    | 显示为字符串       |
+      | i    | 显示为机器语言(仅在用x显示内存时可用) |
+   10. 使用x命令显示内存的内容
+
+	   x/格式 地址
+
+	   这里的格式的结构为NFU,其中N为重复次数,F为p中的格式(x d u o t a c f s i),U为下表所示的单位
+	   #+CAPTION: U代表的单位
+       | 单位 | 说明           |
+       |------+----------------|
+       | b    | 字节           |
+       | h    | 半字(2字节)    |
+       | w    | 字(4字节,默认) |
+       | g    | 双字(8字节)    |
+
+	   例如,下面的命令显示从pc所指地址开始的10条指令
+	   #+BEGIN_EXAMPLE
+	   x/10i $pc
+	   #+END_EXAMPLE
+   11. 使用命令disassemble/disas反汇编
+	   * 反汇编当前整个函数
+
+		 disassemble
+
+	   * 为反汇编程序计数器所在函数的整个函数
+
+		 disassemble $pc
+
+	   * 反汇编从开始地址到结束地址之前的部分
+
+		 disassem 开始地址 结束地址
+
+   12. 使用next/n命令进行单步执行. 若遇到函数不会进入函数内部
+
+   13. 使用step/p命令进行单步执行,若遇到函数则进入函数内部
+
+   14. next和step命令都是执行源代码中的一行. 如果要逐条执行汇编命令,可用分别使用nexti和stepi命令
+
+   15. 使用continue/c命令继续执行程序
+
+	   continue
+
+	   continue 次数
+
+   16. 要想找出变量在何处被改变,可用使用watch命令创建监视点
+
+	   * 当常量/变量发生变化时暂停运行
+
+		 watch <表达式>
+
+		 这里的表达式的意思是常量或变量
+
+	   * awatch <表达式>
+
+		 <表达式>被访问,改变时暂停运行
+
+	   * rwatch <表达式>
+
+		 <表达式>被访问时暂停运行
+
+   17. 使用delete/d命令删除断点和监视点
+
+	   delete <编号>
+
+	   这里的编号可用使用info命令获得
+
+   18. 其他断点
+	   
+	   1. 硬件断点(hbreak)
+
+		  适用于ROM空间等无法修改的内存区域中的程序. 在有些架构中无法使用
+
+	   2. 临时断点(tbreak)和临时硬件断点(thbreak)
+
+		  临时断点会在停止一次后自动被删除
+
+   19. 通过set variable语句改变变量的指
+
+	   set variable 变量=表达式
+
+   20. 使用generate-core-file生成内核转储文件
+
+	   generate-core-file
+  
+** GDB小技巧
+   1. 使用attach命令调试已经运行的进程
+
+	  attach pid
+
+   2. 使用detach命令将被调试的进程释放出来
+
+	  detach
+
+   3. 用info proc命令查看debug的进程信息
+
+	  info proc
+
+   4. 设置条件断点
+
+	  * 设置条件断点
+	    break 断点 if 条件
+	    #+BEGIN_EXAMPLE
+	    b iseq_compile if node == 0
+	    #+END_EXAMPLE
+
+	  * 删除断点的触发条件
+
+	    condition 断点编号
+
+	  * 为断点添加触发条件
+
+		condition 断点编号 条件
+
+   5. 反复执行
+	  
+	  * ignore 断点编号 次数
+
+		在指定的断点,监视点或捕获点忽略指定的次数
+
+	  * continue 次数
+
+	  * step 次数
+
+	  * stepi 次数
+
+	  * next 次数
+
+	  * nexti 次数
+
+		这些格式分别执行相应命令N次
+
+	  * finish
+		
+		执行完当前函数后暂停
+
+	  * until / until 地址
+
+		执行完当前代码块后暂停, 如果是循环,则在执行完循环后暂停,常用于跳出循环
+
+   6. 删除断点和禁用断点
+
+	  * 用clear/delete命令删除已定义的断点
+		
+		clear
+
+		clear 函数名
+
+		clear 行号
+
+		clear 文件名:行号
+
+		clear文件名:函数名
+
+		delete [breakpoints] 点编号
+
+	  * 用disable暂时禁用断点,breakpoints关键字可以省略
+
+		disable [breakpoints]
+
+		disable [breakpoints] 断点编号
+
+		disable display 显示编号
+
+		disable mem 内存区域
+
+	  * 使用enable来启用被禁用的断点
+
+		enable [breakpoints]
+
+		enable [breakpoints] 断点编号
+		
+		enable [breakpoints] once 断点编号
+
+		enable [breakpoints] delete 断点编号
+
+		enable display 显示编号
+
+		enable mem 内存区域
+
+   7. 使用commands命令定义在断点中断后自动执行的命令
+
+	  #+BEGIN_EXAMPLE
+	  commands 断点编号
+          命令
+	      ...
+	      end
+	  #+END_EXAMPLE
+
+	  另外,如果命令的第1行为silent命令,就不会显示在断点出暂停的信息. 单独进行信息输出时这一点很有用
+
+   8. 值的历史
+
+	  通过print命令显示过的值会记录在内部的值历史中. 这些值可以在其他表达式中使用.
+
+	  * 使用show value命令可以显示历史中的最后10个值
+		#+BEGIN_EXAMPLE
+		(gdb) show value
+		#+END_EXAMPLE
+
+	  * 值历史的访问变量和说明
+		* $
+
+		  值历史的最后一个值
+
+		* $n
+
+		  值历史的第n个值
+
+		* $$
+
+		  值历史的倒数第2个值
+
+		* $$n
+		  
+		  值历史的倒数第n个值
+
+		* $_
+
+		  x命令显示过的最后的地址
+
+		* $__
+
+		  x命令显示过的最后的地址的值
+
+		* $_exitcode
+
+		  调试中的程序的返回代码
+
+		* $bpnum
+
+		  最后设置的断点编号
+
+   9. 定义变量
+
+	  gdb中可以随意设置变量. 变量以$开头,由英文字母和数字组成
+
+   10. 命令历史
+
+	   可以将命令历史保存在文件中. 保存命令历史后,就能在其他调试会话中重复利用这些命令(按箭头查找). 默认命令历史文件为./.gdb_history
+	  
+	   * 启用csh风格的!字符
+
+		 set history expansion
+
+		 show history expansion
+
+	   * 设置命令历史保存文件
+
+		 set history filename 文件名
+
+		 show history filename
+
+	   * 启用命令保存到文件和恢复的功能
+
+		 set history save
+
+		 show history save
+
+	   * 设置保存到历史的命令数量. 
+
+		 set history size 数字
+
+		 show history size
+
+   11. GDB的初始化信息
+
+	   初始化文件的语法与命令文件的语法相同,都是有gdb命令组成
+	   1. $HOME/.gdbinit
+
+	   2. 运行命令行选项
+
+	   3. ./.gdbinit
+
+	   4. 通过-x选项给出的命令文件
+
+   12. 命令定义
+	   
+	   * 使用define命令自定义命令
+
+		 #+BEGIN_EXAMPLE
+		 define 命令名
+		     命令
+		     ...
+		     end
+		 #+END_EXAMPLE
+
+	   * 使用document給自定义命令添加说明
+		 #+BEGIN_EXAMPLE
+		 document 命令名
+		     说明
+		     end
+		 #+END_EXAMPLE
+
+	   * 使用help可以查看自定义命令
+
+		 help 命令名
+
+	   * 读取外部文件中的设置
+
+		 source 文件名
+		 
+   13. 其他命令
+
+	   #+CAPTION: 其他命令
+       | 命令           | 简写形式 | 说明                               |
+       |----------------+----------+------------------------------------|
+       | directory      | dir      | 插入目录                           |
+       | down           | do       | 在当前调用的栈帧中选择要显示的帧栈 |
+       | edit           | e        | 编辑文件/函数                      |
+       | frame          | f        | 选择要显示的栈帧                   |
+       | forward-search | fo       | 向前搜索                           |
+       | help           | h        | 显示帮助一览                       |
+       | print-object   | po       | 显示目标信息                       |
+       | sharedlibrary  | share    | 加载共享库的符号                           |
+* 

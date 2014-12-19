@@ -1,0 +1,7 @@
+#+TITLE: 简化你的时间
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+1. 不要点击垃圾邮件的退订按钮,这样只会告诉它这个email地址是有效的,反而会收到更多的垃圾邮件
+2. 自言自语能够提高工作效率,降低干扰和噪音带来的影响.

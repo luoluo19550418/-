@@ -1,0 +1,103 @@
+#+TITLE: cppcheck使用指南
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+* cppcheck简介
+
+  cppcheck是一个静态代码检查工具,支持c/ c++代码;作为编译器的一种补充检查,cppcheck对产品的源代码执行严格的逻辑检查。
+
+  执行的检查包括：
+  * 自动变量检查 
+  * 数组的边界检查 
+  * class类检查 
+  * 过期的函数，废弃函数调用检查 
+  * 异常内存使用,释放检查 
+  * 内存泄漏检查,主要是通过内存引用指针 
+  * 操作系统资源释放检查,中断.文件描述符等 
+  * 异常 STL 函数使用检查 
+  * 代码格式错误,以及性能因素检查
+
+* cppcheck使用
+  cppcheck的使用方法可能是代码工具中最简单的了，说一下使用方法。
+
+  安装好cppcheck之后,安装目录下有两个工具,一个是带图形界面的程序(cppcheckgui.exe),一个是console程序(cppcheck.exe)
+  * cppcheckgui.exe的使用方法
+
+    点击工具栏的第一个图标,是加载文件夹(注意:中文目录支持不是很好),也就是你的项目文件夹,加载完成后它会自动检测所有可能的问题并列出来
+
+  * cppcheck.exe的使用方法
+ 
+    通过命令行进入cppcheck的安装目录并输入以下命令
+	#+BEGIN_SRC dos
+      cppcheck D:/Project/XXX(文件夹完整路径)  2>error.txt
+	#+END_SRC
+ 
+    会将错误生成在安装目录下名为error.txt的文件中,方便查看,结果如下：
+	#+BEGIN_QUOTE
+    [D:\Studio\BKWin\BKWin\resource.h:1]: (error) The code contains characters that are unhandled. Neither unicode nor extended ASCII are supported. (line=1, character code=ff)
+    [D:\Studio\BKWin\BKWin\resource.h:1]: (error) The code contains characters that are unhandled. Neither unicode nor extended ASCII are supported. (line=1, character code=fe)
+	#+END_QUOTE
+ 
+
+* cppcheck与其他软件的整合
+** 与VisualStudio的配合
+   1. 为了在VC中使用方便,先建立一个bat文件,vscppcheck.bat
+	  #+BEGIN_SRC dos
+        cppcheck --enable=all --template=vs %1 > NUL
+	  #+END_SRC
+      因为只需要cerr输出,所以cout输出到NUL.
+
+   2. 然后在 VS->工具->外部工具 中添加：
+	  #+BEGIN_QUOTE
+	  标题：cppcheck
+
+	  命令：d:\jinq\vscppcheck.bat
+	  
+	  参数：$(SolutionDir)
+
+	  使用输出窗口
+	  #+END_QUOTE
+   3. 设好后只需点工具cppcheck菜单,就会输出代码检查结果,按<F4>可跳转到错误行.
+
+** 与TortoiseSVN配合
+   #+BEGIN_QUOTE
+   Since we are not robots (yet), it is very possible to forget running a Cppcheck before committing code to the SVN server. Organizations that use Cppcheck (or any other code analysis tool) usually perform the code analysis once a day/week/month. Usually the team leader assigns a task to developer to fix the issue, commit the code and wait for the next code analysis. And then we start this cycle again. Sometimes the code analysis is taken after a build was already released to QA, or even worse, to customers.
+   
+   So we all know that asking your developers to run the Cppcheck before every commit they do is not feasible. However, this process can be automated (and in some way also made invisible) for the developers.
+   
+   Attached to this page is a script which will automatically force the Cppcheck on all source files that are being committed. The check is run when the commit is triggered (before the commit is actually performed) with a zero effort from the developers. In the case issues are found, the script will fail the commit so the developer can fix the issues and commit only Cppcheck-checked code (failing the commit can be bypassed if needed). The great value of this approach is that we can fix the issues before they are committed to the SVN server!
+   
+   
+   Configuration
+   
+   1.Download the "SVN_Pre_Commit_Hook__CppCheck_Validate.bat" script to your machine and edit it: 
+     * cppCheckPath - Full path to your Cppcheck.exe (not CppcheckGui.exe).
+     * supportedFileTypes - Add or remove file types to check. This variable is here so the script won't check '.sln', '.vxproj' and other non-source file types.
+     * enableScript - '1' or '0' to enable/disable running the script. 
+
+   2.Right click (somewhere on desktop) --> TortoiseSVN --> Settings --> Hook Scripts --> Add...
+
+   3.Configure Hook Scripts: 
+     * Hook Type: Choose 'Pre-Commit Hook' (upper right corner).
+     * Working Copy Path: The directory that all of your SVN checkouts are done. Use the top most directory (or just use 'C:\' for example).
+     * Command Line To Execute: Full path to the attached script.
+     * Make sure that both 'Wait for the script to finish' and 'Hide the script while running' checkboxes are checked --> OK --> OK. 
+   
+   
+   
+   
+   Hints
+   
+   1.Even if the commit failed because of the Cppcheck, SVN gives you the option to easily recommit disregarding the failure by clicking the 'Retry without hooks' button. If commit succeeded (meaning, Cppcheck did not find any issues), it will look like nothing happened (so developers will still see a commit end message just like before). 
+   
+   2.If you want to implement this solution in your organization/team you can do it in two different approaches: 
+     * Client side solution - Meaning, the steps above should be taken for all of your development machines. The benefit in this approach is that only relevant teams can use this solution and not all of the developers that are working on the SVN server. Besides, ignoring this Cppcheck (in case of false-positives for example) is quite easy using one button click integrated in the TortoiseSVN Client ('Retry without hooks'). This approach means that Cppcheck must be installed on all of the relevant developers machines of course.
+     * Server side solution - Meaning, Cppcheck should be installed only on the SVN server and the steps above should be taken only once (server side only). So clients (developers' machines) should take no action since every commit will trigger the hook at server side. The benefit is this is taken only once, but this solution may be to restrictive for some organizations. In addition, in order to ignore the hook (once again, false-positive for example) - you need to create some 'back-door' script that will allow developers to bypass it with a specific keyword in the commit message.
+
+   3.More about SVN hook scripts - Client Hook Scripts, Server Hook Scripts.
+   
+   
+   
+   All you need to do is take the Configuration steps above just once. Afterwards, you can work with SVN the same as before, just now you get to see your failures before code is committed to the SVN server.
+   
+   #+END_QUOTE
+

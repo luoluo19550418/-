@@ -1,0 +1,2512 @@
+#+TITLE: java
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 数值计算
+** 浮点数不适用于禁止出现舍入误差的金融计算,如果需要在数值计算中不含有任何舍入误差,就应该使用BigDecimal类和BigInteger类
+   使用静态的valueOf方法将普通的数值转换成大数值。
+   #+BEGIN_SRC java
+     BigInteger a = BigInteger.valueOf(100);
+   #+END_SRC
+
+   由于java不支持操作符重载，因此对大数据类不能用+-*%/来操作，需要改用add,subtract,multiply,divide,mod方法
+** 表示溢出和出错情况的三个特殊的浮点数值
+   * Double.POSITIVE_INFINITY	正无穷大
+   * Double.NEGATIVE_INFINITY	负无穷大
+   * Double.Nan					不是一个数字
+   
+	 需要说明的是,不能用==来检测一个特定值是否为Double.NaN,因为所有的"非数值"的值都认为是不相同的.
+
+	 要判断是否为NaN,需要使用Double.isNan(x)方法
+   
+	 此外,整数/0会产生一个异常,而浮点数/0会得到无穷大或NaN结果
+** 整型和boolean型直接不能进行相互转换
+** Math类与StrictMath类
+   在Math类中，为了达到最快的性能，所有的方法都使用计算机浮点单元中的例程。 
+   如果得到一个可以完全预测的结果比运算速度更重要的话，那么应该使用StrictMath类
+* 类型说明
+** char型
+   强烈建议不要在程序中使用char类型,除非确实需要对UTF-16代码单元进行操作. 最好将需要处理的字符串用抽象数据类型表示
+** java中的字符串
+   java中的字符串是不可变的，即可以下修改字符串变量的指向，但不能更改指向的内容。 因此会大量使用String.substring方法和+进行字符串修改。
+
+   事实上，java中的字符串更类似C中的char*类型
+*** 字符串的拼接
+    任何java对象都可以转换为字符串，当将一个字符串与一个非字符串的值用+进行拼接时，后者都会先转换成一个字符串。
+*** 检测字符串是否相等
+    一定不能使用==来比较，java中的变量类似C中的指针的概念，因此==只会确定两者是否指向同一个内存区域。
+
+    #+BEGIN_SRC java
+      s.equals(t);                    
+      s.equalsIgnoreCase(t);          // 不区分大小写
+    #+END_SRC
+*** 构造字符串
+    使用StringBuilder或StringBuffer类（支持多线程）来构造字符串
+** java中的数组
+   java中的数组类似于C中的指向数组的指针
+   #+BEGIN_SRC java
+     int[] a = new int[100];
+     int a[] = new int[100];
+     int[] a = new intp[0];          // java中允许数组长度为0
+     int[] a = {2,3,4};              // 创建数组对象并初始化的简写形势
+     int[] a = new int[]{1,2,3};      // 重新初始化数组
+     int[][]b = new int[2][2]{{1,2}
+                              {3,4}}; // 多维数组
+   #+END_SRC
+
+   一旦创建了数组,就不能再改变它的大小了. 若需要在运行过程中扩展数组大小,需要使用ArrayList.
+
+   由于数组变量实际是指针,因此用=赋值时,两个变量将引用同一个数组. 若要实现真正的拷贝,需要使用Arrays.copyOf()方法
+   #+BEGIN_SRC java
+     int[] copiedNumbers = Arrays.copyOf(numbers,numbers.length); // 第二个参数为新数组的长度,可以增加或者减少
+   #+END_SRC
+
+   java中的数组,没有指针运算,因此不能出现a+1这样的写法
+
+   java实际上也没有多维数组,只能用数组的数组来模拟多维数组
+** Object类
+   在java中,只有基本类型不是对象,所有数组类型,不管是对象数组还是基本类型数组,都扩展于Object类.
+*** equals(Object otherObject)方法
+	检测一个对象是否等于另一个对象.
+
+	一般在子类中定义equals时,首先需要调用超类的equals,如果检测失败,对象就不可能相等.
+
+	java语言规范要求equals方法具有下面的特性:
+	* 自反性:
+	  
+	  对于任何非空引用x,x.equals(x)返回true
+
+	* 对称性
+
+	  对于任何引用x和y,当且仅当y.equals(x)返回true, x.equals(y)也返回true
+
+	* 传递性
+
+	  对于任何引用x,y,z.若x.equals(y)==true,y.equals(z)==true.则x.equals(z)==true
+
+	* 对于任何非空引用x,x.equals(null)==false;
+
+	一般编写equals的过程为:
+	#+BEGIN_SRC java
+      class C{
+          @Override public boolean equals // @Override标记会使编译器检测该方法是否对父类的方法进行覆盖,若由于参数类型错误而没有覆盖,则编译器会给出错误报告
+              (Object otherObject) // 为了覆盖Object类的equals方法,参数必须为Object类型
+          {
+              // 检测this与otherObject是否引用同一个对象
+              if(this == otherObject){
+                  return true;
+              }
+              // 检测otherObject是否为null
+              if(otherObject == null){
+                  return false;
+              }
+              // 比较this和otherObject是否同一个类. 有两种情况
+              // 1. 若equals的语义每个子类都不同,则
+              if(getClass() != otherObject.getClass()){
+                  return false;
+              }
+              // 2. 若各子类的语义相同,则
+              if(!(otherObject instanceof ClassName)){
+                  return false;
+              }
+              // 将呕吐和人Object转换为相应的类类型变量
+              ClassName other = (ClassName) otherObject;
+              // 开始域比较,使用==比较基本类型,使用.equals比较对象
+              return field1==other.field1 && field2.equals(other.field2)
+                  && Array.equals(array,other.array); // 对于数组类型的域,使用静态的Arrays.equals方法检测相应的数组类型是否相等.
+          }
+      }
+	#+END_SRC
+*** getClass
+	返回一个对象所属的类.
+*** hashCode()方法
+	如果重定义equals方法,则必须重定义hashCode方法.
+
+	若x.equals(y)==true,则x.hashCode(y)==true
+*** toString()方法
+	返回表示对象值的字符串. 
+
+	Object类定义的toString方法默认打印出对象所属的类名和hash值.
+
+	要输出数组的string,最好使用静态方法Arrays.toString()和Arrays.deepToString()
+
+	强烈建议为自定义的每个类都增加toString方法
+*** clone()方法
+	返回对象的副本. 但在Object中该方法为procected,故只能給子类使用而不能在外部调用.
+
+	因此,子类必须实现Cloneable接口,重新定义该clone方法为public权限
+** 枚举类型
+   #+BEGIN_SRC java
+     enum Size{SMALL,MEDIUM,LARGE,EXTRA_LARGE};
+     Size s = Size.MEDIUM;
+   #+END_SRC
+   
+   所有的枚举类型都是Enum类的子类,枚举类型中定义的值可以看出是类的静态对象,因此比较时直接使用==进行比较.
+
+   且枚举类型与类一样可以定义构造函数,成员方法和成员变量.
+   #+BEGIN_SRC java
+     enum Size
+     {
+         SMALL("S"),MEDIUM("M"),LARGE("L"),EXTRA_LARGE("XL"); // 定义了几个静态对象
+     
+         private Size(string abbr){
+             this.abbr - abbr;
+         }
+         public String getAbbr{return abbr}
+         private String abbr;
+     }
+   #+END_SRC
+   
+   * Enum.toString()
+
+	 返回枚举常量名
+
+   * static Enum.valueOf()
+
+	 根据字符串转换为枚举类型
+
+   * Enum.ordinal()
+
+	 返回enum声明中枚举常量的位置,从0开始计算
+* 语法
+** 常量的声明
+   java中利用final声明常量,而不是const. 习惯上常量名使用大写
+   
+   同理,使用关键字static final来设置一个类的常量.
+
+   需要注意的是,const是java的保留关键字,但目前并没有被使用.
+** 逗号运算符
+   与C/C++不一样，java不使用逗号运算符。 不过可以在for语句中使用逗号分隔表达式列表
+** 关于位移操作
+   >>和<<运算符将二进制位进行右移或左移操作. 
+
+   而且,>>>运算符使用0填充最高位,>>运算符使用符号位填充高位,没有<<<运算符.
+** 嵌套
+   不能在嵌套的两个块中声明同名的变量
+   #+BEGIN_SRC java
+     void test(){
+         int i;
+         {
+             int i;                  // 错误
+         }
+     }
+   #+END_SRC
+** break
+   java提供了带标签的break用于跳出多重嵌套的循环
+   #+BEGIN_SRC java
+     Scanner in = new Scanner(System.in);
+     int n;
+     read_data:                      // 定义标签
+     while(true) {
+         for(...){
+             System.out.print("Enter a number >=0");
+             n = in.nextInt();
+             if(n<0)
+                 break read_data;
+             ...
+         }
+     }
+   #+END_SRC
+** for each语法
+   #+BEGIN_SRC java
+     for(var:collection){            // collection必须为一个数组或实现了Iterable接口的类对象
+         statement;
+     }
+   #+END_SRC
+
+   for each循环无法自动处理二维数组的每一个元素,因为多位数组为数组的数组,因此要使用多个循环
+   #+BEGIN_SRC java
+     for(double[] row:a){
+         for(double var:row){
+             ...
+         }
+     }
+   #+END_SRC
+** java中的命令行参数
+   与C++不一样,java的main方法中,args数组不包含程序名,因此args[ 0 ]即表示第一个参数而不是程序名
+** 类方法定义
+   C++中,通常在类的外面定义方法,如果在类的内部定义方法,则自动为内联方法. 而java所有的方法必须在类中定义,但是否为内联方法由java虚拟机决定.
+** 类方法的返回值
+   当在java中类方法中返回类成员时,由于类成员变量是指向内部对象的指针,因此可能会破坏封装性!. 因此一般来说,若类成员变量为可变的,则需要返回对它的副本.
+** 类成员/类方法的引用
+   C++中,用Class::member和Class::function来访问类成员和类方法.
+
+   而java用Class.member和Class.function来访问类成员和类方法.
+** 函数参数的值传递与引用传递
+   C++中既可以值传递,也可以引用传递.
+
+   java中,只有值传递,但由于java中变量其实是对象的引用,因此可以在函数中更改对象参数的状态,而 *不能让对象参数引用一个新的对象*
+** 对象成员的初始化
+   C++中,只能通过构造函数来对对象成员变量进行初始化.
+
+   java中,可以在类定义时,直接将一个值赋给对象成员变量,而且 *初始化过程会发生在执行构造函数之前*
+   #+BEGIN_SRC java
+     class Employee{
+         public Employee(){
+             // ...
+         }
+         private string name = "";
+     }
+   #+END_SRC
+
+   而且,在直接对对象成员进行赋值时, *右值可以为函数!* (这个方法还可以带参数,但这个参数必须是已经初始化了的)
+   #+BEGIN_SRC java
+     class Employee{
+         static int assignId(){
+             int r = nextId;
+             nextId++;
+             return r;
+         }
+         // ...
+         private int id = assignId();
+     }
+   #+END_SRC
+
+   在类的内部,变量定义的先后顺序决定了初始化的顺序.
+   java中还有一个初始化块的概念,在类的声明中可以包含多个代码块,用于初始化对象,这些初始化块中的代码会在构造函数执行前执行!
+
+   类似的,java也有静态初始化块的概念, *在类第一次加载时*,会执行静态初始化块中的内容.
+   #+BEGIN_SRC java
+     class Employee{
+         public Employee(){
+             // ...
+         }
+         
+         private static int nextId;
+         
+         private id;
+         // 初始化块
+         {
+             id = nextId;            // 居然可以访问对象成员变量!!
+             nextId++;
+         }
+         // 静态初始化块
+         static
+         {
+             Random generator = new Random();
+             nextId = generator.nextInt(1000); // 静态初始化块中只能访问静态变量!!
+         }
+     }
+   #+END_SRC
+
+   由于匿名内部类无法定义构造函数,因此初始化块是很有必要存在以替代构造函数的作用的.
+** 构造函数
+   C++中,一个构造函数不能调用另一个重载的构造函数,必须将抽取出的公共初始化代码编写成一个独立的方法才行.
+
+   java中,一个构造函数可以调用另一个重载的构造函数,方法是用this(...)来调用其他构造函数
+   #+BEGIN_SRC java
+     public Employee(double s){
+         // call Employee(string,double)
+         this("Employee #"+nextId,s);
+         nextId++;
+     }
+   #+END_SRC
+
+   但this(...)必须为构造函数的第一个语句!
+
+   若基类包含有默认构造函数，则子类中不需要明确调用基类中的构造函数，java会自动调用积累的默认构造函数。 但若基类中无默认构造函数，则需要明确调用super(...)来调用基类的构造函数。
+
+   另外一点需要注意的是,在构造函数中应该避免使用非final的方法(private方法默认即为final的),因为它可能会去动态绑定子类的同名方法,而此时子类还未初始化完成.
+** 析构函数
+   由于java有自动垃圾回收器,因此java不支持析构函数. 需要手工调用函数来进行其他资源的回收操作。 在子类的清理函数中，要记得调用基类的清理函数哦。
+
+   但若对象使用了内存之外的其他资源时,可以为类定义一个finalize方法. finalize方法将在垃圾回收器清除对象之前调用.
+
+   由于不确定什么时候会出发垃圾回收，因此不能将finalize方法当作析构函数来处理，但可以作为检测是否正确回收资源的工具。
+** import/import static
+   * 使用import package.class导入某个class
+   * 使用import package.*导入某个package中的所有class
+   * 使用import static package.class.*导入class中的类成员变量和类方法
+   * 使用import static package.class.staticMember导入类中的某个类成员变量或类成员方法
+   * 当使用import导入了同名类时,编译器会报错
+** 继承
+   C++使用subclass:superclass的语法来继承,而且具有private继承和protected继承.
+
+   java使用subclass extends superclass的语法来继承,且只有public继承一种方式
+** super关键字调用超类方法
+   C++中使用BaseClass::function()的形式来调用超类方法.
+
+   java中使用关键字super.function()的形式来调用超类方法.
+
+   在C++中,使用初始化列表语法调用超类的构造函数.
+   #+BEGIN_SRC c++
+     class Base
+     {
+     public:
+             Base(string n){
+                     name = n;
+             }
+     private:
+             string name;
+     };
+     class Sub:Base
+     {
+     public:
+             Sub(string n,int a):Base(n){
+                     age = n;
+             }
+     private:
+             int age;
+     }
+   #+END_SRC
+
+   在java的构造函数中,则使用super(...)的方式来调用超类的构造函数
+   #+BEGIN_SRC java
+     class Base{
+         public Base(string n){
+             name = n;
+         }
+         private name;
+     }
+     class Sub extends Base{
+         public Sub(string n,int a){
+             // super必须为第一句话,这跟this()类似
+             super(n);               // 由于name为超类的私有成员,子类不能直接访问,故需要调用基类的构造函数来对其进行初始化
+             age = a;
+         }
+         private age;
+     }
+   #+END_SRC
+** 多态
+   C++中,只有带有virtual标识的成员方法才具有多态.
+
+   java中,成员方法默认就是动态绑定的,若不希望它具有虚拟特性,可以把它标记为final
+** 名称屏蔽
+   C++中，若在子类中重新定义了某个与基类同名的函数，则基类中所有版本的同名函数都被屏蔽。
+
+   java中，若在子类中重新定义了某个与基类同名的函数，则只会覆盖与基类中相同签名的同名函数。
+
+   可以使用@Override注解来标明某个子类函数是想覆盖积累的同名函数的，这样若编译器发现该子类函数未覆盖积累同名函数，则会生成一条错误的信息。
+** final参数
+   java允许将参数声明为final的，类似于C++中的const，这使得在方法中无法更改参数引用所指向的对象。
+** final类
+   final类不能被继承,而且final类中的方法自动为final方法. 但是final类中的成员变量不是final的,它依然可以改变.
+** abstract类
+   java中的抽象类类似于C++中的虚类.
+   #+BEGIN_SRC java
+     abstract class Person{
+         public abstract String getName();
+     }
+   #+END_SRC
+** 关于protected的权限
+   C++中proctected成员只能被子类访问
+
+   java中proctected成员不仅可以被子类访问,而且可以对同一个包的其他类可见!
+** 可变参数
+   #+BEGIN_SRC java
+     public void printf(String fmt,Object... args){ 
+         ...;                        // 这里args的类型为Object[]
+     }
+   #+END_SRC
+** 反射
+   * 使用static Class.forName(string s)生产一个Class类
+   * 调用Class.newInstance()产生一个Class类的对象.
+** 内部类
+   C++中的内部类与外部类是相互独立的. 在C++中只是单纯的名字隐藏机制，与外围对象没有联系，也没有隐含的访问权限。
+
+   而java中，只有静态内部类才跟C++的嵌套类类似。但有一点不一样,java的静态内部类可以访问外部类的private属性,而C++不允许
+   
+   注意:java的普通内部类不能有static数据和static字段,只有静态内部类才能包含这些东西.
+*** 一般内部类
+   	java中的内部类可以访问外部类的私有成员变量和成员函数. 这是因为内部类的对象总有一个隐式引用,指向它的外部类对象。 而这意味着， *在拥有外部对象之前，不可能创建内部类对象！！*
+
+   	* 内部类中引用外部类对象
+	  #+BEGIN_SRC java
+       	OuterClass.this
+	  #+END_SRC
+   	* 直接创建内部类对象
+
+      要想new出一个内部类对象，不能想当然的使用使用new OuterClass.InnerClass()来创建，而必须先拥有一个外部对象，再使用该外部对象来创建内部类。 这是因为内部类对象会悄悄连接到创建它的外部类对象上。
+	  #+BEGIN_SRC java
+        OuterClass outerObject = new OuterClass(); // new内部类之前，必须先要有一个外部类
+        OuterClass.InnerClass innerObject = outerObject.new InnerClass(); // 必须使用outerObject.new的语法来new内部类
+	  #+END_SRC
+*** 局部类
+	可以在外部类的成员方法中定义内部类,这时的内部类成为局部类,局部类不能用public或private访问说明符进行声明,它的作用域仅限于声明局部类的块中
+	#+BEGIN_SRC java
+	  Class Outer{
+		  public void say(final boolean flag){
+			  class Inner{
+				  if(flag){           // 局部类不仅可以访问外部类的私有成员,还能访问函数的局部变量. 但这些局部变量必须为final. 类似于闭包的概念
+					  ...
+				  }
+				  // ...
+			  }
+			  Inner inner = new Inner();
+			  // ...
+		  }
+	  }
+	#+END_SRC
+*** 匿名内部类
+	若内部类只创建这个类的一个对象,就不必命名了. 这种类被称为匿名内部类
+	#+BEGIN_SRC java
+      interface OuterInterface{
+      }
+      public void start(){
+          OuterInterface obj = new OuterInterface(){ // 匿名类没有类名,因此它不能有构造器,只能将构造函数参数传递給超类构造器. 匿名类implements了OuterInterface
+                  // 匿名内部类的定义
+              };
+      }
+      
+      class OuterClass{
+          public OuterClass(int i){
+              content = i;
+          }
+          public int value(){
+              return content;
+          }
+          private int content;
+      }
+      class Test{
+          public OuterClass getInnerClassObj(){ // 匿名类extends了OuterClass
+              return new OuterClass(12){ // 调用OuterClass(12)这个基类的构造函数来初始化
+                  // 匿名内部类的定义
+                  super.value();
+              };
+      }
+	#+END_SRC
+
+	如果定义一个匿名内部类,并且希望它使用一个在其外部定义的对象,那么编译器会要求其参数引用是final的,否则会得到一个编译时错误信息.
+*** 静态内部类
+	当内部类不需要访问外部类对象时,应该使用静态内部类.这时静态内部类跟C++的嵌套类类似了.
+	#+BEGIN_SRC java
+      Class Outer{
+          public static Class Inner{
+              // ...
+          }
+          public static Inner test(){ // static方法只能使用static内部类
+              return new Inner();
+          }
+      }
+      
+      Outer.Inner obj = new Outer.Inner();
+	#+END_SRC
+
+	正常情况下,不能在接口内部放置任何代码,但静态内部类可以作为接口的一部分,任何接口中的类自动地是public和static的. 由于类是static的,因此它只是把静态内部类放置于接口的命名空间内而已,你甚至可以在内部类中实现其外围接口.
+	#+BEGIN_SRC java
+      public interface OuterInterface{
+          void run();
+          class InnerClass implements OuterInterface{
+              public void run(){
+              }
+              public static void main(String[] args){
+                  new InnerClass().run();
+              }
+          }
+      }
+	#+END_SRC
+
+	如果想要创建某些公共代码,使得它被某个接口的所有不同实现所公用,那么接口内部的静态内部类会显得很方便.
+*** 为什么使用内部类
+    * 实现闭包
+    * 内部类可以直接调用外部类的方法（包括privated），同时它还可以继承其他类，因此可以模拟多重继承
+** interface
+   java不支持多继承,但可以继承多个interface. 
+
+   interface中的方法自动为public,而不需要明确提供public关键字.
+
+   interface中的变量自动为static和final的
+
+   interface中还能定义常量,但是不能包含变量和函数的实现方法.
+
+   interface的语法为class implements interface
+
+   interface也可以用extends关键字实现接口间的继承
+
+   #+BEGIN_SRC java
+     public interface Powered extends Moveable,Fliable // 接口间用extends继承,且可以继承多个接口
+     {
+         double milesPerGallon();    // 默认为public
+         double SPEED_LIMIT = 95;    // 默认为public static final
+     }
+   #+END_SRC
+*** 如何选择应该成为抽象类还是接口？
+    如果要创建不带任何方法定义和成员变量的基类，那么就应该选择接口而不是抽象类。 
+    事实上，如果知道某个事物应该成为基类，那么第一选择应该是成为一个接口
+*** 嵌套interface
+    可以在类或interface中再定义内部interface。 
+      
+    在类中嵌套interface可以拥有public，protected，默认和private的访问权限。 由于在类外部无法访问private的内部interface，因此private的内部interface只能在外部类的内部使用。
+
+    在interface内嵌套interface，则需要遵循所有interface内的元素都必须是public的规则。 因此嵌套在一个interface内的interface，自动就是public的，不能声明为private的
+
+    需要特别注意的是，当实现某个接口时，不需要实现嵌套在其内部的任何接口
+    #+BEGIN_SRC java
+      interface Outer{
+          void o();
+          interface Inner{
+              void i();
+          }
+      }
+
+      class OuterImpl implements Outer{
+          void o(){}                  // 只需要实现外面的o方法即可
+      }
+    #+END_SRC
+** 异常
+*** 异常的分类
+	C++中runtime_exception表示运行期的异常,而logic_exception表示程序的逻辑错误.
+	
+	而java的正好相反,RuntimeException跟C++的logic_exception类似,表示程序写的有问题,其他的异常跟C++的runtime_exception类似表示运行期的问题.
+*** 异常的声明
+	C++中的函数可以不声明可能抛出的异常,表示可能抛出任何异常.
+
+	java中必须声明可能抛出的checked异常(即非RuntimeException,因为它表示编程有问题).
+*** finally语法
+	C++中没有finally语法.
+
+	java中有finally语法,用于扫尾工作. 
+
+	注意,在finally中再抛出新异常,会使得原异常被丢失. 而catch语句只能捕获到finally中抛出的异常.
+*** 异常的方法
+    * String getMessage()
+      获取详细信息
+    * String getLocalizedMessage()
+      获取本地语言表示的详细信息
+    * String toString
+    * void printStackTrace()
+    * void printStackTrace(PrintStream)
+    * void printStackTrace(java.io.PrintWriter)
+    * Throwable fillInStackTrace()
+      返回包含调用该方法时当前栈信息的异常
+    * StaclTraceElement getStackTrace()
+*** 异常链
+    常常会想要在捕获一个异常后，抛出另一个异常，并且保存原异常信息，这被称为异常链
+
+    可以在构建Throwable时在构造器中以原异常为参数来构建，也可以使用initCause(原异常)来构建,在函数中使用getCause()函数获得原异常.
+
+	当不知道如何处理捕获的异常,又必须处理该异常时,可以使用异常链将该异常包装进RuntimeException中. 
+*** 继承体系中的异常
+	子类的方法(构造函数除外)所能够抛出的异常不能多于基类方法所声明的抛出异常. 但可以是基类声明异常的子类.
+
+	对于子类的构造函数没有异常的限制,但由于基类的构造函数必然会被调用,因此子类构造函数的异常声明必然包含基类的异常声明.
+	
+	且由于基类的构造语句要么必须位于构造函数的第一行,要么由系统自动调用默认构造函数,因此子类的构造函数无法捕获基类构造函数抛出的异常.
+** assert关键字
+   * assert 条件;
+	 如果结果为false,则抛出一个AssertionError异常.
+   * assert 条件:表达式;
+	 表达式的值将传入AssertionError的构造函数中,并转换成一个消息字符串
+* 字符串
+** StringBuilder
+   * insert
+   * replace
+   * substring
+   * reverse
+   * append
+   * toString()
+   * delete
+** String
+   * length
+   * charAt
+   * getChars
+   * getBytes
+   * toCharArray
+   * equals
+   * equalsIgnoreCase
+   * compareTo
+   * contains
+   * contentEquals
+   * equalsIgnoreCase
+   * regionMatcher
+   * startsWith
+   * endsWith
+   * indexOf
+   * lastIndexOf
+   * substring
+   * subsequence
+   * concat
+   * replace
+   * toLowerCase
+   * toUpperCase
+   * trim
+   * valueOf
+   * intern
+   * split("regexp")
+
+	 将字符串从正则表达式匹配的地方切开
+
+   * replaceFirst("regexp","replacement")
+
+	 使用replacement替换匹配正则的第一个字串
+
+   * replaceAll("regexp","replacement")
+
+	 使用replacement替换正则匹配的所有地方
+** 格式化输出
+   * printStream.format/printStream.printf/printWriter.format/printWriter.printf
+	 
+	 System.out.printf类似C语言中的printf函数
+
+*** Formatter类
+	当创建一个Formatter对象的时候,需要向其构造器传递一些信息,告诉它最终的结果将向哪里输出.
+	#+BEGIN_SRC java
+      Formatter fmtOut = new Formatter(System.out); // 常用参数为PrintStream,OutputStream和File
+	#+END_SRC
+
+	* 格式化说明符
+
+	  %[argument_index$][flags][width][.precision]conversion
+
+	  * 默认数据向右对齐,但可以通过使用`-`标志来改变对齐方向
+
+	  * precision对不同数据类型意义不一样.
+	    应用于String时,它表示打印String时输出字符的最大数量.
+		应用与浮点数时,表示小数部分要显示的位数(默认为6),如果小数位数过多则舍入,太少则在尾部补零
+		应用于整数,则除法异常
+		
+	  * conversion
+		b表示boolean值,h表示散列值,%表示字符%
+
+*** String.format静态方法
+	类似于sprintf,它返回一个String对象
+* 正则表达式
+** 正则一般用法为：
+   1. 用正则表达式字符串构造Pattern对象
+      #+BEGIN_SRC java
+        Pattern pattern = Pattern.compile(patternString);
+        Pattern pattern = Pattern.compile(patternString,flag);
+      #+END_SRC
+	  
+	  Pattern.flag之间可以使用|来组合多个标记
+	  #+CAPTION: Pattern.flag说明
+      | 编辑标记                 | 正则中的标识 | 说明                                                                                               |
+      |--------------------------+--------------+----------------------------------------------------------------------------------------------------|
+      | Pattern.CANON_EQ         |              |                                                                                                    |
+      | Pattern.CASE_INSENSITIVE | ?i           | 大小写不敏感,通过UNICODE_CASE标记结合,可以开启基于Unicode的大小写不敏感匹配                        |
+      | Pattern.COMMENTS         | ?x           | 空格符将被忽略掉,并且以#开始直到行末的注释也会被忽略掉. 通过嵌入的标记表达式也可以开启UNIX的行模式 |
+      | Pattern.DOTALL           | ?s           | `.`匹配所有字符,包括行终结符. 默认情况下,`.`不匹配行终结符                                         |
+      | Pattern.MULTILINE        | ?m           |                                                                                              |
+      | Pattern.UNICODE_CASE     | ?u           |                                                                                                    |
+      | Pattern.UNIX_LINES       | ?d           | .^和$只匹配行终结符\n                                                                                   |
+   2. 使用Pattern对象匹配要匹配的字符串，并获得一个Matcher对象
+      #+BEGIN_SRC java
+        Matcher matcher = pattern.matcher(input); // 这里的input可以是任何实现了CharSequence接口的对象，例如String，StringBuilder和CharBuffer
+      #+END_SRC
+   3. 使用matcher对象的各种方法来获取匹配信息
+      #+BEGIN_SRC java
+        matcher.matches();              // 判断整个输入字符串在开始处是否匹配正则表达式模式
+        matcher.lookingAt();            // 用来判断该字符串的始部分是否能够匹配模式
+        matcher.find();                 // 查找CharSequence中的多个匹配
+        matcher.find(int start);        // 查找CharSequence中的多个匹配,start为搜索的起点
+        int groupCount = matcher.groupCount(); // 返回匹配器的模式中的分组数目,第0组不包括在内
+        String group = matcher.group();        // 返回前一次匹配操作(如find操作)的第0组(整个匹配)
+        String group = matcher.group(i);       // 返回前一次匹配操作(如find操作)的第i组(整个匹配),如果匹配成功,但是指定的组没有匹配输入字符串的任何部分,则将会返回null
+        int start = matcher.start(int group);  // 返回前一次匹配操作中寻找到的组的起始索引
+        int end = matcher.end(int group);      // 返回前一次匹配操作中寻找到组的结尾索引 *+1* 的值
+      #+END_SRC
+** Pattern的其他方法
+   * String[] pattern.split(CharSequence input)
+	 将输入的字符串断开成字符串数组,断开边界为正则表达式指定
+** Matcher的其他方法
+   * String replaceFirst(String replacement)
+	 将字符串中匹配正则的第一个地方替换为replacement
+   * String replaceAll(String replacement)
+	 将字符串中匹配正则的所有地方替换为replacement
+   * Matcher appendReplacement(StringBuffer sb, String replacement)
+   * StringBuffer appendTail(StringBuffer sb)
+   * Matcher reset()
+	 将Matcher对象重新设置到当前字符序列的起始位置
+   * Matcher reset(CharSequence input)
+	 将matcher对象应用到新的字符序列中
+* 集合类
+  在C++编程中,普遍采用迭代器作为参数,但是在Java编程中,一般传递集合接口,因为从集合接口中总是可以获取迭代器的.
+
+  在新容器中不应该使用过时的Vector，Hashtable和Stack
+** 集合类的基本接口是Collection接口
+   #+BEGIN_SRC java
+     public interface Collection<E>
+     {
+         boolean add(E element);     // 向集合末尾添加元素,成功返回true,失败返回false
+         Iterator<E> iterator();     // 返回Iterator接口的对象,用于遍历集合元素
+         addAll(Collectoin c);       // addAll方法接收一个Collection对象,将元素添加到集合中
+         contains(Object o);                 //方法确定某个对象是否在列表中
+         Object[] toArray();                 // 返回包含此collection 中所有元素的数组
+         T[] toArray(T[] a);                 // 返回包含此 collection 中所有元素的数组；返回数组的运行时类型与指定数组的运行时类型相同
+     
+     }
+     
+   #+END_SRC
+
+   使用Collections.addAll(Collection<? super T>c,T...elements)将所有指定元素添加到指定的collection中
+** List接口是实现了有序的Collection
+   List必须按照插入的顺序保存元素,可以使用整数索引或ListIterator来获取对象
+   * void add(int index, E element)
+
+   * E get(int index)
+
+   * E remove(int index)
+
+   * boolean isEmpty()
+
+   * void clear()
+
+   * boolean remove(Object o)
+	 
+	 使用equals来进行比较
+
+   * int indexOf(Object o)
+
+	 返回该对象在List中所处位置的索引编号. 
+	 使用equals来进行比较
+
+   * List<E> subList(int from,int to)
+
+	 返回子列表引用, *对原列表与子列表的改动会相互影响*
+
+   * boolean retainAll(Collection<?> c)
+
+	 仅在列表中保留指定collection所包含的元素
+
+   * boolean removeAll(Collection<?> c)
+	 
+	 删除collection所包含的元素
+
+   * E set(int index,E element)
+
+	 用element替代index处的元素
+
+   * 
+*** ArrayList
+   	类似C++中的vector模板,但ArrayList<Class>中指定的类型只能是类,而不能是基础类型.
+
+   	java中也提供了Vector模板类,Vector与ArrayList不同之处在与Vector可以在多线程中同步,而ArrayList不支持多线程同步.
+
+   	若要指定基础类型,则需要用到包装器,如int对应Integer类,long对应Long等,还有Float,Double,Short,Byte,Character,Void,Boolean
+   	* add()
+   	* ensureCapacity()
+   	* size()
+   	* trimToSize()
+   	* set()
+   	* get()
+   	* toArray()
+   	* remove()
+*** LinkedList
+   	* ListIterator()返回实现ListIterator接口的对象
+** Set接口
+   Set接口与Collection接口一样，但是它拒绝添加重复的元素。
+** Map本身不是集合，但可以通过调用方法返回一个集合
+   
+   * Set<K> keySet()
+
+     返回键集合
+
+   * Collection<K> values()
+
+     返回值集合
+
+   * Set<Map.Entry<K,V>> entrySet()
+     
+     返回键值对集合，集合的类型为Map.Entry<K,V>
+
+   * V put(K key,V value)
+
+     插入键值对
+
+   * V get(K key)
+     
+     读取值
+
+   * containsKey()
+
+     是否包含某个键
+
+   * containsValue()
+
+     是否包含某个值
+*** HashMap
+	HashMap提供了最快的查找技术,也没有按照任何明显的顺序来保存其对象
+*** TreeMap
+	按照比较结果的升序保存键
+*** LinkedHashMap
+	按照插入顺序保存键,同时还保留了HashMap的查询速度.
+** Queue类
+   Queue是一个典型的FIFO的容器
+   * boolean offer(E)
+
+     将元素插入队列尾部，或者返回false
+
+   * peek()与element()
+
+     在不移除元素的情况下返回队头的元素，但peek()在队列为空的情况下返回null，而element()会抛出NoSuchElementException异常
+
+   * poll()与remove()
+
+     移除并返回队列首部的元素，但poll()在队列为空时返回null，而remove()会抛出NoSuchElementException异常
+*** PriorityQueue优先级队列
+    优先级队列中的元素可以按照任意的顺序插入，却总是按照排序的顺序进行检索，即总是获得当前优先级队列中 *最小* 的元素
+** 视图
+   所谓视图是指，某容器实现了某个方法，这个方法返回一个另一种容器的对象，在这个返回的容器上进行的操作会影响到原容器的内容，则返回的容器为元容器的视图。
+
+*** 子范围
+    可以指定对容器的某部分内容建立视图，例如List接口的subList()方法
+    * list.subList(E from,E to)
+    * sortedSet.subSet(E from,E to)
+    * sortedSet.headset(E to)
+    * sortedSet.tailSet(E from)
+    * sortedMap.subMap(K from,K to)
+    * sortedMap.headMap(K to)
+    * sortedMap.tailMap(K from)
+*** 不可修改的视图
+    Collection接口还有几个方法，用于产生不可修改视图.不可修改视图的所有更改器方法被重新定义为抛出UnsupportedOperationException
+    * Collections.unmodifiableCollection
+    * Collections.unmodifiableList
+    * Collections.unmodifiableSet
+    * Collections.unmodifiableSortedSet
+    * Collections.unmodifiableMap
+    * Collections.unmodifiableSortedMap
+*** 同步视图
+    类库的设计者使用视图机制来确保常规集合的线程安全，而不是实现线程安全的集合类。
+    * Collections.synchronizedMap()
+*** 被检查的视图
+    被检查的视图会检查插入视图的对象类型是否匹配视图的泛型类型。
+    * Collections.checkedList()
+** Arrays类
+   * Arrays.asList
+	 
+     Arrays.asList(T...a)接收一个数组或者可变参数,并将其转换为一个List对象,但该List的低层是数组,因此不能调整尺寸.
+   
+     由于Arrays.asList(T...a)只能根据参数中的类型来推测泛型参数的类型,这可能会推测错误,这时可以使用Arrays.<T>asList(...)来明确指定泛型参数的类型.
+
+   * Arrays.toString
+
+	 Arrays.toString(T[])可以产生数组的打印表示,但不能用于打印容器. 因为默认容器的toString方法已经有了很好的表示
+
+   * 
+** Iterator接口
+   * 使用方法iterator()要求容器返回一个Iterator。 Iterator对象将准备好返回序列的第一个元素
+   * 使用next()获得序列中的下一个元素
+   * 使用hashNext()检查序列中是否还有元素
+   * 使用remove()将迭代器中最近返回的元素删除
+   #+BEGIN_SRC java
+     public iterface Iterator<E>
+     {
+         // java中获取元素和位移操作是合在一起的. 也就是说,只能对集合中一个元素读取一次!
+         E next();                   // 若到达结尾,则抛出NoSuchElementException,
+         boolean hasNext();
+         void remove();              // 删除的是上一次next()返回的元素!!
+     }
+   #+END_SRC
+
+   由于remove()删除的是上一次next()返回的元素,因此要删除两个相邻的元素,不能
+   #+BEGIN_SRC java
+     itr.remove();
+     itr.remove();                   // 错误的
+   #+END_SRC
+   而应该是
+   #+BEGIN_SRC java
+     itr.remove();
+     itr.next();
+     itr.remove();
+   #+END_SRC
+*** ListIterator接口
+    ListIterator是一个更加强大的Iterator的子类型，他只能用于各种list类的访问，它可以实现双向移动
+
+    可以使用list.listIterator()方法产生一个指向List开始处的ListIterator，使用list.listIterator(n)返回一个一开始就指向列表索引为n的元素处的ListIterator
+    #+BEGIN_SRC java
+      interface ListIterator<E> extends Iterator<E>
+      {
+          void add(E element);        // 用于在列表的中间位置添加集合
+          E previous();
+          boolean hashPrevious();
+          void remove();              // 从列表中删除由next/previous返回的最后一个元素
+          void set(E e);              // 替代列表中由next/previous返回的最后一个元素
+      }
+    #+END_SRC
+*** Iterator的实现
+    一般在外部类中定义一个private的容器，并将自己的Iterator实现为内部类，在内部类中访问该外部的private容器
+** sortedSet接口
+   sortedSet要求存储的对象实现了Comparable接口,用于提供默认的比较方式
+
+   同时可以在构造函数中传递一个实现了Comparator接口的对象,用于提供特殊的比较方式
+   #+BEGIN_SRC java
+     SortedSet<Item> sortByDescription = new TreeSet<Item>(new 
+                                                           Comparator<Item>()
+                                                           {
+                                                               public int compare(Item a,Item b){
+                                                                   String A = a.getDescription();
+                                                                   String B = b.getDescription();
+                                                                   return A.compareTo(B);
+                                                               }
+                                                           })
+   #+END_SRC
+** Comparable接口
+   #+BEGIN_SRC java
+     public interface Comparable<T>
+     {
+         int compareTo(T other);
+     }
+   #+END_SRC
+** Comparator接口
+   #+BEGIN_SRC java
+     public interface Comparator<T>
+     {
+         int compare(T a ,T b);
+     }
+   #+END_SRC
+** WeakHashMap类
+   当对键的唯一引用来自WeakHashMap时，垃圾回收器将回收该键值对。
+** LinkedHashSet和LinkedHashMap类
+   用来记住插入元素项的顺序
+** EnumSet类
+   枚举类型元素集的高效实现。 由于枚举类型只有有限个实例，因此EnumSet内部使用位序列实现。
+   
+   EnumSet没有public的构造函数，但可以使用静态工厂方法来构造
+   #+BEGIN_SRC java
+     enum Weekday{MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,STURDAY,SUNDAY};
+     EnumSet<Weekday> always = EnumSet.allOf(Weekday.class);
+     EnumSet<Weekday> never = EnumSet.noneOf(Weekday.class);
+     EnumSet<Weekday> workday = EnumSet.range(Weekday.MONDAY,Weekday.FRIDAY);
+     EnumSet<Weekday> mwf = EnumSet.of(Weekday.MONDAY,Weekday.WEDNESDAY,Weekday.FRIDAY);
+   #+END_SRC
+* IO
+** 使用Scanner对象输入
+*** 构造Scanner对象
+   	使用java.util.Scanner(System.in)来从stdin读取信息。
+   	#+BEGIN_SRC java
+      import java.util.*
+      Scanner in = new Scanner(System.in);
+   	#+END_SRC
+
+   	使用java.util.Scanner(File)从文件读取
+   	#+BEGIN_SRC java
+      Sanner in = new Scanner(new File("myfile.txt"));
+   	#+END_SRC
+
+   	使用java.util.Scanner(String)将String的内容作为读取的内容
+
+	使用java.util.Scanner(Readable)从Readable对象中读取内容
+*** 使用Scanner对象读取数据
+	#+BEGIN_SRC java
+      String name = in.nextLine();
+      String firstName = in.next();
+      String age = in.nextDouble();
+      
+      in.next(pattern);               // 当next方法配合正则使用时,将找出下一个分词中,匹配该模式的输入部分
+      MatchResult match = scanner.match(); // 调用match得到匹配的结果
+      String value1 = match.group(1);
+      String value2 = match.group(2);
+	#+END_SRC
+*** Scanner定界符
+	在默认情况下,Scanner根据空白字符对输入进行分词,但也可以使用正则表达式指定自己所需的分界符
+	
+	* Scanner useDelimiter(Pattern pattern) / Scanner useDelimiter(String pattern) 
+	  设置分界符
+	  #+BEGIN_SRC java
+        Scanner scanner = new Scanner("12,23,4,65,12");
+        scanner.useDelimiter("\\s*,\\s*"); // 用逗号作为分隔符
+	  #+END_SRC
+	* Pattern delimiter() 
+	  返回当前使用的分界符
+** 使用Console类读取密码
+   #+BEGIN_SRC java
+     Console cons = System.console();
+     String username = cons.readLine("User name");
+     char[] passwd = cons.readPassword("Password"); // 为了安全，返回的密码存放在一维数组中，而不是字符串中
+   #+END_SRC
+** 使用System.out.printf()格式化输出
+   java的printf提供了比c中的printf多得多的控制字符。
+
+   此外可以使用%s格式化任何对象，若对象实现了Formattable接口，则调用formatTo方法，否则调用toString方法。
+
+   可以使用%N$格式来说明被格式话的参数索引为N，例如
+   #+BEGIN_SRC java
+     System.out.printf("%1$s %2$s %1$s",1,2); // 结果为121
+   #+END_SRC
+** 使用String.format()格式化字符串
+** 使用PrintWriter写文件
+   #+BEGIN_SRC java
+     PrintWriter out = new PrintWriter("myfile.txt");
+     PrintWriter out = new PrintWriter(new File("myfile.txt"));
+   #+END_SRC
+** 使用Logger类来写日志
+*** 使用静态变量Logger.global记录全局日志
+	#+BEGIN_SRC java
+      Logger.global.info("this is a info");
+	#+END_SRC
+*** 使用Logger.getLogger()方法创建记录器
+	#+BEGIN_SRC java
+      Logger myLogger = Logger.getLogger("com.mycompany.myapp"); // 注意,这里不是填的log文件的地址!
+	#+END_SRC
+
+	一般来说,会把日志记录器命名为与主应用程序包一样的名字.
+*** 日志的7个级别
+	使用logger.setLevel()函数可以设置记录的级别. 使用logger.setLevel(Level.ALL)开启所有级别的记录. 使用logger.setLevel(Level.OFF)关闭所有级别的记录. 
+	1. SERVRE
+	2. WARNING
+	3. INFO
+	4. CONFIG
+	5. FINE
+	6. FINER
+	7. FINEST
+*** 使用日志记录异常信息
+	* void  logger.throwing(String className,String methodName,Throwable t)
+	* void logger.log(level l,String message,Throwable t)
+*** 修改日志属性
+	默认情况下,配置文件存在于:jre/lib/logging.properties中
+
+	要想使用另一个配置文件,要将java.util.logging.config.file特性设置为配置文件的存储位置
+	#+BEGIN_SRC sh
+      java -Djava.util.logging.config.file=configFile MainClass
+	#+END_SRC
+
+	通过修改com.myconpany.myapp.level=FINE来指定自己的日志记录级别
+*** 日志处理器
+	Logger类实际上把要记录的日志信息发送給日志处理器类处理,由日志处理器决定如何记录日志信息. 默认情况下,是将日志信息发送給ConsoleHandler中,并由它输出到System.err流中.
+	
+	默认情况下,Logger类会把日志信息发送給自己的处理器和父类处理器. 可以使用logger.setUseParentHandlers(false)来设置不传给父处理器. 使用logger.addHandler()来添加自己的日志处理器.
+
+	日志API提供了两个常用的日志处理器,一个是FileHandler,一个是SocketHandler
+	#+BEGIN_SRC java
+      FileHandler handler = new FileHandler();
+      logger.addHandler(handler);
+	#+END_SRC
+
+	可以通过扩展Handler类或StreamHandler类自定义处理器
+*** 过滤器
+	默认情况下,过滤器根据日志级别进行过滤. 每个Logger类和Handler类都有一个可选的过滤器来完成附加的过滤. 另外,可以通过实现Filter接口来自定义过滤器
+	#+BEGIN_SRC java
+      boolean isLoggable(LogRecord record)
+	#+END_SRC
+
+	通过调用setFilter方法可以将过滤器安装到一个日志记录器或处理器中,注意,同一时刻最多只能有一个过滤器.
+* NIO
+** 内存映射文件
+   大多数操作系统都可以利用虚拟内存实现一个文件或文件的一部分映射到内存中，然后这个文件就可以当作是内存数组一样地访问，这比传统的文件操作要快的多。
+
+   1. 从文件中获取通道(channel)
+
+      通道是用于磁盘文件的一种抽象，它使我们可以访问诸如内存映射，文件加锁机制以及文件间快速传递等操作系统特性。
+
+      可以通过getChannel()来获取channel，该方法已经添加到FileInputStream，FileOutputStream和RandomAccessFile类中
+      #+BEGIN_SRC java
+        FileInputStream in = new FileInputStream(...);
+        FileChannel channel = in.getChannel();
+      #+END_SRC
+
+   2. 通过调用FileChannl类中的map方法可以从这个通道获取MappedByteBuffer。 
+      #+BEGIN_SRC java
+        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY); // 产生的缓冲区是只读的，写入操作会导致ReadOnlyBufferException
+        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE); // 产生的缓冲区是可写的，修改会在某个时刻同步到文件按中
+        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.PRIVATE); // 产生的缓冲区是可写的，但写入操作不会同步到文件中
+      #+END_SRC
+
+   3. 使用ByteBuffer和Buffer超类的方法读写数据
+      #+BEGIN_SRC java
+        while(bufer.hasRemaining()) {
+            byte b = buffer.get();      // 遍历文件
+        }
+
+        for(int i = 0; i<buffer.limit(); ++i){
+            byte b = buffer.get(i);     // 随机访问文件
+        }
+
+        byte[] b = new byte[];
+        buffer.get(b);                  // 读取字节数组
+
+        int i = buffer.getInt();        // 读入文件中存储的二进制值的基本类型值
+
+        buffer.putInt();                // 写入文件
+      #+END_SRC
+** java.nio.Buffer类
+   Buffer类具有众多具体子类：ByteBuffer，CharBuffer，DoubleBuffer，IntBuffer，LongBuffer和ShortBuffer。 但是StringBuffer与之无关。
+
+   每个Buffer都具有：
+   1. 一个 *容量*,它永远不能改变。
+   2. 一个 *读写位置*,下一个值将在此进行读写
+   3. 一个 *界限*,超过它进行读写是没有意义的
+   4. 一个可选的 *标记*，用于重复一个读入或写出操作
+** 文件加锁机制
+   1. 获取FileChannel
+   2. 调用fileChannel.lock或fileChannel.tryLock方法
+* Stream
+** InputStream
+   * int read()
+
+	 读入一个字节,并返回读入的字节,在遇到源结尾时返回-1
+
+   * int available()
+
+	 检查当前可用于读入的字节数量
+
+   * long skip(long n)
+
+	 输出流中跳过n个字节,返回实际跳过的字节数(如果碰到流的结尾,则可能小于n)
+
+   * void mark(int readlimit)
+
+	 在输入流的当前位置打一个mark(并非所有流都支持这个特性). 如果从输入流中已经读入的字节多于readlimit个,则流允许忽略该标记
+
+   * void reset()
+
+	 将流的位置返回到最后作的mark处
+
+   * boolean markSupported()
+
+	 判断流是否支持打mark
+** OutputStream
+   * void write(int b)
+
+	 向某个输出位置写出一个字节
+
+   * void flush()
+** FileInputStream/FileOutputStream
+   文件
+** DataInputStream/DataOutputStream
+   可以以二进制格式读写所有的基本java类型
+** RandomAccessFile
+   随机访问文件,类似C++中的fstream类. 但mode除了r/rw之外还有rws表示每次更新时都对数据和元数据的写磁盘进行同步的读/写模式,rwd表示每次更新时,只对数据的写磁盘操作进行同步的读/写模式.
+
+   但RandomAccessFile类还同时实现了DataInpt和DataOutput接口,看诶使用readInt,writeInt之类的方法来直接写入基础类型数据.
+
+   * seek(long pos)
+
+	 将文件指针定位到某处
+
+   * getFilePointer()
+
+	 返回文件指针的当前位置
+
+   * length()
+
+	 文件的总字节数
+
+   * 
+** ZipInputStream/ZipOutputStream
+   以常见的ZIP压缩格式读写文件
+
+   一般的读取zip文件的代码格式为:
+   #+BEGIN_SRC java
+     ZipInputStream zin = new ZipInputStream(new FileInputStream(zipname));
+     ZipEntry entry;                 // ZipEntry对应ZIP文档中的一个文件项
+     while((entry = zin.getNextEntry()) != null) { // getNextEntry方法返回一个描述这些项的ZipEntry类型的对象
+         // analyze entry
+         read the contents of zin;   // ZipInputStream的read方法修改为碰到当前entry的结尾时返回-1
+         zin.closeEntry();           // 需要调用closeEntry来读入下一个entry
+     }
+     zin.close();
+   #+END_SRC
+   
+   一般的ZIP压缩文档的写入格式为:
+   #+BEGIN_SRC java
+     FileOutputStream fout = new FileOutputStream("test.zip");
+     zipOutputStream zout = new ZipOutputStream(fout);
+     (for file:allFiles){
+         ZipEntry ze = new ZipEntry(file);
+         zout.putNextEntry(ze);      // 写出新文件
+         send data to zout;          // 将文件数据发送到ZIP流
+         zout.closeEntry();          
+     }
+     zout.close();
+   #+END_SRC
+** CharBuffer
+   拥有按顺序和随机地进行读写访问的方法,它表示一个内存中的缓冲区或者一个内存映射文件.
+** BufferedInputStream
+   代缓存的流
+** PushbackInputStream
+   可以使用unread方法将读取的内容回退到流中
+** Reader
+   专门用于处理Unicode字符的类
+** InputStreamReader
+   它将包含字节(用某种字符编码方式表示的字符)的输入流转换为可以产生Unicode字符的读入器
+** FileReader
+   从文件中读取指定字符编码格式的字符,并转换为Unicode
+** Writer
+   专门用于处理Unicode字符的类
+** OutputStreamWriter
+   它将Unicode字符流转换为指定字符编码的字节流.
+** FileWriter
+   将Unicode字节转换为指定的字符编码格式写入到文件中
+** 对象序列化
+   * Seralizable接口
+	 类似Cloneable接口,Seralizable接口没有任何方法,它只是用来标明该类型的对象是可以序列化的.
+   * ObjectOutputStream对象的writeObject方法可以保存对象数据
+	 #+BEGIN_SRC java
+       ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("employee.dat"));
+       Employee employee = new Employedd();
+       out.writeObject(employee);
+	 #+END_SRC
+   * 使用ObjectInputStream对象的readObject方法读回对象数据
+	 #+BEGIN_SRC java
+       ObjectInputStream in = new ObjectInputStream(new FileInputStream("employee.dat"));
+       Employee e1 = (Employee) in.readObject();
+	 #+END_SRC
+   * 若类中某些域不能被序列化,则将它们标记为transient
+   * 若不希望使用java默认的序列化方式,则需要对被序列化的类定义如下签名方法:
+	 #+BEGIN_SRC java
+       private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException;
+       private void writeObject(ObjectOutputStream out) throws IOException;
+	 #+END_SRC
+* File类
+  File类用于对文件系统的操纵。
+
+  File对象的创建并不会创建一个新的文件，你需要使用file.createNewFile()来创建新文件。
+
+  File对象既可以是文件，也可以表示目录。
+* 字符集
+** 定义字符集
+   #+BEGIN_SRC java
+     Charset cset = Charset.forName("ISO-8859-1");
+   #+END_SRC
+** Unicode字符串转换成其他编码的字节序列
+   #+BEGIN_SRC java
+     String str="待转换的字符串";
+     ByteBuffer buffer = cset.encode(str);
+     byte[] bytes = buffer.array();
+   #+END_SRC
+** 其他编码格式的字节序列转换成Unicode字符串
+   #+BEGIN_SRC java
+     byte[] bytes = {...};
+     ByteBuffer bbuf = ByteBuffer.wrap(bytes.offset,length);
+     CharBuffer cbuf = cset.decode(bbuf);
+     String str = cbuf.toString();
+   #+END_SRC
+* 多线程
+** 在单独线程执行一个任务的简单过程
+   1. 类实现Runnable接口,将要执行的任务代码放入run方法中.
+	  #+BEGIN_SRC java
+        class MyRunnable implements Runnable{
+            public void run(){
+                // task code
+            }
+        }
+	  #+END_SRC
+   2. 创建一个Runnable对象
+	  #+BEGIN_SRC java
+        Runnable r = new MyRunnable();
+	  #+END_SRC
+   3. 使用Runnable对象构造一个Thread对象
+	  #+BEGIN_SRC java
+        Thread t = new Thread(r);
+	  #+END_SRC
+   4. 调用Thread对象的start()方法启动线程
+	  #+BEGIN_SRC java
+        t.start();
+	  #+END_SRC
+** 中断线程
+   * 线程可以调用填thread.interrupt()方法来请求终止线程
+   * 线程可以调用thread.isInterrupted()方法来判断自己是否出于中断状态
+	 #+BEGIN_SRC java
+       while(!Thread.currentThread().isInterrupted()){
+           // do interrupt cleanup
+       }
+	 #+END_SRC
+	 但若在一个被阻塞的线程(调用Thread.sleep或Object.wati)上调用interrupt方法时,则阻塞调用会导致InterruptedException异常中断.
+
+	 一般线程都应该不时的查询自己的interrupt状态,并决定该如何处理该请求. 因此一般的线程run方法的结构为:
+	 #+BEGIN_SRC java
+       public void run(){
+           try{
+               // ...
+               while(!Thread.currentThread().isInterrupted()){
+                   // do thread work
+               }
+               // do Interrupt work
+           }
+           catch(InterruptedException e){
+               // thread was interrupted during sleep or wait
+           }
+           finally{
+               // clean up
+           }
+       }
+	 #+END_SRC
+** 线程状态
+   * New(新生)
+
+	 new Thread()之后,thread.start()之前
+   * Runnable(可运行的)
+
+	 一旦调用start方法,线程处于runnable状态
+   * Blocked(被阻塞)
+
+	 当线程等待其他线程的锁释放时,线程进入阻塞状态.
+   * Waiting(等待)
+
+	 当线程等待另一个线程调度器一个条件时,它自己进入等待状态.
+
+	 在调用Object.wait方法或Thread.join方法,或者等待java.util.concurrent库中的Lock或Conditoin时,就会出现这种情况.
+   * Timed waiting(计时等待)
+
+	 当调用了拥有超时参数的几个方法时,调用这些方法的线程进入计时等待状态.
+   * Terminated(被终止)
+
+** 线程属性
+*** 线程优先级
+    #+BEGIN_SRC java
+      void setPriority(int newPriority) // 设置线程的优先级
+      static int MIN_PRIORITY           // 线程最小优先级，值为1
+      static int NORM_PRIORITY          // 默认优先级，值为5
+      static int MAX_PRIORITY           // 最高优先级，值为10
+      static void yield()               // 导致当前执行线程处于让步状态
+    #+END_SRC
+*** 守护进程
+    守护进程的唯一用途是为其他线程提供服务。 当只剩下守护进程时，虚拟机就退出了，因为如果只剩下守护线程，就没有必要继续运行程序了。
+
+    需要注意的是，守护线程永远都不应该去访问固有资源，如文件，数据库等，因为它会在任何时候甚至于一个操作的中间发生中断。
+    #+BEGIN_SRC java
+      void setDaemon(boolean isDaemon) // 标识一个线程为守护线程或用户线程，必须在线程启动前调用
+    #+END_SRC
+*** 处理线程中未被捕获的异常
+    可以为线程设置一个处理器用于处理线程中未被捕获的异常。 改处理器必须实现Thread.UncaughtExceptionHandler接口的类
+    #+BEGIN_SRC java
+      interface Thread.UncaughtExceptionHandler()
+      {
+          void uncaughtException(Thread t,Throwable e)
+      }
+    #+END_SRC
+
+    可以使用thread.setUncaughtExceptionHandler()方法为任何线程安装一个处理器。
+
+    或者使用Thread.setDefaultExcepionHandler()方法为所有线程安装默认处理器。
+** 线程同步
+*** 互斥量
+    java.util.concurrent.locks.ReentrantLock类提供了锁功能。 使用ReentrantLock保护代码块的基本结构如下
+    #+BEGIN_SRC java
+      Lock myLock = new ReentrantLock();
+      void test(){
+          myLock.lock();              // 锁住
+          try{
+              // ...
+          }finally{
+              myLock.unlock();        // 确保会解锁
+          }
+      }
+    #+END_SRC
+
+    锁是已重入的，即线程可以重复获得已经持有的锁。 这使得加锁函数的递归成为可能。
+
+	还可以使用lock.trylock()来非阻塞地获取锁. lock.trylock(long time,TimeUnit unit)用来设置超时锁我 
+*** 条件变量
+    通常，线程进入临界区，却发现需要满足一定条件后才能够执行，这时它不能一直占着锁在那里等待，而需要使用条件变量来暂时释放锁，并进入阻塞状态，等待其他线程的唤醒。
+
+    一个Lock对象可以有一个或多个相关的条件变量。 可以通过lock.newConiton()方法产生一个条件变量。
+    #+BEGIN_SRC java
+      Condition condition = lock.newCondition();
+    #+END_SRC
+
+    当线程获取了lock后，若发现条件不符合，则通过condition.await()来阻塞线程并释放锁。 该线程等待其他线程调用condition.signalAll()后被激活。 并尝试重新获取lock， 一旦获取lock成功，则该线程从await调用中返回，并从被阻塞的嗲发那个继续执行。
+    
+    由于无法保证线程再次被激活后，条件就能符合，因此这时候线程需要再次检查条件是否满足。 通常对await的调用的代码结构为：
+    #+BEGIN_SRC java
+      // 线程1
+      while(!满足条件){
+          conditon.await;
+      }
+
+      // 线程2
+      // 修改条件的操作
+      conditon.signalAll();
+    #+END_SRC
+
+    condition还提供了一个signal方法，该方法随机解除阻塞中的某个线程。 该方法比较高效但也比较危险，因为有可能解除阻塞的线程发现自己仍然不符合条件，则会再次被阻塞。 这时已经没有线程在来执行唤醒操作了。
+*** synchronized关键字
+    java中的每个对象都一个内部锁。每个类也有一个内部锁（类.class对象的内部锁）。
+
+    若一个方法用synchronized关键字声明，则对象的内部锁将保护整个方法
+    #+BEGIN_SRC java
+      public synchronized void method()
+      {
+          // method body
+      }
+
+      // 等价于
+
+      public void method()
+      {
+          this.内部锁.lock();
+          try{
+              // method body
+          } finally{
+              this.内部锁.unlock();
+          }
+      }
+    #+END_SRC
+
+    同样的，对象的内部锁也有一个内部条件变量。 object.wait()方法等待该条件变量
+    #+BEGIN_SRC java
+      wait();
+      // 等价于
+      内部Conditon.await();
+    #+END_SRC
+    
+    object.notifyAll()和object.notify()解除内部条件的阻塞状态
+    #+BEGIN_SRC java
+      notifyAll();
+      // 等价于
+      内部condition.signalAll();
+
+      notify();
+      // 等价于
+      内部condition.siganl();
+    #+END_SRC
+
+    若将静态方法声明为synchronized的，则使用的是类对象（object.class）的内部锁。
+
+	synchronized还可以指定使用哪个对象中的内部锁,语法为:
+	#+BEGIN_SRC java
+      synchronized(obj){
+          // ...
+      }
+	#+END_SRC
+*** 读写锁
+	java.util.concurrent.locks.ReentrantReadWriteLock类提供了读写锁的功能.
+
+	下面是使用读写锁的一般步骤
+	1. 构造一个ReentrantReadWriteLock对象
+	   #+BEGIN_SRC java
+         private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
+	   #+END_SRC
+	2. 抽取读锁和写锁
+	   #+BEGIN_SRC java
+         private Lock readLock = rwl.readLock();
+         private Lock writeLock = rwl.writeLock();
+	   #+END_SRC
+	3. 对有所访问者加读锁
+	   #+BEGIN_SRC java
+         public double get(){
+             readLock.lock();
+             try{
+                 // ...
+             }finally{
+                 readLock.unlock();
+             }
+         }
+	   #+END_SRC
+	4. 对所有修改者加写锁
+	   #+BEGIN_SRC java
+         public void writer(){
+             writeLock.lock();
+             try{
+                 // ...
+             }finally{
+                 writeLock.unlock();
+             }
+         }
+	   #+END_SRC
+*** 线程池
+	Executor类有许多静态工厂方法来构建线程池.
+
+	一般来说使用线程池的过程为:
+	1. 调用Executors类中的静态方法newCachedThreadPool或newFixedThreadPool
+	2. 调用executorService.submit()提交Runnable或Callable对象,得到一个Future对象.
+	3. 如果向取消一个任务,或者如果提交Callable对象,那就要保存好返回的Future对象
+	4. 当不再提交任何任务时,调用shutdown
+*** 建议
+    1. 优先使用java.util.concurrent包中的机制
+    2. 再使用synchronized关键字
+    3. 最后手工使用Lock/Condition
+	4. 由于队列是多线程安全的,因此许多线程问题,可以通过队列来解决. 多个线程将操作指令插入队列中,而由唯一的一个线程从队列中读取指令并执行,这样可以减少多线程同步的复杂性.
+	5. 阻塞队列当试图往满的队列put元素或从空队take除元素时,可以导致线程阻塞,因此它是一个协调多线程合作的有用工具.
+
+	   java.util.concurrent包提供了阻塞队列的几个变种.
+	6. 优先使用java.util.concurrent包中定义的集合,而不使用同步包装器.
+* SOCKET
+** java.net.InetAddress类
+   使用InetAddress类来实现主机名和因特网地址之间进行转换.
+   * 获取代表某个主机的InetAddress对象
+	 #+BEGIN_SRC java
+       InetAddrss address = InetAddress.getByName("www.baidu.com");
+	 #+END_SRC
+   * 某些主机可能对应多个因特网地址,使用InetAddress.getAllByName方法获取所有因特网地址
+	 #+BEGIN_SRC java
+       InetAddress[] address = InetAddress.getAllByName(host);
+	 #+END_SRC
+   * 获取本地主机的地址
+	 #+BEGIN_SRC java
+       InetAddress address = InetAddress.getLocalHost();
+	 #+END_SRC
+   * 获取InetAddress对象中封装的IP
+	 #+BEGIN_SRC java
+       byte[] addressBytes = address.getAddress();
+	 #+END_SRC
+** 客户端
+   1. 创建一个socket
+	  #+BEGIN_SRC java
+        Socket s = new Socket("www.baidu.com","80");
+	  #+END_SRC
+   2. 使用socket.getInputStream获得输入流,socket.getOutputStream获得输出流.
+	  #+BEGIN_SRC java
+        InputStream in = s.getInputStream();
+        OutputStream out = s.getOutputStream();
+	  #+END_SRC
+   3. 设置超时
+	  * 设置读写socket超时时间
+	    #+BEGIN_SRC java
+          s.setSoTimeout(毫秒);           // 设置超时时间
+          try{
+              out.write("test\n".getBytes());
+              byte[] b = new byte[512];
+              in.read(b);
+              System.out.println(b);
+          }catch(SocketTimeoutException){ // 超时之后会抛出异常
+              ...;
+          }
+	    #+END_SRC
+	  * 设置连接超时
+		#+BEGIN_SRC java
+          Socket s = new Socket();        // 先构建一个无连接的套接字
+          s.connect(new InetSocketAddress(host,port),timeout); // 使用一个超时来进行连接的方法解决这个问题
+		#+END_SRC
+** 服务端
+   #+BEGIN_SRC java
+     ServerSocket server = new ServerSocket(port); // 建立一个负责port端口的服务器
+     Socket socket = server.accept();              // 等待客户端连接端口
+     InputStream inStream = socket.getInputStream(); // 获取输入流
+     OutputStream outStream = socket.getOutputStream(); // 获取输出流
+     Scanner in = new Scanner(inStream);                // 用扫描器封装输入流
+     PrintWriter out = new PrintWriter(outStream);      // 用写入器封装输出流
+     out.println("Hello,Enter BYTE to exit");           // 输出信息
+     String  line = in.nextLine();                      // 读取客户端的输入信息
+     socket.close();                                    // 关闭连接
+   #+END_SRC
+
+   一般情况下,服务器要同时对多个客户端提供服务,则可以使用多线程
+   #+BEGIN_SRC java
+     ServerSocket server = new ServerSocket(8192);
+     while(true){
+         Socket socket = server.accept();
+         Runnable r = new ThreadedEchoHandler(socket);
+     
+         Thread t = new Thread(r);
+         t.start();
+     }
+     
+     Class ThreadedEchoHandler implements Runnable{
+         public void run(){
+             try{
+                 Scanner in = new Scanner(socket.getInputStream);
+                 PrintWriter out = new PrintWriter(socket.getOutputStream);
+                 // 处理输入输出
+                 socket.close();
+             }
+             catch(IOException e){
+                 // 处理异常
+             }
+         }
+         public ThreadedEchoHandler(Socket s){
+             socket = s;
+         } 
+         private Socket socket;
+     }
+   #+END_SRC
+** 半关闭
+   半关闭可以使socket只能输入/只能输出
+   #+BEGIN_SRC java
+     socket.shutdownOutput();        // 关闭输出流
+     socket.shutdownInput();         // 关闭输入流
+   #+END_SRC
+** URL和URI
+   在java中,URI不包含任何用于访问资源的方法,它的唯一作用就是解析. URL则可以使用openStream打开一个到达资源的流.
+*** URLConnection
+	使用URLConnection可以对连接进行更多的控制和获取连接更多的信息
+	
+	操作URLConnection的一般步骤为:
+	1. 调用url.openConnection方法获得URLConnction对象
+	   #+BEGIN_SRC java
+         URLConnection connection = url.openConnection();
+	   #+END_SRC
+	2. 设置请求属性
+	   * setDoInput
+
+		 当使用POST方法请求URL时,需要设置该属性为true
+	   * setDoOutput
+	   * setIfModifiedSince
+	   * setUseCaches
+	   * setAllowUserInteraction
+	   * setRequestProperty
+	   * setConnectTimeout
+	   * setReadTimeout
+	3. 调用connect方法连接远程资源
+	   #+BEGIN_SRC java
+         connection.connect();
+	   #+END_SRC
+	4. 与服务器建立链接后,可以查询头信息
+	   * getContentType
+	   * getContentLength
+	   * getContentEncoding
+	   * getDate
+	   * getExpiration
+	   * getLastModified
+	5. 访问资源数据
+	   * getInputStream
+	   * getContent
+* 数据库
+** Derby数据库
+   JDK6.0自带了Derby数据库,使用它的步骤为:
+   1. 定位到derbyrun.jar所在的目录下
+   2. 启动derby数据库服务
+	  #+BEGIN_SRC sh
+        java -jar derbyrun.jar server start
+	  #+END_SRC
+   3. 创建一个名为ij.properties的文件并包含一下内容
+	  #+BEGIN_SRC conf
+        ij.driver=org.apache.derby.jdbc.ClientDriver
+        ij.protocol=jdbc:derby://localhost:1527/
+        ij.database=COREJAVA;create=true
+	  #+END_SRC
+   4. 在另一个shell下,运行Derby的交互式脚本执行工具
+	  #+BEGIN_SRC sh
+        java -jar derbyrun.jar ij -p ij.properties
+	  #+END_SRC
+   5. 执行SQL命令,注意每条命令都需要以分号结尾
+   6. 运行EXIT;退出编辑器
+   7. 关闭服务器
+	  #+BEGIN_SRC sh
+        java -jar derbyrun.jar server shutdown
+	  #+END_SRC
+** 连接数据库
+*** 注册驱动器类
+    * 包含META-INF/services/java.sql.Driver文件的jar我而建会自动注册
+    * 如果驱动程序jar不支持自动注册，则需要找出数据库提供商使用的JDBC驱动器类并手工注册。
+      #+BEGIN_SRC java
+        // 有两种方式注册驱动器
+        // 1. 在java程序中加载驱动器类
+        Class.forName("org.postgresql.Driver");
+        // 2. 设置jdbc。drivers属性,用这种方法可以用:将多个驱动器分隔开，以提供多个驱动器
+        System.setProperty("jdbc.drivers","org.postgresql.Driver");
+        // 或者在shell下执行java -Djdbc.drivers=org.postgresql.Driver ...
+      #+END_SRC
+*** 连接到数据库
+    #+BEGIN_SRC java
+      String url="jdbc:postgresql:DBNAME";
+      string user="dbuser";
+      string pwd = "dbpwd";
+
+      Connection conn = DriverManager.getConnection(url,user,pwd);
+    #+END_SRC
+** 执行SQL语句
+   1. 创建Statement对象
+	  #+BEGIN_SRC java
+        Statement stat = conn.createStatement();
+	  #+END_SRC
+   2. 调用statement.executeUpdate方法执行insert,update,delete之类的语句
+	  #+BEGIN_SRC java
+        String command = "update mbcredit set a=1 where b=2";
+        stat.executeUpdate(command);
+	  #+END_SRC
+   3. 使用statement.executeQuery方法执行select查询
+	  #+BEGIN_SRC java
+        ResultSet rs = stat.executeQuery("select * from mbcredit");
+	  #+END_SRC
+   4. 还有一个statement.execute方法可以执行任意SQL语句,该方法通常只用于用户提供的交互式查询.
+   5. 遍历ResultSet结果集
+	  #+BEGIN_SRC java
+        while(rs.next()) {              // 初始时,结果集位于第一行结果的位置,必须先调用next方法将它移动到第一行.
+        }
+	  #+END_SRC
+   6. 查看结果集的内容
+	  #+BEGIN_SRC java
+        String isbn = rs.getString(1);  // 获取第一列的内容,列从1开始计算
+        double price = rs.getDouble("Price"); // 获取Price列的内容
+	  #+END_SRC
+   7. 关闭资源
+	  #+BEGIN_SRC java
+        rs.close();
+        stat.close();                   // 会同时关闭stat上打开的所有结果集
+        connection..close();            // 会同时关闭connectoin上的所有statement
+	  #+END_SRC
+*** PreparedStatement
+	1. 准备待绑定变量值的sql语句
+	   #+BEGIN_SRC java
+         String sql = "update mbcredit set user=? where id = ?"; // 每个宿主变量用?表示
+	   #+END_SRC
+
+	2. 获取PreparedStatement
+	   #+BEGIN_SRC java
+         Preparedstatement stat = conn.preparestatement(sql);
+	   #+END_SRC
+
+	3. 使用setXX方法将变量绑定到实际的值上
+	   #+BEGIN_SRC java
+         stat.setString(1,"darksun");
+         stat.setInt(2,12001);
+	   #+END_SRC
+
+	4. 重用PreparedStatement
+	   除非使用setXX方法重新绑定值,或者调用clearPrameters方法,否则所有的宿主变量的绑定都不会改变. 即,在从一个查询到另一个查询过程中,只要调用setXX方法绑定哪些改变了的变量即可.
+*** 读写BLOB（二进制大对象）/CBLOB（字符型大对象）
+    * 读取LOB的一般过程为：
+      1. 在resultSet上调用getBlob或getClob方法获得Blob和Clob对象
+         #+BEGIN_SRC java
+           PreparedStatement stat = conn.prepareStatement("select img from images where id = ?");
+           stat.set(1,id);
+           ResultSet result = stat.executeQuery();
+         #+END_SRC
+      2. 调用getBytes或getInputStream从Blob中获取二进制数据。
+         调用getSubstring或getCharacterStream来获取Clob中的字符串数据
+         #+BEGIN_SRC java
+           Blob imgBlob = result.getBlob(1);
+           Image imgBlob = ImageIO.read(imgBlob.getInputStream());
+         #+END_SRC
+
+    * 写入LOB的一般过程为：
+      1. 在Connection对象上调用createBlob或createClob生产空的LOB对象
+         #+BEGIN_SRC java
+           Blob imgBlob = connection.createBlob();
+         #+END_SRC
+
+      2. 获取该LOB的输出流或写出器
+         #+BEGIN_SRC java
+           int  offset = 0;
+           OutputStream out = imgBlob.setBinaryStream(0); // 这里是set！返回输出流用于从指定位置写入BLOB
+           ImageIO.write(coverImage,"JPG",out);
+         #+END_SRC
+
+      3. 调用set方法插入LOB对象
+         #+BEGIN_SRC java
+           PreparedStatement stat = conn.prepareStatement("insert into image values(?,?");
+           stat.set(1,id);
+           stat.set(2,imgBlob);
+           stat.executeUpdate();
+         #+END_SRC
+*** 多结果集
+    若在单词查询中提交了多个SELECT语句时，一个查询返回多个结果集，需要调用statement.getMoreResults方法移动到下一个结果集。
+
+    由于下一条语句还可能是更新语句，因此当statement.getMoreResults方法返回false时不代表结果集已经遍历完成，还需要调用statement.getUpdateCount方法判断是否为更新操作，若返回-1则表示不是更新操作。 这时才能确定结果集遍历完成
+    #+BEGIN_SRC java
+      boolean done = false;
+      boolean isResult = stmt.execute(command);
+      while(!done) {
+          if(isResult){
+              ResultSet result = stmt.getResultSet();
+              // 操作select出来的结果集
+          }
+          else{
+              int updateCount = stmt.getUpdateCount();
+              if(updateCount >=0){    // 判断是否为更新操作
+                  // 更新后的操作
+              }
+              else{
+                  done = true;        // 完成遍历
+              }
+          }
+          isResult = stmt.getMoreResults();
+      }
+    #+END_SRC
+*** 获取自动生成键
+    #+BEGIN_SRC java
+      ResultSet rs = stmt.getGeneratedKeys();
+      if(rs.next()){
+          key = rs.getInt(1);
+      }
+    #+END_SRC
+*** 可滚动和可更新的结果集
+	1. 获取可滚动可更新的结果集
+	   默认情况下,结果集是不可滚动和不可更新的,为了从查询中获取可滚动,可更新的结果集,必须使用一下方法获得不同的Statement对象
+	   #+BEGIN_SRC java
+         Statement stat = conn.createStatement(滚动类型,更新类型);
+         PreparedStatement stat = conn.prepareS(sql,滚动类型,更新类型);
+	   #+END_SRC
+
+ 	   #+CAPTION:滚动类型的值
+       | 值                      | 解释                                |
+       |-------------------------+-------------------------------------|
+       | TYPE_FORWARD_ONLY       | 结果集不能滚动                      |
+       | TYPE_SCROLL_INSENSITIVE | 结果集可以滚动,但对数据库变化不敏感 |
+       | TYPE_SCROLL_SENSITIVE   | 结果集可以滚动,且对数据库变化敏感   |
+	
+	   #+CAPTION:更新类型的值
+       | 值               | 解释                     |
+       |------------------+--------------------------|
+       | CONCUR_READ_ONLY | 结果集不能用来更新数据库 |
+       | CONCUR_UPDATABLE | 结果集可以用于更新数据库 |
+
+	2. 移动游标位置
+	   #+BEGIN_SRC java
+         rs.relative(n);                 // n为正数表示游标后移,负数表示游标前移
+         rs.absolute(n);                 // 游标设置到指定行
+         int currentRow = rs.getRow();   // 游标当前位置
+         rs.first();
+         rs.last();
+         rs.beforeFirst();
+         rs.afterLast();
+         rs.isFirst();
+         rs.isLast();
+         rs.isBeforeFirst();
+         rs.isAfterLast();
+	   #+END_SRC
+
+	3. 更新结果集的值
+	   #+BEGIN_SRC java
+         rs.updateDouble("Price",100.2);
+         rs.updateRow();                 // 若没有调用该方法就将光标移动到其他行,则所有更新信息都被行集丢弃
+         rs.cancelRowUpdates();          // 取消对当前行的更新
+	   #+END_SRC
+
+	4. 插入新记录
+	   #+BEGIN_SRC java
+         rs.moveToInsertRow();           // 将光标移动到特定插入行位置
+         rs.updateString("Title",title); // 然后调用updateXxx方法创建新行
+         rs.moveToCurrentRow();          // 插入后,再调用moveToCurrentRow方法将光标移回调用moveToInsertRow方法之前的位置
+	   #+END_SRC
+
+	5. 删除记录
+	   #+BEGIN_SRC java
+         rs.deleteRow();                 // 该方法立即从结果集和数据库中删除
+	   #+END_SRC
+*** RowSet
+    ResultSet在操作时，始终需要跟数据库保持联系，而RowSet继承了ResultSet接口，确不需要保持与数据库的连接。
+    1. javax.sql.rowset中实现RowSet接口的类
+       * CachedRowSet
+
+         允许在断开连接的状态下执行相关操作
+
+       * WebRowSet
+
+         允许与XML格式之间进行转换
+
+       * FileredRowSet和JoinRowSet
+
+         等同于SQL中的select和join操作，操作对象是存储在RowSet中的数据
+
+       * JdbcRowSet
+
+         ResultSet接口的一个瘦包装器。 它从RowSet中继承了get方法和set方法，从而将一个结果集转换成一个bean
+
+    2. 获取CachedRowSet对象
+       * 可以使用一个结果集来填充CachedRowSet对象
+         #+BEGIN_SRC java
+           ResultSet result = ...;
+           CachedRowSet crs = new com.sun.rowset.CachedRowSetImpl();
+           crs.populate(result);
+           conn.close(); 
+         #+END_SRC
+
+       * 让CachedRowSet对象自动创建一个数据库连接
+         #+BEGIN_SRC java
+           crs.setURL("jdbc:derby:/loccalhost:1527/COREJAVA");
+           crs.setUsername(usr);
+           crs.setPassword(pwd);
+           crs.setCommand("select * from books where publisher=?");
+           crs.setString(1,"机械工业出版社");
+           crs.execute();
+           crs.setPageSize(20);            // 一次获得20个数据
+           crs.nextPage();                 // 获取下一批数据
+           crs.acceptChanges(conn);        // 将修改数据写回数据库
+           crs.acceptChanges();
+         #+END_SRC
+*** 事务
+    #+BEGIN_SRC java
+      conn.setAutoCommit(false);      // 不自动提交，开始事务
+      stat.executeUpdate(sql);
+      ...;
+      conn.commit();                  
+      conn.rollback();
+
+      Savepoint svpt = conn.setSavepoint(); // 设置保存点
+      conn.rollback(svpt);                  // 还原到保存点
+      conn.releaseSavepoint(svpt);          // 不再需要保存点时，释放它
+    #+END_SRC
+*** 批量更新
+    采取批量更新可以提高程序性能。在使用批量更新时，多个命令作为一个批次的操作同时被收集和提交
+
+    同时，需要注意的是，在批量更新中添加select操作会抛出异常，因为select在批量更新中无意义，它会返回结果集而不是受影响的行数
+    #+BEGIN_SRC java
+      stat.addBatch(sql1);
+      stat.addBatch(sql2);
+      ...;
+      int[] counts = stat.executeBatch();
+    #+END_SRC
+
+    为了在批量模式下正确地处理错误，必须将批量执行的操作视为单个事务，因此批量更新一般与关闭自动提交模式在一起。
+** SQL转义
+   * 表示日期和时间的字面常量
+     #+BEGIN_SRC java
+       {d '2008-01-24'}                // d表示DATE
+       {d '23:59:59'}                  // t表示TIME
+       {ts '2008-01-24 23:59:59'}      // ts表示TIMESTAMP
+     #+END_SRC
+   * 标量函数
+     所谓标量函数是指只返回一个数值的函数
+     #+BEGIN_SRC java
+       {fn function(?,?)}              // 注意，JDBC规范了函数名，并将其转换为数据库相关名称。 这里的functin为JDBC规范的函数名
+       {fn function()}
+     #+END_SRC
+   * 调用存储过程
+     #+BEGIN_SRC java
+       {call PROC1(?,?)}
+       {call PROC}                     // 若存储过程没有任何参数，则可以不加上括号
+       {call ? = PROC3(?)}             // 应该用=来捕获存储过程的返回值
+     #+END_SRC
+   * LIKE字句
+     #+BEGIN_SRC java
+       // 在LIKE子句中，使用`_`来匹配任意一个字符而不是`?`
+       // 由于like子句中，`_`和`?`都有特殊意义，因此要匹配包含`_`字符的字符串要指定转义字符
+       ...WHERE ? like %!_%{escape '!'} // 设置`!`为转义字符
+     #+END_SRC
+** 分析SQL异常
+   每个SQLException都有一个由多个SQLException对象构成的链,这些对象可以通过getNextException方法获得.
+   #+BEGIN_SRC java
+     try{
+         // SQL操作
+     }catch(SQLException e){
+         while(e != null){
+             // 处理异常e
+             e=e.getNextException();
+         }
+     }
+   #+END_SRC
+   
+   java6之后的SQLException类实现了Iterable<Throwable>接口, 我们可以用如下的for循环处理SQLException
+   #+BEGIN_SRC java
+     for(Thrwable t:sqlException){
+         t.getSQLState();            // 获取SQL错误描述
+         t.getErrorCode();           // 获取SQL错误码
+     }
+   #+END_SRC
+
+   另外,数据库驱动程序可以将非致命问题作为Warning报告. SQLWarning是SQLException的子类,但它不会被当作异常抛出.
+   #+BEGIN_SRC java
+     SQLWarning w = stat.getWarning(); // 获取Warning
+   #+END_SRC
+   与SQLException类似,SQLWarning也是串成链的,因此可以使用如下循环
+   #+BEGIN_SRC java
+
+     SQLWarning w = stat.getWarning(); // 获取Warning
+     while(w != null){
+         w.getSQLState();
+         w.getErrorCode();
+         w = w.nextWarning();
+     }
+
+   #+END_SRC
+* Class对象
+** 获取Class对象
+   * 使用Class.forName(string ClassName)方法
+	 #+BEGIN_SRC java
+       try{
+           Class externalClass = Class.forName("externalClass"); // 它使用一个包含目标类的文本名的String作为输入参数,返回Class对象的引用
+           Class<ExternalClass> externalClass = Class.forName("externalClass"); // 也可以使用泛型约束
+       }catch (ClassNotFoundException e){ // 若找不到要加载的类,则抛出异常ClassNotFoundException
+       }
+
+	 #+END_SRC
+	 
+	 使用Class.forName方法加载类,会同时触发类的初始化动作
+
+   * 使用object.getClass()方法来获取
+	 #+BEGIN_SRC java
+       A a = new A();
+       Class c = a.getClass();
+       Class ca = Class<A> c;
+	 #+END_SRC
+
+   * 使用类字面常量:类型.class
+	 #+BEGIN_SRC java
+       Class<A> typeA = A.class;
+	 #+END_SRC
+
+	 使用这种方式,不会触发类的初始化操作
+** Class对象的其他方法
+   * class.newInstance()
+	 该方法获取默认构造器构造的对象
+	 #+BEGIN_SRC java
+       Class classA = ClassA.class;
+       ClassA objectA = (ClassA)classA.newInstance(); // Class对象的newInstance()方法返回Object类型的对象,需要手工进行转换
+
+       Class<ClassA> classB = ClassA.class;
+       objectA = classB.newInstance();     // 当用泛型语法限制了Class对象时,返回的是直接的类型
+
+       Class<? extends Base> classC = Sub.class;
+       Base base = classC.newInstance();
+
+       Class<? super Sub> classD = Base.class;
+       Object obj = classD.newInstance();
+	 #+END_SRC
+
+   * class.getName()
+	 该方法获取全限定的类名称
+
+   * class.getSimpleName()
+	 该方法获取不包含包名的类名
+
+   * class.getCanonicalName()
+	 该方法获取权限定的类名称
+
+   * class.getInterfaces()
+	 获取该class实现的接口列表
+
+   * class.getSuperclass()
+	 获取该class的超类
+
+   * class.isInterface()
+	 判断该class是否为接口类型
+
+   * class.isInstance(Object obj)
+	 判断obj是否为class类型
+
+   * isAssignableFrom(Class<?> cls) 
+	 判断class是否为cls的类/接口/超类/超接口
+* NOTE
+  1. Java SE5.0以后，允许子类将覆盖方法的返回类型定义为原返回类型的子类型
+  2. 在子类覆盖超类的方法时，子类方法不能低于超类方法的可见性，这是为了保证父类指针能引用子类的方法
+  3. 数组继承了object类的toString，数组类型将按照旧的格式打印
+     #+BEGIN_SRC java
+     int[] luckyNumbers={2,3,4}
+     System.out.println(luckyNumbers);
+     //结果为[I@a45e39    前面的[I表示是整型数组
+     #+END_SRC
+     修正的方法时调用静态方法Array.toString
+  4. 当子类覆盖父类方法时，可以在前面加上@override标示,当子类方法不能覆盖父类方法时（比如函数参数的类型与父类不同时），编译器会报错
+  5. 使用ArrayList时，如果已经清楚或者能够估计出数组可能存储的元素数量，可以在填充数组之前调用ensureCapacity方法
+     #+BEGIN_SRC java
+     ArrayList<Employee> staff=new ArrayList<Employee>
+     staff.ensureCapacity(100)
+     #+END_SRC
+     一旦确认数组列表的大小不再发生变化，就可以调用trimToSize方法，这个方法将存储区域的大小调整为当前元素数量所需要的存储空间数目
+     使用ArrayList的add方法增加元素，而不要用set方法，set方法只用来替换旧元素
+     使用ArrayList的toArray方法将数组元素拷贝到一个数组中
+     #+BEGIN_SRC java
+     X[] a=new X[list.size()];
+     list.toArray(a);
+     #+END_SRC
+     ArrayList支持for each循环
+  6. 对象包装器类是不可变的，即一旦构造了包装器，就不允许更改包装在其中的值。
+     同时包装器类还是final，不能定义它们的类型
+     包装器对象的比较用equals方法
+     包装器类不能用来实现在函数中修改传入值，因为包装器对象是不可变的
+     如果想编写一个可以修改参数值的方法，就需要使用org.omg.CORBA包中定义的holder类型
+  7. 接口中的所有方法自动属于public，因此在接口中声明方法时，不必提供关键字public。但是在实现接口时，必须把方法声明为public
+     在接口中可以定义常量，但是不能含有实例域，也不能在接口中实现方法
+     接口中定义的变量自动会成为常量
+     #+BEGIN_SRC java
+     public interface Powered extends Movable
+     {
+         double milesPerGallon();
+	 double SPEED_LIMIT=95;        //这是一个public static final常量
+     }
+     #+END_SRC
+  8. 语言标准规定，对于任意的x和y，必须保证sgn(x.compareTo(y))==-sgn(y.compareTo(x))
+     也就是说，如果y.compareTo(x)抛出一个异常，那么x.compareTo(y)也应该抛出一个异常
+  9. Cloneable几口是标记接口，所谓标记接口没有方法，使用它的唯一目的就是可以用instanceof进行类型检查
+     因为clone方法是从Object中继承过来的
+     必须重新定义clone方法，并将它声明为public，这样才能够让所有方法克隆对象
+     即使clone的默认实现（浅拷贝）能够满足需求，也应该实现Cloneable接口，将clone重定义为public，并调用super.clone()
+  10. 对于每一个要实现clone的类，都需要作出以下判断
+      1. 默认的clone方法是否满足要求
+      2. 默认的clone方法是否能够通过调用可变成员变量的clone方法得到修补
+	 #+BEGIN_SRC java
+	 class Employee implements Cloneable
+	 {
+	     public Employee clone() throw CloneNotSupportedException
+	     {
+	         Employee cloned=(Employee)super.clone();
+		 cloned.hireDay=(Date)hireDay.clone()
+		 return cloned;
+	     }
+	 }
+	 #+END_SRC
+      3. 是否不应该使用clone
+
+  11. 所有的数字类型均包含一个clone方法，且为public，可以利用这个方法创建一个包含所有数据元素拷贝的一个新数组
+  12. java程序规范将派生于Error类或RuntimeException类的所有异常成为未检查异常，所有其他的异常成为已检查异常
+  13. java中的RumtimeException相当于C++的logic_error,java中的非RuntimeException相当于logic_error
+  14. 默认情况下，断言被禁用。可以在运行程序是用-enableassertions或-ea选项启用它
+      也可以在某个类或某个包中使用断言
+      #+BEGIN_SRC java
+      java -ea:MyClass -ea:com.mycompany.mylib... MyApp
+      #+END_SRC
+      也可以用选项-disableassertions或-da禁用断言
+      启用或禁用所有断言的-ea和-da开关不能应用到那些没有类加载器的系统类上。对于这些系统来说，需要使用=enablesystemassertions/-esa开关启动断言
+      在启动或禁用断言时不必重新编译程序。启用或禁用断言时类加载器的功能
+  15. 不一定要通过捕获异常来生成堆栈跟踪。只要在代码的任意位置插入Thread.dumpStack();就可以获得堆栈跟踪
+  16. 一般来说，堆栈跟踪显示在System.err上，也可以利用printStackTrace(PrintWriter s)方法将它发生到一个文件中
+  17. 可以调用静态的Thread.setDefaultUncaughtExceptionHandler方法改变非捕获异常的处理器
+  18. Java SE5.0增加了-Xlint选项，这样编译器就可以对一些普遍容易出现的代码问题进行检查
+  19. java SE5.0增加jconsole对java应用程序进行监控和管理。它利用虚拟机中的代理装置跟踪内存消耗，线程使用，类加载等情况
+      jmap和jhat工具获得一个堆得堆放处，其中显示了堆中的每个对象
+      如果是偶那个-Xprof标志运行java虚拟机，就会运行一个基本的剖析器来跟踪代码中经常被调用的方法。剖析信息发送给System.out
+  20. 
+  21. 
+* 专题
+** 参数数量可变的方法
+   1. 定义方法
+      函数名(参数类型...参数变量)
+      这里的省略号...是java代码的一部分，它表示可以接受任意数量的参数，这里参数变量相当于是一个参数数组
+      #+BEGIN_SRC java
+      public static double max(double...values)
+      {
+          double largest=Double.MIN_VALUE;
+	  for(double v:values) if(v>largest) largest=v;
+	  return largest;
+      }
+      #+END_SRC
+   2. 可以将已经存在且最后一个参数是数组的方法重新定义为可变参数的方法，而不用修改除函数头外任何已经存在的代码
+   
+** 枚举类
+   1. 定义
+      enum 枚举类名称{枚举变量1,枚举变量2,枚举变量3...};
+      #+BEGIN_SRC java
+      public enum Size{SMALL,MEDIUM,LARGE,EXTRA_LARGE};
+      #+END_SRC
+   2. 如果需要的话，可以在枚举类型中添加一些构造器、方法和域，当然构造器只是在构造枚举常量的时候被调用
+      #+BEGIN_SRC java
+      enum Size
+      {
+          SMALL("S"),MEDIUM("M"),LARGE("L"),EXTRA_LARGE("XL");
+	  private Size(String abbreviation){this.abbreviation=abbreviation;}  //构造函数,构造SMALL等变量时调用
+	  public String getAbbreviation(){return abbreviation;}
+	  private String abbreviation;
+      }
+      #+END_SRC
+   3. 枚举的类型是一个类，在定义时就确定了实例，因此比较同枚举类型的值时，不需要调用equals，而直接使用==即可
+   4. 所有的枚举类型都是Enum类的子类。它继承了这个类的许多方法
+      1. toString方法
+	 返回枚举常量名称
+	 #+BEGIN_SRC java
+	 Size.SMALL.toString()   //equals "SMALL"
+	 #+END_SRC
+      2. valueOf方法
+	 静态方法valueOf是toString的逆过程
+	 #+BEGIN_SRC java
+	 Size s=(Size)Enum.valueOf(Size.class,"SMALL");
+	 #+END_SRC
+      3. values方法
+	 每个枚举类型都有一个静态的values方法，它将返回一个包含全部枚举值的数组
+      4. ordinal方法
+	 ordinal方法返回enum声明中枚举常量的位置，位置从0开始
+	 #+BEGIN_SRC java
+	 Size.SMALL.ordinal()         //返回值为0
+	 #+END_SRC
+      5. 其实枚举类型在java中会被扩展为Enum<枚举类型>这种形式
+** 反射
+*** Class类
+    在程序运行期间，java运行时系统始终为所有的对象维护一个被称为运行时类型标识。这个信息保存着每个对象所属的类足迹，保存这些信息的类被称为Class
+    1. Object类的getClass()方法将会返回一个Class类型的实例
+    2. 最常用的Class方法是getName，这个方法返回类的名字。如果类在一个包里，包的名字也作为类名的一部分
+    3. 静态方法forName获取类名称对应的Class对象
+       #+BEGIN_SRC java
+       String className="java.util.Date";
+       Class c1=Class.forName(ClassName);
+       #+END_SRC
+       这里若className不是类名或接口名，则抛出checked exception
+    4. newInstance()方法可以用来快速创建一个类的实例
+       #+BEGIN_SRC java 
+       e.getClass().newInstance();
+       #+END_SRC
+       上面的代码创建了一个与e相同类型的实例。newInstance方法调用默认的构造器（无参数构造器）初始化新建对象，如果这个类没有默认构造器，则抛出异常
+    5. getConstructor()方法返回一个构造器对象(java.lang.reflect.Constructor对象)
+       构造器对象有一个newInstance(Object[] args)方法，返回一个新实例，这里args是提供给构造器的参数
+    6. Class类中的getFields、getMethods和getConstructors方法分别返回类停工的public的域、方法和构造器数组，其中包括超类的共有成员
+       Class类的getDeclareFields、getDeclareMethods、getDeclaredConstructors方法分别返回类中声明的全部域、方法和构造器，其中包括私有的和受保护程序，但不包括超类的成员
+    7. 从Java SE5.0开始，Class类被参数化，Class<Employee>的类型是Employee.class
+    8. 虚拟机为每个类管理一个Class对象，因此可以利用==比较两个类对象
+    9. 
+
+** 内部类
+*** 为什么使用内部类
+    1. 内部类方法可以访问该类定义所在的作用域中的数据，包括私有数据
+    2. 内部类可以对同一个包中的其他类隐藏
+    3. 当想要定义一个回调函数且不想编写大量代码时，使用匿名内部类比较便捷
+*** 定义内部类
+    #+BEGIN_SRC java
+    class clockTeller{
+    private boolean isBeep=false;
+    private int timeInterval=0;
+    public clockTeller(int timeInterval,boolean isBeep){
+        this.timeInterval=timeInterval;
+	this.isBeep=isBeep;
+    }
+    public void start(){
+        ActionListener tp=new TimePrinter();
+	Timer tm=new Timer(timeInterval,tp);
+	tm.start();
+    }
+		
+    private class TimePrinter implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+	        if(isBeep){
+		    System.out.println("time is "+new Date());
+		}
+	    }
+	}
+    }
+    #+END_SRC
+    注意，内部类定义为private，可以保证内部类TimePrinter只能在外部内clockTeller中调用
+    内部类可以直接用外部类的私有变量isBeep
+    
+*** 内部类的特殊语法规则
+    1. 外围类的而引用
+       OuterClass.this
+    2. 外围类的作用域之外，引用内部类
+       OuterClass.InnerClass
+    3. 可以通过显式的命名将外围类引用设置为其他的对象
+       outerObject.new InnerClass(construction parameters)
+       #+BEGIN_SRC java
+       TalkingClock jabber=new TalkingClock(1000,true);
+       TalkingClock.TimePrinter listener=jabber.new TimePrinter();
+       #+END_SRC
+*** 可以在方法中定义局部类
+    #+BEGIN_SRC java
+    public void start()
+    {
+        class innerClass{
+	}
+    }
+    #+END_SRC
+    局部类不能用public或private访问说明符进行声明，它的作用域被限定在声明这个局部类的块中
+    局部类有个优势，即对外部世界可以完全地隐藏起来
+    局部类不仅能够访问包含他们的外部内，还可以访问局部变量，不过，这些局部变量必须被声明为final
+*** 匿名内部类
+    innerObj=new superType(construction paramters)
+    {
+        inner class methods and data
+    }
+    这里用于构造对象的任何参数都要被用在超类名后面的括号()内
+    由于构造器的名字必须与类名相同，而匿名类没有类名，所以，匿名类不能有构造器，取而代之的是，将构造器函数传递给超类的构造器
+    由于接口没有构造函数，因此当匿名内部类实现接口的时候，不能有任何构造参数
+*** 静态内部类
+    有时候，使用内部类只是为了把一个类隐藏在另一个类的内部，并不需要内部类引用外围类对象。为此将内部类声明为static，以便取消产生的引用
+    声明在接口中的内部类自动成为static和public
+
+** 日志
+   1. 日志对象定义
+      #+BEGIN_SRC java
+      Logger.global           //预定义的全局日志对象
+      Logger myLogger=Logger.getLogger("com.mycompany.myapp"); //自定义的日志定义对象
+      #+END_SRC
+      与包类似，日记记录器也具有层次结构，且父与子之间将共享某些属性,如日志级别
+   2. 日志记录器级别
+      SEVERE
+      WARNING
+      INFO
+      CONFIG
+      FINE
+      FINER
+      FINEST
+      默认情况下只记录前三个级别。也可以设置其他级别
+      #+BEGIN_SRC java
+      logger.setLevel(Level.FINE);
+      #+END_SRC
+      还可以使用Level.ALL开启所有级别的记录或者使用Level.OFF关闭所有级别的记录
+   3. 默认日志记录将显示日志调用的类名和方法名，但是如果虚拟机对执行过程进行了优化，此时，可以调用logp方法传入调用类和方法的确切位置
+      这个方法的签名为
+      void logp(Level l,String className,String methodName,String message)
+      还有一些用来跟踪执行流程的方法
+      void entering(String className,String methodName)
+      void entering(String className,String methodName,Object parm)
+      void entering(String className,String methodName,Object[] parms)
+      void exiting(String className,String methodName)
+      void exiting(String className,String methodName,Object result)
+      可以使用两个方法提供日志记录中包含的异常描述内容
+      void throwing(String className,String methodName,Throwable t)
+      void log(Level l,String message,Throwable t)
+      典型用法为
+      #+BEGIN_SRC java
+      IOException e=new IOException();
+      logger.throwing("com.mycompany.mylib.Reader","read",e);
+      throw e;
+      #+END_SRC
+      和
+      #+BEGIN_SRC java
+      try{
+      }catch(Exception e)
+      {
+          logObj.log(Level.WARNING,"reading image",e);
+      }
+      #+END_SRC
+      调用throwing可以记录一条FINER级别的记录和一条以THROW开始的信息
+   4. 修改日志管理器配置
+      可以编辑配置文件来修改日志系统的各种属性
+      默认情况下配置文件存在于:jre路径/lib/logging.properties
+      要想使用另一个配置文件，就要将java.util.logging.config.file特性设置为配置文件的存储位置并用java -Djava.util.logging.config.file=config文件路径 mainClass启动应用程序
+      由于日志管理器在VM启动过程被初始化，因此在main方法中调用System.setProperty("java.util.logging.config.file",file)没有用处
+   5. 日志的本地化
+      1. 请求日志记录器时，指定一个资源包
+	 #+BEGIN_SRC java
+	 Logger.getLogger(logName,资源包名)
+	 #+END_SRC
+	 这里资源包就是properties文件
+      2. 为日志消息指定资源包的关键字，而不是实际的日志消息字符串
+	 通常需要再本地化的消息中增加一些参数，因此消息应该包括占位符{0} {1}
+	 #+BEGIN_SRC java
+	 //资源包内有这么一行
+	 //hello=你好{0}
+	 logger.info("hello","world"); //记录"你好world"
+	 #+END_SRC
+   6. 处理器
+      logger.setUseParentHandlers(boolean flag)  //打开/关闭父处理器
+      logger.addhandler(Handler handler)         //添加自己的处理器
+      默认情况系啊，日志记录器将记录发送到自己的处理器和父处理器。
+      日志API，已经提供了两个很有用的处理器，一个是FileHandler，一个是SocketHandler
+   7. 过滤器
+      默认情况下，过滤器根据日志记录的级别进行过滤。
+      也可以通过实现Filter接口并定义boolean isLoggable(LogRecord record)方法来自定义过滤器。
+      调用setFilter方法就能设置过滤器，同一时刻最多只能有一个过滤器
+   8. 格式化器
+      自定义格式化器通过扩展Formatter类并覆盖String format(LogRecord record)方法
+      在format方法中，有可能会调用String formatMessage(LogRecord record)
+      若要在记录的头尾加上头部和尾部，需要覆盖String getHead(Handler h)和String getTail(Handler h)方法
+      最后，掉偶那个setFormatter方法将格式化器安装到处理器中
+      1. 
+
+** 泛型
+*** 使用泛型
+    一定要记住，泛型类在VM中其实是通一个类！！
+    1. 定义泛型类
+       #+BEGIN_SRC  java
+       class 类名<类型变量1,类型变量2...>
+       {
+           类型变量 成员变量名称
+           类型变量 成员方法名(类型变量1 参数名1,类型变量2 参数名2...)
+       }
+       #+END_SRC
+       类型变量使用大写形式，且比较短，这是很常见的。一般用E表示集合的元素类型，K和V分别表示表的关键字与值的类型。T，U，S表示任意类型
+       #+BEGIN_SRC java
+       public class Pair<T,U>
+       {
+           public Pair(T first,U second){this.first=first;this.second=second;}
+	   public T getFirst(){return first;}
+	   public U getSecond(){return second;}
+	   public void setFirst(T newValue){first=newValue;}
+	   public void setSecond(T newValue){second=newValue);
+	   private T first;
+	   private U secomd;
+       }
+       #+END_SRC
+    2. 定义泛型方法
+       #+BEGIN_SRC
+       <类型变量1,类型变量2...> 返回值的类型变量 函数名(类型变量1 参数1,类型变量2 参数2...)
+       #+END_SRC
+       泛型方法可以定义在普通类中，也可以定义在泛型类来
+       注意，类型变量放在修饰符的后面，返回类型的签名。例如：
+       #+BEGIN_SRC
+       class ArrayAlg{
+         public static<T> T getMiddle(T[] a)
+         {
+           return a[a.length/2];
+         }
+       }
+       #+END_SRC
+    3. 当调用一个泛型方法时，在方法名前的尖括号中放入具体的类型
+       #+BEGIN_SRC
+       String[] names={"DarkSun","ljw","lujun9972"};
+       String middle=ArrayAlg.<String>getMiddle(names);
+       #+END_SRC
+       当返回值类型与函数参数类型一致时，调用泛型方法可以不写明返回值的参数类型，java会根据传入的参数类型自动决定返回值类型
+*** 类型变量的限定
+    + 有时候，泛型类或泛型方法，需要对类型变量加以约束，比如传入的参数变量必须是实现某个接口或是某个类的子类
+      使用<T extends 接口1/超类1 & 接口2/超类2>代替定义中的<T>
+    + 注意，这里必须使用extends，而不是implements
+    + 一个类型变量或通配符可以有多个限定，例如
+      #+BEGIN_SRC java
+      T extends  Comparable & Serializable
+      #+END_SRC
+      限定类型用&分隔，而逗号用来分隔类型变量
+      #+BEGIN_SRC java
+      T extends  Comparable & Serializable,U extends Cloneable 
+      #+END_SRC
+*** 使用java泛型时需要考虑的一些限制
+    1. 不能使用基本类型实例化类型参数
+       因此只能用Pair<Integer,Integer>,而不能用Pari<int,int>
+    2. 运行时类型查询只适用于原始类型
+       虚拟机中的对象会被转换成object类或参数变量的限制类，因此所有的类型查询只产生原始类型
+       同样的道理，getClass方法总是返回原始类型。例如
+       #+BEGIN_SRC java
+       Pair<String,String>stringPair=new Pair<String,String>("k","v");
+       Pair<Integer,Integer>intPair=new Pair<Integer,Integer>(1,2);
+       //stringPair.getClass()==intPair.getClass=pair.class
+       #+END_SRC
+    3. 不能抛出也不能捕获泛型类实例
+       不能抛出也不能捕获泛型类的对象，事实上，泛型类扩展Throwable都不合法
+       #+BEGIN_SRC java
+       public clss Problem,T> extends Exceptiion //这是错误的
+       #+END_SRC
+       不能在catch子句中使用类型变量
+       #+BEGIN_SRC
+       try{
+       }catch(T e)                  //这又是错误的
+       {
+       }
+       #+END_SRC
+       但在异常声明中可以使用类型变量
+       #+BEGIN_SRC java
+       public static <T extends Throwable> void doWork(T t) throws T  //这是可以的
+       #+END_SRC
+    4. 参数化类型的数组不合法
+       不能声明参数化类型的数组。这是因为
+       #+BEGIN_SRC
+       //由于earsure的存在
+       Pair<String,String>[]table=new Pair<String,String>[10]
+       table[0]=new Pair<Integer,Integer>   //能够通过数组存储的检测，但会导致类型的错误
+       //为了防止上面的情况出现，因此禁止使用参数化类型的数字
+       #+END_SRC
+       可以使用ArrayList<Pair<T>>代替Pair<T>[]
+    5. 不能实例化参数变量
+       不能使用像new T(...),new T[...]或T.class这样的表达式中的类型变量
+       可以通过反射掉偶那个Class.newInstance方法来构造泛型对象，但是很复杂
+       #+BEGIN_SRC java
+       public static <T> Pair<T> makePair(Class<T> cl)
+       {
+           try{return new Pair<T>(cl.newInstance(),cl.newInstance())}
+	   catch(Exception ex){return null;}
+       }
+       #+END_SRC
+    6. 泛型类的静态上下文中类型变量无效
+       不能在静态域或方法中引用类型变量
+       与C++不同，泛型类在VM中实际只有一个类（通过类型擦除），因此实际上不同参数变量定义的类中的静态域是同一个静态域。因此，禁止使用带有类型变量的静态域和方法
+    7. 注意擦除后的冲突
+       要想支持擦除的转换，就需要强行限制一个泛型类或泛型类变量不能同时成为两个接口类型的子类并且，这两个接口恰好是同一个接口的不同参数化
+       因为这跟编译器合成的桥方法会产生冲突
+*** 泛型类的继承规则
+    1. 由于泛型类在VM中被擦除成了同一个类，所以
+       即使S是T的超类，但是<S>与<T>不是父子关系
+       而且<S>与<T>之间甚至不能赋值！！可以说<S>与<T>之间并无任何关系
+*** 通配符类型
+    由于<S>与<T>并任何关系，因此java设计者新增了通配符类型
+    直观的讲，带有超类型限定的通配符可以向泛型对象写入，带有子类型限定的通配符可以从泛型对象读取
+    1. 用<? extends T>来表示所有类型参数是T的子类的泛型类
+       #+BEGIN_SRC
+       Pair<? extends Number,? extends Number>可以代表Pair<Double,Double>,Pair<Integer,Integer>而不能代表Pair<String,String>
+       #+END_SRC
+       不能调用通配符类型中带参数的方法，因为编译器只知道需要某个T的子类型，但不知道具体是什么类型，它拒绝传递任何特定的类型
+       但返回值为通配符类型则不存在这个问题，返回值可以统一为T类型
+    2. 用<? super S>来表示所有类型参数是S的父类的泛型类
+       基于同样的道理，该通配符表达方式可以为方法提供参数，但是不能返回值
+    3. 用<?>表示无限定的通配符，初看起来Pair<?>与原始Pair类型一样，其实不一样
+       * <?>函数的返回值只能赋给一个Object，而且函数不能有参数，即使是Object类型的参数也不行
+       * 原始的类可以用任意Object对象作为函数参数
+    4. TODO 通配符捕获
+** 多线程
+*** 条件对象
+    通常，线程进入临界区，却发现在某一条件满足之后它才能执行。要使用一个条件对象来管理哪些已经获得了一个锁但是却不能做有用工作的线程
+    1. 一个锁对象可以有一个或多个相关的条件对象。可以用lock.newCondition方法获得一个条件对象，习惯上给每一个条件对象命名为可以反映它所表达的条件的名字
+       #+BEGIN_SRC java
+       class Bank{
+	   public Bank(){
+	       suffcientFunds=bankLock.newCondition();
+	   }
+	   private Condition sufficientFunds;
+       }
+       #+END_SRC
+    2. 调用condition.await()方法来阻塞该线程，并放弃锁。我们希望可以有另一个线程来修改阻塞条件
+       #+BEGIN_SRC java
+       sufficientFunds.await();
+       #+END_SRC
+       等待获得锁的线程和调用await方法的线程存在本质上的不同。一旦一个线程调用await方法，它进入该条件的等待集。当锁可用时，该线程不能马上解除阻塞。相反它处于阻塞状态，直到另一个线程调用同一condition的signalAll方法为止
+    3. 调用condition.signalAll()给所有该condition.await的线程唤醒
+       调用condition.signal随机给该conditon.awati的一个线程唤醒
+       当这些线程从等待集当中移出时，它们再次成为可运行的，调度器将再次激活它们。同时，它们将试图重新进入该对象。一旦锁成为可用的，它们中的某个将从await调用返回，获得该锁并从被阻塞的地方继续执行
+       此时，线程应该再次测试该条件。因为signalAll方法仅仅是通知正在等待的线程而不保证测试条件一定满足
+       #+BEGIN_EXAMPLE
+       通常，对await的调用应该在如下形式的循环体中
+       while (!(ok to proceed))
+           condition.await();
+       #+END_EXAMPLE
+       从经验上讲，在对象的状态有利于等待线程的condition改变时调用signalAll
+       注意，调用
+    4. 调用signalAll不会立即激活一个等待线程。它仅仅解除等待线程的阻塞，以便这些线程可用在当前线程退出同步方法之后，通过竞争实现对对象的访问
+    5. synchronized关键字
+       * java中的Object类有一个内置的锁。如果一个方法用synchronized关键字声明，那么对象的锁将保护整个方法
+       * 内部对象锁只有一个相关条件。final Object.wait方法添加一个线程到等待集中，notifyAll/notify方法解除等待线程的阻塞状态
+	 #+BEGIN_SRC java
+	 //调用wait或notifyAll等价于
+	 intrinsicCondition.await();
+	 intrinsicCondition.signalAll();
+	 #+END_SRC
+    6. 关于Lock/Condition和synchronized说明
+       * 最好即不适用Lock/Condition也不使用 synchronized关键字。许多情况下，你可以使用java.util.concurrent包中的一种机制，它会为你处理所有的加锁
+       * 如果synchronized关键字适合你的程序，那么请尽量使用它，这样可以减少编写的代码数量，减少出错的几率
+	 * 

@@ -1,0 +1,258 @@
+#+TITLE: land_of_lisp
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 变量类型
+
+** symbol
+   * symbol是大小写不敏感的
+
+   * 
+
+** Number
+   * number分为整数和浮点数, 这是两种不同的类型,因此1和1.0是不能eq的
+
+   * 当对两整数进行除法计算时,若发生除不尽的情况,则返回一个有理数,若其中一个是浮点数,则返回小数近似值
+	 #+BEGIN_SRC lisp
+       (/ 4 6)
+       ; 2/3  在elisp中为0
+       
+       (/ 4.0 6)
+       ; 0.6666667 elisp中为0.6666666666666
+	 #+END_SRC
+* 定义变量
+
+** 定义top-level变量
+   * (defparameter 变量名 值)
+
+	 一般对全局变量都用**包含起来,例如*small*
+	 
+	 多次对同一变量运用defparameter会修改它的值
+
+   * (defvar 变量 值)
+
+	 类似defparameter,但是多次对同一变量使用defvar,不会修改其原有值
+
+   * (setf 变量 值)
+
+** 定义局部变量
+   * (let ((变量 初始值)...) body)
+* 定义函数
+
+** 定义全局函数
+   * (defun 函数名 (参数列表) 函数体)
+	 
+	 定义一个全局函数
+
+** 定义局部函数
+   * (flet ((局部函数 参数列表 函数体) ...) body...)
+
+	 定义局部函数,在body内可以使用局部函数
+
+   * (labels ((局部函数 参数列表 函数体) ...)  BODY)
+
+	 类似flet,但是在后面的局部函数中可以使用前面的局部函数. 类似let*
+
+	 #+BEGIN_SRC lisp
+       (labels ((a (n)
+                   (+ n 5))
+                (b (n)
+                   (+ (a n) 6)))
+         (b 10))
+	 #+END_SRC
+
+* 结构
+
+** 条件判断
+   * (case expr ((条件值1 条件值2 ...) forms操作...) ... (otherwise 默认forms操作...))
+	 
+	 case对expr进行求值,然后将结果与子句中的条件作 *eq比较*, *t则执行forms操作. 这里要注意的是条件值为是放到()中作为列表的形式, 最后的默认值则不需要放到()中,保留原子形式*,'otherwise也可以用t代替
+
+	 由于case中是使用eq作比较,因此一般用来对symbol作判断,而不能对string作判断
+
+** 关于判断等于
+
+   一般的原则是,用eq来比较symbol,用equal来比较其他的类型
+   * eq
+
+	 比较双方就是同一个对象时为t
+
+   * eql
+
+	 除了eq,还能比较数字和字符,但整数和浮点数之间的比较为nil
+
+   * equal
+
+	 比较同样类型的对象是否字面相等
+
+   * equalp
+
+	 基本与equal一致,但比较数字时忽略不同的类型,比较字符串时忽略大小写
+	 #+BEGIN_SRC lisp
+       CL-USER> (equalp 1 1.0)
+       T
+       CL-USER> (equalp "a" "A")
+       T
+	 #+END_SRC
+   
+   * =
+
+	 只用于比较数字
+   
+   * string-equal
+
+	 只用于比较字符串
+
+   * char-equal
+
+	 只用于比较字符,忽略大小写
+
+* 数据结构
+** association list / alist
+*** 结构说明
+
+	 association list类似于C语言中的map,它的结构为
+
+	 #+BEGIN_SRC lisp
+       (defparameter *alist-example* '((key1 value1)
+                                       (key2 value2)))
+	 #+END_SRC
+*** 相关操作
+	* 根据key取key-value键值对
+
+	  (assoc key alist)
+
+	  #+BEGIN_SRC lisp
+        (assoc 'garden *nodes*)
+	  #+END_SRC
+
+	  当使用assoc在alist中取键值对时,只会取发现的第一个符合条件的键值对. 因此可以直接用push命令将要修改为的新键值对放到alist的前面,以此来模拟对老键值对的修改,同时保留了老键值对的历史.
+** array
+
+*** 结构说明
+
+	数组类似C中的数组,索引也是从0开始的.
+*** 相关操作
+	* 新建数组
+
+	  (make-array 数组长度)
+
+	* 获取数组内容的引用
+
+	  (aref 数组 索引)
+
+	* 给数组元素赋值
+
+	  (setf (aref 数组 索引) 新值)
+
+	* 
+* 简写形式
+** Quasiquoting
+   使用'`'可以告诉lisp进入data-mode,但同时可以通过','将后面的lisp片段临时进入code-mode
+
+   #+BEGIN_SRC lisp
+     (defun describe-path (edge)
+       `(there is a ,(caddr edge) going ,(cadr edge) from here.))
+     
+     (describe-path '(garden west door))
+     ;(THERE IS A DOOR GOING WEST FROM HERE.)
+   #+END_SRC
+** higher-order functions 
+   
+   被作为变量被传入其他函数的函数被称为higher-order functions. 在使用higher-order functions作为变量时,一般使用#'函数名 作为(function 函数名)的缩写
+   #+BEGIN_SRC lisp
+     (mapcar #'car '((foo bar)(baz qux)))
+     ; (foo baz)
+     
+     (mapcar (function car) '((foo bar)(baz qux)))
+     ; (foo baz)
+   #+END_SRC
+** 字符
+
+   一般来说字符的字面量格式为"#\字符",但对于那些非可见字符,common lisp也进行了特殊的定义:#\newline,#\tab,#\space
+** array
+
+   #(e1 e2 ...)
+* 已有函数
+
+** bit控制
+   * (ash value count)
+
+	 把value的二进制向左移动count位,若count为负,则实际向右移动
+
+** 过滤list
+   * (remove-if-not #'判断函数 list)
+
+	 
+** IO操作
+
+   * print/read 以计算机的形式来输出/输入,且print的值能够直接被read所读取,并还原原common lisp对象
+   * princ 以人类识别的方式来输出
+   * read-line 将所有的输入都作为字符串来处理
+   * prin1-to-string/write-to-string 将object转换为字符串形式
+   * (with-open-file (stream名称 文件名 :direction :output :if-exists :supersede) body )
+
+	 创建一个输出流,输出到文件中
+
+	 #+BEGIN_SRC lisp
+       (with-open-file (my-stream
+                        "testfile.txt"
+                        :direction :output
+                        :if-exists :supersede)
+                       (princ "Hello File!" my-stream))
+	 #+END_SRC
+
+	 通过重定义*output-stream*变量的方法,可以实现输出重定向
+
+	 #+BEGIN_SRC lisp
+       (defun dot->png (fname thunk)
+         (with-open-file (*standard-output*
+                          fname
+                          :direction :output
+                          :if-exists :supersede)
+                         (funcall thunk))
+         (ext:shell (concatenate 'string "dot -Tpng -O " fname)))
+	 #+END_SRC
+   * 
+** 字符/字符串操作
+   * (string-trim 待trim的字符列表 字符串)
+     
+     trim字符串
+
+   * (char-upcase 字符) 
+     
+     转换字符为大写形式
+
+   * (char-downcase 字符)
+
+	 转换字符为小写形式
+
+   * (substitute-if NEW PREDICATE SEQ)
+
+	 对SEQ中的每个元素使用PREDICATE函数判断,对然会t的用NEW代替
+
+** 类型转换
+   * (coerce 对象 类型)
+
+	 强制类型转换
+
+   * (complement 判断函数)
+
+	 返回判断函数的取反函数
+
+* 结构控制
+** loop
+
+*** 生成数字列表
+	#+BEGIN_SRC lisp
+      (loop repeat 10
+            collect 1
+            )
+      
+      ;(1 1 1 1 1 1 1 1 1 1)
+      
+      (loop for n from 1 to 10
+            collect n
+      )
+      ;(1 2 3 4 5 6 7 8 9 10)
+	#+END_SRC

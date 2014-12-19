@@ -1,0 +1,102 @@
+* 模板函数
+  1. 模板函数的出现,使得算法可以脱离具体的类型而存在
+  2. 非模板函数参数的限制有:
+     * 只能是常整数(包括枚举型)和指向外部链接对象(不在同一个作用域中)的指针
+     * 不能是浮点数和类对象
+     * 不能是全局指针
+** 模板参数
+   模板参数可以为如几种类型
+   * 类型
+     #+BEGIN_SRC c++
+       template<typename T>
+     #+END_SRC
+   * 整数及枚举型
+     #+BEGIN_SRC c++
+       template<int size>
+     #+END_SRC
+   * 指向对象或函数的指针
+     #+BEGIN_SRC c++
+       template<typename T,void(*f)(T &v)>
+       template<int *p>
+     #+END_SRC
+   * 对对象或函数的引用
+     #+BEGIN_SRC c++
+       template<typename int &p>
+     #+END_SRC
+   * 指向对象成员的指针
+     #+BEGIN_SRC c++
+       class some_class;
+       typedef int (some_class::* some_class_mfp)(int);
+       template<some_class_mfp func>
+     #+END_SRC
+   * 模板型
+     #+BEGIN_SRC c++
+       template<typename T,template<typename,typename> class A> // 这里的class是固定必须的,而且不能用struct代替
+       struct Foo{
+         A<T,T> foo;
+       };
+     #+END_SRC
+* 模板类
+  1. 模板类的实现,使得数据结构可以脱离具体的类型而存在
+  2. 对于具有基类的类模板,自身使用名称x并不一定等同于this->x,即使x是从基类继承得到的也不行 
+     #+BEGIN_SRC c++
+       template<typename T>
+       class Base{
+       public:
+         void exit();
+       };
+ 
+       template<typename T>
+       class Derived:Base<T>{
+       public:
+         void foo(){
+           exit();  //这里不会调用Base::exit()!!
+         }
+       }
+     #+END_SRC
+  3.
+* 模板特例
+  1. 只有类模板才有模板特例,函数模板只有重载
+  2. 模板特例的定义语法为
+     #+BEGIN_SRC c++
+       template<模板特例的模板参数列表> // 这里的<>即使模板特例没有模板参数列表也不能省略,
+       class 通例名称<模板特例的匹配式> // 编译器根据模板特列的匹配式来选择使用哪个模板特例
+     #+END_SRC
+  3. 模板特例中匹配式的写作规则
+     * 匹配式卸载模板类名之后,用尖括号括起
+     * 匹配式是用都好分隔的项目列表,项目数必须与通例模板参数总数一致
+     * 匹配式中各项目类型需与通例对应模板类型一致
+     * 匹配式可以是具体的模板参数值,也可以是特例自己声明的模板参数
+     * 当匹配式项目是类型模板参数时,与函数变量类似,模板参数也可以用* & const及volatile修饰
+* C++元编程
+  在C++元编程中是专指针对类型和常数进行推导,演算和构造的操作. 其中:
+  * 变量为类型
+  * 赋值操作通过typedef语句实现
+  * 循环操作通过递归模板定义来实现,通过模板特例来实现递归中止
+  * 以模板特列作为条件判断,多个特列相当与构造了一个多条分支的条件判断语句,分支选择的优先级则由实参匹配特例的优先级决定
+    #+BEGIN_SRC c++
+      // 判断两种类型是否相同
+      template<typename T0,typename T1>
+      struct is_same
+      {
+        enum{result = 0};
+      }
+
+      template<typename T>
+      struct is_same<T,T>
+      {
+        enum{result = 1};
+      };
+        
+      // 
+      template<bool cond,typename Type_True,typename Type_False>
+      struct if_
+      {
+        typedef Type_True return_type;
+      };
+
+      template<false,typename Type_True,typename Type_False>
+      {
+        typedef Type_False return_type;
+      }
+    #+END_SRC

@@ -1,0 +1,29 @@
+#+TODO: TODO(T) INPROGRESS(I) | DONE(D)
+#+TAGS: @office(o) @home(h) @traffic(t)
+#+TAGS: computer(c) nocomputer(n) either(e)
+#+TAGS: immediately(i) wait(w) action(a)
+
+* Idea List:
+* Task List:
+* Project List:    
+** 需求305[2/3]
+   DEADLINE: <2011-08-22 周一>
+- [X] 阅读代码
+- [X] 修改代码
+- [ ] 测试代码
+** 维基经济学[3/11]					   :@office:computer:
+- [X] 阅读维基经济学第1章
+- [X] 阅读维基经济学第2章
+- [X] 阅读维基经济学第3章
+- [ ] 阅读维基经济学第4章
+- [ ] 阅读维基经济学第5章
+- [ ] 阅读维基经济学第6章
+- [ ] 阅读维基经济学第7章
+- [ ] 阅读维基经济学第8章
+- [ ] 阅读维基经济学第9章
+- [ ] 阅读维基经济学第10章
+- [ ] 阅读维基经济学第11章
+* Someday/Maybe List:
+* Reminder:
+
+

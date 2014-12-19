@@ -1,0 +1,112 @@
+#+TITLE: awesomewm
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* Awesome简介
+  Awesome window manager是一款小巧的平铺式窗口管理器，它具有以下一些特点
+  * 体积小，运行迅速。
+  * 支持多种窗口布局。
+  * 使用Lua脚本的配置文件使得它的灵活性非常高。
+  * 更新迅速。
+  * 多显示器支持。
+* 概念说明
+** 平铺式窗口管理
+   简单来说就是多个窗口由操作系统自动调节和位置，使得它们刚好能够占满整个屏幕。
+** 标签（Tag）
+   启动awesome之后出现在左上方的数字就是tag，它的作用类似于虚拟桌面，但概念上很不一样。 我们可以给一个窗口标记上多个tag，同时也可以同时显示多个带有指定tag的窗口。
+   而且，每个tag都可以有它自己的布局风格。
+** 布局（Layout）
+   布局是自动调整窗口位置和尺寸的方式。 Awesome提供了多种布局：
+   * 平铺（Tiled）
+     #+BEGIN_QUOTE
+     所有的窗口都平铺显示，布满整个屏幕。
+     #+END_QUOTE
+   * 最大化（MAX）
+     #+BEGIN_QUOTE
+     每个窗口都是全屏显
+     #+END_QUOTE
+   * 放大（Magnifier）
+     #+BEGIN_QUOTE
+     当前窗口（也就是被鼠标点选中，正在操作的窗口）会显示在屏幕中间，占据大部分屏幕 空间。
+     剩下的窗口都处在stacking区域，并放到当前窗口的后面。
+     #+END_QUOTE
+   * 浮动（Floating）
+     #+BEGIN_QUOTE
+     每个窗口都可以自由的移动和调整大小，就好像普通的窗口管理器一样。
+     无论当前是什么布局，对话框窗口总是处在浮动状态
+     #+END_QUOTE
+   * 主显示区 / 非主显示区
+     #+BEGIN_QUOTE
+     平铺模式下屏幕被分为master和stacking两个区域。master中的窗口包含了需要最多关注
+     的窗口（通常这表示master中的窗口会占据更大的屏幕空间），而stacking区域中包含了
+     其它窗口。如果你想的话master区域可以被划分为多行和多列
+     #+END_QUOTE
+* 鼠标功能
+  | 动作             | 功能                           |
+  |------------------+--------------------------------|
+  | 左键点击tag      | 切换显示带有tag的窗口          |
+  | M-左键点击tag    | 将当前窗口切到tag，取消当前tag |
+  | 右键点击tag      | 增加显示/隐藏具有tag的窗口     |
+  | M-右键点击tag    | 为当前窗口增加/删除tag标志     |
+  | M-左键移动窗口   | 移动窗口                       |
+  | 在窗口移动M-右键 | 改变窗口大小                         |
+* 默认绑定键
+  * M指代Modkey，默认为Mod4，即win键
+  * S指代Shift
+  * C指代Ctrl
+** window manager control
+   | 键序列  | 功能                  |
+   |---------+-----------------------|
+   | M-r     | 运行命令              |
+   | M-x     | 运行lua代码           |
+   | M-Enter | 打开terminal emulator |
+   | M-w     | 打开主菜单            |
+   | M-S-q   | 推出awesome wm        |
+   | M-C-r   | 重启awesome wm          |
+** Clients
+   | 键序列 | 功能           |
+   |--------+----------------|
+   | M-S-r  | 刷新当前window |
+   | M-m    | 最大化窗口     |
+   | M-n    | 最小化窗口     |
+   | M-C-n  | 恢复窗口       |
+   | M-f    | 设置当前窗口全屏   |
+   | M-S-c  | 关闭当前窗口   |
+   | M-t    | 设置当前窗口不被覆盖 |
+** Mavigation
+   | 键序列  | 功能               |
+   |---------+--------------------|
+   | M-j     | 下一个程序       |
+   | M-k     | 上一个程序       |
+   | M-u     | 第一个程序       |
+   | M-Left  | 上一个tag          |
+   | M-Right | 下一个tag          |
+   | M-1...9 | 切换到tag1...tag9  |
+   | M-C-j   | 切换到下一个显示器 |
+   | M-C-k   | 切换到上一个显示器 |
+   | M-Esc   | 回到上一个tag      |
+** Layout modification
+   | 键序列     | 功能                                   |
+   |------------+----------------------------------------|
+   | M-S-j      | 将当前窗口与下一个窗口交换位置         |
+   | M-S-k      | 将当前窗口与前一个窗口交换位置                        |
+   | M-o        | 把当前程序发送到下一个显示器中         |
+   | M-h        | 减少5%的主视窗区的高和宽               |
+   | M-l        | 增加5%的主视窗区的高和宽               |
+   | M-S-h      | 增加一个主视窗区                       |
+   | M-S-l      | 减少一个主视窗区                       |
+   | M-C-h      | 增加一个非主视窗区的column数           |
+   | M-C-l      | 减少一个非主视窗区的column数           |
+   | M-Space    | 切换下一种布局                         |
+   | M-S-Space  | 切换到上一种布局                       |
+   | M-C-Space  | 切换当前程序为floationg方式/Tiling方式 |
+   | M-C-Return | 切换选中的程序到主视窗区                |
+   | M-C-1...9  | 显示带有tagN的程序                     |
+   | M-S-1...9  | 把当前程序切到tagN，取消当前tag        |
+   | M-S-C-1..9 | 给当前程序添加tagN，不取消当前tag      |
+   | M-S-F1..F9 | 给标记的多个程序切到tagN               |
+   |            |                                        |
+* 资源
+  * http://hyperrate.com/topic-files-dir/40/6140-qJtcP3Odzi/awesome.html
+  * http://wiki.ubuntu.org.cn/Awesome

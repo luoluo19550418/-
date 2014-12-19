@@ -1,0 +1,699 @@
+#+TITLE: linux系统管理
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* inittab文件格式
+  id:run-levels:action:process
+** id
+   标示号,一般为两位字母或数字
+** run-levels
+   指定运行级别,可以指定多个
+** action
+   指定运行状态
+   1. initdefault
+      默认进入的运行级别
+   2. sysinit
+      系统启动时执行process的命令
+   3. wait
+      执行process中的命令,并等到其结束再运行其他命令
+   4. once
+      自行process中指定的而明亮,不等待其结束
+   5. respawn
+      一旦procee运行的程序终止,则重新运行该程序
+   6. ctrlaltdel
+      按下ctrl-alt-del时,执行process中的命令
+   7. powerfail
+      当电源执行错误时,执行该process命令
+   8. powerokwait
+      当电源恢复时,执行process命令
+** process
+   指定要运行的脚本/命令
+* 特殊目录   
+** /etc/rc.d/init.d 或 /etc/init.d
+   该目录存放了各服务的监听程序. 一般这些监听程序都可以接收这些参数
+   * start
+     启动服务
+   * stop
+     关闭服务
+   * restart
+     先关闭,再启动服务
+   * reload
+     热装载配置信息
+   * condrestart
+     如果服务已经关闭,则直接启动服务,否则类似restart
+   * status
+     显示服务状态
+** /var/log
+   该目录存放了日志信息
+*** messages
+    启动服务时的信息
+*** boot.log
+    启动时的信息
+* 配置命令
+** chkconfig
+   配置启动要运行的服务
+** ntsysv
+   配置启动要运行的服务
+** dmesg
+   列出启动时内核驱动硬件的信息
+** hwclock
+   查看,设置硬件时钟
+* GRUB
+** 默认配置文件
+   /boot/grub/grub.conf
+** 选项
+   * default
+     定义缺省启动系统,从0开始计算
+   * timeout
+     定义缺省等待时间
+   * splashimage
+     定义GRUB界面图片.(hd0,0)表示到一块硬盘的第一个分区,图片大小必须是640*480,色深为14
+   * hiddenmenu
+     隐藏菜单
+   * title
+     定义菜单项名称
+   * root
+     设置GRUB的根目录
+   * kernel
+     定义内核的位置及选项
+     * 数字
+       表示启动时进入的运行级别
+     * ro
+       表示readonly
+     * quiet
+   * initrd
+     命令加载镜像文件
+   * password
+     指定加密方式及加密后的密码
+     #+BEGIN_QUOTE
+     password -md5 md5加密后的密码
+     #+END_QUOTE
+** GRUB命令
+   * e
+     编辑当前启动菜单项
+   * c
+     进入GRUB的命令行方式,进入命令行方式后,
+     * 可以输入grub.conf中的行内容
+     * boot表示重新启动
+     * cat 文件表示查看文件内容
+   * b
+     启动当前菜单项
+   * d
+     删除当前行
+   * Esc
+     返回GRUB启动菜单界面
+** 设置GRUB密码
+   * grub-md5-crypt 或 grub 再在命令行中输入md5crypt
+     输入密码后,会输出一串密文
+     
+* 软件包管理
+** RPM
+*** RPM软件包的名称格式
+    软件名-版本号-发行号-硬件平台
+*** rpm命令参数
+    * -e 软件名
+      卸载，如果其他软件包有依赖关系，卸载时会产生提示信息，可以用--nodeps强行卸载
+    * -i 软件包名称
+      安装软件包
+    * -v
+      展示详细信息
+    * -h
+      显示进度条
+    * -q 软件名
+      查询软件的安装信息
+    * -qa
+      查询所有软件包，可以将结果用grep过滤
+    * -qf 文件名
+      查询指定文件所属的软件包
+    * -qi 软件名
+      查询已安装软件的信息
+    * -qip 软件包名
+      查询软件包的信息
+    * -ql 软件
+      列出软件包含的文件
+    * -qlp 软件包
+      列出软件包中包含的文件（将要安装的文件）
+    * -qd 软件
+      列出软件的帮助文档
+    * -qdp 软件包
+      列出软件包的帮助文档
+    * -qc 软件 /-qcp 软件包
+      列出软件/软件包的配置文件
+    * -U 软件包
+      升级软件包
+    * -ivh --excludedocs 软件包
+      安装软件包，但不安装文档文件
+    * -ivh --prefix PATH 软件包
+      把软件包安装在由PATH指定的路径下
+    * -ivh --test 软件包
+      只对安装进行测试，并不实际安装
+    * -ivh --replacepkgs 软件包
+      执行覆盖安装
+    * -ivh --replacefiles 软件包
+      忽略文件冲突的错误信息
+    * --nodeps
+      不检查依赖关系，强行安装
+    * -V 软件名
+      校验已安装软件的文件是否改变
+      * 5
+        文件的md5校验值改变
+      * S
+        文件的大小发生改变
+      * T
+        文件的最后修改时间发生改变
+      * M
+        文件的权限发生改变
+      * U
+        文件的所有者发生改变
+      * G
+        文件的用户组发生改变
+      * D
+        设备文件信息发生改变
+      * L
+        链接文件信息发生改变
+** YUM
+   * yum install 软件名
+     安装软件
+   * yum check-update 软件名
+     检测升级软件
+   * yum update 软件名
+     升级软件
+   * yum list
+     列出yum源上的软件列表
+   * yum info 软件名
+     列出软件的信息
+   * yum remove 软件名
+     卸载软件
+   * yum help
+     yum帮助
+** APT
+   * apt-cache search
+     搜索软件包
+   * apt-cache show
+     搜索包信息
+   * apt-get install（-f 强制安装）
+     安装
+   * apt-get resintall
+     修复安装
+   * apt-get remove（--purge 同时删除配置文件）
+     删除
+   * apt-get autoremove
+     自动删除无用的软件
+   * apt-get update
+     更新软件源
+   * apt-get upgrade
+     更新已安装包
+* 用户管理
+** 配置文件
+   * /etc/passwd
+     用户名:密码:UID:GID:注释性描述:宿主目录:命令解释器
+     * uid=0  root
+     * uid in (500,60000)  普通用户
+     * uid in (1,499)      伪用户
+   * /etc/shadow
+     用户名:密码:最后一次修改时间:最小密码修改时间间隔:最大密码修改时间间隔:离密码失效警告时间:帐号闲置时间:失效时间:标志（一般不用）
+   * /etc/group
+   * /etc/gshadow
+   * /etc/skel
+     新用户信息文件
+   * /etc/login.defs
+     添加用户时的默认值
+   * /etc/default/useradd
+     useradd时使用的默认信息
+   * /etc/issue
+     登陆时的欢迎信息
+   * /etc/motd
+     登陆后的欢迎信息
+** S权限
+*** SetUID权限
+    * 当一个可执行程序具有SetUID权限，用户执行这个程序时，将以这个程序所有者的身份执行
+    * 当设置了SetUID，则owner的x权限处改为S
+    * SetUID = 4
+*** SetGID权限
+    * 当一个可执行程序具有SetGID权限，用户执行这个程序时，将以这个程序所有组的身份执行
+    * 当设置了SetUID，则group的x权限处改为S
+    * SetGID = 2
+*** 粘着位
+    * 带有粘着位的权限为777目录，则所有人可以在该目录新增文件，但是只有该文件所有者只能删除才能删除文件
+    * 当设置了粘着位，则other的x权限处改为t
+    * 粘着位 = 1
+** 命令
+*** useradd
+    * -u uid
+    * -g gid
+    * -G gid1,gid2
+    * -d 宿主目录
+    * -s 命令解释器shell
+    * -c 描述信息
+    * -e 指定用户失效时间(YYYYMMDD)
+*** userdel 用户名
+    * -r
+      删除用户目录
+*** groupadd
+    * -g gid
+*** newgrp 组名
+    切换到该组，可能要输入组密码
+*** gpasswd
+    * -a 用户名 组名
+      添加用户到用户组
+    * -d 用户名 组名
+      从用户组中删除用户
+    * -A 用户名 组名
+      设置组的管理员
+    * -r 用户组
+      删除用户组密码
+    * gpasswd 组名
+      设置组密码，设置了组密码后，任何用户用newgrp命令切换组时，需要输入密码
+    * -R 组名
+      禁止用户切换到该组
+*** usermod
+    * -G 组名 用户名
+      添加用户到用户组
+*** finger 用户名
+    察看用户详细信息    
+*** groupdel 组名
+    删除组
+*** groupmod -n 新组名 旧组名
+    修改组名
+*** pwck
+    检测/etc/passwd文件
+*** vipw
+    编辑/etc/passwd文件，会锁定该文件
+*** id
+    察看文件id和组信息
+*** passwd -S [用户名]
+    察看用户密码状态
+*** passwd -l 用户名
+    锁定用户
+*** passwd -u 用户名
+    解锁用户
+*** groups [用户组]
+    察看所属用户组
+*** vigr
+    编辑组文件，会锁定该文件
+*** chage
+    设定密码
+    * -l
+    * -m
+    * -M
+    * -d
+    * -I
+    * -E
+    * 
+*** visudo
+    通过编辑/etc/sudoers来配置sudo权限
+    * 格式为
+      用户（组名）  主机地址=命令（绝对路径，可以细化到参数和选项） 
+      使得用户有权限以root权限执行命令
+* 进程管理
+** 命令
+*** w
+     * JCPU
+       各终端CPU所消耗的时间值
+     * PCPU
+       CPU执行程序消耗的时间
+     * WHAT
+       各终端正在运行的程序
+     * load average
+       过去1，5，15分钟的负载
+     * FROM
+       用户从何处登陆，:0表示从X window下登陆
+     * IDLE
+       用户闲置时间
+*** ps
+     * -a
+       显示所有用户的进程
+     * -u
+       显示用户名和启动时间
+     * -uU 用户名
+       显示指定用户执行的进程
+     * -x
+       显示没有控制终端的进程
+     * -e
+       显示所有进程
+     * -l
+       长格式显示
+     * -w
+       宽行显示，可以使用多个w进行加宽显示
+     * --sort pid
+       按pid/uid，进程执行时间进行排序
+*** kill
+     * kill -1 进程号 
+       重启进程
+     * xkill
+       用鼠标关闭图形程序
+     * killall
+       结束所有同名进程
+     * pgrep 服务名称
+       查找服务进程号
+     * pkill 进程命令
+       以进程名称kill
+*** top
+     * -d
+       指定刷新的时间间隔
+     * -c
+       显示整个命令行而不仅仅显示命令名
+     * u子命令
+       察看指定用户进程
+     * k子命令
+       终止执行中的进程
+     * h / ?子命令
+       获得帮助
+     * r子命令
+       重新设置时间间隔
+     * W
+       将当前设置写入~/.toprc文件中
+*** at
+    at [-f script文件] 时间 
+    * 绝对计时法
+      HH:MM MM/DD/YYYY
+    * 相对计时法
+      now + n minutes
+      now + n hours
+      now + n days
+    * at执行的命令最好是绝对路径
+    * at -d / atrm 任务序号
+      删除at任务
+    * /etc/at.allow 和 /etc/at.deny
+      决定哪些用户可以用at
+*** batch
+    用法与at一样，但是会检查负载，只有在负载<0.8，才会执行
+*** crontab
+    * -e
+      编辑周期任务
+    * -l
+      列出周期任务
+    * -r
+      删除当前周期任务
+    * /etc/cron.allow 和 /etc/cron.deny
+      决定哪些人能够使用cron
+    * /etc/crontab
+      全局的crontab
+*** /etc/xinetd.d/目录
+    xinetd进程托管
+* 文件系统管理
+** 文件系统构成
+   * /usr/bin , /bin
+     存放所有用户可执行的命令
+   * /usr/sbin，/sbin
+     只有root可以执行的命令
+   * /proc
+     虚拟文件系统，存放当前内存镜像
+   * /lib
+     存放系统程序所需要的共享库
+   * /lost+found
+     存放一些系统出错的检查结果
+   * /var
+     包含经常发生变动的文件，如邮件、日志文件、计划任务等
+   * /etc
+     系统配置文件，需要经常配置
+   * /usr
+     存放所有命令，库，手册
+   * /mnt
+     临时文件系统的安装点
+** 命令
+*** 文件系统
+    * fsck（单用户模式下使用）
+      * -y
+        自动修复
+    * e2fsck（单用户模式下使用）
+      * -p
+        自动修复
+*** 分区与格式化
+    1. fdisk /dev/sdb
+       * m
+         帮助
+       * p
+         显示分区表
+       * n
+         添加新分区
+       * t
+         改变分区文件系统类型
+       * d
+         删除分区
+       * w
+         保存退出
+       * q
+         不保存退出
+    2. mkfs.ext3 /dev/sdb1
+       * -b block-size
+         设置数据块的大小
+*** 设备挂载
+    * mount
+    * umount
+    * eject
+    * /etc/fstab
+      * 格式:
+        设备  挂载点  文件系统类型  选项  是否检测  检测顺序
+      * 选项有：
+        * ro 只读
+        * noexec 可执行文件不可运行
+        * nosuid SetUID命令不可执行
+        * noauto 不自动挂载
+        * cl 启动ACl权限控制
+        * usrquota 启用用户磁盘配额
+        * grpquota 启用组磁盘配额
+*** SWAPFILE
+    #+BEGIN_SRC sh
+      #创建swap挂载点
+      mkdir /var/swap
+      chmod 700 /var/swap
+      #创建swap file
+      dd if=/dev/zero of=/var/swap/file.swp bs=1024 count=65536
+       mkswap /var/swap/file.swp
+      #自动挂载swap file
+      vi /etc/fstab
+      /var/swap/file.swp swap swap defaults 0 0
+      #手工挂载swap file
+      swapon /var/swap/file.swp
+      
+    #+END_SRC
+*** 磁盘配额
+    用来设置某用户在某个分区只能用多少空间
+    1. 开启分区配额功能
+       #+BEGIN_SRC sh
+         #编辑/etc/fstab文件,在挂载属性上加上标志 usrquota或grpquota
+         /dev/sda3 /home ext3 defaults,usrquota 1 2
+         mount -o remount /home
+         #临时设置:
+         mount -o remount,usrquota /home
+       #+END_SRC
+    2. 建立配置数据库(进入单用户模式)
+       * quotacheck 选项 [磁盘名]
+         * -c 创建配额
+         * -v 现实详细信息
+         * -u 开启用户配额
+         * -g 开启组配额
+         * -a 给所有磁盘开启配额
+       #+BEGIN_SRC sh
+         quotacheck -cvuga
+       #+END_SRC
+    3. 开启配额功能
+       * quotaon 分区名称
+       * quotaoff 分区名称
+    4. 配置用户配额
+       * edquota 用户名
+       * edquota -g 用户组名称
+       * edquota -t 设置宽限期
+         定义用户在软限制下可以使用其文件系统的期限。
+       * edquota -p 模版用户 复制用户1 复制用户2
+       * quota 
+         察看用户的配额使用情况
+       * repquota -a [分区名]
+         管理员察看配额信息
+* 备份
+** 系统备份
+    * 主要备份/etc /boot /var/log /usr/local
+    * 一般只有在当系统内容发生变化时才进行
+** 用户备份
+   * 实现对/home的备份
+   * 用户数据变动频繁的数据备份
+   * 通常采用增量备份策略进行
+* 网络设置
+** 命令
+*** arp
+    * -a
+      察看ARP缓存表
+    * -d IP
+      删除ARP缓存记录
+    * -s IP MAC
+      添加ARP静态记录 
+*** RARP
+    * -a
+    * -d hostname/ip
+    * -s hostname/ip MAC
+*** hostname [主机名]
+    察看/设置主机名
+*** nmap 主机名/ip
+    察看主机开放了哪些端口
+*** infconfig
+    * ifconfig eth0 down/up
+*** ethtool eth0
+    检测网络连接
+*** traceroute 域名/IP
+    察看路由路径
+*** netstat -an
+    察看所有的连接
+** 配置文件
+*** /etc/services
+    服务名 端口/协议 别名
+*** /etc/resolv.conf
+    指定DNS服务器地址
+    nameserver DNS服务器地址
+* 网络服务
+** ftp(vsftp)
+   * 启动
+     vsftpd start
+   * 配置文件
+     /etc/vsftpd/vsftpd.conf
+     * xferlog_enable 是否启用日志
+     * xferlog_std_format 日志是否采用标准格式
+     * xferlog_file 日志存放目录
+     * ftpd_banner 欢迎信息
+     * anon_max_rate 匿名用户最大传输速率，单位为字节
+     * local_max_rate 用户最大传输速率
+     * userlist_enable 是否启用用户访问控制
+     * userlist_deny 决定userlist_file中的用户是允许访问还是禁止访问
+       * YES 表示指定的用户不能访问，其他用户可以访问
+       * NO  表示指定的用户可以访问，其他用户不能访问
+     * userlist_file 指定允许/禁止的用户
+     * chroot_local_user 用户登陆是否执行chroot
+     * chroot_list_enable=YES 设置指定的用户不执行chroot
+     * chroot_list_file  该文件中的用户不执行chroot
+     * idle_session_timeout 设置空闲超时时间
+     * max_clients  设置服务总并发数
+     * max_per_ip   每个用户的最大连接数
+     * listen_port  设置监听端口
+   * ftp
+     * -n 
+       禁止自动登陆，常用于脚本中
+   * 客户端子命令
+     * prompt
+       关闭交互模式
+     * user
+       输入用户名和密码
+     * open 
+       连接ftp服务器
+** SSH
+*** ssh
+    * 空密码不能登陆
+    * root不能登陆
+**** 选项
+     * -2 
+       使用ssh2协议登陆
+     * -p 端口 
+       连接指定端口
+**** /etc/ssh/sshd.config
+     * PermitRootLogin 是否允许root登陆
+     * PermitEmptyPasswords 是否允许空密码登陆
+     * Port 监听端口
+*** sftp
+    类是ftp
+*** scp
+    类似cp，其中远程主机文件的格式为：
+    用户名@远程主机地址:远程主机目标目录
+**** 选项
+     * -p
+       保持原有文件属性
+     * -r
+       复制目录
+     * -P
+       指定端口号
+*** rsync应用
+    可用于增量备份
+    rsync [option] src dest
+    * -a
+      保持文章属性
+    * -r
+      子目录递归处理
+    * -H
+      保持文件硬链接
+    * -z
+      压缩传输
+    * --progress
+      显示传输过程
+    * --delete
+      删除目标备份没有的文件
+    * -e ssh
+      使用ssh加密隧道传输
+*** 建立信任主机
+    主机一访问主机二不需要密码
+    * 主机一：
+      * 建立密钥对，生成公钥，默认为id_rsa.pub
+        #+BEGIN_SRC sh
+          ssh-keygen -t rsa
+        #+END_SRC
+      * 拷贝公钥到主机二上
+    * 主机二：
+      * 创建.ssh目录
+        #+BEGIN_SRC sh
+          mkdir .ssh
+        #+END_SRC
+      * 生成认证密钥(将主机一的公钥存放入主机二的.ssh/authorized_keys中)
+        #+BEGIN_SRC sh
+          cat id_rsa.pub >>.ssh/authorized_keys
+          chmod 600 .ssh/authorized_keys
+          chmod 700 .ssh        
+        #+END_SRC
+** samba
+*** samba启动
+    * /etc/rc.d/init/d/smb start
+    * smbd处理SMB请求包，负责用户验证和文件共享，监听139TCP端口
+    * nmbd处理浏览共享和计算机名称解析，监听137和138UDP端口
+*** /etc/samba/smb.conf
+    * #注释描述信息
+    * ;注释配置信息
+**** [global] 设置全局环境选项
+     * workgroup 指定工作组或域
+     * server string 描述信息
+     * security 指定安全模式
+       * share 无验证
+       * user  由samba服务器做验证，默认的，推荐
+       * server 第三方主机验证
+       * domain Windows域控制器验证
+     * hosts allow 限定哪些主机可以访问，可以省略主机部分表示网段，用空格分隔
+     * hosts deny  限定哪些主机不能访问
+**** [homes] 设置用户宿主目录共享
+     * comment 描述信息
+     * browseable 无权限访问的用户是否可见
+     * writable 对宿主目录是否有写权限
+**** [printers] 设置打印机选项
+**** [sharefiles] 设置文件共享
+**** [共享名]
+     * path = 共享目录
+     * valid users = 用户列表
+       如果不设置则不限定用户
+     * writable = yes
+*** Samba应用
+    1. 安装samba,若开了SELINUX则可能需要设置防火墙
+       #+BEGIN_SRC sh
+         setsebool -P samba_enable_home_dir on
+       #+END_SRC
+    2. 设置用户Samba校验密码
+       #+BEGIN_SRC sh
+         smbpasswd -a 用户名             # 这里用户必须为系统用户
+         # 这里-a表示增加密码，该密码则直接
+         smbpasswd 用户名
+       #+END_SRC
+    3. 启动samba服务
+       #+BEGIN_SRC sh
+         /etc/rc.d/init.d/smb start
+       #+END_SRC
+    4. 查看samba状态
+       #+BEGIN_SRC sh
+         smbstatus       
+       #+END_SRC
+** NFS
+   * 软件包准备
+     portmap + nfs
+   * 设置NFS服务器共享目录 /etc/exports
+     格式为：共享目录 [允许访问主机(权限)]
+   * 重新配置生效
+     * exportfs -rv
+     * nfs restart
+   * 挂载NFS服务器
+     * mount NFS服务器地址:/website 挂载点
+        
+      
+      

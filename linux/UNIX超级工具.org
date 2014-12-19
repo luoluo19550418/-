@@ -1,0 +1,1133 @@
+#+TITLE: UNIX超级工具
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* shell
+** shell分类  
+  * ()操作符又称为subshell操作符,它会启动一个当前shell的另一个实例,而且不会读取任何设置文件,相反它继承当前shell的环境变量
+
+  * shell分为登录shell(提供給用户交互)和非登录shell(給脚本运行用). 只有登录shell会读.login或.profile文件..
+
+  * 为了区分是否为登录shell,可以在.profile或.login中设置一个`loginshell=yes`,然后就可以通过`if [ -n "$loginshell" ]`来判断shell的类型
+
+  * 有些为了方便用户而设置的信息,用非交互式shell来读取是相当浪费时间的.
+
+	#+BEGIN_SRC sh
+      if [ -n "$loginshell" ]
+      then
+          #登录shell的相关设置
+      fi
+	#+END_SRC
+
+** 如何判断用户从不同终端登录
+	+ 不同终端设置的TERM环境变量不同
+
+	+ 如何从其他主机登录,那么who am i命令会显示主机名
+
+	+ 有些系统会根据登录方式的不同(rlogin,telnet,ssh),tty运行结果也不同
+
+	+ 有些系统会设置确定的环境变量. 例如X window系统设置了DISPLAY环境变量
+
+	+ /etc/motd中包含了UNIX系统的登录信息
+
+	+ 在许多UNIX中若存在$HOME/.hushlogin文件,则登录过程会不显示/etc/motd中的登录信息. 因此可以使用如下脚本来让只有/etc/motd中信息修改过后才显示
+	  #+BEGIN_SRC sh
+        files=$(ls -t /etc/motd ~/.hushlogin )
+        newerFile=$(echo $files|cut -d " " -f1) 
+        if[ $newerFile == /etc/motd ]
+        then
+        cat /etc/motd
+        touch ~/.hushlogin
+        fi
+        
+        unset files
+        unset newerFile
+	  #+END_SRC
+
+** 如何在sh退出时自动执行命令
+
+	在C shell中有一个名为.logout的设置文件. 当用户退出时.logout中的命令被执行. 但是Bourne 和Korn shell中都没有退出文件. 可以使用一下方式模拟
+
+	1. 在用户的.profile加入一行
+	   #+BEGIN_SRC sh
+         trap '. ~/.sh_logout;exit' 0
+	   #+END_SRC
+
+	2. 将退出时想运行的命令放入~/.sh_logout中
+
+** 如何防止shell意外退出
+
+	可以通过设置ignoreeof这个shell变量来解决问题:
+	  
+	对于C shell执行
+	#+BEGIN_SRC sh
+      set ignoreeof   
+	#+END_SRC
+
+	对于bash或ksh使用
+	#+BEGIN_SRC sh
+      set -o ignoreeof
+	#+END_SRC
+
+** shell解释命令行的步骤是怎样的
+	1. 对命令进行历史替换
+
+	2. 将命令根据空格分割成词
+
+	3. 将命令放入历史列表中
+
+	4. 解释单引号`和双引号"
+
+	5. shell对命令进行别名替换
+
+	6. 输入输出的重定向(>,>>,<,|)
+
+	7. shell将变量替换为值
+
+	8. shell将``或$()内的命令替换为结果
+
+	9. 文件名的通配符扩展
+
+** 如何使用echo信息到标准错误中
+
+	#+BEGIN_SRC sh
+      echo "something error" 1>&2
+	#+END_SRC
+
+** 如何强制bash执行外置/内置命令?
+
+	1. 如何让bash不执行shell函数,只执行内部/外部命令
+	
+	  在命令前输入command即可以禁止shell函数查找
+	  #+BEGIN_SRC sh
+		cd ()
+		{
+			command cd "$@"             # 这里只会执行命令shell而不会执行cd函数
+			setvars
+		}
+	  #+END_SRC
+
+	2. 如何强制bash使用内部命令呢
+
+	   在命令前输入builtin
+	   #+BEGIN_SRC sh
+		 builtin echo -n "this should be the builtin command echo" # 使用内置命令echo
+	   #+END_SRC
+
+	3. 如何强制bash使用外置命令呢?
+
+	   只需要给出外部命令的全路径即可.
+	   #+BEGIN_SRC sh
+		 /bin/echo hi                    # 明确指明使用哪个外部命令
+	   #+END_SRC
+
+	   或者也可以使用enable -n将某个/某几个内置bash命令无效化. enable的影响将一直持续到用户退出shell为止.
+	   #+BEGIN_SRC sh
+		 enable -n echo ls               # 禁用内置命令echo和ls
+		 enable ls                       # 重新启动内置命令ls
+		 enable -a                       # 列出所有bash内置命令的状态
+	   #+END_SRC
+** 如何禁止here Document中的变量替换和命令替换呢?
+   可以在EOF标识前放一个反斜杠
+   #+BEGIN_SRC sh
+     # 下面命令会显示$PATH
+     cat <<\EOF
+     $PATH
+     EOF
+     
+     # 下面命令会显示$PATH的值
+     cat <<EOF
+     $PATH
+     EOF
+   #+END_SRC
+** shell中通配符与{}模式的区别
+
+   通配符匹配只对已经存在的文件名作扩展.
+
+   而{}模式,则可以对任意文本进行扩展,{}的用法为{扩展1,扩展2,扩展3...}. 例如
+   #+BEGIN_SRC sh
+     cp filename{,.bak}              # 相当于
+     cp filename filename.bak
+     
+     vi /tmp/file{a,b,c,d,e}         # 相当于
+     vi /tmp/filea /tmp/fileb  /tmp/filec  /tmp/filed  /tmp/filee 
+   #+END_SRC
+   
+** ksh和bash中的变量编辑
+   #+CAPTION:ksh和bash中的变量编辑操作符
+   | 操作符               | 解释                                      |
+   |----------------------+-------------------------------------------|
+   | ${variable#pattern}  | 删除匹配variable值头部的pattern的最短部分 |
+   | ${variable##pattern} | 删除匹配variable值头部的pattern的最长部分 |
+   | ${variable%pattern}  | 删除匹配variable值尾部的pattern的最短部分 |
+   | ${variable%%pattern} | 删除匹配variable值尾部的pattern的最长部分 |
+   
+   其中pattern采取的是通配符模式,而不是正则表达式. 例如
+   #+BEGIN_SRC sh
+     var=/home/tmp/work/file.a.el则
+     echo ${var#/*/}                 # tmp/work/file.a.el
+     echo ${var##/*/}                # file.a.el
+     echo ${var%.*}                  # /home/tmp/work/file.a
+     echo ${var%%.*}                 # /home/tmp/work/file
+     echo ${var%/*}                  # /home/tmp/work可以用于取出目录值
+   #+END_SRC
+
+** bash中的进程替换
+
+   bash中的<(process)被用来执行process并将输出送到一个命令的命名管道中. 
+
+   可以把它想象成一个文件名参数,文件的内容就是process执行的结果.
+
+   若使用的shell没有这个功能,可以用一个shell脚本来代替,该脚本执行一个命令,并将其输出保持到一个临时文件中,然后将临时文件名放到它的标准输出中.
+   #+BEGIN_SRC sh
+     p()
+     {
+         eval "$@" >tmp.$$ 2>&1
+         echo tmp.$$
+     }
+   #+END_SRC
+
+** shell中的历史替换机制
+   * 如何设置历史命令的数量
+
+	 ksh和bash中,设置变量HISTSIZE的值即可
+
+   * 如何列出已保存的历史命令
+
+	 使用history [N]列出所有/后N个命令
+
+   * bash/csh中的历史替换
+
+	 + 使用`!N`来执行编号为N的命令
+
+	 + 使用!:N*来从前面的命令中获取参数,从参数N一直到最后一个参数. 其中N是0-9的数字
+
+	 + !*是!:1*的缩写,获取命令所有参数
+
+	 + !:N* 给出从第N个知道最后的参数
+	   
+	 + !:0 仅替换命令名称,不替换参数(第0个参数为命令名称)
+
+	 + !:N-M 替换第N到第M个参数
+
+	 + !:-M 替换第0到第M个参数(第0个参数为命令名称)
+
+	 + 使用!$来获取前一命令行中的最后一项内容. 例如
+	   #+BEGIN_SRC sh
+         ls /tmp
+         echo !$                         # 等于
+         echo /tmp
+	   #+END_SRC
+
+	 + !^替换第1个参数,与!:1一样
+
+	 + !!重复最后一个命令
+
+	 + !:s/被替换/替换 重复执行最后一个命令,但预先作替换
+
+	 + !so 重复最近的以so开头的命令
+
+	 + !?fn? 重复最近的含有fn的命令
+
+** 比较文件差异
+   * diff file1 file2
+
+	 输出的结果为如何将file1变成file2的过程,描述使用了ed的命令说明(c为修改行,d为删除行,a为添加行)
+
+	 可以使用-e选项来输出供ex/ed使用的脚本
+
+   * diff3 file1 file2 file3
+
+	 输出的结果为如何将file2和file3变成file1的过程,描述使用了ed的命令说明(c为修改行,d为删除行,a为添加行)
+
+	 可以使用-e选项来输出供ex/ed使用的脚本
+
+   * ediff file1 file2
+
+	 diff的输出大量使用了ed的命令来说明,难以理解,可以使用ediff,它会将说明翻译为英文
+
+   * comm [-1] [-2] [-3] file1 file2
+
+	 file1和file2必须是已经排过序的
+
+	 comm命令显示三列信息
+	 1. 第一列只在file1中的行
+
+	 2. 第二列只在file2中的行
+
+	 3. 第三列同时在file1和file2中的行
+
+	 要想不显示那一列的信息,使用-N选项即刻.
+** shell的作业控制
+   * 使用stty tostop停止后台输出
+
+	 正常情况下,后台运行的作业也会把输出输出到用户的屏幕上,这样容易搞乱屏幕. 可以使用stty tostop命令来让试图对终端写入的后台作业停止运行.
+
+	 若后台作业因为输出到终端而停止,则shell会打印出一条信息:`+ stopped (tty output) somejob`
+
+   * 标识作业的几种方法
+
+	 + %作业号 
+
+       %1表示第1号作业.
+
+	 + %命令名的头几个字母 
+      
+       %vi表示匹配以vi开头的命令行的作业
+
+	 + %?作业命令行的任何唯一部分.
+
+	   %?fn表示命令行中包含fn的作业
+
+   * 作业控制的快捷方式
+	 
+	 + fg %N 可以缩写为 %N
+	   #+BEGIN_SRC sh
+         fg %2                           # 等于
+         %2
+	   #+END_SRC
+
+	 + bg %N 可以缩写为 %N &
+	   #+BEGIN_SRC sh
+         bg %2                           # 等于
+         %2 &
+	   #+END_SRC
+
+** shell的IO重定向
+   * 如何仅将标准错误发送給管道?
+
+	 默认情况下,只有命令的表示输出才回发送到管道中,若要仅将标准错误发送給管道可以使用subshell. 如下所示
+     #+BEGIN_SRC sh
+	   (command1 >/dev/null) 2>&1 |command2
+     #+END_SRC
+     或者使用如下方式交换stderr和stdout
+     #+BEGIN_SRC sh
+       command1 3>&2 2>&1 1>&3 |command2
+     #+END_SRC
+   * 使用noclobber确保IO重定向的安全性
+
+	 在bash/ksh中设置`set -o noclobber`后,则shell将不允许IO重定向破坏一个已经存在的文件. 除非在重定向的符号之后添加一个!来显式的通知他. 
+	 #+BEGIN_SRC sh
+       set -o noclobber
+       ls
+       # filea fileb
+       ls >filea
+       # bash: filea: Cannot clobber existing file
+       ls >|filea
+       # 没问题,filea被覆盖了
+	 #+END_SRC
+
+   * 使用subshell来组合几个命令的输出整合起来实现IO重定向
+	 #+BEGIN_SRC sh
+       (cat filea1;echo .bp;cat file2) |nroff
+       
+       (date;who;ls) >log
+	 #+END_SRC
+
+   * 使用{}列表来组合几个命令的输出,实现整体的IO重定向
+	 #+BEGIN_SRC sh
+       {
+           date
+           who
+           ls
+       } > log
+	 #+END_SRC
+
+	 使用{}列表与sushell的不同在与,{}的所有操作都是基于当前shell来操作的.
+
+   * 使用tee命令将输出发送到多个地方
+
+	 若希望一个程序的输出重定向到一个文件的同时也在屏幕上输出,则可以使用tee命令.
+
+	 tee命令会将它的标准输入写入到一个文件中,并将相同的文本写入到他的标准输出中.它的格式为:tee [-a] file
+	 #+BEGIN_SRC sh
+       ls |tee ls.log                  # 将ls的结果保存到ls.log中,同时输出到屏幕上
+       ls |tee -a ls.log               # tee -a的意思是将结果添加到ls.log中
+	 #+END_SRC
+
+   * 如何关闭输入/输出文件描述符
+
+     * m<&- 关闭输入文件描述符m
+
+     * m>&- 关闭输出文件描述符m
+
+     * <&-  关闭标准输入
+
+     * >&-  关闭标准输出
+** ksh的文件通配符说明
+   * ?(abc)
+
+	 匹配0个或1个abc
+
+   * *(abc)
+	 
+	 匹配0个或多个abc
+
+   * +(abc)
+
+	 匹配1个或多个abc
+
+   * !(abc)
+
+	 匹配不包含abc的任何字符串
+** tar命令
+   * 使用tar实现目录树的拷贝
+
+	 使用tar打包目录到标准输出|从标准输出tar解包
+	 #+BEGIN_SRC sh
+       tar cf - . | (cd ~/backup && tar xBf -) # 需要注意,这里tar -cf不能加参数v,因为有些tar命令的v选项会使得详细输出输出到标准输出而不是标准错误中,从而破坏tar的流
+	 #+END_SRC
+
+   * tar文件解压缩时,会保持文件的UID,若UID不是你的,那么tar解压出来的文件你可能无法使用,使用o选项可以保证解压缩的文件属于你
+
+   * 使用tar的X标识可以指定哪些文件不包含在打包/解包的范围内
+	 
+	 tar的X标志后接一个文件,文件的内容就是排除打包的文件路径列表
+	 #+BEGIN_SRC sh
+       echo *~ >/tmp/ExcludeTar
+       tar -cvf e.tar -X /tmp/ExcludeTar .          # 排除所有以~结尾的文件
+       tar -xvf e.tar -X /tmp/ExcludeTar            # 解包时排除所有以~结尾的文件
+	 #+END_SRC
+
+   * 请注意tar打包时是使用的相对路径还是绝对路径
+
+	 使用-C标识,可以指定tar在打包前先进入指定目录,然后就可以指定相对路径打包了
+	 #+BEGIN_SRC sh
+       cd
+       tar -cvf t.tar dir1 -C /tmp/dir2 . # 打包的内容包括~/dir1 /tmp/dir2的内容,
+       tar -tvf t.tar                     # 但路径都为./
+	 #+END_SRC
+
+   * 使用tar将多个小文件打包以节约空间的想法是行不通的.
+
+	 这是因为,tar实际上是为磁带归档所设计的. 它会在每个文件的末尾加上垃圾空字符以沾满一个块的空间,因此实际上一个大的tar文件和里面单独小文件所占用的磁盘块差不多.
+
+	 但是可以通过对tar包进行压缩的方式来解决这个问题,因为大量的空字符实际上非常适用于压缩算法.
+** find命令
+   * find命令会修改目录的访问时间,因此想用find来找出没有被访问过的目录是不行的.
+
+   * find命令中的逻辑表达式可以包含括号
+	 #+BEGIN_SRC sh
+       find . -atime +5 \( -name "*.o" -o -name "*.tmp" \) -print # 这里的要用\(\),因为()是subshell的操作符
+	 #+END_SRC
+
+   * find命令的atime/ctime/mtime的时间是以天为参数的,那么如何找出某个具体时间到几分几秒(比如找出比3月20日4pm更晚的文件)呢? 使用touch和find -newer可以实现这个目的
+
+	 1. 使用touch -t 让一个文件回溯到过去/将来的任何一点.
+
+	 2. 使用-newer操作符进行比较
+
+   * find的-exec也能作为匹配测试条件,当它所执行的命令返回一个0退出状态时,返回真. 例如
+	 #+BEGIN_SRC sh
+       find . -exec myTest {} \; -print # 只有通过myTest的文件才会输出
+	 #+END_SRC
+
+   * find的-exec只认识独立的{}. 若{}和其他字符结合,则不再被替换为查找到的文件. 例如
+	 #+BEGIN_SRC sh
+       find. -type d -exec mkdir /usr/project/{} \; # 这里的{}不会被扩展
+       # 需要改为
+       find . -type d -print |sed 's@^@/usr/project/@' |xargs mkdir # 先用sed转换,再传给mkdir来创建目录
+	 #+END_SRC
+
+   * 使用find删除名字特殊的文件
+	 1. 使用ls －i查看奇特文件的inode索引号
+
+	 2. 使用find命令查找特定的inode索引号，并使用－exec执行rm或mv操作
+		#+BEGIN_SRC sh
+          ls -i
+          find . -inum 9620 -exec rm {} \;
+          find . -inum 9620 -exec mv {} ordinaryname \;
+		#+END_SRC
+
+*** 提高find的性能
+   	* 出于性能方面的原因,将-exec操作符放的越靠后越好. 这样可以避免不要的进程
+
+   	* find命令需要读取它所搜索的目录树中的每个索引节点,因此最好尽可能地把多个内容组合到单个find命令中. 方法为
+	  #+BEGIN_SRC sh
+       	find . \( -type d    -a -exec chmod 771 {} \; \) -o \
+           	\( -name "*.BAK" -a -exec chmod 600 {} \; \) -o \
+           	\( -name "*.sh" -a -exec chmod 755 {} \; \) -o \
+           	\( -name "*.txt" -a -exec chmod 644 {} \; \) -o \
+	  #+END_SRC
+
+   	* 为了提高find的效率,可以考虑创建自己的find数据库
+
+	  创建find数据库
+	  #+BEGIN_SRC sh
+       	cd
+       	find . -print |sed "s@^./@@" > ~/.fastfinddb # 存储~/下的所有文件信息,并替换到./
+	  #+END_SRC
+
+	  创建cron定时运行该脚本.
+
+	  创建一个shell脚本来使用这个数据库
+	  #+BEGIN_SRC sh
+       	ffind()
+       	{
+           	egrep "$1" ~/.fastfinddb |sed "s@^@$HOME/@" # 在查询结果前添加$HOME
+       	}
+	  #+END_SRC
+   	* 
+** ln命令
+
+   * 不能对目录建立硬连接
+
+   * ln的最后一个参数可以是一个目录,表示建立与之前参数的同名连接存放在目录中.
+	 #+BEGIN_SRC sh
+       ln f1 f2 f3 /tmp                # 在/tmp下创建名为f1 f2 f3的链接
+	 #+END_SRC
+
+   * ln可以只带一个参数,表示在当前目录建立与第一个参数同名的链接
+	 #+BEGIN_SRC sh
+       cd /tmp
+       ln ~/bin/file                       # 在/tmp创建一个名为file的链接,链接到~/bin/file下
+	 #+END_SRC
+** cat命令
+   * cat -v 使用可打印的方式来显示不可打印的字符
+   * cat -vt 则TAB字符被显示成^I
+   * cat -ve 则用$来标示每行的行尾
+   * cat -n 显示的时候加上行号
+** tail命令
+   * tail -n 显示倒数n行
+   * tail +n 显示第n行直到结尾的内容
+   * tail -c N 显示倒数N个字节
+   * tail -b N 显示倒数N块的内容
+   * tail -r 从最后一行开始逆序显示文件内容
+** su命令
+   * 使用su命令切换到其他用户后,使用who am i显示的还是原用户登录的.
+   * 因为su命令是在subshell上运行的,所以会继承原shell的环境变量,除非用su -切换
+** expr命令   
+*** 语法
+	expr arg1 operator arg2 [operator arg3...]
+
+	
+*** 返回值
+	如果表达式的值非0并且非空,那么expr的退出状态值为0;如果表达式的值为0或者空,则退出状态值为1;如果表达式无效,则退出状态值为2
+
+*** operator操作符
+	* 算术操作符
+	  * + 加法
+	  * - 减法
+	  * * 乘法,需要转义
+	  * / 除法
+	  * % 取余数
+	  * \( \) 括号
+        #+BEGIN_SRC sh
+          expr \( 5 + 10 \) / 2           # 7
+        #+END_SRC
+	* 关系运算符
+	  * = 相等
+	  * != 不等
+	  * > 大于
+	  * >= 大于等于
+	  * < 小于
+	  * <= 小于等于
+	  
+    * 逻辑操作符
+	  * | 逻辑或
+
+	  * & 逻辑与
+
+	  * : 类似grep,表示从arg1充查找匹配arg2的模式.arg2必须为正则表达式. 
+	    若arg2模式被放入\(和\)中,则输出为与之相匹配的arg1的一部分.
+		否则仅仅输出匹配字符的数目. 模式匹配时从arg1的起始位置开始
+		#+BEGIN_SRC sh
+          p="version.100"
+          expr "$p" : '.*'                # 11
+          expr "$p" : '\(.*\)'            # "version.100"
+		#+END_SRC
+
+** bc命令进行数学运算
+
+   * scale=N 设置结果的精度为小数点后N位
+     #+BEGIN_SRC sh
+       echo "scale=2;10/4"|bc          # 结果为2.50
+     #+END_SRC
+   * ibase=N 设置输入的数字以N进制为单位
+   * obase=N 设置是输出的数字以N进制为单位
+     
+     需要注意的是，若先设置ibase=N，再设置obase=M时，M已经是以N进制来计算了，例如
+     #+BEGIN_SRC sh
+       echo "ibase=8;obase=16;17" |bc  # 结果为11
+     #+end_SRC
+     
+     之所以结果为11是因为obase的16使用的是8进制，它的值其实是14
+** yes命令生成任意大小的文件
+
+   yes会不断重复地输出它的参数(默认为y),使用它和head命令一起可以生成任意长度大小的文件. 例如
+
+   要生成每行8个字符(7个数字和一个换行符),共12800行的文件,则输入
+   #+begin_src sh
+     yes 1234567 |head -12800 >file
+   #+end_src
+** 其他
+   * 使用pushd和popd实现目录的快速跳转
+   * 用户在进入/退出目录时,自动执行脚本
+	 #+BEGIN_SRC sh
+       cd (){
+           test -r .exit.sh && . .exit.sh
+           builtin cd "$1"
+           test -r .enter.sh &&. .enter.sh
+       }
+	 #+END_SRC
+   * 使用grep -c 可以统计每个文件匹配模式的数量,通过这种方法可以抽取出不匹配模式的那些文件
+	 #+BEGIN_SRC sh
+       vgrep()
+       {
+           case $# in
+               0|1) echo "Usage: `basename $0` pattern file [files...]" 1>&2
+                   ;;
+               ,*) pattern = $1
+                   shift
+                   grep -c $pattern "$@" |sed -n 's/:0$//p'
+                   ;;
+               esac
+       }
+	 #+END_SRC
+   * 使用ls -t -u来查找最老/最新的文件
+
+	 + ls -t 按修改时间排序
+
+	 + ls -tu 按访问时间排序
+
+   * 如何区分change time和modification time
+
+	 change time是对文件的inode进行修改,比如文件名,权限等
+
+	 modification time是对文件的内容进行修改
+
+   * 使用dircmp/diff可以对比两个目录的不同
+
+   * 一般情况下,使用mv移动一个文件时,并不改变所有权. 
+
+     但若是跨文件系统移动文件,那么被移动的文件的所有者将改为你.
+
+	 这时因为,在跨文件系统移动时,mv实际上必须拷贝该文件,并删除原文件
+
+   * 使用目录的sticky位保护文件
+
+	 一般情况下,若一个用户又对某目录的写权限,则它可以对该目录中的文件进行重命名或者删除操作--即使文件并不属于该用户.
+
+	 通过设置目录的sticky位(1000)可以使得只有文件的所有者,目录的所有者和超级用户才能对文件进行重命名或删除.
+	 #+BEGIN_SRC sh
+       chmod 1777 ~/tmp
+       chmod +t ~/tmp
+       ls -l ~/tmp                     # /tmp的属性显示为drwxrwxrwt,最后的t标识sticky位
+	 #+END_SRC
+   * 如何清空其他终端上的屏幕
+
+	 终端的标准输出被映射成了/dev/中的tty文件了,而clear清除屏幕的方法是通过TERMINFO查询终端的清除键序列,然后输出该键序列到标准输出中.
+
+	 因此,若终端类型一致,且用户具有对/dev/tty文件的写权限的化,可以通过clear>/dev/tty来实现清空其他终端上内容
+	 #+BEGIN_SRC sh
+       who |grep darksun       # darksun  pts/6   9月24 20时2   (10.8.201.68) 
+       clear >/dev/pts/6       # 清空/dev/pts/6的屏幕显示
+	 #+END_SRC
+   * 使用/dev/null链接为无用的日志文件可以节省空间
+
+	 假设某个进程会不断的写日志到~/logfile中，而该日志并无用处，则可以
+	 #+BEGIN_SRC sh
+       ln /dev/null ~/logfile
+	 #+END_SRC
+   * 使用strip去掉程序的调试信息时要注意,对一个setuid的文件使用strip会去掉setuid位.
+   * 使用cat -v或od -c来显示非打印字符
+   * 如何为file增加文件类型的识别
+
+	 通过修改/etc/magic能够增加可识别的文件类型
+
+	 /etc/magic有四个字段:
+
+	 offset data-type value file-type
+
+	 * offset
+
+	   文件中的偏移量,从0开始计算. 表示file从该偏移量开始匹配
+
+	 * data-type
+
+	   测试类型. 文本比较用string,字节比较用offset,两字节比较用short,四字节比较用long
+
+	 * value
+
+	   用户希望的值,若datea-type为串比较,则可以是任何字符串,可以包括UNIX转义序列. 若为字节比较则必须是一个数字
+
+	 * file-type
+
+	   若测试成功,file会打印的值
+
+   * crush:一个略过所有空白行的cat
+
+	 使用sed将所有空白行删掉
+	 #+BEGIN_SRC sh
+       #!/bin/sed -f
+       /^[     ]*$/d                   
+	 #+END_SRC
+
+   * 如何在每行输出后增加1/N行的空白间距?
+
+	 使用sed的G命令可以实现功能. sed的G命令附加了一个换行符和sed所保留空格的内容.
+
+	 增加一行空白间距的方法为
+	 #+BEGIN_SRC sh
+       exec /bin/sed G $@
+	 #+END_SRC
+
+	 同理,增加2行空白间距的方法为
+	 #+BEGIN_SRC sh
+       exec /bin/sed 'G;G' $@
+	 #+END_SRC
+* 环境变量	
+** 常用的环境变量
+   | 变量名       | 说明                                                               |
+   |--------------+--------------------------------------------------------------------|
+   | PATH         | 用户的命令搜索路径,其中空记录项(::)表示当前目录                    |
+   | EDITOR       | 用户喜好的编辑器名称                                               |
+   | PRINTER      | 默认的打印机名称                                                   |
+   | PWD          | 用户当前目录的绝对路径                                             |
+   | HOME         | 用户主目录的绝对路径                                               |
+   | SHELL        | 用户登录shell的绝对路径                                            |
+   | USER/LOGNAME | 用户名                                                             |
+   | TERM         | 终端类型名称                                                       |
+   | ENV          | 启动一个新ksh时需要执行的初始化文件的名称                          |
+   | PAGER        | 用户喜好的分页屏幕显示程序名称                                     |
+   | EXINIT       | vi或ex编辑器初始化脚本的位置                                       |
+   | PS1          | 主提示符                                                           |
+   | PS2          | 第二提示符                                                         |
+   | MANPATH      | 搜索参考手册页的路径                                               |
+   | TZ           | 时间区域.这是一个位于/usr/lib/zoneinfo中的文件名                   |
+   | DISPLAY      | X Window系统所用,用来标识X应用程序将会使用的输入和输出的显示服务器 |
+   | SHLVL        | 位于当前shell的第几层,一个subshell增加一层                                       |
+   
+** 如何显示其他地区现在的时间?
+   可以通过临时设置环境变量TZ的值,然后执行date的方式,来获得其他地区的时间. 例如
+   #+BEGIN_SRC sh
+     (TZ=Japanf9;date)               # 获取日本现在的时刻
+   #+END_SRC
+
+** 环境变量和shell变量的区别
+   export后的shell变量就是环境变量. subshell会从shell中继承所有的环境变量,但不会继承shell变量
+
+** 使用CDPATH变量为用户改变目录节省时间
+   执行cd foo时,shell会先尝试进入当前目录的foo目录下,若失败,则会遍历CDPATH中的各目录,并一一尝试进入其中的foo目录下
+   #+BEGIN_SRC sh
+     CDPATH=:~                       # 注意最开始的:,它是一个空记录项,表示当前目录,若没有这个当前目录的记录,则无论是sh还是ksh都无法cd到当前目录的子目录中!!bash不存在这个问题
+     cd ~/bin
+     cd bin                          # 若不存在~/bin/bin目录,则进入~/bin目录下
+   #+END_SRC
+** 获取路径中目录信息的几种方法
+   1. 使用dirname函数
+   2. 使用
+	
+* 组织$HOME目录
+  * ~/bin存放程序和shell脚本
+  * 其他类型的脚本分类存放,例如~/sedsrc存放sed脚本
+  * ~/private存放私人文件,将权限设为700
+  * 
+
+* vi
+  * ~/.exrc初始化vi或者ex编辑器
+
+	启动vi或ex编辑器时,会自动执行保存在~/.exrc内的初始化命令. 
+    
+    初始化命令可以是set,ab和map. 注释由双引号"开头.
+
+	由于该文件实际上是进入vi前由ex读取的,因此exrc中的命令不应该有前置的冒号
+
+  * 某些版本的vi在启动时不仅会加载~/.exrc,而且还会加载启动目录下的./.exrc文件
+
+	除了.exrc文件外,还可以在其他文件中保持设置的选项,并在vi中用:so命令来读取.
+
+  * 也可以把vi和ex的设置选项和启动过程保存在名为EXINIT的环境变量中,如果在EXINIT和.exrc文件中的设置有冲突,则EXINIT设置具有优先级.
+
+  * 在vi的ex命令中，可以用%代表当前文件名,用#代表替换文件名. 
+    
+    因此:e#的意思是切换到另一个替换文件,功能等同于C-^
+
+	:w %.bak的意思是
+
+  * vi中,最后一次删除的内容被存入缓冲区1中,倒数第二次的被存入缓冲区2中,以此类推共9个数字缓存区
+
+  * ex/vi中的ex模式可以使用搜索模式来定位操作行
+    | 操作                    | 说明                                         |
+    |-------------------------+----------------------------------------------|
+    | :/pattern/d             | 删除包含pattern的行                          |
+    | :/pattern/+{N}d         | 删除包含pattern行的下面第N行                 |
+    | :/pattern1/,/pattern2/d | 删除包含pattern1的行与pattern2的行中的所有行 |
+    | :.,/pattern/m23         | 移动当前行到包含pattern的行中的所有行放到第23行后面去            |
+
+  * ex/vi中的ex模式,支持g全局命令
+    | 操作                       | 说明                                    |
+    |----------------------------+-----------------------------------------|
+    | :g/pattern/                | 移动到文件中最后一个匹配pattern的行处   |
+    | :g/pattern/p               | 将所有符合pattern的行显示出来           |
+    | :g!/pattern/nu             | 显示所有不符合pattern的行,同时显示行号  |
+    | :60,124g/pattern/p         | 显示60-124行直接所有包含pattern的行     |
+    | :g/^WARNING/s/\<not\>/NOT/ | 将所有以WARNING开头的行中的not替换为NOT |
+    | :g/^START$/,/^END$/d       | 删除所有START和END内的内容                       |
+
+  * 可以使用ex行定位命令和w命令组合起来,以保存部分文件
+
+	:.,600w newfile   把当前行到第600行的内容写入newfile中
+
+  * 使用>>和w命令一起,可以把内容添加到一个现有的文件中
+
+	:.,600w >>newfile  可以把当前行到600行的内容添加到newfile中,而不覆盖原newfile的内容
+
+  * 使用:s替换时,可以使用\U表示将后面的模式替换成大写形势,用&指代签名的搜索式
+
+  * 在ex中,|是一个命令分隔符,作用类似UNIX命令行中的分号;
+
+  * 使用vi -r 文件名 可以恢复被杀掉的文件,使用vi -r会列出所有可以恢复的文件列表
+
+  * vi支持符合搜索
+
+	象/Los Alamos/;/treasure/表示找到出现在Los Alamos后的treasure处,即使这两个短语可能不在同一行.
+
+	类似于/Los Alamos然后再/treasure. 不同的是,它可以使用n命令来重复搜索
+
+  * vi支持:tag命令来搜索ctags命令创建的tag文件. 
+
+	可以通过设置tags的属性来设置多个tags文件.
+
+  * vi支持使用:ab定义缩写词
+
+	:ab 缩写 全称
+
+	还可以用:unab 缩写来取消缩写词定义.
+
+	:ab 则会列出当前已定义的缩写词
+
+	需要特别说明的是: *ab定义的缩写词,对ex模式也生效*,事实上,对ex模式下的命令,用缩写词比用键映射更好.
+
+  * 默认情况下,vi会把用户正在编辑的文件存放在临时文件目录下,若编辑的一个大文本,则可能发生临时文件目录溢出的情况,这时需要指定其他目录存放,方法为
+
+	:set directory=/some/place/new
+
+  * 可以使用{}命令快速切换到上一/下一个段落处.
+
+** vi的命令模式映射:
+   使用map智能在命令模式下定义宏.
+  
+   * map x 命令序列   把x定义为一个编辑命令序列
+
+   * unmap x         删除x的定义
+
+   * map             列出当前被映射的所有命令
+
+   使用map!的作用类似map,但是map!在文本输入模式下起作用,它的功能类似ab
+
+** vi的宏定义
+
+   vi虽然不支持使用q来定义宏,但是支持用@来执行宏.
+* 设置终端
+
+** 登录时设置终端类型
+   * 通过设置变量TERM的值来设定
+   * 通过tset对终端类型进行测试,并初始化
+   * 使用程序qterm查询用户终端类型
+
+	 在.profile中放入下面一句:
+	 #+BEGIN_SRC sh
+       TERM=`qterm`;export TERM
+	 #+END_SRC
+
+** 登录时,若挂起怎么办?
+   1. 检查shell的初始化文件
+   2. 在shell的初始化文件顶部加上`set -xv`,让shell进入调试模式
+   3. 检查/etc/passwd文件中的记录,以确认它具有正确数目的域. 同时查看一下是否有另一个用户使用了相同的登录名
+   4. 检查账户是否使用了远程安装的目录
+   
+** 使用stty设置删除,终止和终端字符
+
+   通过输入stty erase {控制字符} 可以将{控制字符}设定为删除键.
+
+   stty让用户用两个字符的组合^{char}来代表一个控制键. 其中^就是键^本身,而{char}是任意的单个字符. 可能需要在{char}前放入一个\,以防止shell将其解释为一个通配符
+
+   例如
+   #+BEGIN_SRC sh
+     stty erase ^h
+     stty erase ^\?
+   #+END_SRC
+
+   stty可以改变的功能包括:
+   #+CAPTION: 用stty设置的键
+   | 字符   | 功能                          |
+   |--------+-------------------------------|
+   | erase  | 删除先前的字符                |
+   | kill   | 删除整行                      |
+   | werase | 删除先前的字                  |
+   | intr   | 终止当前作业                  |
+   | quit   | 终止当前作业,生成一个core文件 |
+   | susp   | 停止当前作用                  |
+   | rprnt  | 重新显示当前行                |
+
+   用stty -a会显示用户当前所有终端的设置. werase和rprnt字符有些UNIX版本未实现.
+** 从哪里寻找可能可以使用的终端类型
+   可以通过搜索/etc/termcap文件内容或者通过列出在/usr/lib/terminfo目录结构中的文件名来寻找终端名,以方便地设置TERM
+* 文本处理
+** 分割文本
+*** 按行数分割
+    * 使用split分割
+      #+BEGIN_SRC sh
+        split -N bigfile                # 每N行分割一个文件，分割产生的文件以xaa，xab这样命名
+        split -N bigfile bigfile.split.  # 每N行分割一个文件，分割产生的文件以bigfile.split.aa，bigfile.split.ab这样命名
+      #+END_SRC
+    * 使用sed来实现
+      #+BEGIN_SRC sh
+        split_line=$1
+        file=$2
+        total_line=$(wc -l $file |cut -d " " -f1)
+        prefix=$file.split.
+        i=1
+        begin_line=1
+        while [ $begin_line -le $total_line ]
+        do
+            end_line=$(echo "$begin_line+$split_line" |bc)
+            sed "$begin_line,$end_line!d" $file >$prefix$i
+            i=$(echo "$i+1" |bc)
+            begin_line=$(echo "$end_line+1"|bc)
+        done
+      #+END_SRC
+*** 按字节数分割
+    * 使用split分割
+      #+BEGIN_SRC sh
+        split -b N bigfile              # 以N个字节来分割
+        split -b N bigfile prefix. # 以N个字节来分割，且分割的文件前缀为prefix.
+      #+END_SRC
+    * 使用dd分割
+      #+BEGIN_SRC sh
+        split_byte=$1
+        file=$2
+        total_byte=$(wc -c <$file)
+        prefix=$file.split.
+        i=1
+        begin_byte=1
+        while [ $begin_byte -le $total_byte ]
+        do
+            dd of=$prefix$i bs=$split_byte count=1 2>/dev/null
+            i=$(echo "$i+1" |bc)
+            begin_byte=$(echo "$begin_byte+$split_byte" |bc)
+        done <$file
+
+      #+END_SRC
+** 按列粘贴文本
+   若希望并排粘贴N个文件的内容，则可以使用paste命令
+   #+BEGIN_SRC sh
+     paste <(ls) <(ls -r)
+     # my-byte-split.sh  my-line-split.sh
+     # my-line-split.sh  my-byte-split.sh
+   #+END_SRC
+   
+   合并的数据流默认情况下使用TAB分割，但是可以用-d选项来指定分隔符。
+** 匹配连接两个文本的内容
+
+   join会在文件中搜索某些列，找到相互匹配的行之后，它会在该列的位置上把两列文本粘帖在一起
+   
+   默认join会以第一列的内容进行匹配，也可以使用-1 FIELD和-2 FIELD来指定file1和file2的FIELD列
+** uniq用来删除以排序的文件中相邻文本行的重复内容
+   
+   * -c 一次打印一行文本，并且计算每行出现的位置
+
+   * -d 打印出重复的文本行，而不是唯一的文本行
+
+   * -u 只打印出唯一的文本行（不保留重复条目的副本）
+
+   * -n 忽略一行文本的前n个字段。字段之间用空格或TAB字符隔开
+
+   * +n 忽略一个字段的前n个字符。
+
+   需要注意的是：
+   
+   uniq file1 file2
+
+   的意思是用file1的唯一行代替file2的内容
+** 使用sort对文本进行排序
+
+   * 选项
+
+     * -t{char} 指定{char}为字段分隔符
+     
+     * +n 告诉sort从字段n开始排序（从0开始计算）
+
+     * -n 告诉sort从字段n处停止排序
+
+     * +n.c 告诉sort根据字段n的第c列进行排序
+
+     * -n.c 告诉sort在第n个字段的第c列前一个字符处停止排序
+
+     * 一个sort内可以指定多个+/-n，用于指定排序的方式，例如
+       #+BEGIN_SRC sh
+         sort +2 -3 +0 -2 phonelist      # 先根据第2列的值排序，再根据第0列和第1列的值进行排序
+       #+END_SRC
+
+     * 可以把任何校正操作（删除空格，数字排序）加在字段说明符后面，以说明怎样对那个字段进行排序
+       #+BEGIN_SRC sh
+         sort +2 -3 +0 -2 +3n phonelist # 先根据第2列的值排序，再根据第0列和第1列的值进行排序,最后根据第三列进行数字排序
+       #+END_SRC
+
+     * -u 根据规则排序文件，并删除相等的行
+
+     * -b 排序时，忽略每个字段开头的额外空格。 它只有显式地指出需要对哪个字段进行排序时才起作用
+
+     * -f 排序时，将小写字母看成是大写字母
+
+     * -d sort程序忽略除了字母，数字和空白以外的所有其他字符，尤其可以忽略标点符号
+
+     * -M 告诉sort把一个字段的前三个非空白字符看成是一个三个字母的月份缩写，并进行月份的排序
+
+     * -r sort进行逆向排序
+
+   * sort排序规则
+
+     * 当出现两个或两个以上的空白字符时，只有第一个空白字符会被认为是字段分隔符，其他空白字符作为下一个字段的一部分参与排序
+
+     * 每个字段至少要有一个非空白字段，除非是在一行文本的末尾，即若空白字符出现在文本的地一列处，则该空白字符也作为参与排序的一部分。 例如
+       
+       {TAB}12 345 678中参与第0列排序的是{TAB}12而不是12
+
+     * 若根据地n列还无法进行排序，则sort自动根据地n+1列的值进行排序，知道出现-N位置。
+
+   * 根据长度对行进行排序
+
+     #+BEGIN_SRC sh
+       #! /bin/sh
+       awk 'BEGIN { FS=RS }
+       {print length,$0}' $* |
+       sort +0n -1 |                   # 根据数字大小进行排序
+       sed 's/^[0-9][0-9]*//'          # 删除数字大小
+     #+END_SRC
+
+* shell编程
+** case语句中的模式匹配
+   #+BEGIN_SRC sh
+     case i in
+         ?)                          # 匹配只有1个字符的字符串
+                 ;;
+         ?*)                         # 匹配有一个或多个字符的字符串
+                 ;;
+         [yY]|[yY][eE][sS])          # 匹配y，Y或者YES，Yes，YeS等
+                 ;;
+         /*/*[0-9])                  # 匹配以/开始并且至少再包含一个/的一数字结尾的文件路径名，例如/xxx/yyy/somedir/file2
+                 ;;
+         'what now?')                # 匹配模式what now?。引号告诉shell按字面意思解释
+                 ;;
+         "$msgs")                    # 匹配$msgs变量的内容。双引号允许shell替换变量的值
+                 ;;
+         ,*)                          # 匹配所有的值，起默认值的作用
+   #+END_SRC
+** trap捕获信号量
+
+   trap "command1;command2..." sign1 sign2...
+
+   捕获到sign1,sign2...等信号后，执行command1;command2
+
+   #+CAPTION:一些用于trap命令的UNIX信号编号
+   | 信号编号 | 信号名称 | 解释             |
+   |----------+----------+------------------|
+   |        0 | EXIT     | 退出命令         |
+   |        1 | HUP      | 当会话断开链接时 |
+   |        2 | INT      | 中断，C-c        |
+   |        3 | QUIT     | 退出，C-\        |
+   |       15 | TERM     | 来自kill           |
+** 使用getopt/getopts处理脚本的参数解析
+
+** 使用set命令重新初始化脚本的参数
+
+   使用set 新参数1 新参数2...能够初始化脚本的参数。
+   #+BEGIN_SRC sh
+     #set_test.sh
+     echo before set : $@
+     set 1 2
+     echo after set : $@
+     # set_test.sh 3 4
+     # before set : 3 4
+     # after set : 1 2
+   #+END_SRC
+   但要注意的是，若新参数以-开头的，则shell会把它看出是自己的选项。
+   
+** 使用jot命令产生数组
+   jot 要产生多少个参数 [起始参数值 结束参数值]
+** 使用exec可以重定向shell脚本的IO
+   exec command会执行comand来代替当前shell,它常常用于shell脚本的最后一个命令.
+
+   但exec也可以用来重定向当前shell脚本的IO,例如
+   #+begin_src sh
+     exec < formfile   
+   #+end_src
+     
+   上面命令使得当前shell中所有命令的标准输入来自于文件formfile
+** :操作符
+   :操作符会计算它的参数值,并返回0退出状态,它可以用来
+   * 代替true来生成一个无限的while循环. 这样shell就不需要每次循环都启动一个新进程
+   * 作为空操作的填位符,例如可以用于if语句中
+
+** #!的原理
+   
+   #!的原理实际是将脚本名作为参数拼接到#!后面的程序后面来运行该脚本的. 例如
+
+   #+begin_src sh
+     #! /bin/bash
+     #假设该脚本名称为test.sh
+     commands... 
+   #+end_src
+
+   则在直接执行该脚本时,内核实际上执行的是
+   #+begin_src sh
+     /bin/bash test.sh
+   #+end_src
+
+   这也是为什么用awk作为#!行的命令解释程序时,需要加-f的原因,因为-f表示用从文件中读取脚本.
+   #+begin_src sh
+     #! /usr/bin/awk -f
+     {print $2}
+   #+end_src
+
+   因此使用#!/bin/cp可以制作自复制脚本. 将它放到名为zap的文件中,运行zap zup,则会有一份zup的自拷贝
+
+   另外,需要注意,内核不会去搜索PATH路径,因此#!中的解释程序必须使用绝对路径.
+
+** 如何将捕获到的信号传递给子进程?
+   使用trap : sign1 sign2...
+
+   会忽略信号，向子进程传递信号
+
+** 参数替换操作符
+   | 操作符          | 说明                                            |
+   |-----------------+-------------------------------------------------|
+   | ${var:-default} | 如果没有设置var或者var为空，那么使用default代替 |
+   | ${var:=default} | 如果没有设置var或者var为空，那么将它设为默认值并使用该值 |
+   | ${var:+instead} | 如果已经设置var并且var不为空，那么使用instead，否则什么都不用（空字符串） |
+   | ${var:?message} | 如果已经设置var并且var不为空，那么使用它的值，否则打印message并退出shell，若message为空，则显示一条默认消息 |
+
+** 为了保护密码而关闭回显
+   使用stty -echo就能关闭回显，这样用户的输入就不会显示在屏幕上了
+   #+BEGIN_SRC sh
+     echo "enter the password"
+     stty -echo
+     read pwd
+     stty echo
+   #+END_SRC
+
+** sh<file与sh file有时候那么区别?
+
+   sh<file若file中有无法进行read操作
+
+** 创建锁文件,防止多个进程同时操作
+
+   掩码只会在文件存在时起作用.如果文件尚不存在,掩码就不会应用于它. 基于该特性,可以创建一个锁文件
+   #+begin_src sh
+     name = $(basename $0)
+     LOCKFILE=/tmp.lock.$name
+     until (umask 222;echo $$ >$LOCKFILE) 2>/dev/null # 若已 存在锁文件,则该操作失败,否则成功
+     do
+         sleep 5
+     done
+     
+     
+     rm -f $LOCKFILE
+   #+end_src
+
+   事实上,可以通过如下命令来创建模式为000的文件
+   #+begin_src sh
+     (umask 666;echo hi >afile)
+   #+end_src

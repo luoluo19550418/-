@@ -1,0 +1,81 @@
+* 使用Skeleton
+  * 专门定义的命令--一般以C-c开头
+  * 使用Abbrev实现Skeleton
+  * skeleton语言
+* skeleton语言
+  skeleton是专为Lisp语言定义的扩展,skeletons由函数`skeleton-insert`进行解析
+** skeleton的结构
+   skeleton的结构为(INTERACTOR ELEMENT...),
+*** INTERACTOR可能为:
+	* prompt-string
+	* nil
+	* Lisp expression
+	  可以在lisp中可以进行复杂的读取操作并返回计算的结果
+*** ELEMENT可能为:
+	* 字符串`"string"` / 字符 `?C` `?\C`
+	  该字符串/字符会被传递給`skeleton-transformation-function`表示的函数,并插入返回值,默认该函数为identity
+	* 回车符`?\n`
+	  回车并重排
+	* _
+	  标识interregion的插入点
+	* -
+	  标识插入点,但不会插入interregion
+	* >
+	  重排该行
+	* >_
+	  重排_所代表的interregion
+	* &
+	  逻辑与,表示如果前一个ELEMENT操作时移动了光标,则进行下一个ELEMENT操作
+	* |
+	  逻辑或,表示如果后一个ELEMENT操作时没有移动光标,则进行下一个ELEMENT操作
+	* -NUMBER
+	  表示删除前NUMBER个字符
+	* ()或nil
+	  无意义,直接略过.
+	* @
+	  增加一个position到变量`skeleton-positions`中
+	* resume:(注意后面的冒号)
+	  如果前面的ELEMENT操作抛出quit操作,则在这里继续往下操作
+	* quit
+	  这是一个常量,当由于用户退出操作而进入resume:部分时,该值为非nil
+	* 另一个SKELETON
+	  ELEMENT也可以是一个SKELETON,被称为subskeleton.
+	* LISP表达式
+	  执行该LISP表达式,并以其返回值作为要操作的ELEMENT说明,在该LISP表达式中可以使用一下这些变量
+	  * str
+		这是一个特殊的变量,第一次执行时,会要求用户输入一串字符串,并根据INTERACTOR进行解析,并返回解析结果. 之后再遇到该变量则直接使用该解析结果.
+		对于每个subskeleton来说,都有自己的str变量
+	  * input
+		设置读取str变量时的初始值.
+	  * v1 v2
+		提供给用户自定义的本地变量
+	* 'LISP表达式'(被引用起来的LISP表达式)
+	  执行LISP表达式,但忽略它的返回值
+	* 其他
+	  有些mode可以自定义其他的skeleton元素. 这些自定义的元素定义在变量`skeleton-further-elements`中
+** 使用
+   * 使用宏`define-skeleton`来为定义的skeleton分配命令
+	 #+begin_src elisp
+       (define-skeleton COMMAND DOCUMENTATION &rest SKELETON)
+       ;; Define a user-configurable COMMAND that enters a statement skeleton.
+       ;; DOCUMENTATION is that of the command.    
+	 #+end_src
+* 自动插入匹配的字符
+  * 可以通过绑定第一个匹配字符到命令`skeleton-pair-insert-maybe`(默认是绑定到self-insert-command)来实现.
+  * 命令中maybe的意思是,默认情况下,自动插入匹配功能是关闭的,要启用该功能需要设置`skeleton-pair`为非nil,这时若想临时取消自动插入匹配功能,则在输入前先C-u
+  * 通过定义变量`skeleton-pair-alist`,可以自定义匹配关系
+* 自动插入预定义文本到空文件中
+  * M-x auto-insert会自动插入一段预定义的文本到buffer头部
+  * auto-insert根据变量`auto-insert-alist`寻找预定义的文本.
+** auto-insert-alist变量说明
+   该变量是一个列表,元素格式为 (CONDITION . ACTION)或((CONDITION . DESCRIPTION) . ACTION)
+   * CONDITION
+	 CONDITION可以是个正则表达式的字符串,用来匹配新文件的名称. 
+     也可以是一个表示mode的符号,用来匹配处于该mode下的buffer.
+   * DESCRIPTION
+	 描述字符
+   * ACTION
+	 ACTION可能是一个文件的绝对路径,则该文件的内容被插入buffer中.
+	 也可以是一段skeleton语言,则被扩展后插入buffer中.
+	 也可能是一段Lisp代码,则执行该段代码
+	 

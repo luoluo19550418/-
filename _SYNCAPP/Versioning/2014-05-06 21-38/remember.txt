@@ -1,0 +1,99 @@
+                               remember
+                               ========
+
+Author: 
+Date: 2014-01-27 15:31:47 中国标准时间
+
+
+Table of Contents
+=================
+1 快速开始
+2 Remember相关函数说明
+3 Remember Buffer中的操作
+4 Backends
+    4.1 保存到text文件中
+    4.2 保存到diary文件中
+    4.3 保存到Mailbox中
+    4.4 保存到Org文件中
+
+
+1 快速开始 
+-----------
+  * 在.emacs中加入一行
+
+
+  (require 'remember)
+
+  * 执行M-x remember. 一个名为`*Remember*`的buffer会显示出来,在该buffer的末尾,remember会自动添加一段注解,这段注解描述记录内容时的情景.
+  * 输入任何你想记录的内容. 第一行是标题,其他行作为内容
+  * 按`C-c C-c`保存记录,并关闭remember buffer
+  * 默认情况下该记录内容被保存在`~/.notes`中,然后我们就可以随意的查看,编辑这个文件了.
+  * 如果要记录的内容刚好是正在阅读的buffer中的内容,则可以中要记录的内容,然后执行C-u M-x remember. 在打开的remember buffer中,会以选中的内容作为初始内容.
+  * 默认情况下,remember的注解使用的是`remember-annotation-functions`中函数执行返回的第一个值. 我们可以通过设置该变量为自定义函数来记录不同的注解.
+    例如
+
+
+  (defun my/remember-with-filename ()
+    "Always use the filename."
+    (interactive)
+    (let ((remember-annotation-functions '(buffer-file-name)))
+      (call-interactively 'remember)))
+
+  * 如果向要remember记录所有的`remember-annotation-functions`函数返回的注解,则需要设置变量`remember-run-all-annotation-functions-flag`为非nil
+
+2 Remember相关函数说明 
+-----------------------
+  * (remember &optional initial)
+    记录数据,如果有前缀参数,则选中的部分会作为initial的值
+  * (remember-region &optional beg end)
+    如果在remember buffer中执行该命令,则beg end的值会被忽略,这时整个buffer都会被记录下来. 如果在其他buffer中,则选中的region连同情景信息都会被记录下来.
+  * remember-clipboard
+    记录当前粘贴板的内容
+  * remember-finalizer
+    记录当前buffer的内容
+
+3 Remember Buffer中的操作 
+--------------------------
+  * C-c C-c / C-c C-s
+    记录当前buffer的内容
+  * C-c C-k
+    取消记录当前buffer的内容
+
+4 Backends 
+-----------
+  Remember可以将记录保存为多种文件格式,这些保存记录的文件被称为Backends.
+
+4.1 保存到text文件中 
+=====================
+
+
+  (setq remember-handler-functions '(remember-append-to-file))
+
+   * remember-data-file
+     Remember用来保存记录的文件地址
+   * remember-leader-text
+     Remember在每条记录前都添加上该变量的值作为前缀
+
+4.2 保存到diary文件中 
+======================
+
+
+  (add-to-list 'remember-handler-functions 'remember-diary-extract-entries)
+
+   * remember-diary-file
+     设置记录的diary文件的地址,如果为nil则使用`diary-file`的值代替.
+
+4.3 保存到Mailbox中 
+====================
+
+
+  (add-to-list 'remember-handler-functions 'remember-store-in-mailbox)
+
+   * remember-mailbox
+     把记录作为mail来保存的文件地址.
+   * remember-default-priority
+     将记录保存为mail时,设置的默认优先级.
+
+4.4 保存到Org文件中 
+====================
+   参见Org-manual的9.1 Capture

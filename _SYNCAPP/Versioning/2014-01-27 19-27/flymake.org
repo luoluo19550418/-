@@ -1,0 +1,27 @@
+* 快速入门
+  * 要想当打开能够进行语法检查的文件时自动开启flymake,需要进行如下配置
+	#+begin_src elisp
+      (add-hook 'find-file-hook 'flymake-find-file-hook)   
+	#+end_src
+  * 当进入flymake-mode后,语法检查会在出现以下情况时自动进行
+	* 加载buffer后
+	* 回车后
+	* 改变buffer内容后过了一定的时间(默认为0.5s)
+  * 如果想手工运行语法检查,则执行函数`flymake-start-syntax-check-for-current-buffer`
+  * 如果语法检查出错误/警告,则会高亮出错的行,并在mode-line上显示总共的错误和警告的数量
+  * 使用`flymake-goto-next-error`和`flymake-goto-prev-error`移动到下一个/下一个错误行
+  * 要查看当前行的错误信息,使用命令`flymake-display-err-menu-for-current-line`
+  * 语法检查完成后,会在mode-line上显示检查的结果. 说明如下
+    | Flymake*     | Flymake正在运行,暂时没找到错误                                 |
+    | Flymake:E/W* | Flymake正在运行,已经找到E个错误和W个警告                       |
+    | Flymake      | Flymake运行结束,没有找到错误                                   |
+    | Flymake:E/W  | Flymake运行结束,已经找到E个错误和W个警告                       |
+    | Flymake:!    | Flymake无法找到当前buffer的主文件                              |
+    | CFGERR       | 语法检查进程返回非0值,但是分析不出错误/警告信息,可能是配置错误 |
+    | NOMASTER     | 不能找到当前buffer的主文件                                     |
+    | NOMK         | 不能找到当前buffer的构建文件,比如makefile                      |
+    | PROCESS      | Flymake无法运行语法检查进程                                    |
+  * 若Flymake出现错误,可以切换到*Message* buffer查看日志,变量`flymake-log-level`定义了记录日志的级别,-1表示不记录日志
+* 配置
+** 配置变量
+** 扩展支持新的语法检查工具

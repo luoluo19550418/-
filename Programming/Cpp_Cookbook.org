@@ -1,0 +1,395 @@
+#+TITLE: Cpp_Cookbook
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 代码结构
+** 使用向前类声明来减少#include的使用
+
+   当不关心引用类的细节时,可以使用向前类声明的方式来减少编译依赖.
+
+   所谓不关心类A的细节,意味着不能使用类A的成员变量和方法,类A不能声明为其他类的成员变量,因为需要知道A的大小.
+
+   但由于指针和引用具有固定大小,因此可以使用
+** 命名空间
+   * 命名空间可以嵌套
+   * 命名空间别名
+	 #+BEGIN_SRC c++
+       using 别名 = 全称;
+       别名::类 对象;
+	 #+END_SRC
+   * 命名空间中的自动查找功能
+
+	 当你传入一个属于某个命名空间的函数参数时,在这个函数体内部执行这个函数的名字查找功能时,编译器会包含这个命名空间
+	 #+BEGIN_SRC c++
+       void f(dev::Device& d){
+               register(d);            // 这里的register实际可能是dev::register
+       }
+	 #+END_SRC
+* 数值计算
+** 字符串转换成数值
+   还在使用C库中的atof和atoi吗?快来试试<cstdlib>中的strtol,strtod和strtoul吧,它们分别可以转换为long int,double,和unsigned long型,而且支持任意进制的字符串.
+
+   这些函数还有对应的款字符函数,分别是wstrtol,wstrtod和wstrtoul
+
+   也可以使用stringstream的operator>>方法来实现类型的转换,使用这种方法甚至能够解析含有科学计数法表示的数值
+** 获取某种数值类型的最大和最小值
+   使用<limits>中的numeric_limits类模板中的max()/min()方法就可以知道某个数值类型所能表示的最大和最小值
+* 字符串操作
+** 如何反转字符串
+   字符串可以看成是字符的容器,还记得<algorithm>中的reverse函数模板么?那么,答案就是:
+   #+BEGIN_SRC c++
+     std::reverse(s.begin(),s.end());
+   #+END_SRC
+   
+   若要翻转的复制一个字符串,则可以使用翻转迭代器
+   #+BEGIN_SRC c++
+     std::string rs;
+     rs.assign(s.rbegin(),s.rend());
+   #+END_SRC
+** 从字符串中删除子字符串
+   使用find查找到子字符串的位置,在用erase函数删除
+** 大小写不敏感的字符串比较
+   使用equal模板函数来比较两个字符串,并提供自己的字符比较函数,在字符的比较函数中使用toupper函数/tolower函数(<cctype>)
+
+   但光这样做还不行,还需要比较它们的长度. 因为equal函数只比较前n个元素.
+** 如何在忽略大小写的情况下从一个字符串中查找一个子串
+   使用search算法+toupper函数就能实现.
+   #+BEGIN_SRC c++
+     bool caseIngoreCharComp(char a,char b)
+     {
+         return (toupper(a) == toupper(b));
+     }
+     
+     string::size_type caseIgnoreFind(const string& s,const string& p)
+     {
+         string::const_iterator pos = search(s.begin(),s.end(),p.begin(),p.end(),caseIngoreCharComp);
+         if(pos == s.end())
+         {
+             return string::npos;
+         }
+         return pos - s.begin();
+     }
+     
+   #+END_SRC
+** 字符测试函数
+   在<cctype>中定义了大量的字符测试函数
+   | 单字符版函数 | 宽字符版函数 | 说明         |
+   |--------------+--------------+--------------|
+   | isalpha      | iswalpha     | 希腊字母     |
+   | isupper      | iswupper     | 大写希腊字母 |
+   | islower      | iswlower     | 小些希腊字母 |
+   | isdigit      | iswdigit     | 数字         |
+   | isxdigit     | iswxdigit    | 十六进制数字 |
+   | isspace      | iswspace     | 空白符       |
+   | iscntrl      | iswcntrl     | 控制符       |
+   | ispunct      | iswpunct     | 不属于以上各组的标点符号 |
+   | isalnum      | iswalnum     | 希腊字符或数字           |
+   | isprint      | iswprint     | 可打印的ASCII字符        |
+   | isgraph      | iswgraph     | 希腊字符或数字或标点符号 |
+   |              |              |                          |
+** getline函数
+   <string>中提供了getline函数模板,使用它能够一次读取一行文本到某个string变量中,或者更精确的,可以把文本读取直到碰到一个特定的定界符.
+   #+BEGIN_SRC c++
+     basic_istream<char>& getline(basic_istream<char> cin,basic_string<char>& str,char _delim='\n');
+   #+END_SRC
+
+   <basic_istream>中有个同名的函数,但它把输出存在一个字符缓存中而不是字符串中.
+** 如何使你的文本右对齐或左对齐
+   最简单的方法就是使用流和标准流中的格式标志右和左. 
+   #+BEGIN_SRC c++
+     ofstream out(file);
+     ios_base::fmtflags flgs = out.setf(ios_base::right); // 当用完设置的格式标志时,你应该做的就是清掉它们.
+     out.width(72);
+     out<<line<<endl;                
+     out.flags(flgs);                // 还原原格式,flags函数和setf的不同在于flags是替代原标志,而setf是打开某个标志
+   #+END_SRC
+** 如何把文件中连续的多个空格缩减为1个.
+   最简单的方法就是使用<string>中的操作符>>函数模板,从一个流中把一块连续的非空白字符读入到一个字符串中,然后使用"<<"操作符,把文本写入到输出流中,并在每块的末尾追加一个空格.
+   #+BEGIN_SRC c++
+     ifstream ifs;
+     ofstream ofs;
+     
+     string tmp;
+     ifs >> tmp;
+     ofs << tmp;
+     while(ifs >> tmp)
+     {
+             ofs<<' '<<tmp;
+     }
+   #+END_SRC
+* 日期与时间
+** localtime，gmtime和asctime函数都返回一个指向静态分配的对象的指针
+   这意味着随后的调用将改变这些对象的值，且这些函数不能用在多线程环境中。
+
+   #+BEGIN_SRC c++
+     char* x = asctime(localtime(time(NULL)));
+     sleep(15);
+     sactime(localtime(time(NULL)));
+     cout<<x<<endl;                  // 这里显示的是当前的时间而不是15s之前的时间
+   #+END_SRC
+
+   若要将这些函数用在多线程的环境下，则需要使用localtime_r,gmtime_r,asctime_r来代替。
+** 如何将日期/时间格式化为一个字符串
+   除了可以使用C语言<time.h>中的strftime函数外,还可以使用<locale>中的time_put模板类.
+   #+BEGIN_SRC c++
+     ostream& formatDateTime(ostream& out,const tm& t, const char* fmt)
+     {
+             const time_put<char>& dateWriter = use_facet<time_put<char> >(out.getloc());
+             int n = strlen(fmt);
+             if(dateWriter.put(out,out,' ',&t,fmt,fmt+n,).failed())
+             {
+                     throw runtime_error("failure to format date time");
+             }
+             return out;
+     }
+   #+END_SRC
+   time_put成员函数与C语言的printf函数一样使用一个字符串来指定输出的格式. 
+   #+CAPTION: 日期/时间格式的指定符
+   | 格式指定符 | 描述                                 |
+   |------------+--------------------------------------|
+   | a          | 星期的缩写(Mon)                      |
+   | A          | 星期的完整名(Monday)                 |
+   | b          | 月份的缩写(Dec)                      |
+   | B          | 月份的完整名(May)                    |
+   | c          | 完全的日期和时间                     |
+   | d          | 月份中的天数(01~31)                  |
+   | H          | 24小时制中的小时数(00-23)            |
+   | I          | 12小时制的小时数(01-12)              |
+   | j          | 一年中的天数(01~366)                 |
+   | m          | 月份数(01~12)                        |
+   | M          | 分钟数(00~59)                        |
+   | p          | (上午/下午)的标识(AM/PM)             |
+   | S          | 秒数,包括最多两个润秒                |
+   | U          | 周数(00~53),第一周从第一个星期天开始 |
+   | w          | 每周中的天数(0~6),星期天为0          |
+   | W          | 周数(00~53),第一周从第一个星期一开始 |
+   | x          | 采用MM/DD/YY格式的日期               |
+   | X          | 24小时制中HH/MM/SS格式的时间         |
+   | y          | 当前世纪中的年数(00-99)              |
+   | Y          | 年                                   |
+   | Z          | 时区的缩写,如果系统不知道时区的话,就是空           |
+* STL
+** 如何使用一个由逗号分割开的数列来初始化一个容器
+   通过定义一个帮助类并重载逗号操作符,就可以在这些标准的容器中使用逗号初始化语法了.
+   #+BEGIN_SRC c++
+     template<class Seq_T>
+     class comma_helper
+     {
+     public:
+         typedef typename Seq_T::value_type value_type;
+         explicit comma_helper(Seq_T& x) :m(x){
+         }
+         comma_helper& operator=(const value_type& x){
+             m.clear();
+             m.push_back(x);
+             return *this;
+         }
+         comma_helper& operator+=(const value_type& x){
+             m.push_back(x);
+             return *this;
+         }
+         
+         template<class Scalar_T>
+         comma_helper& operator,(Scalar_T x){
+             return operator+=(x);
+         }
+     private:
+         Seq_T& m;
+     };
+     
+     template<typename Seq_T>
+     comma_helper<Seq_T> initialize(Seq_T& x)
+     {
+         return comma_helper<Seq_T>(x);
+     }
+     
+     
+     int main(int argc,char** argv)
+     {
+         vector<int> v;
+         initialize(v) = 0,1,1,2,3,4,5;
+         cout<<v[5]<<endl;
+         return 0;
+     }
+   #+END_SRC
+** 如何随机打乱数据
+   使用<algorithm>中的random_shuffle标准算法带两个随机访问迭代器和一个可选的随机数产生函数,可以在一定范围内随机打乱这些数据
+   
+   若要使用自己的随机数产生器,则它必须接收一个简单参数并返回一个简单值,且这两个值都可以转换成iterator_traits<RndIter>::difference_type类型
+** 如何在序列上进行集合运算
+   使用标准类库函数:set_union,set_difference,set_intersection和set_symmetric_difference
+** 如何将一个范围的元素输出到数据流中
+   使用copy算法和ostream_iterator算法把每一个元素都写到一个流中去.
+** 如何快速读取一系列数据存入容器中
+   使用istream_iterator即可
+   #+BEGIN_SRC c++
+     istream_iterator<stirng> start(cin);
+     istream_iterator<string> end;
+     vector<string> vs(start,end)
+   #+END_SRC
+* 类
+** 类成员变量,需要在独立的源文件中初始化它,而不是在它所声明的头文件中.
+   #+BEGIN_SRC c++
+     // static.h
+     class OneStatic
+     {
+             static int count;
+     };
+     // static.cpp
+     int OneStatic::count = 0;
+   #+END_SRC
+   
+   若把初始化语句放到头文件,则每个包含了头文件的实现文件都会給这个变量分配存储空间,这样会得到链接错误.
+** 若在基类中提供了虚的析构函数,则你需要给它一个实现,这是因为子类的析构函数需要自动调用基类的析构函数
+** 如何调用超类中的虚函数
+   使用目标基类来修饰你的成员函数名
+   #+BEGIN_SRC c++
+     DerivedPtr->Base::foo()
+   #+END_SRC
+* 异常安全
+** 保证初始化列表的异常安全
+   要捕获初始化列表中抛出的异常,需要使用try..catch的一种特殊用法
+   #+BEGIN_SRC c++
+     class Broker
+     {
+     public:
+             Broker(int devno1,int devno2)
+             try:dev1_(Device(devno1)),
+                         dev2_(Device(devno2)){}
+             catch(...)
+             {
+                     throw;          // 需要注意的是,这里无法访问dev1_和dev2_,因为这时候它们还不存在
+             }
+     }
+   #+END_SRC
+
+   这里它把try代码块当成构造函数体.
+** 如何使类具有强异常安全保证
+   先做可能抛出异常的操作. 这些危险操作完成后,再更新对象状态.
+* 流
+** 如何实现自己的流操作符
+   有两类留操作符:带参数的和不带参数的.
+
+   不带参数的流操作符容易实现. 只需要写一个以ios_base作为参数的函数. 在函数中对这个流做一些处理,然后再把这个流返回即可
+
+   而带参数的流操作符,需要实现为一个类,该类以参数为构造函数的参数,并通过实现operator(ostream& os)方法供流对象使用.
+   此外,需要定义一个函数,该函数接收参数并返回上面定义的类对象.
+   最后,还需要重载操作符<<,使得流对象直到 如何处理这个对象:
+   #+BEGIN_SRC c++
+     class WidthSetter
+     {
+     public:
+             WidthSetter(int n):width_(n){}
+             void operator(osteram& os) const {
+                     os.width(width_);
+             }
+     private:
+             int width_;
+     };
+             
+     
+     WidthSetter setWidth(int n){
+             return WidthSetter(n);
+     }
+     
+     ostream& operator<<(ostream& os, const WidthSetter& ws){
+             ws(os);
+             return os;
+     }
+   #+END_SRC
+** 如何删除/重命名文件
+   定义在<cstdio>中的标准C函数remove和rename可以完成这个任务
+** 如何创建一个临时文件名和文件
+   使用<cstdio>中的tmpfile或tmpname函数
+* 数字
+** 查找最大/最小值
+   使用<algorithm>中的函数max_element和min_element
+** 计算总和与平均值
+   使用<numeric>中的accumulate函数来计算总和,用distance函数来计算个数
+
+   但该方法不能与istream_iterator一起工作
+** 过滤掉给定范围之外的值
+   使用定义在<algorithm>中的remove_copy_if函数
+** 生成随机数
+   <cstdlib>提供了一个C的运行函数rand来产生0到RAND_MAX之间的随机数
+
+   使用rand函数前,还需要调用srand来給随机数产生器产生一个种子
+* 国际化问题
+** 硬编码Unicode字符串
+   通过使用一个前置L来硬编码这个字符串,并且把这个字符像任何别的字符串一样输入,或者使用十六进制数字来代替这个unicode字符
+   #+BEGIN_SRC c++
+     string ws = L"Infinity:\u221E";
+   #+END_SRC
+   
+   使用宽字符类型wchar_t可以用来存储Unicode字符. 这个类型的实现是预定义好的,常常使用UTF32编码
+** 如何以遵循本地格式的方法读取/写入一个数字到流
+   #+BEGIN_SRC c++
+     int main(int argc,char** argv)
+     {
+         locale loc("");             // 创建一个本地的locale
+         cout<<"Locale name is "<<loc.name()<<endl;
+         cout.imbue(loc);            // 为流设置locale
+         cout<<"pi in locale "<<cout.getloc().name()<<"is "<<3.14<<endl;
+         return 0;
+     }
+   #+END_SRC
+
+   除了cout.imbue(loc)设置某个流的locale外,还能通过Locale::global来设置全局的locale
+
+   Locale的名字是非标准化的. 通常它们看上去是这样的:
+   <language><country>.<codepage>
+** 如何用本地的格式习惯来显示/读取时间和日期
+   用use_facet来从locale中获取符合本地习惯的facet
+   #+BEGIN_SRC c++
+     const time_get<char>& dateReader = use_facet<time_get<char> >(cin.getLoc());
+     const time_put<char>& dataWriter = use_facet<time_put<char> >(cout.getloc());
+   #+END_SRC
+
+   然后可以使用facet time_put定义的put函数来将"存储于tm对象中的日期信息"转化成一个字符序列,写至output迭代器.
+   #+BEGIN_SRC c++
+     ostreambuf_iterator osfitr = 
+             dateWriter.put(out,             // output stream iterator
+                            out,             // output stream
+                            out.fill(),      // Fill char to use
+                            &t,              // Addr of tm struct
+                            &fmt[0],         // Begin of format string
+                            &fmt[2]);        // end of format string
+   #+END_SRC
+
+   可以通过time_put::put返回一个ostreambuf_iterator迭代器,它有一个成员函数failed()来判断输出是否有问题.
+   #+BEGIN_SRC c++
+     if(osfitr.failed())
+     {
+             throw Exception("put time failed");
+     }
+   #+END_SRC
+** 如何读取/写入符合本地格式的货币值
+   类似读取/写入本地格式的时间,但是用money_put和money_get facet来替代time_put和time_get facet
+** 如何对本地化字符串进行排序
+   使用collate facet的compare函数可以对本地化字符串进行比较
+   #+BEGIN_SRC c++
+     bool localLessThan(const string& s1, const string& s2)
+     {
+             const collate<char> & col = use_facet<collate<char> >(locale());
+             const char* pb1 = s1.data();
+             const char* pb2 = s2.data();
+             return (col.compare(pb1,pb1+s1.size(),
+                                 pb2,pb2+s2.size()) < 0);
+     }
+   #+END_SRC
+
+   compare函数与strcmp函数类似,当第一个字符串<第二个字符串时返回-1,相等时返回0,大于时返回1
+* 指针
+** 如何引用数据成员或成员函数的地址
+   使用类名和范围操作符::加上*来引用类成员
+   #+BEGIN_SRC c++
+     MyClass::* mpi = &MyClass::ival_; // 指向成员变量,这里的值不是一个内存中的具体地址,可以把它想象成是一个从这个类对象的起始地址开始到这个数据成员之间的偏移量
+     obj.*mpi = 5;                     // 給obj.ival赋值
+     int* pi = obj.ival_;              // 也可以普通指针引用具体某个对象的成员变量
+     
+     void (MyClass::*mpf)();           // 指向成员函数的指针
+     mpf = &MyClass::func;             // 指向成员函数
+     (obj.*mpf)();                     // 调用obj的成员函数
+     void(*pf)();                      // 定义一个普通函数指针
+     pf = &obj.func();                 // 不能通过编译. 因为成员函数需要对象的上下文才有意义
+   #+END_SRC

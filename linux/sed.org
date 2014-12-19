@@ -1,0 +1,45 @@
+#+TITLE: sed
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 语法
+  sed [选项] '范围(条件) 命令' 文件
+* 选项
+  * -n 不显示源文件内容
+  * -i 直接替换源文件内容
+* 范围
+  * 数字N表示第N行
+  * $表示最后一行
+  * 正则表达式/reg/ 表示符合正则的行
+  * 起始行,结束行表示两个行直接的范围,包括起始行和结束行
+* 命令
+  命令之间可以用;分隔,表示对匹配行进行多个命令操作.
+  * d 删除匹配行
+  * p 显示匹配行一般与sed -n一起使用
+  * s 替换
+    s/old/new/标签
+    这里new不能用完整的正则表达式,但是提供了一些特殊符号代替
+    * & 表示old的值
+    * \U把\U后面的所有字符都变成大写
+    * \u把\u后面的第一个字符变成大写
+    * \L把\L后面的所有字符变成大写
+    * \l把\l后面所有字符变成小写
+    * \E 表示终止前面\U和\L的转换
+    * \1,\2... 分组替换
+  * a 在指定行的下一行添加一行
+    #+BEGIN_SRC sh
+      sed '$ a This is the last line' file
+    #+END_SRC
+  * i 在指定行的上一行添加一行 
+    #+BEGIN_SRC sh
+      sed '1 a This is the first line' file
+    #+END_SRC
+  * c 把满足某个条件的行替换
+    #+BEGIN_SRC sh
+      sed '/old-line/ c new-line' file
+    #+END_SRC
+  * y 字符的分别替换
+    #+BEGIN_SRC sh
+      sed '1,$ y/abc/ABC/' file       # 把file中所有的a换成A,b换成B,c换成C
+    #+END_SRC

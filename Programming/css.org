@@ -1,0 +1,164 @@
+#+TITLE: css
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 语法
+** CSS的位置
+   * 外置
+     放在外部css文件中
+   * 内部
+     放在<head>中
+   * 内联
+     放在标签的style属性中
+** CSS的优先级规则
+   1. 最后执行到的CSS规则覆盖前面的CSS规则
+   2. 同一位置的CSS规则中,精确匹配的覆盖模糊匹配的. 也即id>class>标签>*匹配
+** CSS选择器的类型
+   * 标签选择器
+     #+BEGIN_SRC css
+       标签{
+       }            
+     #+END_SRC
+   * id选择器
+     #+BEGIN_SRC css
+       #id{
+       }     
+     #+END_SRC
+   * 类选择器
+     #+BEGIN_SRC css
+       .class{
+       }     
+     #+END_SRC
+   * 关联选择器
+     #+BEGIN_SRC css
+       外部选择器 外部选择器{
+       }     
+     #+END_SRC
+   * 伪选择器
+   * 组合选择器
+
+* 常见的样式属性和值
+** 字体
+   1. font-family
+      任意字体族科名称
+   2. font-size
+      绝对大小、相对大小、长度或百分比
+   3. font-style (斜体,下划线等等)
+      normal,italic,oblique
+   4. font-weight (加粗)
+      normal,bold,bolder,lighter
+   5. font-variant
+      normal,small-caps
+   6. font
+      font:[字符风格][字体变形][字体加粗]?[字体大小][/行高]?字体族科
+** 文本
+   1. letter-spacing
+      长度格式
+   2. word-spacing
+      长度格式
+   3. text-decoration (超链接下划线的位置)
+      underline,overline,line-through,blink
+   4. text-align
+      left,right,center,justify
+   5. line-height (设置标签的行高)
+      数字或百分比
+   6. text-indent
+      长度或百分比
+   7. word-break (碰到标签右侧,自动折行)
+      break-all
+   8. word-spaceing / letter-spacing (词/字间距)
+      像素数
+   9. 
+** 背景
+   1. background-color
+      color值,transparent值
+   2. background-image
+      图片URL或none
+      #+BEGIN_SRC css
+        div{
+            background-image:url("url.gif");
+        }      
+      #+END_SRC
+   3. background-repeat
+      repeat,repeat-x,repeat-y,no-repeat
+   4. background-attachment(背景是否与页面一起滚动)
+      scroll,fixed
+   5. background-position
+      left,center,right,top,center,bottom
+      #+BEGIN_SRC css
+        div{
+            background-position: right top;  /* 背景图放在右上方*/
+            background-position: x-坐标 y坐标;  /* x y坐标可以为负数*/
+        }      
+      #+END_SRC
+   6. background
+      background:背景颜色 背景图像 背景重复 背景附件 背景位置 (位置不分先后)
+** 鼠标光标属性
+   1. cursor (光标的形状)
+      default,hand,crosshair,text,wait,help,pointer
+** 位置
+   1. position
+   2. top
+   3. left
+   4. width
+   5. height
+   6. z-index
+   7. display
+      block,inline,none
+   8. visibility
+      inherit,visible,hidden
+   9. overflow
+      visible,hidden,scroll,auto
+** 边框
+   1. bordr-style,border-top-style,border-bottom-style,border-left-style,border-right-style
+      none,dotted,dashed,solid,double,groove,ridge,inset,outset
+   2. border-width,border-top-width,border-bottom-width,border-left-width,border-right-width
+      medium,thin,thick
+   3. border-color
+      颜色
+   4. border,border-left,border-right,border-top,border-buttom
+      border:border-width,border-style,border-color
+** 列表
+   1. list-style
+      none,
+** 尺寸样式
+   1. height
+   2. max-height
+   3. min-height
+   4. width
+   5. max-width
+   6. min-width
+** textarea样式
+   1. resize:none (无法拖动改变大小)
+** 表格样式
+   1. border-collapse (表格边框是否合并)
+      separate|collapse
+   2. border-spacing (表格边框之间的距离,前提是边框为分离)
+      像素数/百分比
+** 继承样式
+   1. 字体样式会继承下去
+   2. 大部分的与文字相关的样式会被继承下去
+** 边距样式
+   1. margin(外边距),margin-right,margin-left,margin-left,margin-bottom
+      像素数量 / 百分比 / auto
+   2. padding(内边距)
+      类似margin,但修改内边据可能会修改原标签的长度
+** 定位样式
+   1. position(该样式意味着脱离文档流)
+      absolute(绝对定位),relative
+   2. left
+   3. top
+   4. right
+   5. buttom
+   6. z-index
+      数字,支持负数
+** 其他
+   1. display
+      none(不占位隐藏) / block(占位显示,为默认值)
+   2. visibility
+      hidden(占位隐藏) / visible(占位显示)
+   3. float(漂浮,脱离文档流,一般来说同等水平的div需要同时漂浮)
+      left/right
+   4. overflow(子标签超过父标签如何处理)
+      auto(自动添加滚动条) visible(超出部分也显示) hidden(不显示超出的不分) scroll(总是添加滚动条)

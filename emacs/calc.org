@@ -1,0 +1,3 @@
+#+TITLE: calc
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}

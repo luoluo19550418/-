@@ -1,0 +1,39 @@
+短语搜索	"短语"
+或者		OR 短语
+否定		-短语
+约束扩展	+短语
+同义词		~短语
+数字范围	min..max
+单个单词	*
+intitle（allintittle）将搜索的范围限制在网页的标题
+intext（allintext）仅在网页的正文中搜索关键字
+inanchor在页面的链接描点进行搜索
+Site将搜索限制在站点或者顶层域名上。
+inurl将搜索结果限制在URL或网站页面上
+link查询的是所有连接到某个特定URL上的页面列表
+cache：查找Google索引过的页面副本
+related查找与特定页面相关的页面列表
+phonebook查找电话号码
+define查询单词定义
+使用版权声明来查找文章
+
+
+Google论坛专用语法：
+insubject：
+group：
+author：
+
+
+Gmail搜索语法
+from:
+to:
+subject:
+label:
+has:attachment
+filename:搜索带有附件，且文件名与关键词匹配的邮件
+in:返回某个文件夹的邮件in:trash  in:spam   in:anywhere  in:inbox  in:anywhere
+is:后面可以接starred，unread，read，分别用于用户查找已回复邮件，未读邮件和已读邮件。
+cc:搜索复制到某个收件人信箱的邮件
+bcc:搜索所有用户发送的邮件，但是不包括查询中指定的收件人
+before:查找在某个日期之前发送或者接收的邮件
+after:搜索某个日期之后接收和发送的邮件。

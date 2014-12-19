@@ -1,0 +1,334 @@
+#+TITLE: latex
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 命令行
+  1. tex -> dvi
+     latex $filename
+  2. dvi -> ps
+     dvips $filename
+  3. dvi -> pdf
+     dvipdfm $filename
+  4. ps -> pdf
+     ps2pdf $filename.ps
+  5. tex -> pdf
+     pdflatex $filename
+  6. 查看dvi
+     yap $filename
+* LaTeX文档结构
+** 文档类,序言,正文
+   LaTeX源文件结构反三大部分,一次为文档类声明,序言(可选),正文
+   * 文档类型用来声明知道那个文档的类型
+     \documentclass[$options]{$class}
+     #+BEGIN_EXAMPLE
+     常用的文档类（documentclass）有三种：article、report、book
+     #+END_EXAMPLE
+     #+BEGIN_EXAMPLE
+     文档常用的选项有
+     10pt,11pt,12pt 正文字号，缺省10pt。L ATEX会根据正文字号选择标题、上下标等的字号。
+     letterpaper,a4paper 纸张尺寸，缺省是 letter。
+     notitlepage,titlepage 标题后是否另起新页。article 缺省 notitlepage，report和 book缺省有titlepage。
+     onecolumn,twocolumn 栏数，缺省单栏。
+     oneside,twoside 单面双面。article 和 report 缺省单面，book 缺省双面。
+     landscape 打印方向横向，缺省纵向。
+     openany,openright 此选项只用于 report 和 book。report 缺省
+     openany，book缺省 openright。
+     draft 草稿模式。有时某些行排得过满，draft 模式可以在它们右边标上粗黑线提醒用户。
+     #+END_EXAMPLE
+   * 序言用来完成一些特殊任务,比如引入宏包,定义命令,设置环境等
+     \usepackage[$options]{$package}
+   * 正文用来放文档的实际内容
+     \begin{document}
+     $text
+     \end{document}
+** 标题,摘要,章节
+   1. 标题,作者,日期命令如下,注意\maketitle命令放在最后
+      \title{标题}
+      \author{作者}
+      \today
+      \maketitle
+   2. 摘要环境用法为
+      \begin{abstract}
+      \end{abstract}
+   3. 常用层次结构命令为
+      \chapter{章节名称}
+      \section{章节名称}
+      \subsection{章节名称}
+      \subsubsection{章节名称}
+** 目录
+   1. 生成整个文档的目录
+      \tableofcontents
+   2. 指定目录层次深度
+      \setcounter{tocdepth}{深度}
+   3. 如果不想让某个章节标题出现在目录中,可以用
+      \chapter*{...}
+      \section*{...}
+      \subsection*{...}
+      声明章节
+   4. \生成插图目录
+      \listoffigures
+   5. 生成表格目录
+      \listoftables
+   6. 当章节或图表等结构发生变化时,我们需要执行两边编译命令以获得正确结果
+** 文字排版
+   1. 特殊字符
+      LATEX 中有些字符（例如 #$%^&_{}~\ 等）被用作特殊的控制符，所以不能直接输入，多数需要在前面加个 \。而 \ 本身则要用\textbackslash 命令来输入，因为 \\ 被用作了换行指令。
+      #+BEGIN_EXAMPLE
+      ©   \textcopyright      ˚a \aa          June28,2009 \today
+      ®   \textregistered     ˚A \AA          TEX \TeX
+      ◦C   $^\circ$C          æ  \ae          LATEX \LaTeX
+      ¥   \textyen            ø  \o           LATEX2ε \LaTeXe
+      £   \pounds             ¨  \"o          METAFONT \MF
+      ¿   \texteuro           ˆ  \^o          METAPOST \MP
+      ...  \dots             ˜  \~o
+      #+END_EXAMPLE
+   2. 换行,换页,断字
+      * 换行
+	\\
+	或
+	\newline
+      * 换页
+	\newpage
+      * 断字
+	\hyphenation{断字列表}
+	断字列表中-的地方指示可以断开的地方,没有-的地方不能断开.
+   3. 字体,字号
+      * 字体命令
+	#+BEGIN_EXAMPLE
+	\textrm{...} roman          \textbf{...} boldface
+	\textsf{...} sans serif     \textit{...} 斜体
+	\texttt{...} typewriter     \textsl{...} 倾斜
+	\emph{...}   强调            \underline{...} 下划线
+	\textsc{...} SmallCaps
+	#+END_EXAMPLE
+      * 字号命令
+	#+BEGIN_EXAMPLE
+	命令           10pt 11pt 12pt
+	\tiny          5pt  6pt  6pt
+	\scriptsize    7pt  8pt  8pt
+	\footnotesize  8pt  9pt  10pt
+	\small         9pt  10pt 11pt
+	\normalsize    10pt 11pt 12pt
+	\large         12pt 12pt 14pt
+	\Large         14pt 14pt 17pt
+	\LARGE         17pt 17pt 20pt
+	\huge          20pt 20pt 25pt
+	\Huge          25pt 25pt 25pt
+	#+END_EXAMPLE
+** 常用命令环境
+   1. 列表
+      LaTeX 中有三种列表环境：itemize、enumerate、description，它们的一般用法如下：
+      * 无序号列表
+	#+BEGIN_SRC LaTeX
+	\begin{itemize}
+        \item 列表项1
+        \item 列表项2
+        \item 列表项3
+	\end{itemize}
+	#+END_SRC LaTeX
+      * 顺序列表
+	#+BEGIN_SRC LaTeX
+	\begin{enumerate}
+	\item 列表项
+	\item 列表项
+	\item 列表项
+	\end{enumerate}
+	#+END_SRC
+      * 指定标识的列表
+	#+BEGIN_SRC LaTeX
+	\begin{description}
+	\item{C++} 一种编程语言
+	\item{Java} 另一种编程语言
+	\item{HTML} 一种标记语言
+	\end{description}
+	#+END_SRC
+   2. 对齐
+      LaTeX缺省两端对其,我们也可以让段落
+      * 居左
+	#+BEGIN_SRC LaTeX
+	\begin{flushleft}
+	本段落\\
+	居左
+	\end{flushleft}
+	#+END_SRC
+      * 居右
+	#+BEGIN_SRC LaTeX
+	\begin{flushright}
+	本段落\\
+	居右
+	\end{flushright}
+	#+END_SRC
+      * 居中
+	#+BEGIN_SRC LaTeX
+	\begin{center}
+	本段落\\
+	居中
+	\end{center}
+	#+END_SRC
+   3. 摘要
+      LaTeX有三种摘录环境:
+      1. quote:两端都缩进
+	 #+BEGIN_SRC LaTeX
+	 正文
+	 \begin{quote}
+	 引文两端都缩进。
+	 \end{quote}
+	 正文
+	 #+END_SRC
+      2. quotation在quote的基础上都增加了首行再进一步缩进
+	 #+BEGIN_SRC LaTeX
+	 正文
+	 \begin{quotation}
+	 引文两端缩进，首行缩进。
+	 \end{quotation}
+	 正文
+	 #+END_SRC
+      3. verse:比quote多了第二行起缩进
+	 #+BEGIN_SRC LaTeX
+	 正文
+	 \begin{verse}
+	 引文两端缩进，第二行起缩进。
+	 \end{verse}
+	 正文
+	 #+END_SRC
+   4. 原文照排
+      一般文档中，命令和源代码通常使用等宽字样来表示，也就是原文照排。
+      对此LATEX 提供了
+      1. \verb 命令（一般用于在正文中插入较短的命令）
+	 #+BEGIN_SRC LaTeX
+	 \verb|插入的命令语句|
+	 #+END_SRC LaTeX
+      2. verbatim环境。(有带* 的版本用来标明空格。)
+	 #+BEGIN_SRC LaTeX
+	 \begin{verbatim}
+	 命令语句
+	 \end{verbatim}
+	 #+END_SRC
+   5. 交叉引用
+      我们常常需要引用文档中 section、subsection、figure、table 等对象的编号，这种功能叫作交叉引用（crossreferencing）。
+      1. 在被引对象的后面使用\label定义一个标记
+	 \label{标记名}
+      2. 引用标记处的编号
+	 \ref{标记号}
+      3. 引用标记的页码
+	 \pageref{标记吗}
+   6. 脚注
+      \footnote{脚注}
+** 盒子
+   LaTeX在排版时把每个对象都视为一个矩形盒子(box)
+   1. 简单盒子
+      *. 把一组对象组合起来
+	 \mbox{...}
+      *. 把对象组合起来,画上边框
+	 \fbox{...}
+   2. 提供宽度和横向对齐方式控制选项的盒子
+      * \makebox[宽度][对齐方式]{内容}
+      * \framebox[宽度][对齐方式]{内容}
+      * 对齐方式用l,r,s分别代表居左,居右,分散对齐
+   3. 提供宽度和纵向对齐方式控制选项的盒子
+      * \parbox[对齐方式]{宽度}{内容}
+      * 这里对齐方式分别为t,c,b分别代表居顶,居中,居低
+      * begin{minipage} 内容 end{minipage}
+* 数学
+  为了使用AMS-LaTeX提供的数学功能,我们需要在文档的序言部分加载amsmath宏包
+  \usepackage[options]{amsmath}
+** 数学模式
+   LaTeX中的数学模式有两种形式
+   1. display:独立排序,可以有或者没有编号
+   2. inline:指在正文插入行间数学公式
+      #+CATPITON 简单数学公式的输入
+      |                | TeX命令  | LaTeX命令 | LaTeX环境   | amsmath环境 |
+      |----------------+----------+-----------+-------------+-------------|
+      | 行间公式       | $...$    | \(...\)   | math        |             |
+      | 无编号独立公式 | $$...$$$ | \[...\]   | displaymath | equation*   |
+      | 有编号独立公式 |          |           | equation    | equation    |
+      * 推荐行间公式用$...$,无编号独立公式用\[...\].
+      * 建议不要用$$...$$,因为它跟AMS-LaTeX有冲突
+      * 数学模式下有个\boxed命令,类似\fbox可以给文本内容加方框
+	#+BEGIN_SRC LaTeX
+	爱因斯坦的$E=mc^2$方程
+	\[E=mc^2\]
+	\[\boxed{E=mc^2}\]
+	\begin{equation}
+	E=mc^2
+	\end{equation}
+	#+END_SRC
+** 基本元素
+   1. 字母
+      英文字母在数学模式下可以直接输入,希腊字母需要用命令输入,大写希腊字母的命令首字母也是大写
+      #+BEGIN_EXAMPLE
+      α \alpha       θ \theta         o o         τ \tau
+      β \beta        ϑ \vartheta      π \pi       υ \upsilon
+      γ \gamma       ι \iota          ϖ \varpi    ϕ \phi
+      δ \delta       κ \kappa         ρ \rho     φ \varphi
+      ϵ \epsilon      λ \lambda       ϱ \varrho    χ \chi
+      ε \varepsilon  µ \mu            σ \sigma    ψ \psi
+      ζ \zeta        ν \nu            ς \varsigma ω \omega
+      η \eta         ξ \xi
+      Γ \Gamma       Λ \Lambda        Σ \Sigma    Ψ \Psi
+      ∆ \Delta        Ξ \Xi           Υ \Upsilon   Ω \Omega
+      Θ \Theta       Π \Pi           Φ \Phi
+      #+END_EXAMPLE
+   2. 指数、下标、根号
+      指数或上标用 ^ 表示，下标用 _ 表示，根号用 \sqrt 表示。上下标如果多于一个字母或符号，需要用一对{} 括起来。
+      #+BEGIN_SRC LaTeX
+      \[x_{ij}^2\quad\sqrt[2]{x}\]
+      #+END_SRC
+   3. 运算符
+      有些特殊运算符需要用命令得到
+      #+BEGIN_EXAMPLE
+      \pm                     ±
+      \times                  ×
+      \div                    ÷
+      \cdot                   ·
+      \cap                    ∩
+      \cup                    ∪
+      \geq                    ≥
+      \leq                    ≤
+      \neq                     
+      \approx                 ≈
+      \equiv                  ≡
+      \sum                    ∑
+      \prod                   ∏
+      \lim                    极限符号
+      \int                    积分符号
+      \iint \iiint \\\iiiint \idotsint  输入多重积分                   
+      #+END_EXAMPLE
+   5. 分隔符
+      * 各种括号用() [] \{\} \langle\rlang等命令标识
+      * 我们可以在上述分隔符前加\big \Big \bigg \Bigg等命令来调整大小.
+      
+** 箭头
+   #+BEGIN_EXAMPLE
+   ← \leftarrow ←− \longleftarrow
+   → \rightarrow −→ \longrightarrow
+   ↔ \leftrightarrow ←→ \longleftrightarrow
+   ⇐ \Leftarrow ⇐= \Longleftarrow
+   ⇒ \Rightarrow =⇒ \Longrightarrow
+   ⇔ \Leftrightarrow ⇐⇒ \Longleftrightarrow
+   #+END_EXAMPLE
+** 标注
+   #+BEGIN_EXAMPLE
+   表 3.4: 数学注音符号
+    \acute{x}  \tilde{x}  \mathring{x}
+    \grave{x}  \breve{x}  \dot{x}
+    \bar{x}    \check{x}  \ddot{x}
+    \vec{x}    \hat{x}
+    \dddot{x}
+   表 3.5: 长标注符号
+   \overline{xxx}  \overleftrightarrow{xxx}
+   \underline{xxx}  \underleftrightarrow{xxx}
+   \overleftarrow{xxx}
+   \overbrace{xxx}
+   \underleftarrow{xxx}  \underbrace{xxx}
+   \overrightarrow{xxx}  \widetilde{xxx}
+   \underrightarrow{xxx} \widehat{xxx}
+   #+END_EXAMPLE
+** 省略号
+   #+BEGIN_EXAMPLE
+   \dots   
+   \cdots
+   \vdots
+   \ddots
+   #+END_EXAMPLE

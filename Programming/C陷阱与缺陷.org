@@ -1,0 +1,94 @@
+#+TITLE: C陷阱与缺陷
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 语法陷阱
+** 理解函数声明
+   * 任何C变量的声明都由两部分组成:类型及一组类似表达式的声明符(declarator). 这个declarator的求值应该返回这个声明中的类型. 例如
+     #+BEGIN_SRC c
+       float *(g());                     /* 这里*(g())的求值结果应该是一个float,即g是一个函数,该函数返回float指针 */
+       float (*h)();                     /* 这里(*h)()的求值结果应该是一个float,即h是一个函数指针,该函数的返回类型为float */
+     #+END_SRC
+** 运算符的优先级问题
+   * 逻辑运算符 < 关系运算符 < 移位运算符 < 算术运算符
+** else始终与同一对括号内最近的未匹配if结合
+* 语义陷阱
+** 取值顺序问题
+   * C语言中只有四个运算符(&& || ?: ,)有规定的求值顺序,其他运算符的左操作数和右操作数的取值顺序不定.
+     #+BEGIN_SRC c
+       y[i] = x[i++];                  /* 可能先执行y[i],也可能先执行x[i++] */
+     #+END_SRC
+   * 函数中不同参数的取值顺序也是未定义的.
+** 函数的返回值
+   * 当未声明函数的返回值时,则C默认函数返回值为int型.
+** 函数签名
+   * 当一个函数被声明或定义之前被调用,则C编译器会自动推测函数的返回值为int,并根据调用的参数列表推测形参列表.
+** 检查外部类型
+   * 当同一个外部变量名在两个不同的文件中被声明为不同的类型时,大多出C语言实现不能检测出这种错误.
+     这里说的不同类型指的是严格意义上的不同类型,比如数组与指针就是不同类型,虽然它们很接近.
+* 库函数
+** getchar函数返回值为整数
+   这是因为char型不能容下所有可能的字符,特别是无法容下EOF
+** 对文件操作时,一个输入操作不能紧跟着一个输出操作,反之亦然
+   #+BEGIN_SRC c
+     #include<stdio.h>
+     #include<stdlib.h>
+     #include<string.h>
+     int main()
+     {   
+         char szContents[10] = "";
+         FILE *fp;
+         fp = fopen("c:/tmp.txt","r+");
+         fread(szContents,3,1,fp);
+         printf(szContents);
+         strcpy(szContents,"123456789");
+         fseek(fp,0L,1);             /* 若没有该行,则无法写入 */
+         fwrite(szContents,sizeof(szContents),1,fp);
+         fclose(fp);
+             system("pause");
+      return 0;
+     }
+   #+END_SRC
+
+** 使用setbuf函数设置输出的缓冲区时,需要注意在缓冲区释放之前显式调用flush函数将缓冲区清空
+   #+BEGIN_SRC c
+     #include <stdio.h>
+     int main()
+     {
+       int c;                        /* 注意这里要用int型 */
+       char buf[60];
+       setbuf(stdout,buf);
+       while((c=getchar()) != EOF)
+         putchar(c);
+     }
+     /* 上面这段代码出错的原因在于,由于输出内容前要放入buf缓冲,而最后一次flush清空buf的时间是在main函数结束之后,作为程序交回操作系统之前C进行自动清理的时候进行的,而这是,buf已经被释放了! */
+     /* 更明显的例子是 */
+     #include <stdio.h>
+     int main()
+     {
+       int c;                        /* 注意这里要用int型 */
+       {
+         char buf[60];
+         setbuf(stdout,buf);
+         while((c=getchar()) != EOF)
+           putchar(c);
+       }
+       flush(stdout);
+     
+   #+END_SRC
+** 使用errno检测错误时,首先要检查函数返回值
+   在库函数调用成功的情况下,没有强制要求库函数一定要设置errno为0,因此如果直接根据errno来判断,则可能得到的是上一次函数失败调用的errno.
+   因此,我们应该首先检测函数的返回值,确定失败后,再检查errno来搞清楚出错原因.
+** 信号的处理函数中不应该包含可能引发Signal的库函数
+   有些库函数内部会维护一些公共变量,当引发Signal时,这些公共变量可用已经被损坏了,这时候再去调用这些库函数已经是不安全的了.
+* 移植性
+** short,int,long型的长度是可变的
+   short,int,long型的长度是可变的,但ANSI规定short,int型整数至少16位,long型整数至少32位
+** 移位操作时,如果被移位的对象是无符号数则空出的位用0填充,否则可能用0也可能用符号位填充
+** 移位操作时,若被移位的对象长度为n,则移动计数必须0<=计数<n
+** 取除法和余数操作时,有些实现保证余数为正,有些实现余数可能为负数
+** rand函数的返回值范围根据实现的不同有所不同,ANSI中定义了一个常数RAND_MAX等于随机数的最大取值
+** realloc函数中的参数一般要求为未释放的内存块地址,但有些实现中可以传入已经释放的内存块,前提是该块内存的内容没有被覆盖.
+** 当对一个负数n用-n的方式取正时,需要注意可能发生溢出,因为大多数实现中整数的取值范围要小于负数的取值范围!
+

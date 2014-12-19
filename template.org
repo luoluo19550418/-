@@ -1,0 +1,25 @@
+* 模板函数
+  1. 当在模板函数中调用到了重载函数时,该被调用的重载函数在此时是否可见这个事实,可能会影响到调用的结果
+  2. 非模板函数参数的限制有:
+     * 只能是常整数(包括枚举型)和指向外部链接对象(不在同一个作用域中)的指针
+     * 不能是浮点数和类对象
+     * 不能是全局指针
+* 模板类
+  1. 对于具有基类的类模板,自身使用名称x并不一定等同于this->x,即使x是从基类继承得到的也不行 
+     #+BEGIN_SRC c++
+       template<typename T>
+       class Base{
+       public:
+         void exit();
+       };
+       
+       template<typename T>
+       class Derived:Base<T>{
+       public:
+         void foo(){
+           exit();  //这里不会调用Base::exit()!!
+         }
+       }
+     #+END_SRC
+  2. 
+* 

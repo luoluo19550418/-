@@ -1,0 +1,71 @@
+#+TITLE: UNIX环境高级编程
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 限制
+  * limit.h等头文件中只定义了各种系统实现时必须支持的各种最小值,但是要
+    找到一个特定系统实际支持的限制值只能使用一下三个函数:
+    #+BEGIN_SRC c
+      #include <unistd.h>
+      /* 该函数返回不与文件和目录相关的限制值,name参数以_SC_开头 */
+      long sysconf(int name);
+      /* 后两个函数返回与路径相关的限制值,其中name参数以_PC_开头 */
+      long pathconf(const char* pathname,int name);
+      long fpathconf(int filedes,int name); /* 这里的filedes为文件描述符 */
+    #+END_SRC
+* 功能测试宏
+  * _POSIX_C_SOURCE
+
+    定义了该宏表示使用符合POSIX.1实现
+    #+BEGIN_SRC sh
+      cc -D_POSIX_C_SOURCE=200112 file.c # 仅使用POSIX.1定义
+    #+END_SRC
+  * _XOPEN_SOUCE
+
+    定义了该红表示使用符合Single UNIX Specification的实现
+    #+BEGIN_SRC sh
+      c99 -D_XOPEN_SOURCE=600 file.c   
+    #+END_SRC
+  * __STDC__
+
+    该宏由符合ISO C标准的C编译器自动定义.
+* 文件IO
+** lseek函数的返回值只有在等于-1时,才表示失败.
+
+   这是因为虽然文件的偏移量一般来说是一个非负数.但有些设备也可能允许负的偏移量.
+** 内核中是如何表示打开的文件的?
+   * 每个进程维护一个fd表
+     #+CAPTION: 文件描述表
+     | 内容     | 说明             |
+     |----------+------------------|
+     | fd       | 文件描述符标志   |
+     | 文件指针 | 指向一个文件表项 |
+   * 内核为所有打开文件维护一张文件表
+     #+CAPTION: 文件表
+     | 内容           | 说明               |
+     |----------------+--------------------|
+     | 文件状态标志   | 表示操作文件的MODE |
+     | 当前文件偏移量 | lseek函数的结果    |
+     | v节点指针      | 指向v节点          |
+   * 每个打开的文件(或设备)都有一个v节点结构
+     #+CAPTION: v节点表
+     | 内容      | 说明 |
+     |-----------+------|
+     | v节点信息 |      |
+     | i节点信息 |      |
+     | 当前文件长度  |      |
+
+*** 文件共享
+    若用open函数分别打开同一个文件,则会在进程中产生两条fd表项,每条表项的文件指针指向两个不同的文件表项. 这使得它们有自己的对该文件的当前偏移量.
+
+    若想使得两个fd表项指向同一个文件表项,以此共享同一个文件信息,则需要使用dup,dup2或者fcntl函数.
+    
+
+*** 关于原子操作
+    * 打开文件时设置O_APPEND标志后,每次对文件的写操作都是下列操作的原子操作
+      * lseek(fd,0L,SEEK_END);
+      * write(fd,buf,100)
+    * 对open函数的O_CREATE|O_EXCL模式参数,是对下列操作的原子操作
+      * 先检查文件是否存在
+      * 再创建文件

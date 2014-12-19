@@ -1,0 +1,169 @@
+#+TITLE: linux防火墙
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* iptable ：只过滤IP及其之上协议的数据包
+** 基本概念
+1. 表：表是iptables构建块，它描述了其功能的大类。iptables中共有4个表：
+   filter：过滤规则应用于filter表
+   nat   ：nat规则应用于nat表
+   mangle：用于修改分组数据的特定规则
+   raw   ：独立于netfilter连接跟踪系统起作用的规则
+2. 链：一个iptables链是一个规则集，这些规则按序与包含共同特征的数据包进行比较。每个表都有自己的一组内置链，用户也可以对链进行自定义，最重要的内置链是filter表中的INPUT、OUTPUT和FORWARD链和nat表中的PREROUTING何POSTROUTING链
+   INPUT链：由内核中的路由计算确定为指向本地linux系统的数据包
+   OUTPUT ：linux系统自身生成的数据包
+   FORWARD：管理经过linux系统路由的数据包（转发）
+   PREROUTING：在内核进行IP路由计算之前修改数据包的头部
+   POSTROUTING：在内核进行IP路由计算之后修改数据包的头部
+3. 匹配：每个匹配都在iptables的命令行中指定，最重要的匹配有
+   1. --source     （-s）：匹配源IP地址或网络
+   2. --destination（-d）：匹配目标ip地址和网络
+   3. --protocol   （-p）：匹配协议
+   4. --in-interface（-i）：流入接口
+   5. --out-interface（-o)：流出接口
+   6. --state             ：匹配一组连接状态
+      INVALID             ：不能被识别为属于一个已有连接的数据包
+      ESTABLISHED         ：Netfilter连接跟踪子系统在一个连接的两个方向上都已看到了数据包
+      RELATED             ：描述了在netfilter连接跟踪子系统中打开一个新连接的数据包，而且这个连接和现有的连接相关
+   7. --string            ：匹配应用层数据节点序列
+   8. comment           ：在内核内容中为一个规则的注释内容
+4. 目标：用于在数据包匹配一条规则时触发一个动作：
+   ACCEPT：允许数据包通过
+   DROP  ：丢弃数据包
+   LOG   ：将数据包信息记录到syslog
+   REJECT：拒绝数据包
+   RETURN：在数据链中继续处理数据包
+5. 一个例子：
+ #+BEGIN_SRC iptables
+#! /bin/sh
+IPTABLES=/sbin/iptables
+MODPROBE=/sbin/modprobe
+INT_NET=192.168.49.0/24
+
+###  flush existing rules an d set chain policy setting to drop
+echo "[+] Flushing existing iptables rules...."
+$IPTABLES -F
+$IPTABLES -F -t nat
+$IPTABLES -X
+$IPTABLES -P INPUT DROP
+$IPTABLES -P OUTPUT DROP
+$IPTABLES -P FORWARD DROP
+
+##load connection-tracking modules
+$MODPROBE ip_conntrack
+$MODPROBE iptable_nat
+$MODPROBE ip_conntrack_ftp
+$MODPROBE ip_nat_ftp
+
+####INPUT CHAIN###
+echo "setting up input chain"
+$IPTABLES -A INPUT -m state --state INVALID -j LOG --log-prefix "DROP INVALID" --log-ip-options --log-tcp-options
+$iPTABLES -A INPUT -m state --state INVALID -j DROP
+$IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+### anti-spoofing rules
+$IPTABLES -A INPUT -i eth1 -s ! $INT_NET -j LOG --log-prefix "SPOOFED PKT"
+$IPTABELS -A INPUT -i eth1 -s ! $INT_NET -j DROP
+
+###accept rules
+$IPTABLES -A INPUT -i eth1 -p tcp -s $INT_NET --dport 22 --syn -m state --state NEW -j ACCEPT #22port is ssh
+$IPTABLES -A INPUT -i ! lo -j LOG --log-prefix "DROP" --log-ip-options --log-tcp-options
+
+####OUTPUT chain###
+echo "setting up output chain"
+###state tracking rules
+$IPTABLES -A OUTPUT -m state --state INVALID -j LOG --log-prefix "DROP INVALID" --log-in-options --log-tcp-options
+$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
+$IPTABLES -A OUTPUT -m state --state ESABLISHED,RELATED -j ACCEPT
+### ACCEPT rules for allowing connections out
+$IPTABLES -A OUTPUT -p tcp --dport 21 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 22 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 25 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 43 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 80 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 443 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 4321 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p tcp --dport 53 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
+### default OUTPUT LOG rule
+$IPTABLES -A OUTPUT -o ! lo -j LOG --log-prefix "DROP" --log-ip-options --log-tcp-options
+
+### FORWARD chain ###
+echo "setting up forward chain..."
+$IPTABLES -A FORWARD -m state --state INVALID -j LOG --log-prefix "DROP INVALID" --log-ip-options --log-tcp-options
+$IPTABLES -A FORWARD -m state --state INVALID -j DROP
+$IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+###anti-spoofing rules
+$IPTABLES -A FORWARD -i eth1 -s ! $INT_NET -j LOG --log-prefix "SPOOFED PKT"
+$IPTABLES -A FORWARD -i eth1 -s ! $INET_NET -j DROP
+### ACCEPT rules
+$IPTABLES -A FORWARD -p tcp -i eth1 -s $INT_NET --dport 21 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p tcp -i eth1 -s $INT_NET --dport 22 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p tcp -i eth1 -s $INT_NET --dport 25 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p tcp -i eth1 -s $INT_NET --dport 43 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p tcp --dport 80 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p tcp --dport 443 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p tcp -i eth1 -s $INT_NET --dport 4321 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p udp -i eth1 -s $INT_NET --dport 53 --syn -m state --state NEW -j ACCEPT
+$IPTABLES -A FORWARD -p icmp --icmp-type echo-request -j ACCEPT
+### default log rule
+$IPTABLES -A FORWARD -i ! lo -j LOG --log-prefix "DROP" --log-ip-options --log-tcp-options
+### NAT rules
+echo "setting up nat rules..."
+$IPTABLES -t nat -A PREROUTING -p tcp --dport 80 -i eth0 -j DNAT --to 192.168.49.142:80
+$IPTABLES -t nat -A PREROUTING -p tcp --dport 443 -i eth0 -j DNAT --to 192.168.49.142:443
+$IPTABLES -t nat -A PREROUTING -p tcp --dport 53 -i eth0 -j DNAT --to 192.168.49.142:53
+####forwarding
+echo  "enabling ip forwarding "
+echo 1 >/proc/sys/net/ipv4/ip_forward
+ #+END_SRC
+** 命令
+1. iptables-save和iptables-restore
+   iptables-save：将正在运行的策略保存下来iptables-save >/root/ipt.save
+   iptables-restore：导入策略           cat /root/ipt.save | iptables-restore
+2. iptables选项
+   -A 链名，INPUT|OUTPUT|NAT|FORWARD|PREROUTING|POSTROUTING
+   -j 动作，ACCEPT|REJECT|LOG|DROP|RETURN
+   -s 源IP地址|源网络地址
+   -d 目的IP地址|目的网路地址
+   -dport 目的端口
+   -m limit --limit xx/sec 设置每秒通过的包流量
+   -m string --string "xxx" --algo 字符串搜索算法（bm|kmp）在应用层负载数据中匹配xxx的字符串
+   -m string --hex-string "|xxx|" --algo 十六进制搜索算法（bm|kmp）在应用层负载数据中匹配xxx的字符串
+   -p 协议：TCP|UDP|ICMP
+** 日志说明
+***  网络层日志说明
+     1. IP记录
+	TOS=服务类型
+	PREC=优先级子类型
+	LEN=总长度
+	ID=标识
+	DF=分片标记
+	MF=是否还有分片标记
+	FRAC=片偏移
+	TTL=生存时间
+	PROTO=协议
+	SRC=源地址
+	DST=目的地址
+	OPT=选项，（未解码的，且需要--log-ip-options）
+     2. ICMP记录(与IP首部一样，LOG总是记录ICMP的类型字段和代码字段，但不记录ICMP的校验和字段)
+	CODE=代码
+	TYPE=类型	
+*** 传输层日志说明
+    1. TCP记录
+       SPT=源端口号
+       DPT=目的端口号
+       SEQ=序号，需要--log-tcp-sequence
+       ACK=确认序号，需要--log-tcp-sequence
+       RES=保留字段
+       CWR-显式拥塞通告
+       SYN=
+       WINDOW=窗口大小
+       URGP=紧急指针
+       OPT=选项，未解码，需要--log-tcp-options
+    2. UDP记录
+       SPT=源端口号
+       DPT=目的端口号
+       LEN=长度
+*** 应用层日志说明（应用层通过在有效载荷内执行字符串匹配的方法）

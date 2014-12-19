@@ -1,0 +1,127 @@
+library(object,jobq,pgm,jobd,file(member,member,member))
+WRKSYSSTS(Work with system status) 
+AS/400中子系统的配置与系统值QCTLSBSD有关
+WRKSBS(work with subsystems)可以看到AS/400系统中当前活跃的各个子系统的名称
+WRKJOBQ可以看到系统中所有JOB QUEUE的一个列表和每一个JOB QUEUE中等待执行的JOB 数目。
+WRKOUTQ可以看到系统中所有Output Queue的一个列表以及spooled file的数目和队列的状态。
+DSPJOBD可以看到作业描述中的内容。
+strsda编辑页面和菜单
+GRTOBJAUT分配用户专有权限
+crtusrprf产生用户
+DSPUSRPRF 显示用户的useprofile。
+DLTUSRPRF删除用户的userprofile。
+WRKUSRPRF处理用户的userprofile,可以通过选项对用户进行如修改，显示，删除等操作。
+CHGUSRPRF 修改用户的userprofile。（包含于WRKUSRPRF）
+CHGPWD    允许用户修改自己的密码。
+ADDAUTLE 允许用户将自己加到权限列表中
+WRKOBJPDM+库名对library,file,member进行操作
+STRSQL对数据库进行操作
+UPDDTA+物理文件名
+WRKQRY得到指定格式的数据库查询结果
+wrksplf控制Spooled file的操作
+WRKACTJOB查看活跃的作业命令
+netstat,wrklind,wrkctld,wrkdevd查看网络状态及线描述，控制器描述，设备描述
+crtsavf创建存储文件对数据进行存储和恢复
+SAVLIB+F4将数据库保存到save file中，rstlib从save file中恢复数据库
+程序的存储路径为：Library—File—Member
+wrksplf察看spool file
+crtlib建立库
+STRPDM、WRKOBJPDM+F4	Object、WRKLIBPDM+F4	Lib、WRKMBRPDM+F4	Member进入源物理文件
+WRKOBJ  库名/文件名可以看到文件
+dsplibl可以看到自己当前的库列表
+ADDLIBLE（Add Library List Entry）将库加入库列表中
+DSPDBF  数据物理文件名/逻辑文件名：察看数据
+wrkobjlnk
+ADDPFM   在PF中增加MEMBER
+CPYF	从其它数据文件中拷贝数据
+
+常用的CL命令
+
+    操作					CL命令					结果
+   使用系统菜单					GO MAIN					显示主菜单
+   						GO INFO					显示帮助菜单
+						GO CMDRPG				列出有关RPG的命令
+						GO CMDCRT				列出有关建立的命令
+						GO CMDXXX				列出有关‘XXX’命令
+   调用						CALL程序名				运行一个程序
+   编译						CRTxxxMOD				建立xxx模块
+						CRTBNDxxx				建立连接的xxx程序
+   连接						CRTPGM					用ILE模块建立一个ILE程序
+    						CRTSRVPGM				建立一个服务程序
+						UPDPGM					更新一个连接的程序目标
+   调试						STRDBG					启动ILE源语句调试程序
+						ENDDBG					结束ILE源语句调试程序
+   建立文件					CRTPRTF					建立打印文件
+						CRTPF					建立物理文件
+						CRTSRCPF				建立源物理文件
+						CRTLF					建立逻辑文件
+
+
+产生物理文件的方式
+1.	进入SEU键入DDS语句，经编译产生实际存放数据的物理文件
+2.	通过STRDKTRDR命令读盘产生，目前不用。
+3.	通过复制文件 (CPYF命令)产生.注意：这方法不创建源物理文件.
+4	通过恢复库或目标产生命令RSTLIB，RSTOBJ。不介绍。
+
+
+建立逻辑文件
+逻辑文件的建立方法与物理文件的建立方法相同，仅仅是类型改为LF：在逻辑文件中对于物理文件的域不要再定义长度和类型
+第一行：type=R，name=物理文件中的格式名次，function=PFILE(物理文件名)从物理文件中读取数据
+	type=k:作为关键字,type=s function=条件:选出指定条件的数据,type=o function=条件：忽略指定条件的数据
+
+NOTE：
+1、物理文件名一般五位，前两位说明文件的类型
+2、物理文件一般以A结尾i
+3、seu进行编辑源物理文件时，记录格式名一般为F+源物理文件名的前4位
+4、若UNION后有多个KEY的话，表示这些KEY联合唯一
+
+
+
+一个子系统中的作业类型一致
+
+
+
+Q:子系统，工作队列，工作的关系
+
+
+
+
+	  ADDLIBLE				临时添加库列表
+	  ADDBKP				在DEBUG程序时给程序加断点
+	  CRTLIB				创建Library
+	  CRTSAVF				创建用于存目标或库的*SAV文件
+	  CRTSRCPF				创建源物理文件
+	  DLTLIB				删除Library
+	  DLTSPLF				删除SPOOL  FILE
+	  EDTLIBLE				编辑库列表
+	  ENDDBG				结束DEBUG
+	  RSTLIB				恢复Library
+	  RSTOBJ				恢复Object
+	  SBMJOB(SUBMIT)			向主机提交作业
+	  STRDBG				启动DEBUG模式
+	  STRPDM				启动工具PDM
+	  STRRLU				启动工具RLU
+	  STRSDA				启动工具SDA
+	  STRSQL				启动SQL
+	  WRKACTJOB				处理当前的活动作业
+	  WRKLIB				处理Library
+	  WRKLIBPDM				Work  with Library  PDM
+	  WRKJOBLOG				处理作业日志
+	  WRKJRNA(!!)(JOURNAL)			处理日志（物理文件的日志）
+	  WRKMBRPDM				Work with Member PDM
+	  WRKOBJ				对Object进行处理
+	  WRKOBJLCK				处理目标的锁定情况
+	  WRKOBJPDM				Work with Object  PDM
+	  WRKSYSSTS				处理系统状态
+	  WRKUSRPRF				处理用户的Profile
+
+
+
+以后命令不出结果  一定要先dspjoblog
+1、系统请求功能
+可以用系统请求功能，在终端上启动一个替换的交互作业，然后用系统请求键在著作也和替换作业之间切换
+步骤为：
+a、按住shift或alt键+系统请求键（ESC键），屏幕底部显示一整行的竖线（||||||）
+b、按执行键，出现系统请求菜单
+2、切换视图
+可以通过按F21来切换视图，有三种模式：基本，中间，高级

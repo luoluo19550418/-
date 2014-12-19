@@ -1,0 +1,270 @@
+*函数
+**检查一个函数是否存在
+function_exists(函数名)//返回bool值
+**字符串函数
+strtoupper(字符串)
+strtolower(字符串)
+ucwords(字符串)			//将字符串中每个单词的首字母大写
+ucfirst(字符串)			//将字符串的首字母大写
+stristr(字符串,子字符串)		//判断子字符串是否在字符串中，不关心大小写
+strstr(字符串,子字符串)		//判断子字符串是否在字符串中，关心大小写
+strpos(字符串,子字符串)		//子字符串在字符串中的位置
+substr(字符串,位置)		//从位置处截取字符串
+**日期与实践函数
+PHP在操作日期的时候，使用的是标准的UNIX风格的时间戳
+time()				//得到当前时间戳,时间戳为从1970.1.1开始的秒数，所以可以通过+，-秒数的方法来修改时间
+date(格式字符串,时间戳)		//以指定的方式显示时间
+checkdate(月,日,年)		//验证日期是否有效
+mktime(小时,分,秒,月,日,年)	//创建指定时间的时间戳
+**文件操作
+file_exist(文件路径)		//检查文件是否存在
+is_readable(文件路径)		//检查问价属性
+is_writable(文件路径)
+is_executable(文件路径)
+touch(文件路径)			//创建文件
+unlink(文件路径)			//删除文件
+renam(旧文件名,新文件名)		//重命名
+***对上传文件进行验证
+1、当用<input type="file",name="upload_file">进行文件上传时，可以通过全局变量$_HTTP_POST_FILES['upload_file'][]数组获取upload_file文件的信息。PHP4之后，可以用$_FILES去带$HTTP_POST_FILES
+2、move_uploaded_file(旧文件名,新文件名)		//重命名旧文件名为新文件名，该函数会检查文件确实是通过PHP的HTTP POST上传的。
+3、is_uploaded_file(上传文件的临时文件)		//文件是否已上传，由于上传后会重命名为临时文件，故检查临时文件
+**执行系统命令
+exec(系统命令)	//最好用escapeshellcmd($cmd)对用户提供的系统命令进行特殊字符转码
+***例如
+$_HTTP_POST_FILES['upload_file']['name']	//原始文件名
+$_HTTP_POST_FILES['upload_file']['tmp_name']	//临时文件名
+$_HTTP_POST_FILES['upload_file']['type']	//MIME类型
+$_HTTP_POST_FILES['upload_file']['size']	//文件大小
+**将其他PHP脚本加入到自己脚本里来	
+1、include和include_once
+2、require和require_once
+
+*面向对象编程
+**对象的使用
+1、创建对象用new创建，返回指针.即对象由指针表示。
+2、由于对象用指针引用，故使用对象成员函数时用->运算符调用
+**对象的定义
+3、PHP5.0支持通过function __constructor来定义构造函数，如果类中无此方法，就使用旧的方式，把与类同名方法当作构造函数，（类似C++）
+4、在类中定义变量的方法为var 变量名
+5、在类中使用内部变量的方法为$this->变量名，同理类外部使用方法为：对象名->变量名
+6、定义继承用extends运算符
+7、!!子类构造方法不会自动调用父类构造函数，故总是要在子类构造函数中手工调用父类构造函数
+8、调用父类的方法使用parent::父类方法名
+9、调用静态方法的方式为：类名::静态方法名
+**例如
+<?php
+class Cat
+{
+    var $name;
+    function Cat($name)
+    {
+        $this->name=$name;
+    }
+    function miao()
+    {
+        echo "miao......";
+    }
+    function who()
+    {
+	echo "this is ".$this->name;
+    }
+}
+class Kitty extends Cat
+{
+    function Kitty($name)
+    {
+	parent::Cat($name);
+    }
+    function sleep()
+    {
+	echo "zzz......";
+    }
+}
+$aCat=new Cat("catA");
+$aCat->miao();
+echo "</br>";
+$aCat->who();
+echo "</br>";
+echo "</p>";
+$aKitty=new Kitty("kittyA");
+$aKitty->who();
+echo "</br>";
+$aKitty->sleep();
+echo "</br>";
+?>
+**变量引用
+&在变量前不代表取变量的地址，而表示变量的引用
+***例如
+<?php
+$a=1;
+$b=&$a;//引用，b和a指向同一个变量或对象
+$b=2;
+echo $a;//结果为2
+?>
+*数组
+**可以用"下表=>值"的方式创建一个关联数组
+例如
+<?php
+$sharp=array('a'=>'1','b'=>'2','3'=>'c','4'=>'d');
+?>
+count($array)
+sort($array[,SORT_FLAG]);
+
+
+*使用MySQL
+**修改表定义
+ALTER TABLE 表名 修改语句
+***修改表名
+ALTER TABLE 旧表名 RENAME 新表名;
+***修改|增加列类型
+ALTER TABLE 表名 MODIFY|ADD 列名 列定义 [FIRST|AFTER 列名]
+***修改列名
+ALTER TABLE 表名 CHANGE 旧列名 新列名 列定义
+***删除列
+ALTER TABLE 表名 DROP 列名
+**数据库备份与恢复
+***备份
+****备份为sql
+mysqldump -u 用户名 -p密码 [--all-databases|--no-data|--no-create-info] [数据库名称] [表名] >备份文件.sql
+****备份为其他格式
+mysqldump -u 用户名 -p密码 --all-databases --no-create-info --tab=备份文件目录 --fields-terminated-by=分隔符 数据库名称 >备份文件.txt
+***恢复
+mysqldump -u 用户名 -p密码 [-D 数据库名称] <备份文件.sql
+mysqlimport -u 用户名 -p密码 --fields-terminated-by=分隔符 数据库名 备份文件.txt --这里备份文件名称就是表的名称，该表名称必须事先存在
+**高级SQL
+1、建立索引用UNIQUE 索引名(列名)而不是INDEX
+2、EXPLAIN SQL语句 可以用来查看MySQL处理该查询语句的细节
+***数据库函数
+3、CONCAT（列名1,列名2....） --合并列值
+4、CONCAT_WS(分隔符,列名1,列名2...) --用指定的分隔符合并列值
+5、LENGTH(列名) --得到字符串长度
+6、UCASE(列名)--字符串转变为大写
+   LCASE(列名) --字符串转变为小写
+7、LPAD(列名,填充长度,填充字符)--从左填充值
+   RPAD(列名,填充长度,填充字符)--从右填充值
+8、LTRIM(列表)
+   RTRIM(列表)
+   TRIM(LEADING|TRAILING 填充符 from 列名)--从列名去除指定填充符，LEADING为从左去除，TRAILING为从右去除
+9、LOCATE('子字符串','字符串') --定位子字符串，0表示没查到，位置从1开始
+10、LEFT|RIGHT(列名,长度) --截取字符串长度
+    SUBSTR(列名,开始位置,长度)
+11、REPLACE(源字符串,查找字符串,替代字符串) --替换子字符串
+***时间函数
+****提取date值
+    WEEKDAY
+    DAYOFWEEK
+    DAYNAME
+    WEEK
+    MONTH
+    MONTHNAME
+****提取time值    
+    HOUR
+    MINUTE
+    SECOND
+****时间运算
+    DATE_ADD
+    DATE_SUB
+    +
+    -
+****时间显示    
+    DATE_FORMAT
+****UNIX时间戳转换
+    unix_timestamp()
+    from_unixtime()
+***事务
+start transaction;
+commit;
+rollback;
+
+*PHP连接mysql
+**调用mysql
+$db=mysql_connect($host,$user,$password);
+mysql_select_db($databaseName,$db);	//注意，这里没有对$db赋值
+$result=mysql_query($sql,$db);		//注意，这里指定了$db
+$row=mysql_fetch_row($result);		//返回数组，以数组为下表
+$array=mysql_fetch_array($result);	//返回数组，以域名为下表
+mysql_close($connect);
+或者
+$connect=mysql_connect($host,$user,$password);
+$$db=mysql_select_db($databaseName,$connect);//注意，这里对$db赋值了
+$result=mysql_query($sql);		//注意，这里没指定$db
+$row=mysql_fetch_row($result);		//返回数组，以数组为下表
+$array=mysql_fetch_array($result);	//返回数组，以域名为下表
+mysql_close($connect);
+**调用PEAR 的DB
+include_once("DB.php");
+$db=DB::connect("mysql://$user:$passwd@$host/$db");	//注意是/而不是\
+DB::isError($db);	
+$result=$db->query($sql);
+$errorCode=DB::isError($result);
+$errorMessage=DB::errorMessage($errorCode);
+$row=$result->fetchRow([DB_FETCHMODE_ASSOC|DB_FETCHMODE_NUM]);
+$db->disconnect();
+$connect->netxid(列名);	//该列名为社长了AUTO_INCREAMENT的列名，返回可供使用的下一个值
+
+*PHP与HTML
+**指定页面为XHTML格式:
+header('Content-Type:application/xhtml+xml;charset=utf-8');//header函数指定生成的文件格式
+**获取页面传递的值
+$value=$_GET["$key"]	//获取GET方式传递的值
+$value=$_POSt["$key"]	//获取POST方式传递的值
+
+*安全
+**防止SQL注入
+1、MySQL的查询命令只允许一个查询里执行一个语句
+2、PHP默认使用魔术引号。魔术引号会对单引号和双引号里的特殊字符自动进行反斜线\转义
+3、可以用mysql_real_escape_string($sql)对sql语句进行转义
+4、PEAR也提供了转义函数escapeSimple($sql)
+**脚本攻击
+5、对用户提交的字符串执行函数htmlentities($string_to_clean)对字符串中的html代码进行转义
+**屏蔽MySQL错误信息
+在函数调用前加上错误控制操作符@，这样输出的错误信息就不会带过多的信息了。
+例如：
+$connect=@mysql_connect($host,$user,$passwd);
+echo $error
+在PHP.ini中
+设置display_errors=ON|OFF可以决定是否显示错误信息
+设置error_reporting($level)决定记录错误信息的等级
+**对某些页面指定身份验证
+在需要身份验证的页面所在目录放置 .htaccess文件，它会告诉Apache在用户访问该目录下的信息之前必须通过身份认证，且该文件只对本目录有效，对子目录无效
+例如
+AuthType Basic
+AuthName "Administrators Only"
+AuthUserFile /usr/local/apache/passwd/passwords
+Require valid-user
+
+*Cookie、会话和访问控制
+**Cookie
+***设置读取Cookie
+setCookie($key,$value[,$expire][,$path][,$domain][,$secure]); //设置Cookie
+$_COOKIE["$key"]					      //访问Cookie
+***删除Cookie
+重置Cookie的过期时间为过去时间
+重置Cookie，并只指定Cookie的名字
+**身份认证
+***使用apache的身份认证
+PHP可以使用Apache服务器的身份认证，PHP在返回给浏览器的应答中使用验证头，要求浏览令其显示一个身份认证对话框
+header('WWW-Authenticate:Basic realm="Member Area"');
+header("HTTP/1.0 401 Unauthorized");
+$_SERVER['PHP_AUTH_USER']	//获取身份认证输入的用户名
+$_SERVER['PHP_AUTH_PW']		//获取身份认证输入的密码
+例如：
+<?php
+if(!isset($_SERVER['PHP_AUTH_USER']))
+{
+	header('WWW-Authenticate:Basic realm="Member Area"');
+	header("HTTP/1.0 401 Unauthorized");
+	echo "please login with a valid username and password";
+	exit;
+}
+else
+{
+	echo "You entered a username of :".$_SERVER['PHP_AUTH_USER']." ";
+	echo "and a Password of:".$_SERVER['PHP_AUTH_PW']." ";
+}
+?>
+**会话
+session_start();	//开始会话
+$_SESSION['$key']=$value//将值放入会话中
+$_SESSION['$key']	//取存入会话的值
+$session_destory();	//销毁会话

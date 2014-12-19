@@ -1,0 +1,677 @@
+#+TITLE: curses
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* curses开发包初接触
+** curses包内容
+   * curses.h
+     主要控制屏幕的输入和输出,光标的操作,窗口的创建和操作等
+   * panel.h
+     类似窗口堆栈,不同窗口可以存放其中,并且可以在其中进行移动
+   * menu.h
+     主要包括创建菜单并且与之交互的函数,主要用来接受用户的选择
+   * form
+     包括创建表单以及与之交互的函数,主要用来接受用户数据输入
+** 开始使用curses包
+*** curses初始化
+    * 一般情况下在其余的cuses函数被调用前就必须先调用initscr().
+    * stdscr和curscr的不同在于
+      * stdscr代表的是逻辑屏幕
+      * curscr代表的是物理屏幕
+      * wfresh函数会根据stdscr和curscr之间的差异更新物理屏幕
+    * 如果程序使用多个终端
+      * 使用newterm()代替initscr()
+      * 对于每个希望与之交互的终端都调用一次newterm()
+      * newterm()返回一个SCREEN结构用来引用某个终端
+      * 在需要从某个终端接受输入和输出的时候,必须通过set_term(SCREEN)来将它设置成当前终端
+*** 终端模式设置
+    * 终端模式实际上是一系列开关的属性,它们直接影响着终端如何处理输入以及输出.
+    * keypad(stdscr,TRUE)
+      用来控制是否将键盘上的特殊字符转换成curses包中的对应特殊键
+    * nonl()
+      用来控制程序将回车键不要转换成换行符
+    * cbreak()
+      读取除了DELETE或CTRL等特殊字符以外的所有字符,其他所有的字符都被立即读取出来
+    * noecho()
+      使键盘输入的字符不需要直接在屏幕上显示
+*** 颜色处理
+    * 使用函数has_colors()判断终端是否支持彩色
+    * 使用init_pair(0,COLOR_GREEN,COLOR_BLACK)初始化颜色配对表,设置字符的前景色和背景色
+    * 使用attron(A_BLINK|COLOR_PAIR(2))设置要显示的字符如何显示
+*** 使用refresh和wrefresh进行屏幕更新
+    * refresh其实是wrefresh(stdscr)的宏定义
+*** 使用endwin()函数中断curses程序
+    * endwin()是程序最后调用的一个函数,与initscr()相呼应
+    * endwin()执行后,光标移动到屏幕的左下方
+** 编译
+   * 如果程序使用了panel,menu,form等库,-lcurses选项必须在其余的选项之后
+** 例子
+   #+BEGIN_SRC c
+     #include <curses.h>
+     static void finish(int sig);
+     int main()
+     {
+         initscr();
+         keypad(stdscr,TRUE);
+         nonl();
+         cbreak();
+         noecho();
+         if(has_colors())
+         {
+             start_color();
+             init_pair(0,COLOR_BLACK,COLOR_BLACK);
+             init_pair(1,COLOR_GREEN,COLOR_BLACK);
+             init_pair(2,COLOR_RED,COLOR_BLACK);
+             init_pair(3,COLOR_CYAN,COLOR_BLACK);
+             init_pair(4,COLOR_WHITE,COLOR_BLACK);
+             init_pair(5,COLOR_MAGENTA,COLOR_BLACK);
+             init_pair(6,COLOR_BLUE,COLOR_BLACK);
+             init_pair(7,COLOR_YELLOW,COLOR_BLACK);
+         }
+         attron(A_BLINK|COLOR_PAIR(2));
+         move(LINES/2+1,COLS-4);
+         addstr("Eye");
+         refresh();
+         sleep(2);
+     
+         move(LINES/2-3,COLS/2-3);
+         addstr("Bulls");
+         refresh();
+         sleep(2);
+     
+         finish(0);
+     }
+     
+     static void finish(int sig)
+     {
+         endwin();
+         exit(0);
+     }
+   #+END_SRC
+
+* curses库IO处理
+** curses的说明
+*** curses中的常量定义
+    * OK 
+      curses库函数运行成功的返回值,系统定义为0
+    * ERR
+      curses库函数运行发生错误的返回值,系统定义为-1
+    * TRUE
+      布尔值,表示真,系统定义为1
+    * FALSE
+      布尔值,表示假,系统定义为0
+*** curses函数命名规范
+    * 函数默认直接作用于stdscr上
+    * 如果某函数是操作对象是指定的窗口而不是stdscr,那么这些函数都带有w作为前置,同时它的地一个函数是一个WINDOW结构的窗口指针
+    * 如果某函数是移动操作和输入/输出操作结合的,这些函数在名称前面加上mv,同时移动的坐标(y,x)作为第一二个函数
+*** curses参数规范
+    * 对于set函数来说,一般对被作用对象的参数赋值为NULL时,表示的意思是对该类对象设置默认属性
+** 终端模式设置
+*** ECHO模式
+    * 函数
+      int echo() / int noecho()
+    * 说明
+      1. ECHO模式即回显模式,ECHO模式用来决定用户的输入是否立即回显
+*** CBREAK模式
+    * 函数
+      int cbreak() / int nocbreak()
+    * 说明
+      1. CBREAK模式也被成为立即输入模式,在此模式下,除了DELETE或者CTRL等仍然被视为特殊控制字符外,所有的输入字符都被一一立即读取出来.
+      2. 默认情况下CBREAK模式是打开的
+      3. 在旧版本的curses中,必须使用crmode()和nocrmode()取代cbreak()和nocbreak()
+*** NEWLINE模式
+    * 函数
+      int nl() / int nonl()
+    * 说明
+      NEWLINE模式决定输入时回车是否为\r\n.输入时\r\n是否和起来作为一个回车键
+*** 功能键模式
+    * 函数
+      int keypad(WINDOW *win,int flag)
+      * 参数说明
+	1. win指向需要设置功能键模式的窗口
+	2. flag为TRUE/FALSE用来指定模式的开启或关闭
+    * 说明
+      1. 一般情况下,方向键与功能键这些特殊字符是无法被wgetch()之类的函数读取出来的.开启功能键模式之后,特殊字符会被转化为curses.h内部定义的一些特殊键.
+      2. curses.h内部定义的特殊键一般以KEY_开头,列表如下
+	 * KEY_MIN         curses中定义的最小的键值
+	 * KEY_BREAK       break按键
+	 * KEY_DOWN        方向键下
+	 * KEY_UP          方向键上
+	 * KEY_LEFT        方向键左
+	 * KEY_RIGHT       方向键右
+	 * KEY_HOME        home键
+	 * KEY_BACKSPACE   退格键
+	 * KEY_F0          功能键F0
+	 * KEY_F(n)        功能键Fn
+	 * KEY_DL          行删除键
+	 * KEY_IL          行插入建
+	 * KEY_DC          字符删除键
+	 * KEY_IC          字符插入键
+	 * KEY_NPAGE       下一页
+	 * KEY_PPAGE       上一页
+	 * KEY_END         end键
+	 * KEY_MAX         curses定义的最大键值
+*** RAW模式
+    * 函数
+      int raw() / int noraw()
+    * 说明
+      * 用户的输入会立即被接受,同时任何特殊字符将不再起作用,取而代之的是产生一个相应的信号
+      * 如果同时设置CBREAK和RAW模式,仅有RAW模式其作用
+*** 延迟模式
+    * 函数
+      int halfdelay(int tenth)
+      * 参数说明
+	1. tenth指定半延时的时间间隔,单位是10ms
+      int nodelay(WINDOW *win,bool bf)
+      * 参数说明
+	1. win指向需要设置无延迟模式窗口的指针,bf决定开启或关闭该模式
+    * 说明
+      * 半延迟模式与cbrak模式非常类似,所有用户输如立即被接受,但不同点在于如果一段时间内用户没有输入,则输入函数立即返回ERR
+      * 使用nocbreak()函数可以取消终端的半延时模式
+      * 无延迟模式主要用来控制终端的字符输入. 它使得终端输入函数由阻塞调用变成非阻塞调用
+** 输入/输出函数
+*** 字符,字符串输出
+    #+BEGIN_SRC c
+      /**
+      @brief 在光标位置输出字符,但不自动刷新
+      @param ch 需要输出的字符
+      @return OK 成功
+      @return ERR 失败 
+      @note chtype为无符号长整型,它的低位可以包含字符本身的信息,这部分与char类型类似
+      @note curses中定义了一些常量与之队列,这些常量以ACS_开始:ACS_ULCORNER,ACS_LLCORNER,ACS_URCORNER,ACS_LRCORNER,ACS_RTEE,ACS_BTEE,ACS_HLINE,ACS_VLINE,ACS_PLUS,ACS_S1,ACS_S9,ACS_DIAMOND,ACS_CKBOARD,ACS_DEGREE,ACS_PLMINUS,ACS_BULLET,ACS_LARROW,ACS_RARROW,ACS_UARROW,ACS_DAROW,ACS_BOARD,ACS_LANTERN,ACS_BLOCK
+      @see waddch(),mvaddch(),mvwaddch()
+       */    
+      int addch(chtype ch);
+      
+      /**
+      @brief 输出字符,并自动刷新
+      @note 跟addch类型,但是会自动刷新窗口
+       */
+      int echochar(chtype ch);
+      
+      /**
+      @brief 输出字符串str
+      @note 如果字符串的长度超过了屏幕的大小,字符串将截取掉
+      @see waddstr(),mvwaddstr(),mvaddstr()
+       */
+      int addstr(char* str);
+      
+      /**
+      @brief 在屏幕上格式化输出一个或者多个值
+       */
+      int printw(char* fmt,arg1,arg2...);
+      
+      /**
+      @brief 在当前位置插入一个字符
+      @note 字符插入后,光标将自动的向右i移动一个位置,如果最右边的字符超过终端屏幕的范围,它将被截取掉
+      @see mvprintw(),mvwprintw(),wprintw()
+       */
+      int insch(chtype ch);
+      
+      /**
+      @brief 删除当前光标处字符的函数
+       */
+      int delch();
+      
+      /**
+      @brief 在屏幕上插入一空白行
+       */
+      int insertln();
+      
+      /**
+      @brief 删除当前行,并且将当前行下的所有行往上移动一行,最后一行则用空格代替
+       */
+      int deleteln();
+    #+END_SRC
+
+*** 字符,字符串输入
+    #+BEGIN_SRC c
+      /**
+      @brief 从终端键盘读取一个字符,并返回字符的整数值
+      @return 如果成功,则返回读入的字符整数值
+      @return 如果失败,返回ERR
+       */
+      int getch();
+      
+      /**
+      @brief 从终端键盘接受字符串,并且存储在str中
+      @param str 指向存储字符串的位置
+      @note 当字符串被存储时,'\n'被空格所代替
+       */
+      int getstr(char* str);
+      
+      /**
+      @brief 格式化输入数据,并把他们复制到指定的位置
+       */
+      int scanw(char* fmt,argptr1,argptr2...);
+    #+END_SRC
+
+** 字符属性函数
+*** chtype说明
+    * chtype类型包含两部分信息:一部分包含字符本身的信息,另一部分包含与字符相关的一些属性信息,这些属性允许字符用不同的方式显示,包括反显,加粗,变色,下划线等
+    * 当字符作为参数传递给函数的时候可以将这些属性直接用|与字符结合,多个属性直接也可以用|来对属性进行组合
+*** 字符属性列表
+    | 属性值        | 说明                                    |
+    |---------------+-----------------------------------------|
+    | A_NORMAL      | 标准的显示模式                          |
+    | A_BLANK       | 闪烁                                    |
+    | A_BOLD        | 加粗                                    |
+    | A_DIM         | 半透明                                  |
+    | A_REVERSE     | 反显                                    |
+    | A_STANDOUT    | 高亮                                    |
+    | A_UNDERLINE   | 下划线                                  |
+    | A_ALTCHARSET  | 可替代字符集                            |
+    | COLOR_PAIR(n) | 设置字符的背景色和前景色                |
+    | A_CHARTEXT    | 与chtype类型用&操做符可以提取字符值     |
+    | A_ATTRIBUTES  | 与chtype类型用&操作符可以提取属性值     |
+    | A_COLOR       | 与chtype类型用&操作符号可以提取颜色信息 |
+ 
+*** 设置/取消字符属性
+    #+BEGIN_SRC c
+      /**
+      @brief 设置字符输出的默认字符属性,设置之后所有的文本字符都受该属性的影响
+      @note 可以用过attrset(0)的特殊用法来关闭所有属性
+       */
+      int attrset(chtype attrs);
+      
+      /**
+      @brief 打开某些属性
+       */
+      int attron(chtype attrs);
+      
+      /**
+      @brief 关闭某些属性
+       */
+      int attroff(chtype attrs);
+      
+      /**
+      @brief 在当前屏幕打开高亮显示属性A_STANDOUT
+       */
+      int standout();
+      
+      /**
+      @brief 作用与attrset(0)作用相同,关闭所有属性
+       */
+      int standend();
+    #+END_SRC
+
+** 光标操作
+*** 光标说明
+    * curses库中光标分为物理光标和逻辑光标.物理光标只有一个,而逻辑光标属于curses窗口,每个窗口只有一个物理光标但却可能有多个逻辑光标
+    * 物理光标位置会在处理输入函数之后发生改变,但可以通过WINDOW结构的_leave标志重新定位它
+      * 如果设置了_leave标志,在输入结束后,逻辑光标将会移动到物理光标指向的窗口中最后写入的区域.
+      * 如果没有设置_leave标志,在输入操作结束后,物理光标将返回到逻辑光标指向窗口的地一个字符移动位置
+      * _leave标志由leaveok()函数控制的
+*** 光标移动函数
+    #+BEGIN_SRC c
+      /**
+      @brief 移动逻辑光标到指定的位置
+      @param x x坐标,表示移动后位置所在的行数
+      @param y y坐标,表示移动后位置所在的列数
+       */
+      int move(int x,int y);
+      
+      /**
+      @brief 移动物理光标到指定位置
+      @param last_x 移动前光标所处的行位置
+      @param last_y 移动前光标所处的列位置
+      @param new_x 移动后光标所处的行位置
+      @param new_y 移动后光标所处的列位置
+      @note mvcur()不用等待屏幕刷新就会立即生效
+       */
+      void mvcur(int last_x,int last_y,int new_x,int new_y);
+      
+      /**
+      @brief 设置物理光标的状态
+      @param visibility 物理光标的状态
+             0  隐藏
+             1  正常
+             2  高亮显示
+       */
+      int curs_set(int visiblility)
+    #+END_SRC
+
+** 清屏函数
+   #+BEGIN_SRC c
+     /**
+     @brief 清除屏幕上的所有字符,并且将光标移动到屏幕的原点
+     @note clear()会自动调用clearok()函数,这使得clear()函数能够清除物理屏幕上的那些curses无法识别的垃圾
+     @see wclear()
+      */
+     int clear();
+     
+     /**
+     @brief 清除屏幕上所有字符
+     @note 它不会自动调用clearok()函数,因此它并不是一种最彻底的清除方式
+     @see werase()
+      */
+     int erase();
+     
+     /**
+     @brief 清楚从当前光标位置到屏幕底端的所有内容
+     @note 会改变当前光标的位置
+      */
+     int clrtoeol();
+     
+     /**
+     @brief 清除屏幕上当前位置到该行末尾的所有字符
+     @note 会改变当前光标的位置
+      */
+     int clrtobot();
+   #+END_SRC
+** 颜色属性
+*** 颜色说明
+    * curses库中使用RGB方法来表示一种颜色
+    * 默认的颜色有
+      | 颜色          | 索引号 |
+      |---------------+--------|
+      | COLOR_BLACK   |      0 |
+      | COLOR_RED     |      1 |
+      | COLOR_GREEN   |      2 |
+      | COLOR_YELLOW  |      3 |
+      | COLOR_BLUE    |      4 |
+      | COLOR_MAGENTA |      5 |
+      | COLOR_CYAN    |      6 |
+      | COLOR_WHITE   |      7 |
+      |               |        |
+*** 颜色函数及变量
+    #+BEGIN_SRC c
+      int COLORS; /**终端能够支持的最大颜色数目 */
+      
+      int COLORS_PAIRS; /**终端能够支持的颜色配对表的最大数目 */
+      
+      chtype COLOR_PAIR(n); /**根据索引号返回初始化的颜色配对表中的颜色属性 */
+      
+      /**
+      @brief 将终端的颜色f恢复到终端打开时候的状态
+      @return ERR 终端不支持彩色
+      @return OK 成功
+      @note 一般在调用了initscr()函数之后就调用这个函数,它初始化颜色表,同时i初始化变量COLORS和COLOR_PAIRS
+       */
+      int start_color();
+      
+      /**
+      @brief 改变颜色配对表条目中的颜色定义
+      @param 颜色配对索引
+      @param 前景色
+      @param 背景色
+       */
+      int init_pair(short pair,short f,short b);
+      
+      /**
+      @brief 更改颜色定义
+      @param color 被更改定义的颜色
+      @param r 红色背景分量
+      @param b 蓝色背景分量
+      @param g 绿色背景分量
+       */
+      int init_color(short color,short r,short b,short g);
+    #+END_SRC
+
+* curses库窗口(WINDOW)处理
+** 什么是窗口
+   * 窗口是屏幕上的一块区域,在其上面可以进行各种输出及其操作.
+   * 窗口可以位于标准屏幕的任意位置,窗口之间可以相互重叠.
+   * 窗口可以同时包含与它们相关的子窗口,任何在父窗口与子窗口重叠区域的变化会同时影响到他们中的任何一个
+** 窗口操作
+*** 创建和删除窗口
+    #+BEGIN_SRC c
+      /**
+      @brief 创建窗口并返回WINDOW指针
+      @param lines 需要创建窗口所占的总行数
+      @param cols  需要创建窗口所占的总列数
+      @param begin_x 窗口左上角所在的行数(x坐标)
+      @param begin_y 窗口左上角所在的列数(y坐标)
+      @return 返回WINDOW类型的指针,如果创建失败,函数返回NULL
+      @note 如果lines或者cols为0,函数自动创建一个行数和列数分别为LINES和COLS的窗口.
+            所创建窗口的大小不能超过实际屏幕的大小,如果超过了,则返回失败.
+            对于不再使用的窗口有必要及时清屏,可以使用werase()和wclear()实现.
+            不管werase()还是wclear()都不能清除内存空间,需要调用delwin()释放内存.
+       */
+      WINDOW* newwin(int lines,int cols,int begin_x,int begin_y);
+      
+      /**
+      @brief 删除窗口
+      @param win 待删除窗口的指针
+      @note 在主窗口删除之前必须先删除与它相关连的所有子窗口
+       */
+      int delwin(WINDOW* win);
+      
+      /**
+      @breif 创建子窗口
+      @param win 父窗口的指针
+      @param lines,cols 子窗口的总行数和列数
+      @param begin_x,begin_y 子窗口的左上角在标准屏幕的相对位置
+      @note 注意相对位置是想对于*标准屏幕*的,而不是父窗口的!!
+       */
+      WINDOW* subwin(WINDOW* win,int lines,int cols,int begin_x,int begin_y);
+      
+      /**
+      @breif 创建子窗口
+      @param win 父窗口的指针
+      @param lines,cols 子窗口的总行数和列数
+      @param begin_x,begin_y 子窗口的左上角在父窗口的相对位置
+      @note 注意相对位置是想对于*父窗口*的,而不是标准屏幕的!!
+       */
+      WINDOW* derwin(WINDOW* win,int lines,int cols,int begin_x,int begin_y);
+    #+END_SRC
+*** 在窗口进行输入和输出
+    #+BEGIN_SRC c
+      int wmove(WINDOW* win,int x,int y); /**移动光标到相对win的(x,y)处*/
+      int waddch(WINDOW* win,int ch); /**在窗口的当前位置增加字符ch*/
+      int mvwaddch(WINDOW* win,x,y,ch); /**在窗口中移动光标到x,y,同时输出ch*/
+      int waddstr(WINDOW* win,char* str); /**输出str*/
+      int mvwaddstr(WINDOW* win,int x,int y,char* str); /**将窗口光标移动到x,y,同时输出str*/
+      int wprintw(WINDOW* win,char* fmt[,arg...]); /**在窗口中格式化输出*/
+      int wgetch(WINDOW* win); /**在窗口中获取输入*/
+      int mvwgetch(WINDOW* win,int x,int y);
+      int wgetstr(WINDOW* win);
+      int mvwgetstr(WINDOW* win,int x,int y,char* str);
+      int wscanw(WINDOW* win,char* fmt[,args...]);
+      int mvwscanw(WINDOW* win,int x,int y,char* fmt[,args...]);
+      int winsch(WINDOW* win,int ch); /**在窗口中插入字符*/
+      int mvwinsch(WINDOW* win,int x,int y,int ch);
+      int winsertln(WINDOW* win,int x,int y); /**在窗口中插入一行*/
+      int wdelch(WINDOW* win); /**在窗口中删除一个字符*/
+      int mvwdelch(WINDOW* win,int x,int y);
+      int wdeleteln(WINDOW* win);
+      int wclear(WINDOW* win);
+      int werase(WINDOW* win);
+      int wclrtoeol(WINDOW* win);
+      int wclrtobot(WINDOW* win);
+      int wstandout(WINDOW* win);
+      int wstandend(WINDOW* win);
+      int wattrset(WINDOW* win,chtype atr);
+      int wattroff(WINDOW* win,chtype atr);
+      int wattron(WINDOW* win,chtype atr);
+      
+      /**
+      @brief 复制srcwin的内容到dstwin中
+      @param srcwin 被复制窗口的指针
+      @param dstwin 接受复制窗口的指针
+      @note srcwin和dstwin的尺寸不需要完全相同,如果srcwin大于dstwin窗口,函数仅仅复制srcwin中适合dstwin的部分
+            overlay()是一种非破坏性的复制,它不复制原窗口上的空字符,因此如果原窗口的某个位置为空字符,而目标窗口对应位置不为空字符,则目标窗口的原字符继续保留.
+       */
+      int overlay(WINDOW* srcwin,WINDOW* dstwin);
+      
+      /**
+      @brief 复制srcwin的内容到dstwin中
+      @param srcwin 被复制窗口的指针
+      @param dstwin 接受复制窗口的指针
+      @note srcwin和dstwin的尺寸不需要完全相同,如果srcwin大于dstwin窗口,函数仅仅复制srcwin中适合dstwin的部分
+            overwrite()是一种破坏性的复制,它复制原窗口上的所有内容,包括空字符
+       */
+      int overwrite(WINDOW* srcwin,WINDOW* dstwin);
+      
+      /**
+      @brief 复制srcwin的部分内容到dstwin的指定部分上
+      @param srcwin 复制的源窗口指针
+      @param dstwin 复制的目标窗口指针
+      @param srcminrow,srcmincol 源窗口待复制部分的左上角坐标
+      @param dstminrow,dstmincol 目标窗口被复制部分的左上角坐标
+      @param dstmaxrow,dstmaxcol 指示了需要复制区域的大小
+      @param overlay 复制是否是破坏性的
+       */
+      int copywin(WINDOW* scrwin,WINDOW* dstwin,int srciminrow,int srcmincol,int dstminrow,int dstmincol,int dstmaxrow,int dstmaxcol,int overlayFlag);
+    #+END_SRC
+*** 窗口刷新
+    #+BEGIN_SRC c
+      /**
+      @breif 将窗口内容写入虚拟屏幕中,虚拟屏幕描述了将要显示的内容
+       */
+      int wnoutrefresh(WINDOW* win);
+      
+      /**
+      @brief 将虚拟屏幕内容刷新到物理屏幕中
+       */
+      int doupdate(WINDOW* win);
+      
+      /**
+      @brief 等价于先wnoutrefresh()再doupdate()
+       */
+      int wrefresh(WINDOW* win);
+      
+      /**
+      @brief 重画指定窗口
+       */
+      int redrawwin(WINDOW* win);
+      
+      /**
+      @brief 重画指定窗口的指定区域
+      @param beg_line 区域的起始行
+      @param num_lines 区域的行数
+       */
+      int wredrawln(WINDOW* win,int beg_line,int num_lines);
+    #+END_SRC
+*** 窗口其他属性操作
+    #+BEGIN_SRC c
+      /**
+      @brief 移动窗口到指定位置
+      @param win 待移动的窗口
+      @param x,y 移动的目标位置
+      @note 移动窗口后,记得用wrefresh刷新窗口
+       */
+      int mvwin(WINDOW* win,int x,inty);
+      
+      /**
+      @brief 在窗口相互重叠时,激活指定窗口,使它获取当前操作的焦点
+       */
+      void touchwin(WINDOW* win);
+      
+      /**
+      @brief 给窗口加上边框
+      @param win 需要画出边框的窗口
+      @vert 垂直方向的字符,通常为ACS_VLINE
+      @hort 水平方向的字符,通常为ACS_HLINE
+       */
+      int box(WINDOW* win,chtype vert,chtype hort);
+      
+      /**
+      @breif给窗口加上边框
+      @param win 需要画出边框的窗口
+      @param ls 窗口左边字符 //left side
+      @param rs 窗口右边字符 //right side
+      @param ts 窗口上边字符 //top side
+      @param bs 窗口下边字符 //buttom side
+      @param tl 窗口左上角字符 //top left
+      @param tr 窗口右上角字符 //top right
+      @param bl 窗口左下角字符 //buttom left
+      @param br 窗口右下角字符 //buttom right
+       */
+      int border(WINDOW* win,chtype ls,chtype,rs,chtype ts,chtype bs,chtype tl,chtype tr,chtype bl,chtype br);
+      
+      /**
+      @brief 在标准屏幕绘制横线
+      @param ch 直线支付
+      @param n 制定最大线长度
+       */
+      int hline(chtype ch,int n);
+      
+      /**
+      @brief 在标准屏幕绘制竖线
+      @param ch 直线字符
+      @param n 制定最大线长度
+       */
+      int vline(chtype ch,int n);
+      
+      /**
+      @brief 在指定窗口绘制横线
+      @param win 指定窗口
+      @param ch 直线支付
+      @param n 制定最大线长度
+       */
+      int whline(WINDOW* win,chtype ch,int n);
+      
+      /**
+      @brief 在指定窗口绘制竖线
+      @param win 指定窗口
+      @param ch 直线字符
+      @param n 制定最大线长度
+       */
+      int wvline(WINDOW* win,chtype ch,int n);
+      
+      /**
+      @brief 设置窗口的相应标志
+      @param state TRUE则设置该标志,FLASE则取消设置
+       */
+      void leaveok(WINDOW* win,bool state);
+      void scrollok(WINDOW* win,bool state);
+      void clearok(WINDOW* win,bool state);
+    #+END_SRC
+*** 屏幕的转存
+    #+BEGIN_SRC c
+      /**
+      @brief 将win中所有数据写入fp中
+       */
+      int putwin(WINDOW* win,FILE* fp);
+      
+      /**
+      @brief 由fp内容创建窗口
+       */
+      WINDOW* getwin(FILE* fp);
+      
+      /**
+      @brief 存储标准屏幕
+       */
+      int scr_dump(const char* filename);
+      
+      /**
+      @brief 读取标准屏幕
+       */
+      int src_restore(const char* filename);
+    #+END_SRC
+
+* curses库基垫(pad)处理
+** 基垫说明
+   * 基垫也是一种窗口,它在各方面与WINDOW一样,只是它的大小和位置不再局限于终端屏幕的可视部分.
+   * 与子窗口类似,基垫也同样有子基垫(subpad)
+   * 大部分窗口操作的函数都可以直接作用在基垫上,只有少数才是基垫独有的.
+   * 由于基垫可以完全看不见,这就导致了基垫与WINDOW的一个最主要的差异,即基垫与标准屏幕没有直接关联
+** 基垫函数说明
+   #+BEGIN_SRC c
+     /**
+     @brief 创建新基垫
+     @param lines,cols 指定创建基垫的总行数和总列数
+     @return 失败的话,返回NULL
+     @note 由于与标准屏幕没有任何关联,因此参数中不需要在标准屏幕中的定位参数
+      */
+     WINDOW* newpad(int lines,int cols);
+     
+     /**
+     @brief 创建子基垫
+     @param pad 要创建子基垫的父基垫
+     @param lines,cols 子基垫的行数和列数
+     @param begin_x,begin_y 子基垫左上方在父基垫中的相对位置
+      */
+     WINDOW* subpad(WINDOW* pad,int lines,int cols,int begin_x,int begin_y);
+     
+     /**
+     @brief 刷新基垫指定区域
+     @param prow,pcol 描述了基垫中需要刷新到标准屏幕中的区域的左上角
+     @param sminrow,smincol,smaxrow,smaxcol 指示标准屏幕上显示基垫的矩形区域
+     @see   pnoutrefresh() doupdate()
+
+      */
+     int prefresh(WINDOW* pad,int prow,int pcol,int simnrow,int smincol,int smaxrow,int smaxcol);
+   #+END_SRC

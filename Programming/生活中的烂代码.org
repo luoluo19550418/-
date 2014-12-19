@@ -1,0 +1,58 @@
+#+TITLE: 生活中的烂代码
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 宏相关
+
+** 无意义的宏定义
+
+   #+BEGIN_SRC c++
+     #define PFR0001 "PRF0001"
+   #+END_SRC
+
+   这样的宏定义有什么意义吗?PFR0001这个错误代号是什么意思呢?完全无法理解啊
+
+** 该定义宏的时候不定义宏
+
+   #+BEGIN_SRC c++
+     Trace(E_DEBUG,__FILE__,__LINE__,__func__,"errmsg1=[%s]",szErrMsg1);
+     Trace(E_INFO,__FILE__,__LINE__,__func__,"errmsg2=[%s]",szErrMsg2);
+     Trace(E_ERROR,__FILE__,__LINE__,__func__,"errmsg3=[%s]",szErrMsg3);
+   #+END_SRC
+   
+   为什么不用宏定义来减少重复代码呢?
+   
+   #+BEGIN_SRC c++
+     #define DEBUG_LOG(fmt,...) Trace(E_DEBUG,__FILE__,__LINE__,__func__,fmt,##__VA_ARGS__)
+     #define INFO_LOG(fmt,...) Trace(E_INFO,__FILE__,__LINE__,__func__,fmt,##__VA_ARGS__)
+     #define ERROR_LOG(fmt,...) Trace(E_ERROR,__FILE__,__LINE__,__func__,fmt,##__VA_ARGS__)
+   #+END_SRC
+   
+   一般来说,若函数中大量出现__FILE__,__LINE__,__func__的时候都能用宏来缩减输入工作量
+
+** 定义了宏而不用
+
+   #+BEGIN_SRC c++
+     #define SND_FLAG "01"
+     
+     string flag = "01";
+   #+END_SRC
+   
+   这就是典型的没事找事了,不用,你定义个宏来干嘛啊?
+
+* 用C++来写C代码
+
+** 取字符串长度
+
+   #+BEGIN_SRC c++
+     string s;
+     int  iLen = strlen(s.c_str());
+   #+END_SRC
+   
+   你得是多喜欢C语言啊? 不知道c++的string是有可能包含'\0'的吗? 你让string类的size方法情何以堪啊??
+
+** 
+   
+* 设计
+** 数据字典定义不一致
+** 数据格式不一致

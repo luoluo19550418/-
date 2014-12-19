@@ -1,0 +1,53 @@
+* 变量
+** 设置默认访问方法
+   * tramp-default-method
+	 设置tramp的默认方法
+	 #+begin_src elisp
+       (setq tramp-default-method "ssh")           
+	 #+end_src
+   * tramp-default-method-alist
+	 为不同的用户/主机设置不同的方法
+	 #+begin_src elisp
+       (add-to-list 'tramp-default-method-alist '("主机" "户名" "方法")) ;主机与户名可以为空
+	 #+end_src	 
+** 设置默认用户
+   默认情况下,tramp使用登录系统的用户名来作为访问远程文件的用户名,但可以通过设置来修改该设定
+   * tramp-default-user 
+	 #+begin_src elisp
+     (setq tramp-default-user "root")    ;该变量已被标记为废弃,不建议使用
+	 #+end_src
+   * tramp-default-user-alist
+	 #+begin_src elisp
+       (add-to-list 'tramp-default-user-alist
+                    '("ssh" ".*\\.somewhere\\.else\\'" "john")) ;ssh方法,somewhere.else域名,以john作为用户名
+       (add-to-list 'tramp-default-user-alist '(nil nil "jonas") t) ;设置默认用户名
+       
+	 #+end_src
+** 设置默认的host
+   * tramp-default-host 
+	 #+begin_src elisp
+       (setq tramp-default-host "target.host")     ;
+	 #+end_src
+** 通过代理访问远程文件
+   有时候无法直接访问远程文件,需要通过代理访问
+   * default-proxies-alist
+	 #+begin_src elisp
+       (add-to-list 'tramp-default-proxies-alist
+                   	(host user proxy))                 ;访问user@host上的文件时,使用proxy作为代理.user和host为正则表达式或者nil,nil标识匹配任何表达式
+       
+       (add-to-list 'tramp-default-proxies-alist
+                   	'("\\." nil "/ ssh:bird@proxy.com:"))    ;proxy为一个tramp文件名,但没有localname部分,其中在method和user设置了默认值的情况下可以省略,而且method只能为inline或gateway方法 
+       
+       (add-to-list 'tramp-default-proxies-alist
+                   	'("\\.your\\.domain\\'" nil nil)) ;proxy为nil表示无需代理
+       
+       (add-to-list 'tramp-default-proxies-alist
+                   	'("\\.your\\.domain\\'" "\\`root\\'" "/ssh:%u@proxy%h")) ;可以用%u和%h来替换host和user的字符串
+       
+	 #+end_src
+** 密码缓存时限
+   tramp通常会缓存输入的密码，这样下次再用相同的用户名登陆相同的主机时，就不用反复的输入密码了，但是为了安全起见，可以通过设置password-cache来设定密码缓存的期限
+   #+begin_src elisp
+     (setq password-cache nil)               ;password-cache的值可以是以秒为单位的时间，nil则表示不缓存密码
+   #+end_src
+

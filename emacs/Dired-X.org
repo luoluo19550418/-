@@ -1,0 +1,136 @@
+#+TITLE: Dired-X
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 特性
+  * 过滤不需要的文件显示
+  * 在Dired buffer中猜测需要执行的shell命令
+  * virtual-Dired,根据非Dired Buffer的内容模拟Dired Buffer
+  * 大量的文件标记命令
+  * 根据光标所处文本作为文件名来打开文件
+* 启用Dired-X
+  #+begin_src elisp
+    (add-hook 'dired-load-hook
+              (lambda ()
+                (load "dired-x")
+                ;; Set dired-x global variables here.  For example:
+                ;; (setq dired-guess-shell-gnutar "gtar")
+                ;; (setq dired-x-hands-off-my-keys nil)
+                ))
+    (add-hook 'dired-mode-hook
+              (lambda ()
+                ;; Set dired-x buffer-local variables here.  For example:
+                ;; (dired-omit-mode 1)
+                ))
+  #+end_src
+* 过滤不需要的文件显示
+** 命令
+   * * O
+	 (dired-mark-omitted)标识哪些文件不需要显示的
+   * M-o
+	 (dired-omit-mode)是否显示被标记为无需显示的文件
+   * 
+** 变量
+   * dired-omit-files
+	 文件名匹配该正则表达式的文件被认为是无需显示的
+   * dired-omit-extensions
+	 文件扩展名在其中的文件被认为是无需显示的
+* 猜测应该执行的shell命令
+  Dired会根据文件名猜测你想要执行的shell命令. 当按下"!"键后,Dired会将猜测的shell命令作为mini-buffer的默认项
+  Dired只会对单个文件进行猜测shell命令,而不会对多个mark的文件进行猜测
+** 命令
+   * !
+	 对指定文件允许shell命令.该shell命令使用Dired-buffer的最顶端目录作为执行shell命令的工作目录
+   * M-!
+	 类似!,但是该shell命令使用当前目录作为执行shell的工作目录,当一个Dired-buffer中使用i命令插入了多个子目录时,两者有差别
+** 变量
+   * dired-guess-shell-alist-default
+	 预定义好的猜测规则,设为nil则不做猜测
+   * dired-guess-shell-alist-user
+	 用户自定义的猜测规则,会覆盖dired-guess-shell-alist-default中的值.
+	 该list中各元素的格式为(REGEXP COMMAND...),这里COMMAND可以是字符串或者返回值为字符串的LISP表达式,可以提供多个COMMAND以供选择.
+	 COMMAND中可以用*来替代文件名称.
+   * dired-guess-shell-gnutar
+	 指明使用的tar命令是否是gnu的tar命令,不同点在于z选项. 如果为nil则表示不用gnu的tar命令,否则应该为gnu tar命令名
+   * dired-guess-shell-gzip-quiet
+	 指明是否給gzip命令使用-q命令
+   * dired-guess-shell-znew-switches
+	 传递給znew命令的选项
+   * dired-shell-command-history
+	 该列表保存了所有读取过的dired-shell命令
+* Virtual Dired
+  若buffer中的内容刚好符合Dired-mode的格式,则可以用M-x dired-virtual入dired-virtual-mode中,该mode根据buffer的内容生成Dired-mode,我们可以在其中进行操作,所进行的操作会影响到真实的文件系统.
+* 根据光标所处文本作为文件名来打开文件
+  
+* 高级文件标记命令命令
+  * F
+	打开所有marked的文件,并且同时显示他们出来
+  * M-(
+	该命令会提示输入一个判断式,Emacs根据该判断式来标记文件,若加了前缀参数,则取消这些标记. 这些判断式是一个Lisp表达式
+	#+begin_src elisp
+      ;;找所有空的文件
+      (equal 0 size)    
+      ;;查找所有没有对应elc文件的el文件
+      (not (file-exists-p (concat name "c")))
+	#+end_src
+    其中表达式中可以是包含如下这些符号
+	+ inode
+	  integer型,表示文件的inode
+	+ s
+	  integer型,表示文件的大小
+	+ mode
+	  string型,表示文件的属性,类似'-rw-r--r--'这样的格式
+	+ nlink
+	  integer型,表示文件拥有link的个数
+	+ uid
+	  string型,表示文件的所有者
+	+ qid
+	  string型,表示文件的所有组
+	+ size
+	  integer型,表示文件的大小
+	+ time
+	  string型,为ls命令显示的时间
+	+ name
+	  string型,为文件的名称
+	+ sym
+	  string型,如果文件是一个软链接,则为被链接的文件名,否则为""
+	
+  * dired-mark-extension
+	为指定扩展名的所有文件加Mark标记,需要明确写"."
+  * dired-flag-extension
+	为指定扩展名的所有文件加Delete标记.
+  * dired-clean-patch
+	为patch命令产生的临时文件加Delete标记.
+  * dired-clean-tex
+    为Tex,LaTeX和texinfo命令产生的临时文件加Delete标记.
+  * dired-very-clean-tex
+	为TeX,LaTeX,texinfo产生的临时文件,和*.dvi文件加Delete标记
+* 根据光标所处文本作为文件名来打开文件
+  如果想要使用该项功能,需要在dired-load-hook时,设置`dired-x-hands-off-my-keys`为nil
+  * dired-x-find-file
+	dired-x-find-file跟find-file一样,但是若加了prefix argument(即在执行命令前执行C-u),则使用光标出处文本作为默认的文件名
+  * dired-x-find-file-other-window
+	类似dired-x-find-file,但在另一个窗口显示
+  * dired-x-hands-off-my-keys
+	是否用dired-x-find-file替代find-file,用dired-x-find-file-other-window替代find-file-other-window的标志,t表示不替代,否则表示替代.
+	该变量需在加载dired-x.el之前赋值,若在加载了dired-x.el之后更改了该变量,请执行命令dired-x-bind-find-file
+  * dired-x-bind-find-file
+	该命令根据dired-x-hands-off-my-keys的值来决定是否使用dired-x-find-file和dired-x-bind-file-other-window替代find-file和find-file-other-window
+* 其他说明
+  * dired-jump
+	绑定到C-x C-j,跳转到当前buffer 文件所处的dired处
+  * dired-jump-other-window
+	绑定到C-x 4 C-j,类似dired-jump,但是打开的dired处于另一个窗口
+  * dired-vm
+	对当前文件执行VM命令,若dired-bind-vm变量为t则绑定到dired-mode的V命令中
+  * dired-rmail
+	对当前文件执行Rmail命令,若dired-bindvm为nil则绑定到dired-mode的V命令中
+  * dired-info
+	对当前文件执行Info命令,若dired-bind-info为nil则绑定到dired-mode的I命令中
+  * dired-man
+	对当前文件执行man命令,若dired-bind-man为nil则绑定到dired-mode的N命令中
+  * dired-do-relsymlink
+	对dired-mode中做了mark标记的文件或光标所在的文件创建相对链接,绑定到dired-mode的Y命令
+	
+  

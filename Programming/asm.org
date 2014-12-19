@@ -1,0 +1,21 @@
+#+TITLE: asm
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+1. 在汇编程序中，立即数前面要加$,寄存器名前面要加%,以便更符号名区分开
+2. _start这个符号比较特殊，它所代表的地址是整个程序的入口地址，类似C中的main函数
+3. Linux的各种系统调用都是由int $0x80指令引发的，内科需要通过eax判断用户要调哪个系统调用
+4. 内存寻址在指令中可以表示成如下的通用格式
+   #+BEGIN_EXAMPLE
+   ADDRESS_OR_OFFSET(%BASE_OR_OFFSET,%INDEX,MULTIPLIER)
+   #+END_EXAMPLE
+   它所表示的地址这样计算出来
+   #+BEGIN_EXAMPLE
+   FINAL_ADDRESS=ADRESS_OR_OFFSET+BASE_OR_OFFSET+INDEX*MULTIPLIER
+   #+END_EXAMPLE
+   其中，ADDRESS_OR_OFFSET和MULTIPLIER必须是常数，BASE_OR_OFFSET和INDEX必须是寄存器。
+   在有些寻址方式会省略这4项中的某项，相当于这些项为0
+5. 
+   
+   

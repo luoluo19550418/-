@@ -1,0 +1,361 @@
+#+TITLE: Effective_C
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 让自己习惯C++
+** 尽量以const，enum，inline替换#define
+   1. 用宏写出的函数，最好用template inline函数代替 
+** 尽可能用const
+   1. 如果关键字const出现在*左边,表示被指物是常量;如果出现在星号右边,表示指针自身是常量
+   2. const iterator就像声明指针为const一样(T* const),表示这个迭代器不得指向不同的东西,但它所指的东西的值可以改变.
+      如果希望迭代器所指的东西不可变动(模拟const T*),需要从const_iterator
+   3. 令函数返回一个const值,可以防止对返回值进行赋值
+   4. 两个成员函数如果只是常量性不同,可以被重载
+      #+BEGIN_SRC C++
+      class A
+      {
+          public:
+          char str[100];
+          char& tb(int i){return str[i];}
+	  const char& tb(int i) const {return str[i];} 
+      }
+      #+END_SRC
+   5. 编译器强制实现bitwise constness,但编写程序时应该使用概念上的常量性(conceptual constness).
+      这时可以用mutable关键字释放掉non-static成员变量的bitwise constness约束
+   6. 当const和non-const成员函数实质上等价的实现时,可以令non-const版本函数调用const版本函数,而不能反过来.(因为承诺不改动对象的const函数调用可能改动对象的non-const函数,是错误的)
+      #+BEGIN_SRC C++
+      class A
+      {
+          public:
+          char str[100];
+	  const char& tb(int i) const {return str[i];} 
+          char& tb(int i)
+	  {
+	  return const_cast<char&>(       //将const函数的返回值const移除
+	      static_cast<const TextBlock&>(*this)  //为*this加上const,强迫调用的是const版本的函数
+	          .tb(i);                           //调用tb方法                        
+	  }
+      }
+      #+END_SRC
+** 确定对象被使用前已经先被初始化
+   1. 如果某编译单元内的某个non-local static对象的初始化动作用到了另一个编译单元的某个non-local static对象,它所用到的这个对象可能尚未初始化,因为C++对定义于不同编译单元内部的non-local static对象的初始化次序无明确定义.
+      可以将non-local static对象搬到一个函数内成为local static对象,并让该函数返回一个reference指向该对象(类似与Singleton模式),这样就能保证对象初始化了
+* 构造/析构/赋值运算
+** 了解C++默认编写并调用哪些函数
+   1. 如果自己没有声明,编译器会自动声明一个copy构造函数,一个copy assignment操作符和一个析构函数.
+      如果没有声明任何构造函数,编译器也会自动声明一个default构造函数
+   2. 注意:编译器产生的析构函数是个non-virtual,除非这个class的base class自身声明有virtual析构函数(这时这个函数的虚属性,主要来自base class)
+   3. 编译器自动生产的copy构造函数和copy assignment操作符会尝试调用基类的对应函数,因此如果某个基类将copy assignment操作符申请为private,编译器将拒绝为其子类生成一个copy assignment操作符
+** 若不想使用编译器自动生成的函数,就该明确拒绝
+   1. 若想阻止类的copy行为,可以将copy构造函数和copy assignment操作符声明为private,并且故意不去实现它们.那么如果某些人不慎调用任意一个函数,都会获得一个链接错误.
+      或则也可以将该类继承至一个copy构造函数和copy assignment操作符为private的基类.因为正如上一条所说的,编译器自动生产的copy构造函数和copy assignment操作符会尝试调用基类的对应函数,而这些基类是private的,会被编译器拒绝.
+      #+BEGIN_SRC C++
+      class Uncopyable{
+      protected:
+          Uncopyable(){}
+	  ~Uncopyable(){}
+      private:
+          Uncopyable(const Uncopyable&);
+	  Uncopyable& operator=(const Uncopyable&);
+      }
+      #+END_SRC
+** 为多态基类声明virtual析构函数
+   1. 当子类对象经由一个基类指针删除,而该基类带有一个non-virtual析构函数,其结果未定义.通常发生的是对象的derived成分没被销毁.
+   2. 一般只有当class内含有至少一个virtual函数时,才将析构函数声明为virtual.因为一个class不含virtual函数往往说明它不愿意被当作基类(C++没有类似finally这样的禁止派生机制),这时使用virtual析构函数只是增大体积而已.
+   3. std::string和所有的STL容器都有个non-virtual析构函数,因此继承它们是个搜主意
+   4. class的设计目的如果不是作为基类使用,或不是为了具备多态性,就不该声明virtual析构函数
+   5. 析构函数的运行方式是,子类的析构函数先被调用,然后父类的析构函数被隐性调用
+** 若析构函数有代码的情况下,不要在构造函数中抛出异常
+   1. 这是因为,在构造函数执行过程中抛出异常的话,则该对象的析构函数不会被执行,若析构函数中有实际的回收资源代码,则意味着这部分资源无法被回收.
+      *然而,如果析构函数为空的情况下,构造函数中出现了问题就可用抛出异常*,这是因为那些构造函数正常结束的成员对象,它们的构造函数会被执行. 因此 *尽量使用智能指针封装资源,而保持构造函数的代码为空*!
+** 析构函数不要抛出异常
+   1. 可以将会抛出异常的析构函数中的操作封装为一个普通函数提供给客户,使客户有机会捕获异常并处理它.
+** 绝不要在构造和析构函数过程中调用virtual函数
+   1. *在基类的构造期间,virtual函数不是virtual函数,它执行的还是基类版本的函数*!!因为在子类对象的base class构造期间,改对象的类型是base class而不是子类.
+      某个对象的子类部分没有初始化,因此最后的做法就是视他们不存在,把对象当基类看.
+** 令operator=返回一个reference to *this
+   1. 为了实现连续赋值,赋值操作符必须返回一个reference指向操作符的左侧实参.
+** 在operator=中处理自我赋值
+   1. 传统做法是在operator=最前面做一个证同测试,达到自我赋值的检测目的.然而这种方法不具备异常安全性
+   2. 使用所谓的copy and swap技术.过程是首先为右值制作一个副本,然后将*this上的数据和副本的数据交换.
+** 复制对象时别忘了其没一个成分(尤其是父类的成分)
+   1. 只要需要手工编写derived class的copying函数(copy构造函数和copy assignment操作符),就必须很小心地复制其base class成分.那些成分往往是private的,所以你可能无法直接访问它们,你应该让derived class的copying函数调用相应的base class函数.
+      #+BEGIN_SRC C++
+      Derived::Derived(const Derived& rhs):Base(rhs)   //调用base的copy构造函数
+      Derived& Derived::operator=(const Derived& rhs)
+      {
+          Base::operator=(rhs)                         //对base class成分进行赋值操作
+      }
+      #+END_SRC
+   2. 不要在copy assignment操作符中调用copy构造函数,也不要在copy构造函数中调用copy assignment操作符,
+      构造函数用来初始化新对象,而assignment操作符只施行于已初始化的对象上,这两者互用是不合理的.
+* 资源管理
+** 以对象管理资源
+   1. 标准程序库提供的auto_ptr,其析构函数自动对所指对象调用delete.
+      #+BEGIN_SRC C++
+      auto_ptr<T> pT(new T());
+      #+END_SRC
+   2. 由于auto_ptr会自动删除所指之物,故一定别让多个auto_ptr指向同一对象,否则对象被删除多次的后果是未定义的.
+      为了防止这个问题,auto_ptr有一个不同寻常的性质:若通过copy构造函数或copy assignment操作符复制它们,它们会变成null,而复制所得的指针将取得资源的唯一拥有权.
+      由于STL容器要求元素发挥正常的复制行为,因此这些容器不能存auto_ptr
+      auto_ptr的替代方案是引用计数型智慧指针(reference-counting smart pointer RCSP)
+      例如TR1的tr1:shared_ptr
+   3. auto_ptr和tr1::shared_ptr的析构函数内做的是delete而不是delete[]动作,故不能在动态分配的数组上使用auto_ptr和tr1::shared_ptr,不过数组基本上可以被vector所取代
+   4. 以对象管理资源的两个关键想法是
+      * 获得资源后立刻放入管理对象中
+      * 管理对象运用析构函数确保资源被释放
+** 在资源管理类中提供对原始资源的访问
+   1. tr1::shared_ptr和auto_ptr都提供一个get成员函数,会返回智能指针内部的原始指针.
+   2. 可以通过显式提供get方法返回原始指针,
+      也可以提供隐式转换函数的方法转型为原始指针
+      #+BEGIN_SRC C++
+      class ResourceHandler{
+      public:
+          operator Resource() const
+	  {return res;{
+      private:
+          Resource res;
+      }
+      #+END_SRC
+      但是这个隐式转换函数可能会使客户在需要使用ResourceHandler的地方错误地转换成为Resource
+** 以独立语句将newd对象置入智能指针
+   1. 当构造函数是个explicit构造函数,无法进行隐式转换
+   2. 像Func(ResourceHandler(new Resource),otherHandler)这样的语句,有可能获得的操作序列为new Resource,otherHandler,ResourceHandler(),
+      由于在资源被创建(new Resource)和资源被转换为资源管理对象(ResourceHandler())之间的otherHandler可能发生异常干扰故而可能发生资源泄露.
+      解决的办法就是分离语句,分别写出1.创建新资源并放入智能指针中(rh=ResourceHandler(new Resource)),2.将智能指针传入函数内(Func(rh,otherHandler)).
+* 设计与声明
+** 让接口容易被正确使用,不易被误用
+   1. 许多客户端错误可以因为导入新类型而获得预防.
+      一旦使用了新类型,限制其值就顺其自然了.
+   2. 任何接口如果要求客户必须记得做某事,就是有着不正确使用的倾向,因为客户可能会忘记做那件事.
+** 设计class犹如设计type
+   1. 几乎没有class都要求你面对以下几个问题
+      * 新的type的对象应该如何被创建和销毁?
+      * 对象的初始化和对象的赋值应该有什么样的差别?
+      * 新的type的对象如何被passed by value?
+	copy构造函数用来定义一个type的pass-by-value该如何实现
+      * 新type的合法值范围是什么?
+      * 你的新type是否继承至其他类,或者有其他类继承至新type类?
+	特别关系到函数的virtual和non-virtual的影响
+      * 你的新type需要转换为其他type吗?
+	如果你希望类型T1可以隐性转换为类型T2,可以
+	1) 在class T1内写一个类型转换函数(operator T2)
+	2) 在class T2内写一个non-explicit-on-argument的构造函数
+      * 什么样的操作符和函数对该type而言是合理的
+      * 什么样的标准函数应该被屏蔽(声明为private)
+      * 哪些类型可以存取type内成员?
+	这个问题帮助你决定成员的权限,也帮助你决定哪一个class或function是友元的,以及它们嵌套于另一个之内是否合理.
+      * 什么是新type的未声明接口( *什么意思??* )
+      * 你想定义的是一个新type还是整个types家族,或许你应该定义的是一个新的class template
+      * 你真的需要一个新的type吗?
+	如果只是定义新的derived class以便为既有的class添加功能,那么说不定单纯定义一个函数就能达到目标
+** 以pass-by-reference-to-const替换pass-by-value
+   1. 节省开销
+   2. 解决子类的切割问题
+   3. 对于内置类型STL的迭代器和函数对象,pass-by-value比pass-by-reference-to-const效率高
+** 宁以non-member-non-friend函数替换member函数
+   1. 由于member函数可以访问类中private数据,而non-member-non-friend函数不能访问类的private函数,因此non-member-non-friend函数的封装性强过member函数
+   2. friend函数的封装性与member函数相同,他们都能访问类的private数据
+   3. 在C++,比较自然的做法是让non-member-non-friend函数与类放在同一个命名空间中,这也是C++标准程序库的组织方式.
+** 若所有参数都需要类型转换,请为此采用non-member函数
+   1. 只有当参数被列于参数列内,这个参数才是隐式类型转换的合格参与者.而member函数所在对象(this对象)也因此并不能被隐式转换.
+      因此,为了使用对象的隐式转换功能,可以把this作为non-member函数中的一个参数.
+** 当std::swap的效率不够高时,考虑写出一个不抛异常的swap函数
+   1. 可以在member的swap函数中调用std::swap对private权限的成员进行互换
+   2. 只能对class templates进行偏特化,而function templates不能进行偏特化,只能进行全特化.
+   3. 如果你打算偏特化一个function template时,惯常做法是简单的为它添加一个重载版本
+   4. 严格来说,std是个特殊的命名空间,客户可以全特化std内的templates,但不能添加新的templates或classes或functions或任何东西到std里头.
+      std的内容理论上完全由C++标准委员会决定.
+   5. 如果swap的缺省实现提供的效率可接受的话,就不用做任何事了.
+      如果swap缺省实现效率不足,那么试着做以下事情
+      1) 提供一个public swap成员函数,让它高效地置换你的类型的两个对象值.这个函数不能抛出异常
+      2) 让你的class货template所在的命名空间内提供一个non-member swap,并令它调用上述的swap成员函数
+      3) 如果你编写一个class,为你的class特化std::swap.并令它调用你的swap成员函数.
+* 实现
+** 尽量少做转型动作
+   1. static_cast类似旧式转型,用来强制隐式转换,但它不能将const转换为non-const,这个只有const_cast能办到.
+   2. 许多人相信,转型其实什么都没做,只是告诉编译器把某种类型视为另一种类型.这是错误的,类型转换,往往真的令编译器编译出运行期间执行的码.
+   3. 在C++中,对单一对象(例如一个类型位Derived对象),不同类型指针指向它的地址可能不一样(例如以Base*指向的地址和Derived*指向的地址可能不一样)!
+      实际上,一旦使用多重继承,这事几乎肯定会发生.(*NOTE:这一条在实验时没有成立*)
+   4. 对象的布局方式和它们的地址计算方式随编译器的不同而不同,那意味者"由于知道对象如何布局"而设计的转型,在某一平台行得通,在其他平台并不一定行得通.
+   5. 我们应该尽可能隔离转型动作,通常是把它隐藏在某个函数内,函数的接口会保护调用者不受函数内部转型动作的影响.
+** 避免返回handles(reference或指针或迭代器)指向对象内部受保护成分
+   1. 调用者可能通过这些handles来更改内部数据
+      要解决这个问题,只要在它们的返回类型加上const即可
+   2. 要注意handle比所指对象更长寿的风险存在,可能handle指向的是一个废弃的内存空间.
+** 当异常发生时,需要保持安全
+   1. 异常安全有两个条件:当异常抛出时,带有异常安全性的函数会
+      * 不泄露任何资源(可以通过资源管理类来解决)
+      * 不允许数据败坏(遵循策略:不要为了某事块要发生而改变对象状态,除非那件事情真的发生了)
+   2. 异常安全的三个级别分别是
+      1) 基本承诺:
+	 如果异常被抛出,程序内的任何事物仍然保持在有效状态下,对象是可用的,但无法预知具体是哪个状态.
+      2) 强烈保证:
+	 如果函数不抛异常,就完全成功;如果函数抛异常,则程序还原为原始状态
+      3) 不抛异常保证:
+	 承诺绝不抛异常,总是能够完成她们承诺的功能
+   3. 保证强烈保证的一个设计策略师copy and swap:
+      为打算修改的对象制作一份拷贝,然后在拷贝上做一切修改,若有任何修改抛出异常,源对象不变.待所有改变成功后,再将拷贝和原对象在一个不抛出异常的操作中置换(swap)
+** 透彻了解inline
+   1. inline只是申请,不是强制命令.大部分编译器拒绝太过复杂的函数inlining,而对virtual函数的调用肯定不会inlining,毕竟inlining的过程是在编译期,而virtual函数的确定是在运行期
+   2. inline函数通常一定被放置在头文件内,因为大多数构建环境在编译过程中inlining,而为了将一个函数调用替换为被调用函数的本地,编译期必须知道那个函数的定义.
+      同样的道理,templates通常也放置于头文件中,因为它一旦被使用,编译期为了将它具现化,需要知道它长什么样子.
+   3. 若通过函数指针的方式调用inline函数,则编译期也会为该函数生成一个outlined函数本地.
+   4. 构造函数和西沟函数不是好的适合inline的函数,因为编译期会自动为这些函数生成其他代码,这些代码会大大增加inline的代码量
+   5. 要注意:inline函数无法随着函数库的升级而升级.
+      而且,大部分调试器都难以调试inline函数
+** 将文件间的编译依存关系降至最低
+   1. 把类分割成两个classes,一个作为main class提供接口,一个作为Impl class实现接口.其中,main class只内含一个指针成员指向其实现类Impl class.这般设计常称为pimpl(pointer to implementation)
+      这样的设计之下,main class的客户就完全和原类的成员相分离了,由于客户无法看到实现的细节,也就不可能写出什么取决于细节的代码,这是真正的接口与实现分离!
+      这个分离的关键在于以"声明的依存性"替换"定义的依存性"
+   2. 编译依存最小化的本质是:
+      让头文件尽可能自我满足,万一做不到,则让它与其他文件内的声明式(*而非定义式*)相依
+      * 如果reference或pointer能完成任务,就不要用object
+	一个声明就定义出指向该类型的reference或pointer.
+	需要定义式才能知道类型的定义
+      * 尽量以class声明式代替class定义式
+	声明一个函数,而它用到某个class时(返回值或参数类型),并不需要该class的定义;即使函数以by value方式传递参数亦然.
+	#+BEGIN_SRC C++
+	class A;              //A的声明式
+	A copy(A a);          //这里只需要A的声明就够了
+	#+END_SRC
+      * 为声明式和定义式提供不同的头文件
+	#+BEGIN_EXAMPLE
+	可以参考C++标准程序库头文件的<iosfwd>,其内涵iostream各组件的声明式
+	#+END_EXAMPLE
+* 设计与面向对象设计
+** 确定public继承表达的是is-a关系
+   1. 所谓is-a的关系不是指语言中的关系(比如鲸鱼是鱼,正方形是一种长方形等等),它要求能够施行于base class对象身上的每件事情,都可以施行于derived class对象身上.
+   2. 注意区分is-a(是一个),has-a(有一个),is-implemented-in-terms-of(根据某物实现出)
+** 在子类中小心定义与父类相同名称的方法
+   1. 子类中的同名方法会覆盖父类中的 *所有* 同名方法.即使父类和子类中的汗水有不同的参数类型也适用,不论函数是virtual或non-virtual方法都适用.
+   2. 可以在子类中用using 父类::同名方法的方式,使父类方法在子类中可见.而继承机制一如既往地运行
+** 区分接口继承和实现继承
+   1. pure virtual函数也可以提供定义,但调用它的唯一方法是"调用时明确指出class名称":pt->class::pure_virtual_func()
+   2. 声明一个pure virtual函数的目的是为了让derived classes只继承函数接口
+   3. 声明一个impure virtual函数的目的,是为了让derived class继承该函数的接口和缺省实现
+      可以通过将接口声明为一个pure virtual函数,将实现抽取作为一个non-virtual函数的方法来防止子类忘了重载impure-virtual的情况出现.但这种方法容易因过度雷同的函数名称而引起class命名空间污染问题.
+      我们也可以将接口声明为pure virtual函数,但同时也为这个pure-virtual提供缺省实现的方法来分离接口和缺省实现.
+      本质上,上面两种方法是为了将impure-virtual函数分割成两部分:声明部分表现的是接口(子类必须有),定义部分表现出缺省行为(子类可能有,但是需要在子类中明确调用),可以让着两个函数享有不同的保护权限.
+   4. 实现non-virtual函数的目的是为了令derived class继承函数的接口及一份强制性实现.
+** 考虑virtual函数以外的其他选择
+*** NVI模式(non-virtual interface)
+    1. 令客户通过public non-virtual成员函数间接调用private virtual函数,称为NVI手法.
+    2. NVI手法允许derived class重新定义virtual函数,从而赋予它们"如何实现机制"的控制能力,但base class保留诉说"函数何时被调用"的权利.
+    3. NVI手法没必要一定让virtual是private,也可以是protected,但是不能为public
+*** 借由Function Pointers实现Strategy模式
+    1. 通过在类中包含指向功能的指针来让类具有指定的功能
+    2. 这种方法可以实现
+       * 同一个类对象可以有不同的实现功能
+       * 实现功能可以在运行期变更
+       * 这种方法要求功能实现不依赖类的内部成分,因为这个方法已经不是类的成员函数了.
+*** 古典的Strategy模式
+    1. 传统的Strategy做法会将功能函数做成一个分离的类继承体系中的virtual成员函数.       
+** 绝不重新定义public继承而来的non-virtual函数
+   1. 若子类和父类有同名的non-virtual方法,那么一个指针调用哪个方法,就看指针声明类型是子类还是父类.
+** 绝不重新定义继承而来的缺省参数值
+   1. virtual函数是动态绑定的,而缺省参数值却是静态绑定的.
+   2. 指针的静态类型指声明该指针时的类型
+      指针的动态类型指指针所指对象的实际类型
+   3. 由于virtual函数是动态绑定,而却是函数是静态绑定的,所以当一个指向base饿指针在调用一个定义于derived class内的virtual函数时,使用的确实base class为它指定的缺省函数值!!
+      #+BEGIN_SRC C++
+      struct B
+      {
+      virtual void say(string word = "b"){cout<<word<<endl;}
+      };
+      struct D:public B
+      {
+      virtual void say(string word = "d"){cout<<"i am "<<word<<endl;}
+      };
+      int main()
+      {
+      B* pb = new D();
+      pb->say();       //i am b;
+      return 0;
+      }
+      #+END_SRC
+   4. 既然base中缺省参数和derived中的缺省参数必须一致,那么在derived中声明同样的缺省函数就显得代码重复,而且带着相依性了.
+      可以使用NVI的手法,让non-virtual函数指定缺省参数,而private virtual函数负责真正的工作.
+** 明智而审慎地使用private继承
+   1. 如果class之间的继承关系是private,编译器不会自动将一个derived class对象转换为base class对象.
+      由private base class 继承来的变量全部变为private的
+   2. private继承意味着implemented-in-terms-of(根据某物实现出).
+      如果你让class D以private形式继承class B,那么用意应该为采用class B内已经具备的某些特性,而不是因为B对象和D对象存在任何观念上的关系. private继承意味着只有实现部分被继承,而接口部分被略去
+   3. 复合的意义也是is-implemented-in-terms-of,而且复合比较容易理解,因此尽可能使用复合,必要时才使用private继承.
+   4. 当面对并不存在is-a关系的两个classes,其中一个需要访问另一个protected成员,或需要重新定义其一或多个virtual函数,则可以使用private继承.
+** 明智而审慎地使用多重继承
+   1. 调用多个父类中同名函数的问题:
+      多个父类中的同名函数的调用是歧义的,即时两个函数中只有一个是可取的(即一个是public,一个是private).因为C++解析重载函数调用的规则是,先找出匹配函数,再检查其可取性.
+      为了解决这个歧义,必须明确指明调用哪一个base class中的函数,例如sub.base1::func()
+   2. 钻石型多重继承
+      所谓钻石型多重继承指多个父类继承于同一个base class.这是带来的问题是,这个base class中的成员变量,是否应该重复
+      C++缺省的做法是重复的,如果不想要重复,那么父类在继承base class时需声明为virtual继承,即class D:virtual public B
+   3. virtual继承
+      由于virtual继承的开销太大,因此
+      * 尽量不要使用virtual继承,多使用non-virtual继承
+      * 如果必须使用virtual继承,尽量避免在virtual-base-class中放置数据
+* 模板和泛型编程
+** 运用成员函数模板接受所有兼容类型
+   1. 带有base-derived关系的B，D两类型分别具现化某个template，这两个template之间并无base-derived关系
+   2. 当为一个T型的模板定义了一个U型的构造函数模板之后，该行为叫做泛化
+** 需要类型转换时请为模板定义非成员函数
+   1. template实参推导过程中从不将隐式类型转换函数纳入考虑
+   2. 为了让类型转换可能发生于所有实参上，我们需要一个non-member函数
+      为了让这个函数自动具现化，我们需要将它们声明在class内部
+      而在class内部声明non-member函数的唯一办法就是让它成为一个friend
+* 定制new和delete
+** 了解new-handler的行为
+   1. 当opeartor new无法满足某一内存分配需求时,它会抛出异常.在这之前,它会先调用一个客户指定的错误处理函数,所谓的new-handler
+   2. 用户必须通过调用set_new_handler来设置new-handler函数,set_new_handler的参数是指向new-handler函数的指针
+   3. new-handler函数应该没有参数,也不返回任何东西(void)
+   4. 当operator new无法满足内存申请时,它会 *不断* 调用new-handler函数,直到找到足够内存!
+   5. 一个设计良好的new-handler函数必须做以下事情中的一个或几个
+      * 让更多内存可被使用
+	一个做法是,程序一开始执行就分配一大块内存,然后当new-handler第一次调用,将它们释放给程序使用
+      * 安装另一个new-handler
+	(否则会不断调用这个new-handler,进入死循环)
+      * 卸除new-handler
+	也就是将null指针传给set_new_handler,这样operator new会在内存分配不成功时抛出异常
+      * 抛出bad_alloc
+      * 退出程序
+	通常调用abor或exit
+   6. 使用new (std::nothrow),如果分配内存失败,不会抛异常,而是返回NULL值,nothrow定义于<new>
+** 写new和delete时需固守常规
+   1. operator new应该内含一个无穷循环,并在其中尝试分配内存,如果无法满足内存需求,就调用new-handler.
+      它也应该有能力处理0bytes申请.
+      由于类中的operator new成员函数会被子类继承,因此class专属版本则还需要处理"比正确大小更大的错误申请"
+      #+BEGIN_SRC C++
+      //non-member operator new伪代码
+      void* operator new(std::size_t size)throw(std::bad_alloc)
+      {
+          using namespace std;
+	  if(size == 0){
+	      size = 1;    //处理0-bye申请,将它视为1-bye申请,因为C++不允许大小为0的对象
+	  }
+	  while(true){
+	      尝试分配size bytes;
+	      if(分配成功){return 指向内存的指针;}
+	      //分配失败,找出目前的new-hander函数并调用
+	      new_handler globalHandler = set_new_handler(NULL);
+	      set_new_handler(globalHandler);
+	      if(globalHandler){
+	          (*globalHandler)();
+	      }else{
+	          throw std::bad_alloc();
+	      }
+	  }
+      }
+      #+END_SRC
+   2. operator new[]唯一需要做的一件事就是分配一块未加工内存.
+   3. operator delete应该在收到null指针时,不做任何事.class专属版本则还应该处理"比正确大小更大的错误申请"
+** 写了placement new也要写placement delete
+   1. 如果operator new接受的参数除了一定会有的那个size_t之外,还有其他参数,这便是个所谓的placement new.
+   2. 相应的placement delete指"参数个数和类型都与operator new相同的"operator delete
+   3. 运行期,若replacement new抛出异常,则系统会去找与placement new相对应的placement delete版本,若找不到则什么也不做.
+      但是placement delete只有在"伴随placement new调用而触发的构造函数"出现异常时才会被编译器自动调用.对一个指针显式调用delete不会导致调用placement delete.
+   4. 缺省情况下,C++在global作用域提供三种形式的operatornew
+      * void* operator new(std::size_t)throw(std::bad_alloc);  //normal new
+      * void* operator new(std::size_t,void*) throw();         //placement new
+      * void* operator new(std::size_t,const std::nothrow_t&)throw()//nothrow new
+   5. 当声明了专有类的new和delete之后,请注意,它会遮掩std的标准new和delete.

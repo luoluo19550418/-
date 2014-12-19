@@ -1,0 +1,138 @@
+#+TITLE: ebrowse
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* Ebrowse说明
+  Ebrowse是一款类似cscope的工具,但是它只能专用于C++代码.Emacs可以使用它浏览C++中的类继承信息.
+  Ebrowse其实分为两个部分,一个部分是Emacs自带的ebrowse(windows中为ebrowse.exe)命令,该命令可以在shell中运行.另一部分则为Emacs编辑器中的ebrowse相关Lisp程序.
+  在使用Ebrowse前,需要使用ebrowse命令对源代码进行预处理生成数据库,随后Emacs才能通过读取数据库的内容来显示/操作源代码中的类,成员,全局函数,宏,类型等..
+* ebrowse命令
+  使用ebrowse命令生成源代码数据库的方式很简单,只需要执行`ebrowse 源代码文件名`即可. 当然ebrowse命令也提供了许多命令选项.使用选项`--help`来显示帮助信息
+  | 选项                     | 说明                                                                               |
+  |--------------------------+------------------------------------------------------------------------------------|
+  | --file=$file             | 以$file中包含的内容作为待解析的文件列表,每行表示一个文件名                         |
+  | --search=$paths          | 为输入文件定义搜索路径,其中$paths根据操作系统的不同使用冒号或分号分隔不同路径      |
+  | --output-file=$file      | 定义输出数据库的文件名                                                             |
+  | --append                 | 不清除数据库文件的原始内容                                                         |
+  | --no-structs-or-unions   | 不记录struct和union的信息                                                          |
+  | --no-regexps             | 不记录正则表达式信息,这些正则信息有利于Emacs的Ebrowse相关命令来查找函数,变量等信息 |
+  | --verbose/--very-verbose | 显示处理源代码过程的详细信息                                                                 |
+
+* Tree-buffers
+  使用C-x C-f打开ebrowse命令生成的文件时,会自动进入Tree-buffer,在其中提供了如下一些操作
+** 操作
+   | 命令              | 说明                                                    |
+   |-------------------+---------------------------------------------------------|
+   | /                 | 查找类名                                                |
+   | n                 | 继续上一次查找                                          |
+   | q                 | 退出                                                    |
+   | L v               | 显示成员变量                                            |
+   | L V               | 显示静态成员变量                                        |
+   | L d               | 显示友函数                                              |
+   | L f               | 显示成员函数                                            |
+   | L F               | 显示静态成员函数                                        |
+   | L t               | 显示类型类表                                            |
+   | T f               | 切换显示类所对应的文件名                                |
+   | s                 | 显示当前行的文件名,如果加了数字参数,则显示第N行的文件名 |
+   | -                 | 折叠树                                                  |
+   | +                 | 展开树                                                  |
+   | *                 | 展开所有的折叠                                          |
+   | C-k               | 移除当前行及其子类                                      |
+   | C-x C-s / C-x C-w | 保存编辑过的类树                                        |
+   | x                 | 显示类树的统计信息                                      |
+   | M t               | 給当前类加/去除Mark                                     |
+   | M a               | 去除所有类的Mark                                        |
+   | C-u M a           | 給所有类添加Mark                                        |
+   | SPC               | 查看当前class                                           |
+   | RET               | 定位到当前class                                         |
+* Member-buffers
+  存在6中不同的member-buffers,分别用来表示
+  * Instance variables
+  * Instance functions
+  * Static variables
+  * Static member functions
+  * Friend functions
+  * Types
+** 操作
+   | 命令       | 说明                                                                                     |
+   |------------+------------------------------------------------------------------------------------------|
+   | L n        | 显示下一个member列表                                                                     |
+   | L p        | 显示上一个member列表                                                                     |
+   | L v        | 显示成员变量                                                                             |
+   | L V        | 显示静态成员变量                                                                         |
+   | L d        | 显示友函数                                                                               |
+   | L f        | 显示成员函数                                                                             |
+   | L F        | 显示静态成员函数                                                                         |
+   | L t        | 显示类型类表                                                                             |
+   | RET        | 定位到当前member的定义处                                                                 |
+   | f          | 定位到当前member的声明处                                                                 |
+   | SPC        | 查看当前member的定义                                                                     |
+   | v          | 查看当前member的声明                                                                     |
+   | D b        | 显示/不显示继承来的member                                                                |
+   | D a        | 是否显示member属性                                                                       |
+   | D l        | 是否显示详细信息(长模式),短模式只显示member名,长模式显示member名和匹配member的正则表达式 |
+   | G v        | 查找指定的member                                                                         |
+   | G m        | 查找指定的member,与上一个命令不同点在于补全的范围更大了                                  |
+   | G n        | 继续上一次的查找                                                                         |
+   | F 系列命令 | Filter                                                                                   |
+   | F a u      | 是否显示public member                                                                    |
+   | F a o      | 是否显示protected member                                                                 |
+   | F a i      | 是否显示private member                                                                   |
+   | F v        | 是否显示virtual member                                                                   |
+   | F i        | 是否显示inline member                                                                    |
+   | F c        | 是否显示const member                                                                     |
+   | F p        | 是否显示pure virtual member                                                              |
+   | F r        | 删除所有filter                                                                           |
+   | C 系列命令 | 显示其他的Class内容                                                                      |
+   | C c        | 切换到指定的class的member-buffer                                                         |
+   | C b        | 切换到基类(base)的member-buffer                                                          |
+   | C d        | 切换到子类(derived)的member-buffer                                                       |
+   | C p        | 显示同一继承层次中的前一个class的member-buffer                                           |
+   | C n        | 显示同一继承层次中的后一个class的member-buffer                                           |
+   | q          | 退出                                                                                     |
+   | C-l        | 刷新显示                                                                                 |
+   | ?          | 显示mode帮助                                                                             |
+   |            |                                                                                          |
+** member属性说明
+   属性列表从左至右说明为:
+   * T
+	 member是template
+   * C
+	 member声明为extern "C"
+   * v
+	 member声明为virtual
+   * i
+	 member声明为inline
+   * c
+	 member是const的
+   * 0
+	 member是纯虚函数
+   * m
+	 member声明为mutable
+   * e
+	 member声明为explicit
+   * t
+	 member声明了throw list
+* 查询tag
+  ebrowse也提供了一些类似find-tag这样的命令,你可以在C++源代码buffer中执行如下一些命令.
+** 操作
+   | 命令                | 说明                                                                     |
+   |---------------------+--------------------------------------------------------------------------|
+   | C-c C-m f           | 定位到当前member的定义处                                                 |
+   | C-c C-m F           | 定位到当前member的声明出                                                 |
+   | C-c C-m v           | 查看当前member的定义                                                     |
+   | C-c C-m V           | 查询当前member的声明                                                     |
+   | C-c C-m 4/5 f/F/v/V | 类似上面的命令,但是在另一个窗口/frame中显示                              |
+   | C-c C-m -           | 定位到上一个跳转点                                                       |
+   | C-c C-m +           | 定位到下一个跳转点                                                       |
+   | C-c C-m p           | 显示跳转列表,在列表上可以按SPC来定位,按v来查看位置                       |
+   | C-c C-m s           | 在文件集合中执行正则表达式查询                                           |
+   | C-c C-m u           | 查询调用当前member的地方                                                 |
+   | C-c C-m %           | 在文件集合中执行正则表达式替换                                           |
+   | C-c C-m ,           | 上面3个操作当找到第一个匹配条件时会停止,该命令重启上面的查询             |
+   | C-c C-m n           | 跟上面的命令类似,重启上一次的匹配操作,担从文件集和中的下一个文件开始匹配 |
+   | C-c C-m l           | 显示指定文件中的所有member                                               |
+   | C-c C-m a           | 显示所有符合给定正则表达式的member                                       |
+   | C-c C-m <TAB>       | 自动补全当前符号                                                         |
+   | C-c C-m m           | 显示包含光标所在member的member-buffer                                             |

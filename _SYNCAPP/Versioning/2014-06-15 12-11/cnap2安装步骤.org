@@ -1,0 +1,63 @@
+* 平台安装
+** 准备工作
+   * 确定所有sql以utf-8格式存储
+   * 确保创建的tablespace路径是一个新路径
+	 编译createTablespace_db2.sql中的managed by database using (file ....)语句
+   * 修改配置文件
+	 * 修改~/cfg/pmts.cfg
+	 * 修改~/audit/pmts.cfg
+	 * 修改~/esbapi/cfg/cfg.ini
+** 先用cnaps2Creation里的脚本建立数据库
+   * 用uppinst1登录db2服务器
+   * 执行cnaps2Creation里的db2_createDatabase_cnaps2.sh 
+	 sh db2_createDatabase_cnaps2.sh 数据库密码
+   * 用cnaps2登录前置服务器
+   * catalog db2
+	 db2 catalog tcpip node cnaps2db remote 10.8.6.11 server 50017
+	 db2 catalog db cnaps2db as cnaps2db at node cnaps2db
+   * 执行cnaps2Creation里的db2_createTable_nps.sh
+	 sh db2_createTable_nps.sh Table 数据库密码
+   * 执行cnaps2Creation里的db2_createTable_cnaps2.sh(由于在创建view时，bankinfo_view需要用到nps的表信息，所以需要先执行nps的建表脚本)
+	 sh db2_createTable_cnaps2.sh All 数据库密码
+** 再用db_init里的脚本初始化数据库
+   * 用cnaps2登录前置服务器
+   * 执行db2_init力的importAll.sh
+	 sh importAll.sh 数据库密码
+   * 用户管理表中的脚本为客户端脚本
+** 创建MQ
+** 编译程序
+   * 加执行权限
+	 chmod +x ~/bin/*
+	 chmod +x ~/entity/mk
+	 chmod +x ~/makeall
+   * 编译
+	 makeall all
+** 上传程序
+   * tar -cvf cnaps2.tar bin  entity lib cfg dglib sqllib(能db connect 就可以不打包sqllib) esbapi xerces icu mqtest
+   * tar -xvf cnasp2.tar
+   * cd entity
+   * sh bind.sh
+** 必要时修改～/etc/pmts.xml
+** 加执行权限
+   * chmod +x ~/bin/*
+   * chmod +x ~/dglib/*
+
+
+
+
+* 客户端安装
+** 新建一个WAS实例
+** 修改WAR包中\WEB-INF\classes\cnaps.properties中的数据库信息
+** 修改WAR包中\WEB_INF\classes\mqConfig.properties中的MQ信息
+** 修改WAR包中\WEB-INF\classes\properties\esb-client.properties中的esb通讯路径
+** 修改\js\common\ICCardOperation.jsp中的jkp481_for_jsp.dll的地址（端口号一般＝控制台端口号＋20）
+** 布置WAR，填入上下文根，不断的下一步
+** 完成之后，启动
+
+
+
+* CusProviderItem安装
+** 修改WAR包中\WEB-INF\classes\mqConfig.properties的MQ配置路径
+** 修改WAR包中\WEB-INF\classes\properties\esb-client.properties的esb通讯路径
+** 布置WAR包
+** 完成后启动

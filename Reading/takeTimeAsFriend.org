@@ -1,0 +1,9 @@
+#+TITLE: takeTimeAsFriend
+#+AUTHOR: DarkSun
+#+EMAIL: lujun9972@gmail.com
+#+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
+
+* 记录时间的开销
+* 制作时间的预算
+* 慢而后能持久，不要想一口吃成个胖子
+* 从失败者身上获取经验，因为成功的方式各种各样，而失败的原因都差不多

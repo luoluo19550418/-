@@ -1,0 +1,12 @@
+* Ediff说明
+  * Ediff可以同时比较2个或者3个文件/buffer的异同点
+  * Ediff可以合并两个文件形成第三个文件
+  * Ediff可以应用patch文件
+  * Ediff已经跟版本控制系统结合在一起了,使得你可以将文件与老版本的文件进行比较
+  * Ediff可以自动处理远程的和压缩过的文件
+* Ediff基础命令
+  * ediff-files / ediff
+	比较两个文件
+  * ediff-backup
+	比较文件与它的backup文件,如果存在多个backup文件,则使用最新的那个,如果文件本身是backup文件,则与它的原始文件比较
+  * 
