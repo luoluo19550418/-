@@ -2281,7 +2281,18 @@
 
 	* (backtrace-frame frame-number)
 ** edebug
-   
+*** 使用Edebug的一般步骤
+	1. 引入函数/宏到edebug中来调试 
+
+	   将光标移动到要debug的函数/宏定义上,按下C-u C-M-x(eval-defun)
+
+	   一旦函数/宏被引入到edebug来调试,任何调用该函数/宏的操作都会触发edebug执行.
+
+	2. Edebug跳转到定义Elisp源代码的buffer,且该buffer暂时变为只读的.
+
+	3. 使用Edebug命令开始调试,可以使用`?`来显示Edebug命令
+
+	4. 若不需要在用Edebug调试了,需要将函数/宏引出Edebug,方法是再执行一边函数/宏的定义即可.
 ** test coverage
 *** 使用步骤
    	通过testcover库,能够对代码进行铺盖面测试. 方法是:
