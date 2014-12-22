@@ -2293,7 +2293,7 @@
 	3. 使用Edebug命令开始调试,可以使用`?`来显示Edebug命令
 
 	4. 若不需要在用Edebug调试了,需要将函数/宏引出Edebug,方法是再执行一边函数/宏的定义即可.
-*** Edebug中的modes
+*** Edebug中的命令
 **** Execution Mode
 	 Edebug在调试程序时,也支持各种execution modes. 但它并不是实际上的major-mode或minor-mode
 	 
@@ -2323,7 +2323,93 @@
      | i    | 进入form所调用的函数/宏定义(edebug-step-in) |
      |      |                                            |
 **** Breaks
-	 
+	 在三种情况下,Edebug会暂停程序的执行:
+
+	 * 设置断点
+       | 命令                   | 说明                                                                                            |
+       |------------------------+-------------------------------------------------------------------------------------------------|
+       | b                      | 设置断点(edebug-set-breakpoint),若带prefix argument,则该断点为临时断点                          |
+       | u                      | 取消断点(edebug-unset-breakpoint)                                                               |
+       | x CONDITION-FORM <RET> | 设置条件断点,当运行CONDITION-FORM的结果为非nil时,断点生效(edebug-set-conditional-breakpoint). 若带prefix argument,则断点为零时断点 |
+       | B                      | 光标跳转到下一个断点处(edebug-next-breakpoint)                                                              |
+	   
+	   re-evaluting/reinstrumenting函数定义会移除之前的所有断点
+
+	   设置条件断点时,CONDITION-FORM抛出的error会被忽略,当成返回nil来看待.
+
+	   一般情况下,Edebug会在断点处暂停程序的执行. 然而,当Edebug处于Go-nonstop mode下时,会完全忽略断点.
+
+	 * 当某个条件(Global Condition)匹配时
+
+	   若变量`edebug-global-break-condtion`的计算结果为非nil则暂停程序的执行. 同样的,若计算过程中抛出error,则当返回nil处理.
+
+	   可以在edebug模式下使用X命令来设置该条件. 也可以在任何buffer的任何时候,通过C-x X X来调用(edebug-set-global-break-condition)设置该条件
+	   
+	 * 插入断点代码
+	   
+	   使用(edebug)主动调用edebug,进入断点模式.
+
+	   若执行(eedbug)时,该函数并未引入到edebug中,则该函数其实调用的是(debug)
+**** Evaluation
+     | 命令          | 说明                                                                    |
+     |---------------+-------------------------------------------------------------------------|
+     | e EXP <RET>   | 在Edebug的外部上下文环境中计算EXP(edebug-eval-expression)               |
+     | M-: EXP <RET> | 在Edebug的上下文环境中计算EXP(eval-expression)                          |
+     | C-x C-e       | 在Edebug的外部上下文环境中计算光标前的expression(edebug-eval-last-sexp) |
+
+**** Evalution List Buffer
+     在Edebug中可以按E命令,进入名为*edebug*的"evaluation list buffer".
+
+	 在该buffer中可以交互式的运行SEXP,且在该buffer中计算的SEXP,处于Edebug外部的上下文环境中.
+
+	 可以在该buffer中使用Lisp Interaction mode中的命令. 还可以执行以下命令:
+
+	 * C-j (edebug-eval-print-last-sexp)
+
+	   在edebug的外部上下文环境中,计算光标前的expression,并将结果插入到当前buffer
+
+	 * C-x C-e (edebug-eval-last-sexp)
+
+	   在edebug的外部上下文环境中,计算光标前的expression
+
+	 * C-c C-u (edebug-update-eval-list)
+
+	   基于当前buffer的内容,创建新的evaluation list
+
+	   evalution list由多个evalutation list groups组成. 每个groups由多个Lisp expression组成,group之间使用注释行来区分.
+
+	   当edebug每次暂停程序执行时,每个evaluation list group中的地一个Lisp expression都会自动执行一遍.
+
+	   #+BEGIN_SRC emacs-lisp
+         (current-buffer)
+         #<buffer *scratch*>
+         ;---------------------------------------------------------------
+         (selected-window)
+         #<window 16 on *scratch*>
+         ;---------------------------------------------------------------
+         (point)
+         196
+         ;---------------------------------------------------------------
+         bad-var
+         "Symbol's value as variable is void: bad-var"
+         ;---------------------------------------------------------------
+         (recursion-depth)
+         0
+         ;---------------------------------------------------------------
+         this-command
+         eval-last-sexp
+         ;---------------------------------------------------------------
+
+	   #+END_SRC
+
+	 * C-c C-d (edebug-delete-eval-list)
+
+	   从evalution list中删除光标所在的group
+
+	 * C-c C-w (edebug-where)
+
+	   切换回当前暂停点的原代码buffer处
+
 **** 其他命令
      | 命令 | 说明                                                                                 |
      |------+--------------------------------------------------------------------------------------|
@@ -2334,6 +2420,25 @@
      | r    | 重新在echo area中显示上次expression的运算结果(edebug-previous-result)                |
      | d    | 显示backtrace(但是不显示Edebug自己的function,并且此时处于标准debugger模式下),(edebug-backtrace) |
      |      |                                                                                      |
+**** 捕获Errors
+	 默认情况下,若某函数被引入edebug中,则当该函数抛出error时,会自动激活edebug. 
+
+	 但可以通过配置变量`edebug-on-error`和`edebug-on-quit`来改变这一情况.
+**** Edebug Views
+
+*** Edebug中的输出
+	当Edebug输出循环list结构时,可能会出错,这时需要设置一下几个变量
+
+	* 配置项edebug-print-length
+
+	* 配置项edebug-print-level
+
+	* 配置项edebug-print-circle
+
+*** Trace Buffer
+	通过设置变量`edebug-trace`的值为非nil,可以使得Edebug将每次执行的过程都记录下来.
+
+	记录存储在名为`*edebug-trace*`的buffer中. 它记录了使用什么参数调用那个函数,返回值是什么.
 ** test coverage
 *** 使用步骤
    	通过testcover库,能够对代码进行铺盖面测试. 方法是:
