@@ -2293,6 +2293,47 @@
 	3. 使用Edebug命令开始调试,可以使用`?`来显示Edebug命令
 
 	4. 若不需要在用Edebug调试了,需要将函数/宏引出Edebug,方法是再执行一边函数/宏的定义即可.
+*** Edebug中的modes
+**** Execution Mode
+	 Edebug在调试程序时,也支持各种execution modes. 但它并不是实际上的major-mode或minor-mode
+	 
+	 execution mode决定了Edebug下一次在哪里暂停,以及在暂停时显示多少执行的信息.
+	 
+     | 命令  | 说明                                                                              |
+     |-------+-----------------------------------------------------------------------------------|
+     | S     | Stop:不再往下执行程序,等待用户输入更多的Edebug命令(edebug-stop)                   |
+     | <SPC> | Step:步进下一个语句(edebug-step-mode)                                             |
+     | n     | Next:跳到下一个Form(edebug-next-mode)                                             |
+     | t     | Trace:每执行一个语句(会在echo area显示每个语句执行的结果)就暂停一段时间(默认为1s,由参数`edebug-sit-for-seconds`确定) |
+     | T     | Rapid trace:类似t,但并不暂停(edebug-Trace-fast-mode)                              |
+     | g     | Go:继续执行直到下一个端口(edebug-go-mode)                                         |
+     | c     | Continue:继续执行,在每个断点处都停顿一下,然后继续执行(edebug-continue-mode)       |
+     | C     | Rapid continue:类似c,但在断点处并不停顿(edebug-continue-fast-mode)                |
+     | G     | Go non-stop:忽略断点的存在,继续执行程序.                                          |
+	 
+	 在程序执行过程中,可以用S或其他命令暂停程序的执行
+**** Jumping命令
+	 Jumping系列命令告诉Edebug,让程序执行直到指定的位置
+
+     | 命令 | 说明                                        |
+     |------+---------------------------------------------|
+     | h    | 执行到光标所在位置(edebug-goto-here)        |
+     | f    | 执行一个sexp(edebug-forward-sexp)           |
+     | o    | 执行完(跳出)当前的sexp(edebug-step-out)     |
+     | i    | 进入form所调用的函数/宏定义(edebug-step-in) |
+     |      |                                            |
+**** Breaks
+	 
+**** 其他命令
+     | 命令 | 说明                                                                                 |
+     |------+--------------------------------------------------------------------------------------|
+     | ?    | 显示Edebug的帮助信息(edebug-help)                                                    |
+     | C-]  | Abort one level back to the previous command level(`abort-recursive-edit')           |
+     | q    | 终止程序运行并退出edebug,但`unwind-protect`和`condition-case`中的代码还是会执行      |
+     | Q    | 类似q,但`unwind-protect`和`condition-case`中的代码不会执行(edebug-top-level-nonstop) |
+     | r    | 重新在echo area中显示上次expression的运算结果(edebug-previous-result)                |
+     | d    | 显示backtrace(但是不显示Edebug自己的function,并且此时处于标准debugger模式下),(edebug-backtrace) |
+     |      |                                                                                      |
 ** test coverage
 *** 使用步骤
    	通过testcover库,能够对代码进行铺盖面测试. 方法是:
