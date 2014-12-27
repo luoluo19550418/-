@@ -1446,6 +1446,15 @@
 
    *
 
+* Customization
+  emacs中可以使用`defcustom`定义customizable variables, 使用defface定义customizable face,使用defgroup定义cutomization group.
+
+** Common Item Keywords
+   defcustom,defgroup,defface这些定义配置项的函数/宏,都接收keyword参数. 下面是一些通用的参数说明.
+** customizable variable
+** customizable face
+** customization groups
+
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
@@ -2426,7 +2435,7 @@
 	 但可以通过配置变量`edebug-on-error`和`edebug-on-quit`来改变这一情况.
 **** Edebug Views
 
-*** Edebug中的输出
+*** Edebug中的输出格式
 	当Edebug输出循环list结构时,可能会出错,这时需要设置一下几个变量
 
 	* 配置项edebug-print-length

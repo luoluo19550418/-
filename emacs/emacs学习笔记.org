@@ -1670,17 +1670,18 @@
   6. 代码对齐
 
 	 假设有下面一些代码:
-	 #+BEGIN_EXAMPLE
+	 #+BEGIN_SRC js
        a = 1;
        bc = 2;
        cde = 3;
-	 #+END_EXAMPLE
+	 #+END_SRC
 	 要让它们在=处对齐,则可用先选中这几行,然后调用`align-regexp`,然后输入=,则排列结果为
-	 #+BEGIN_EXAMPLE
+	 #+BEGIN_SRC js
        a   = 1;
        bc  = 2;
        cde = 3;
-	 #+END_EXAMPLE
+	 #+END_SRC
+
   7. 如何在text terminal下调用text-based menu?
 
 	 调用tmm-menubar(M-`)
