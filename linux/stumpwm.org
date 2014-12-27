@@ -1,0 +1,322 @@
+#+TITLE: stumpwm
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 基础用法
+  * C-t e
+	
+	打开emacs
+
+  * C-t c
+
+	打开terminal
+
+  * C-t w
+
+	查看window列表
+
+  * C-t ;
+
+	运行command
+
+  * C-t C-t
+
+	在两个window间切换
+
+  * C-t s
+
+	垂直分割frame
+
+  * C-t TAB
+
+	在frame间跳转
+
+  * C-t window编号
+
+	将指定编号的window显示在当前frame上
+
+  * C-t !
+
+	执行shell命令
+
+  * C-t Q
+
+	删除其他frame
+
+* 快捷键说明
+  StumpWm的快捷键默认与GNU Screen的快捷键很接近.
+** Frame间跳转
+
+   * C-t / C-t TAB (fnext)
+
+	 选中当前group的下一个frame
+
+   * C-t  M-TAB (fother)
+
+	 跳转到上次选中的frame
+
+   * C-t f (fselect)
+
+	 显示每个frame的编号,然后输入编号就能直接选中指定的frame
+
+   * C-t 方向键 (move-focus)
+
+	 选中方向键所指示的frame
+
+   * (sibling)
+
+	 若将一个frame分割成A和B两个frame,则A,B互为sibling. 用该命令则会将focus从A跳转到B或从B跳转到B
+
+** Window操作
+*** 切换当前frame所拥有的window
+
+    * C-t C-M-n (next-in-frame)
+
+	  切换当前frame中的下一个window
+
+	* C-t C-M-p (prev-in-frame)
+
+	  切换当前frame中的上一个window
+
+	* C-t M-t (other-in-frame)
+
+	  切换当前frame中的两个window
+
+	* (frame-windowlist)
+
+	  显示当前frame所属的window列表. 并且可以选中列表中的window
+
+	* (frame-windows)
+
+	  仅仅显示当前frame所属的window列表,而不提供选中功能.
+
+*** 切换当前group所有用的window
+	
+	有一类命令,在切换各window时,会将focus移动到window所在的frame处. 这类命令有:
+
+	* C-t M-n (next)
+
+	  切换到当前group中的下一个window
+
+	* C-t M-p (prev)
+
+	  切换到当前group中的上一个window
+
+	* (other) / (other-window)
+
+	  在当前group中的两个window间相互切换
+
+	* C-t C-u (next-urgent)
+
+	  切换到当前group中下一个带urgent标记的window
+
+	* C-t ' (select) / (select-window)
+
+	  该命令提示你输入某个window的title,并跳转到那个window. 输入title时支持部分补全.
+
+	* (select-window-by-name)
+
+	  该命令提示你输入某个window的title,并跳转到那个window. 该命令要求输入的title与window的实际title完全一样
+
+	* C-t window编号 (select-window-by-number)
+
+	  根据编号选中window
+
+	* C-t " (windowlist)
+	  
+	  悬赏当前group的window列表菜单,并且可以通过该菜单直接选中window
+
+    还有一类命令保持focus在一个frame不动,它将指定的window从原frame拉到当前frame中,该类操作命名为pull:
+	
+	* C-t C-window编号 (pull) / (pull-window-by-number)
+
+	  将指定编号的window拉到当前frame
+
+	* C-t n /C-t SPC (pull-hidden-next)
+
+	  将没有显示出来的下一个window拉到当前frame中显示
+
+	* C-t p (pull-hidden-previous)
+
+	  将没有显示出来的上一个window拉到当前frame中显示
+
+	* C-t C-t (pull-hidden-other)
+
+	  将没有显示的windows中查找最近捕获到focus的window,拉到当前frame中显示
+
+    下面的命令,将当前window连带focus也一起移动到其他的frame中
+
+	* C-t M-方向键 (move-window)
+
+	  将当前window连带focus一起移动到方向键所指的frame中
+
+	* exchange-direction
+
+	  提示输入一个方向, 然后将当前window与最远方向的frame的window进行互换.
+
+*** 其他操作
+
+	* C-t k / C-t C-k
+
+	  退出程序
+
+	* C-t K
+
+	  强制杀死程序
+
+	* C-t -
+
+	  隐藏所有frame
+
+	* C-t Q
+
+	  移除所有其他的frame,并最大化当前frame
+
+	* C-t +
+
+	  平均分铺frame
+	
+** 帮助
+
+   * C-t h k
+
+	 捷键说明
+
+   * C-t h f
+
+	 函数说明
+
+   * C-t h v
+
+	 变量说明
+
+   * C-t h w
+
+	 列出指定命令的快捷键
+
+   * C-t h c
+
+	 命令说明
+
+** Group操作
+   * C-t G
+
+	 显示所有的group及其所含的window
+
+   * C-t g 编号
+
+	 切换到第n个group
+
+   * C-t Fn
+
+	 切换到第n个group
+
+   * C-t g g
+
+	 显示group列表
+
+   * C-t g c
+
+	 创建新group
+
+   * C-t g n / C-g g C-n /C-g g SPC /C-t g C-SPC
+
+	 切换到下一个group
+
+   * C-t g N
+
+	 切换到下一个group,并将当前的window也一起带到下一个group中
+
+   * C-t g p / C-t g C-p
+
+	 切换到上一个group
+
+   * C-t g P
+	 
+	 切换到上一个group,并将当前的window也一起带到上一个group中
+
+   * C-t g '
+
+	 根据名字/编号选中group
+
+   * C-t g "
+
+	 从group list中选择group
+
+   * C-t g m
+
+	 将当前window移动到指定的group
+
+   * C-t g k
+
+	 删除当前group,所有该group所拥有的window归并到下一个group中
+
+   * C-t g r / C-t g r
+
+	 更改当前group的名称
+
+* 配置
+** 自定义快捷键
+
+   * (define-key map key command)
+
+	 为command分配key作为快捷键
+
+	 #+BEGIN_SRC lisp
+       (stumpwm:define-key stumpwm:*root-map* (stumpwm:kbd "C-z") "echo Zzzzz...")
+	 #+END_SRC
+	 
+	 若command为nil表示删除已有的快捷键
+
+   * (undefine-key map key)
+
+	 删除已有的快捷键
+
+   * (kbd keys)
+
+	 这里keys为表示快捷键的字符串. kbd将keys字符串转换为key structure,一般用于`define-key`,`undefine-key`,`set-prefix-key`这类函数中
+
+   * (set-prefix-key key)
+
+	 设置stumpwm的prefix-key,默认为(C-t)
+	 
+	 #+BEGIN_SRC lisp
+       (stumpwm:set-prefix-key (stumpwm:kbd "C-M-H-s-z"))
+	 #+END_SRC
+
+   * (make-sparse-keymap)
+
+	 创建新的空keymap.
+
+	 #+BEGIN_SRC lisp
+       (defvar *my-frame-bindings*
+         (let ((m (stumpwm:make-sparse-keymap)))
+           (stumpwm:define-key m (stumpwm:kbd "f") "curframe")
+           (stumpwm:define-key m (stumpwm:kbd "M-b") "move-focus left")
+           m ; NOTE: this is important
+           ))
+       (stumpwm:define-key stumpwm:*root-map* (stumpwm:kbd "C-f") ’*my-frame-bindings*)
+	 #+END_SRC
+
+	 stumpwm默认自带的keymap有:
+
+	 * * root-map*
+
+	   默认快捷键为prefix-key,即C-t
+
+	 * * top-map*
+
+	   无快捷键
+
+	 * * groups-map*
+
+	   默认快捷键为prefix-key g
+
+	 * * exchange-window-map*
+
+	   默认快捷键为prefix-key x
+
+   * (bind key command)
+
+	 Hang a key binding off the escape key
+	   
