@@ -61,7 +61,7 @@
 
    * C-t 方向键 (move-focus)
 
-	 选中方向键所指示的frame
+	 选中方向键所毗邻的frame
 
    * (sibling)
 
@@ -300,23 +300,23 @@
 
 	 stumpwm默认自带的keymap有:
 
-	 * * root-map*
+	 * 变量*root-map*
 
 	   默认快捷键为prefix-key,即C-t
 
-	 * * top-map*
+	 * 变量*top-map*
 
 	   无快捷键
 
-	 * * groups-map*
+	 * 变量*groups-map*
 
 	   默认快捷键为prefix-key g
 
-	 * * exchange-window-map*
+	 * 变量*exchange-window-map*
 
 	   默认快捷键为prefix-key x
 
-	 * * input-map*
+	 * 变量*input-map*
 
 	   This is the keymap containing all input editing key bindings.
 
@@ -434,33 +434,189 @@
 	 
 	 类似argument-pop-rest,但若pop的值为空,则提示用户输入参数值
 
-** Message and Input Bar
-   * (echo string)
+* Message and Input Bar
+  * (echo string)
 
-	 在message bar中显示string
+	在message bar中显示string
 
-   * (message fmt &optional args)
+  * (message fmt &optional args)
 
-	 在message bar中显示格式化后的信息
+	在message bar中显示格式化后的信息
 
-   * (copy-last-message)
+  * (copy-last-message)
 
-	 拷贝在X中最后显示的那条信息
+	拷贝在X中最后显示的那条信息
 
-   * (colon &optional init-input)
+  * (colon &optional init-input)
 
-	 从用户处读取command
+	从用户处读取command
 
-   * (read-one-line screen prompt &key (initial-input ) require-match password)
+  * (read-one-line screen prompt &key (initial-input ) require-match password)
 
-   * (read-one-char screen)
+  * (read-one-char screen)
 
-   * (completing-read screen prompt completions &key (initial-input ) require-match)
+  * (completing-read screen prompt completions &key (initial-input ) require-match)
 
-   * (input-insert-string input string)
+  * (input-insert-string input string)
 
-   * (input-insert-char input char)
+  * (input-insert-char input char)
+
+* Frames
+  * (pull-window-by-number window-id &optional(group(current-group)))
 	
+	从指定group抽取指定编号为window-id的window到当前group,并focus到这个window上
+
+  * (hsplit &optional (ratio 1/2))
+
+	按比例竖着一分为二
+
+  * (vsplit &optional (ratio 1/2))
+
+	按比例,横着一分为二
+
+  * (remove-split &optional (group(current-group)) (frame (tile-group-current-frame group)))
+	
+	移除指定group的指定frame(默认为当前group的当前frame). frame中的windows会合并到下一个frame中
+
+  * (only)
+
+	移除所有的非当前frame,并最大化当前frame
+
+  * (curframe)
+
+	Display a window indicating which frame is focused.
+
+  * (fnext)
+
+	循环遍历frame tree中的下一个frame
+
+  * (sibling)
+
+	 若将一个frame分割成A和B两个frame,则A,B互为sibling. 用该命令则会将focus从A跳转到B或从B跳转到B
+
+  * (fother)
+	
+	 跳转到上次选中的frame
+
+  * (fselect frame-number)
+
+	显示每个frame的编号,然后输入编号就能直接选中指定的frame
+
+  * (resize width height)
+
+	调整当前frame到width * height个像素大小
+
+  * (fclear)
+	
+	clear当前frame
+
+  * (move-focus direction)
+	
+	 选中方向所毗邻的frame. 方向可以为up/down/left/right
+
+  * (move-window direction)
+
+	类似move-focus, 只是当前window会连着一起pull过去
+
+  * (next-in-frame)
+
+	切换当前frame中的下一个window
+
+  * (prev-in-frame)
+	
+	切换当前frame中的上一个window
+
+  * (other-in-frame)
+	
+	切换当前frame中的两个window
+
+  * (echo-frame-windows &optional (fmt *window-format*))
+	
+	显示当前frame中的所有windows列表
+
+  * (exchange-direction direction &optinal (win (current-window)))
+
+	提示输入一个方向, 然后将当前window与最远方向的frame的window进行互换.
+
+  * 变量*min-frame-width*
+
+  * 变量*min-frame-height*
+
+  * 变量*new-frame-action*
+
+	当一个创建了一个frame后,该变量控制会往该新frame中放些什么东西.
+
+	:empty表示保留该frame为空
+
+	:last-window 表示frame中没有显示的最后一次focus的window. 为默认值
+	
+** 交互式更改Frame的大小
+
+   进入iresize mode可以是你交互式的更改当前frame的大小. 使用iresize或C-t r进入resize mode
+   
+   * (iresize)
+
+	 进入iresize-mode. 在该mode下可以使用如下命令交互地更改当前frame的大小
+
+	 * C-p / Up / k
+
+	   减少当前frame的高度
+
+	 * C-n / Down / j 
+
+	   增加当前frame的高度
+
+	 * C-f / Right / l
+
+	   增加当前frame的长度
+
+	 * C-b / Left / h 
+
+	   减少当前frame的长度
+
+	 * C-g / ESC
+
+	   取消调整(还未实现)
+
+	 * RET
+	   
+	   确定调整
+
+   * (abort-iresize)
+
+	 退出interactive resize mode.
+
+   * (exit-iresize)
+
+	 退出interactive resize mode.
+
+   * 变量*resize-increment*
+
+	 当调整frame大小时,每次调整多少像素
+	
+** Frame Dumping
+
+   frame和group的配置信息可以使用如下命令保存/还原
+
+   * (dump-desktop-to-file file)
+
+	 保存所有screen的所有group的frames信息
+
+   * (dump-group-to-file file)
+
+	 保存当前screen的当前group的frames信息
+
+   * (dump-screen-to-file file)
+
+	 保存当前screen的所有group的frames信息
+
+   * (restore-from-file file)
+
+	 还原file中的screen,group和frames信息
+
+   * (place-existing-windows)
+
+	 根据placement rules重新排布windows的位置
 * mode-line
   * 命令mode-line
 
