@@ -316,7 +316,434 @@
 
 	   默认快捷键为prefix-key x
 
+	 * * input-map*
+
+	   This is the keymap containing all input editing key bindings.
+
    * (bind key command)
 
 	 Hang a key binding off the escape key
 	   
+** 自定义command
+
+   使用defcommand来定义command,语法为:
+
+   #+BEGIN_SRC lisp
+     (defcommand cmd(arg1 arg2...)
+       ((arg1-type arg1-prompt)
+        (arg2-type arg2-prompt)
+        ...)
+
+       bodys)
+   #+END_SRC
+   下面是一个例子:
+   #+BEGIN_SRC lisp
+     (defcommand now-we-are-six (name age)
+       ((:string "Enter your name: ")
+        (:number "Enter your age: "))
+       (message "~a, in six years you will be ~a" name (+ 6 age)))
+   #+END_SRC
+
+   其中cmd为命令名称,它也可以是(cmd scope)这样的格式,表示所定义的函数只在scope内生效. 
+   目前scope的值有两个: 'tile-group和'float-group. 分别表示函数只在tile-group/float-group中生效.
+   例如:
+   #+BEGIN_SRC lisp
+     (defcommand (next tile-group) ...)
+   #+END_SRC
+
+   arg-prompt表示提示用户输入参数时所显示的message.
+   arg-prompt可以为nil或省略,则该参数认为是可选参数
+   
+   arg-type可以为:
+   | 类型             | 说明                                                                            |
+   |------------------+---------------------------------------------------------------------------------|
+   | :y-or-n          | A yes or no question returning T or NIL.                                        |
+   | :variable        | A lisp variable                                                                 |
+   | :function        | A lisp function                                                                 |
+   | :command         | A stumpwm command as a string.                                                  |
+   | :key-seq         | A key sequence starting from *TOP-MAP*                                          |
+   | :window-number   | An existing window number                                                       |
+   | :number          | An integer number                                                               |
+   | :string          | A string                                                                        |
+   | :key             | A single key chord                                                              |
+   | :window-name     | An existing window’s name                                                      |
+   | :direction       | A direction symbol. One of :UP :DOWN :LEFT :RIGHT                               |
+   | :gravity         | A gravity symbol. One of :center :top :right :bottom :left :top-right :top-left |
+   | :bottom-right    | :bottom-left                                                                    |
+   | :group           | An existing group                                                               |
+   | :frame           | A frame                                                                         |
+   | :shell           | A shell command                                                                 |
+   | :rest            | The rest of the input yes to be parsed.                                         |
+   | :module          | An existing stumpwm module                                                      |
+   | 其他自定义的类型 | 使用define-stumpwm-type自定义的类型                                             |
+
+   使用defin-stumpwm-type定义类型的作用类似于emacs中的"(interactive (list . . . ))". 它的语法为:
+
+   (define-stumpwm-type :type-name (input prompt) body)
+   #+BEGIN_SRC lisp
+     (define-stumpwm-type :smart-direction (input prompt)
+       (let ((valid-dirs
+              (loop ; gather all the directions in which there’s a neighbouring frame
+               with values = ’(("up" :up)
+                                ("down" :down)
+                                ("left" :left)
+                                ("right" :right))
+               with frame-set =
+               (group-frames (window-group (current-window)))
+               for dir in values
+               for neighbour = (neighbour
+                                (second dir)
+                                (window-frame (current-window)) frame-set)
+               if (and neighbour (frame-window neighbour))
+               collect dir))
+             (arg (argument-pop input))) ; store a possible argument
+         (cond ((null valid-dirs) ; no directions, bail out
+                (throw ’error "No valid directions"))
+               (arg ; an arg was bound, but is it valid?
+                (or (second (assoc arg valid-dirs :test #’string=))
+                    (throw ’error "Not a valid direction")))
+               ((= 1 (length valid-dirs)) ; only one valid direction
+                (second (car valid-dirs)))
+               (t ; multiple possibilities, prompt for direction
+                (second (assoc (completing-read input prompt valid-dirs
+                                                :require-match t)
+                               valid-dirs :test #’string=))))))
+     (defcommand smarty (dir) ((:smart-direction "Pick a direction: "))
+       ;; ‘dir’ is a keyword here
+       (message "You’re going ~a" (string-downcase dir)))
+     (define-key *root-map* (kbd "R") "smarty right")
+   #+END_SRC
+   
+   这里input和prompt皆为参数,其中input参数的值为提供给command的argument line. prompt参数的值为defcommand中定义的prompt.
+
+   stumpwm为input参数提供了许多处理函数:
+
+   * (argument-pop input)
+
+	 从argument-line中pop出一个参数(参数之间以空格为分隔符)
+
+   * (argument-pop-rest input)
+
+	 将argument-line中的剩余值作为单个的字符串参数pop出来
+
+   * (argument-pop-or-read input prompt &optional completions) 
+   
+	 类似argument-pop,但若pop的值为空,则提示用户输入参数值
+
+   * (argument-pop-rest-or-read input prompt &optional completions)
+	 
+	 类似argument-pop-rest,但若pop的值为空,则提示用户输入参数值
+
+** Message and Input Bar
+   * (echo string)
+
+	 在message bar中显示string
+
+   * (message fmt &optional args)
+
+	 在message bar中显示格式化后的信息
+
+   * (copy-last-message)
+
+	 拷贝在X中最后显示的那条信息
+
+   * (colon &optional init-input)
+
+	 从用户处读取command
+
+   * (read-one-line screen prompt &key (initial-input ) require-match password)
+
+   * (read-one-char screen)
+
+   * (completing-read screen prompt completions &key (initial-input ) require-match)
+
+   * (input-insert-string input string)
+
+   * (input-insert-char input char)
+	
+* mode-line
+  * 命令mode-line
+
+	切换是否显示mode-line
+
+  * (toggle-mode-line screen head &optiional (format (quote *screen-mode-line-format*)))
+	
+	切换特定screen中的mode-line是否显示
+
+  * 变量*screen-mode-line-format*
+
+	该变量为一个由string,symbol和list组成的list.
+
+	其中,若元素为symbol,则mode-line显示它的值.
+
+	若元素为(:eval FORM)这样的list,则FORM的计算结果为显示的值
+
+	若元素为string,则该string为一个fmt,会将string中的转义字符转义后显示.
+
+    | 转义字符 | 说明                                                                                                                                |
+    |----------+-------------------------------------------------------------------------------------------------------------------------------------|
+    | %h       | 显示当前mode-line所属的head编号                                                                                                     |
+    | %w       | 列出当前group包含的所有window,格式根据*window-format*来定                                                                           |
+    | %W       | 列出当前group的当前head所包含的所有window,格式根据*window-format*来定                                                               |
+    | %g       | 列出所有group,格式根据*group-format*来决定                                                                                          |
+    | %n       | 当前group的名称                                                                                                                     |
+    | %u       | 根据*window-foramt*列出urgent windows                                                                                               |
+    | %v       | 列出所有的window列表,格式根据*window-format*来定. 其中当前的window由fmt-highlight来高亮,不可见的window由*hidden-window-color*来标色 |
+    | %d       | 根据*time-modeline-string*来输出当前时间                                                                                                    |
+    |          |                                                                                                                                     |
+
+  * 变量*mode-line-postion*
+
+	可选值为:top或:buttom
+
+  * 变量*mode-line-border-width*
+
+  * 变量*mode-line-pad-x*
+
+  * 变量*mode-line-pad-y*
+
+  * 变量*mode-line-background-color*
+
+  * 变量*mode-line-foreground-color*
+
+  * 变量*mode-line-border-color*
+
+  * 变量*mode-line-timeout*
+
+	mode-line会在每次命令执行后自动更新. 但若一直不执行命令,则会每隔*mode-line-timeout*秒后更新.
+
+	更改该值之后,需要重新执行mode-line命令才能生效.
+
+* groups
+  stumpwm中的group,类似其他wm中的virtual desktop或workspace
+** group相关命令
+   * 命令(gnew name)
+
+	 创建名为name的新group,并切换到该group
+
+	 若name以`.`开头,则表示该group为隐藏group. 隐藏group的编号小于1,并且对命令gnext,gprev不可见
+
+   * 命令(gnew-float name)
+
+	 创建名为name的浮动float,并切换到该float
+
+   * 命令(gnewbg name)
+
+	 类似gnew,但不切换到该group
+
+   * 命令(gnewbg-float name)
+
+	 类似gnew-float,但不切换到该group
+
+   * 命令(gnext)/(gprev)
+
+	 切换到下一个/上一个group
+
+   * 命令(gnext-with-window) / (gprev-with-window)
+
+	 连带着当前的window一起切换到上一个/下一个group
+
+   * 命令(gother)
+
+	 在两个group间相互切换
+
+   * 命令(gmerge from-group-id)
+	 
+	 将from-group中的window拉到当前group中
+
+   * 命令(groups &optional (fmt *group-format*))
+	 
+	 以格式fmt显示groups列表
+
+   * 命令(grouplist &optional (fmt *group-format*))
+	 
+	 类似groups,但同时还让用户看可以选择切换到哪个group
+
+   * 命令(vgroups &optional gfmt wfmt)
+	 
+	 类似groups,但同时还显示每个group的window
+
+   * 命令(gselect to-group)
+
+	 跳转到to-group,to-group可以为group-id,也可以为字符串,表示匹配该字符串的group
+
+   * 命令(gmove to-group)
+
+	 移动当前window到to-group中
+
+   * 命令(gkill)
+
+	 删除当前group,当前group所拥有的window会merge到下一个group
+
+   * 命令(grename new-group-name)
+
+	 重命名当前group
+** 自定义group
+   * 变量*group-formatters*
+
+	 它为一个(字符 . 格式化函数)组成的alist. 这里定义的字符可以作为*group-format*中的转义字符来用. 
+
+	 当在*group-format*中出现某转移字符时,会在*group-formatters*中查找相应的格式化函数,并以group作为参数调用该格式化函数. 将返回结果作为输出的字符串.
+
+	 若格式化函数的返回结果不是string,则会自动调用prin1-to-string转换.
+
+   * 变量*group-format*
+
+	 显示group list时的格式说明.
+     | 转移字符 | 说明                                       |
+     |----------+--------------------------------------------|
+     | %n       | 根据变量*group-number-map*转换group number |
+     | %s       | group的状态,类似window的状态               |
+     | %t       | group的名称                               |
+
+   * 函数(current-group &optional (screen (current-screen)))
+	 
+	 返回指定screen显示的当前group
+* Screen
+  Stumpwm支持多screen
+** 相关命令
+   * snext
+
+	 切换到下一个screen
+
+   * sprev
+
+	 切换到上一个screen
+
+   * sother
+
+	 在两个screen中相互切换
+
+   * refresh-head &optional (screen (current-screen))
+	 
+	 若自定的screen连接到monitor上了,则刷新指定screen.
+
+	 Stumpwm中的head就是monitor的意思.
+** 自定义screen
+
+   * 函数(current-screen)
+
+	 获取当前screen
+
+   * 函数(screen-current-window screen)
+
+	 获取指定screen中的当前window
+
+   * 函数(current-window)
+
+	 获取当前screen中的当前window
+
+   * 变量*screen-list*
+
+	 stumpwm维护的screen列表
+* 与UNIX/X11交互
+  * 命令(run-shell-command cmd &optional collect-output-p)
+	
+	运行cmd命令,若collect-output-p为T,则stumpwm会等待cmd运行结束,并返回cmd的输出.
+
+  * 命令(emacs)
+
+	若emacs没有运行,则运行emacs
+
+  * 函数(programs-in-path &optional full-path-p (path (split-string (getenv PATH) :)))
+	
+	返回path中的所有程序list. 若参数full-path-p为T,则返回程序的全路径,否则之返回程序的文件名
+
+  * 函数(pathname-is-executable-p pathname)
+	
+	pathname所表示的文件是否可执行
+
+  * 变量*shell-program*
+
+	命令run-shell-command会使用该变量所表示的shell来运行cmd
+
+  * 函数(getenv var)
+	
+	获取var的环境变量值
+
+  * 函数(setf (getenv var) val)
+
+	设置环境变量
+
+  * 命令(window-send-string string &optional (window (current-window)))
+	
+	发送string到指定的window,就好像用键盘在window上敲string一样.
+
+  * 命令(getsel)
+
+	echo选中的内容
+
+  * 命令(putsel string)
+
+	Stuf the string string into the X selection.
+
+  * 函数(set-x-selection text &optional (selection primary))
+	
+	Set the X11 selection string to string
+
+  * 函数(get-x-selection &optional timeout (selection primary)) 
+	
+	Return the x selection no matter what client own it.
+* stumpwm系统相关
+  * 命令(reload)
+
+	使用asdf重载stumpwm
+
+  * 命令(loadrc)
+
+	重加载~/stumpwmrc配置文件
+
+  * 命令(quit) / (keyboard-quit)
+
+	退出stumpwm
+
+  * 命令(restart-hard) / (restart-soft)
+
+	重启stumpwm
+
+  * 命令(commands)
+
+	列出所用的命令
+
+  * 函数(run-commands &rest commands)
+
+	按顺序以此执行stumpwm的command
+* Timer
+
+  Stumpwm也有定时器
+
+  * 函数(run-with-timer delay-secs repeat-secs function &rest args)
+	
+	在delay-secs之后,开始每隔repeat-secs就执行一次function, args为传递给function的参数
+
+  * 函数(cancel-time timer)
+
+	取消timer
+
+  * 函数(timer-p timer)
+
+	判断timer是否为定时器.
+* 帮助相关命令
+  * 命令(describe-key key)
+
+	快捷键所绑定的命令
+
+  * 命令(describe-variable var)
+
+	变量说明
+
+  * 命令(describe-function fn)
+
+	函数说明
+
+  * 命令(describe-command command)
+
+	命令说明
+
+  * 命令(where-is cm)
+
+	获取命令的快捷键
+
+  * 命令(modifiers)
+
+	List the modi￿ers stumpwm recognizes and what MOD-X it thinks they’re on.
