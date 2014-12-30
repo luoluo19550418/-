@@ -461,6 +461,244 @@
 
   * (input-insert-char input char)
 
+* Windows
+  * (next)
+
+	切换到window列表中的下一个window
+
+  * (pull-hidden-next)
+
+	把下一个未显示的window,拉到当前frame
+
+  * (prev)
+
+	切换到window列表中的上一个window
+
+  * (pull-hidden-previous)
+	
+	把上一个未显示的window,拉到当前frame
+
+  * (delete-window &optional (window (current-window)))
+
+	关闭指定window
+
+  * (kill-window &optional (window (current-window)))
+	
+	强制关闭指定window
+
+  * (echo-windows &optional(fmt *window-format*) (group (current-group)) (windows (group-windows group)) )
+	
+	根据fmt的格式显示指定group中的指定windows信息
+
+  * (other-window&optional(group(current-group)))
+	
+	切换到上次选中的window
+
+  * (pull-hidden-other)
+
+	在未显示的window中将最后一次选中的window拉到当前frame
+
+  * (renumber n &optional (group (curent-group)))
+
+	将group中的当前window重新分配编号为n, 若n已经有其他window占用了,则两者相互交换编号
+
+  * (meta key)
+
+	发送虚假按键信息到当前window. key一般为stumpWM的key,例如C-M-o
+
+  * (select-window query)
+
+	切换到以query开头的第一个window
+
+  * (select-window-by-number num &optional (group (current-group)))
+
+	查找指定编号的window,并让它显示在它所属的frame中
+
+  * (title new-title)
+
+	设定当前window的title
+
+  * (windowlist &optional (fmt *window-format*))
+
+	使用fmt格式列出window列表,并允许用户选择哪个window
+
+  * (fullscreen)
+
+	最大化当前window
+
+  * (info &optional (fmt *window-info-format*))
+
+	显示当前window的信息
+
+  * 命令(list-window-properties)
+
+	列出当前window的所有属性及其值,类似xprop的功能.
+
+  * (refresh)
+
+	刷新当前window,而不更改window的大小
+
+  * (redisplay)
+
+	刷新当前window,会让该window占用整个frame大小?
+
+  * 变量*window-format*
+
+    | 占位符 | 说明                                                                       |
+    |--------+----------------------------------------------------------------------------|
+    | %n     | 根据*window-number-map*转换后的windows编号                                 |
+    | %s     | 用符号显示window status. *表示当前window,+表示最后的window,-表示其他window |
+    | %t     | window的名称                                                               |
+    | %c     | window的class                                                              |
+    | %i     | window的resouce ID                                                        |
+    | %m     | 若window为marked,则显示为#                                                 |
+
+	可以使用前缀的数字来表示长度,例如%20t表示将window的title扩展为20个字节
+
+  * 变量*window-name-source*
+
+	该变量决定了使用什么作为window的名称. 默认为:title
+
+    | 值             | 说明                      |
+    |----------------+---------------------------|
+    | :title         | 使用window的title         |
+    | :class         | 使用window的resource class |
+    | :resource-name | 使用window的resource name    |
+
+  * 变量*new-window-prefered-frame*
+
+	
+** Window Marks
+   可以为某些window打上标记. 打上标记的window在window列表上显示时会有#标记. 有些命令,只对带标记的window生效
+
+   * (mark)
+
+	 切换当前window的标记
+
+   * (clear-window-marks &optional (group (curent-group)) (windows (group-windows group)))
+
+	 清除指定group中所有window的mark标记
+
+   * (pull-maked)
+
+	 将所有带标记的window拉到当前frame来,并清除掉这些mark
+
+** 控制Raise和Map请求
+
+   A map request occurs when a new or withdrawn window requests to be mapped for the first time.
+
+   A raise request occurs when a client asks the window manager to give an existing window focus.
+   
+   * 变量*deny-map-request*
+
+	 该变量是一个由window properties组成的list. 匹配其中window properties的window的map request会被拒绝
+	 #+BEGIN_SRC lisp
+       ;; Deny all map requests
+       (setf stumpwm:*deny-map-request* t)    
+       ;; Deny transient raise requests
+       (push ’(:transient) stumpwm:*deny-map-request*)
+	 #+END_SRC
+
+   * 变量*deny-raise-request*
+
+	 该变量是一个由window properties组成的list. 匹配其中window properties的window的raise request会被拒绝
+	 #+BEGIN_SRC lisp
+       ;; Deny the firefox window from taking focus when clicked upon.
+       (push ’(:class "gecko") stumpwm:*deny-raise-request*)
+       ;; Deny the all windows in the xterm class from taking focus.
+       (push ’(:class "Xterm") stumpwm:*deny-raise-request*)
+	 #+END_SRC
+
+   * 变量*suppress-deny-messages*
+
+	 设置为T会屏蔽raise/map的静止消息
+	
+** Programming With Windows
+   * 宏(define-window-slot attr)
+
+	 创建新的window属性,和对应的set/get函数
+
+   * 函数(window-send-string string &optional (window(current-window))
+	 
+	 发送string表示的字符到指定window,就好像用键盘输入一样
+
+   * 变量*default-window-name*
+
+	 若window没有自己的名字,则使用这个变量为自己的名字.
+
+** Rule Based Window Placement
+   可以指定一个规则,让匹配规则的window自动放在指定的group和frame中.
+
+   * 宏(define-frame-preference target-group &rest frame-rules)
+
+	 指定一个规则,让匹配规则的window自动放在指定的group和frame中.
+	 
+	 每个frame-rule为一个lambda list:
+
+	 (frame-number raise lock &key create restore dump-name class instance type role title)
+
+	 * frame-number
+
+	   将匹配的window放到该编号的frame中
+
+	 * raise
+
+	   若值为非nil,则raise and focus the window in its frame
+
+	 * lock
+
+	   若值为nil,则该规则只有在当前group为参数target-group时才有用.
+
+	   若值为非nil,则不管当前group为何,该规则都会将匹配的window送到target-group中.
+
+	 * create
+
+	   若create为非nil,且它的值为*DATA-DIR*目录下的某个group-dump文件名称.则该group会自动重新加载并创建出来
+
+	 * restore
+
+	   若restore为非nil,且它的值为*DATA-DIR*目录下的某个group-dump文件名称.则即使该group已经存在,也会自动重新加载并还原.
+
+	 * class
+
+	   window的class的匹配条件
+
+	 * instance
+
+	   window的instance/resource name的匹配条件
+
+	 * type
+
+	   window的type匹配条件
+
+	 * role
+
+	   window的role匹配条件
+
+	 * title
+
+	   window的title匹配条件
+
+   * 函数(clear-window-placement-rules)
+
+	 清空所有window的placement rules
+
+   * (remember lock title)
+
+	 记住当前window的所属的位置,即为当前window创建一条placement rule
+
+   * (forget)
+
+	 忘记当前window的所属位置
+
+   * (dump-window-placement-rules file)
+
+	 将*window-placement-rules*保存到文件中
+
+   * (restore-window-placement-rules file)
+
+	 加载保存到file中的*window-placement-rules*
+
 * Frames
   * (pull-window-by-number window-id &optional(group(current-group)))
 	
@@ -825,13 +1063,17 @@
 	
 	发送string到指定的window,就好像用键盘在window上敲string一样.
 
+  * 命令(ratclick &optional (button 1))
+
+	模拟鼠标在当前位置点击. Note: 只有在X server和CLX实现同时支持XTEST时才有效
+
   * 命令(getsel)
 
 	echo选中的内容
 
   * 命令(putsel string)
 
-	Stuf the string string into the X selection.
+	Stuff the string string into the X selection.
 
   * 函数(set-x-selection text &optional (selection primary))
 	
@@ -864,6 +1106,20 @@
   * 函数(run-commands &rest commands)
 
 	按顺序以此执行stumpwm的command
+
+  * 
+
+  * 命令(copy-unhandled-error)
+
+	拷贝未捕获的错误,并将错误信息拷贝到X11 selection中
+
+  * 命令(lastmsg)
+
+	显示最后出现的message
+
+  * 命令(eval-line cmd)
+
+	计算S表达式,并显示结果
 * Timer
 
   Stumpwm也有定时器
