@@ -1107,11 +1107,33 @@
 
 	按顺序以此执行stumpwm的command
 
-  * 
+  * 函数(run-or-raise cmd props &optional (all-groups-p *run-or-raise-all-groups*) (all-screens-p *run-or-raise-all-screens*))
+	
+	若没有匹配props的window,则运行cmd,否则直接切换到匹配props的window. 
 
-  * 命令(copy-unhandled-error)
+    其中props为window property组成的list. 它可以识别如下的property:
 
-	拷贝未捕获的错误,并将错误信息拷贝到X11 selection中
+	* :class
+
+	  匹配window的class
+
+	* :instance
+
+	  匹配window的instance或resource-name
+
+	* :role
+
+	  匹配window的WM_WINDOW_ROLE
+
+	* :title
+
+	  匹配window的title
+
+    参数all-groups-p和all-screens-p说明了,在搜索匹配属性的window时的范围,是否在所有group/所有screen中搜索
+
+  * 函数(run-or-pull cmd props &optional(all-groups *run-or-raise-all-groups*) (all-screens *run-or-raise-all-screens*))
+	
+	类似run-or-raise. 但是会把匹配属性的window拉到当前frame,而不是切换到window所属的frame
 
   * 命令(lastmsg)
 
@@ -1120,6 +1142,69 @@
   * 命令(eval-line cmd)
 
 	计算S表达式,并显示结果
+
+  * 命令(copy-unhandled-error)
+
+	拷贝未捕获的错误,并将错误信息拷贝到X11 selection中
+
+  * 函数(restarts-menu err)
+
+	Display a menu with the active restarts and let the user pick one. Error is the error being recovered from. 
+
+	若用户取消菜单,则该error重新抛出
+
+  * 宏(with-restarts-menu &body body)
+
+	执行body,若有error抛出,则弹出一个菜单,让用户选择是否重新执行. 若不重新执行,则抛出错误
+
+  * 变量*startup-message*
+
+	当StumpWM启动时会显示该message. 若值为nil则不显示启动信息
+
+  * 变量*suppress-abort-message*
+
+	当值为非nil时,不显示abort message
+
+  * 变量*default-package*
+
+	该变量指明了当知心eval命令时所处于的package. 若你经常要用到stumpwm的内部symbol,则一般设置为:stumpwm
+
+	NOTE:设置该变量在rc文件中不起作用.
+
+  * 宏(defprogram-shortcutname&key(command(string-downcase (string name))) (props(backq-list (quote quote) (backq-list (quote class) (string-capitalize command)))) (map*top-map*) (key(kbd (concat H-(subseq command 0 1)))) (pullpnil) (pull-name(intern1 (concat (string name) -PULL))) (pull-key(kbd (concat H-M- (subseq command 0 1)))))
+
+	定义命令和快捷键来运行或切换到某个程序. 若pullp参数设置为非nil,则会把已存在的window拉到当前frame
+
+  * 变量*initializing*
+
+	当启动stumpwm时该值为T. loadrc时该值为nil
+** StumpWM的数据存储目录
+   若像在不同session间共享StumpWM数据,一个比较好的方法是将数据存储在*data-dir*目录中.
+
+   * 变量*data-dir*
+
+	 该变量所指定的目录为stumpwm存储数据的目录. 默认为~/.stumpwm.d
+
+   * 函数(data-dir-file name &optional type)
+
+	 返回*data-dir*中匹配name和type的文件路径
+
+   * 宏(with-data-file (s file &rest keys &key(if-exists supersede))
+	 
+	 打开*data-dir*中的文件. keyword参数直接传递給open函数.
+** 调试StumpWM
+
+   * 变量*debug-level*
+	 
+     设置debug级别,0表示关闭debug. 数字越大,级别越高
+
+   * 变量*debug-stream*
+
+	 定义debug的输出流. 默认为*error-output*
+
+   * 函数(redirect-all-output file)
+
+	 将所有的输出都转储进指定的文件
 * Timer
 
   Stumpwm也有定时器
@@ -1159,3 +1244,69 @@
   * 命令(modifiers)
 
 	List the modi￿ers stumpwm recognizes and what MOD-X it thinks they’re on.
+* Hooks
+  * 宏(add-hook hook fn)
+
+	添加hook
+
+	#+BEGIN_SRC lisp
+      (defun my-rad-fn (to-frame from-frame)
+        (stumpwm:message "Mustard!"))
+      (stumpmwm:add-hook stumpwm:*focus-frame-hook* 'my-rad-fn)
+	#+END_SRC
+
+  * 宏(remove-hook hook fn)
+
+	删除hook的指定函数
+
+  * hook变量*new-window-hook*
+
+    当一个window添加到window list时会触发该hook. 有可能是新创建了一个window,也有可能是一个游离的已存在window回到window list中
+
+  * Hook变量*destroy-window-hook*
+	
+	当一个window被关闭了,或者游离出了window list时会调用该hook
+
+  * Hook变量*focus-window-hook*
+
+	当一个window获得了焦点后会触发该hook. 该hook函数需要接收两个参数: 当前获得焦点的window和上一个获得焦点的window
+
+  * Hook变量*place-window-hook*
+	
+A hook called whenever a window is placed by rule. Arguments are window group
+and frame
+[Hook] *start-hook*
+A hook called when stumpwm starts.
+[Hook] *internal-loop-hook*
+A hook called inside stumpwm’s inner loop.
+[Hook] *focus-frame-hook*
+A hook called when a frame is given focus. The hook functions are called with 2
+arguments: the current frame and the last frame.
+[Hook] *new-frame-hook*
+A hook called when a new frame is created. the hook is called with the frame as an
+argument.
+*message-hook*
+A hook called whenever stumpwm displays a message. The hook function is passed
+any number of arguments. Each argument is a line of text.
+[Hook] *top-level-error-hook*
+Called when a top level error occurs. Note that this hook is run before the error is
+dealt with according to *top-level-error-action*.
+[Hook] *focus-group-hook*
+A hook called whenever stumpwm switches groups. It is called with 2 arguments: the
+current group and the last group.
+[Hook] *key-press-hook*
+A hook called whenever a key under *top-map* is pressed. It is called with 3 argu-ment: the key, the (possibly incomplete) key sequence it is a part of, and command
+value bound to the key.
+[Hook] *root-click-hook*
+A hook called whenever there is a mouse click on the root window. Called with 4
+arguments, the screen containing the root window, the button clicked, and the x and
+y of the pointer.
+[Hook] *mode-line-click-hook*
+Called whenever the mode-line is clicked. It is called with 4 arguments, the mode-line,
+the button clicked, and the x and y of the pointer.
+[Hook] *urgent-window-hook*
+A hook called whenever a window sets the property indicating that it demands the
+user’s attention
+[Hook] *event-processing-hook*
+A hook called inside stumpwm’s inner loop, before the default event processing takes
+place. This hook is run inside (with-event-queue ...).
