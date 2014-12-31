@@ -1450,10 +1450,83 @@
   emacs中可以使用`defcustom`定义customizable variables, 使用defface定义customizable face,使用defgroup定义cutomization group.
 
 ** Common Item Keywords
-   defcustom,defgroup,defface这些定义配置项的函数/宏,都接收keyword参数. 下面是一些通用的参数说明.
+   defcustom,defgroup,defface这些定义配置项的函数/宏,都接收keyword参数. 
+
+   所有这些keyword参数,除了`:tag`之外,都可以联合使用. 下面是一些通用的参数说明.
+   
+   * :tag LABEL
+
+	 LABEL为一个字符串类型. 该参数表示使用LABEL取代被定义item的名称作为该item的标签.
+
+   * :group GROUP
+
+	 定义item所属的组别. 一个item可以同时属于多个组别,因此你可以多次使用该参数
+
+   * :link LINK-DATA
+
+	 在该item的说明文档后面增加一个外部链接. 其中LINK-DATA可以以下格式:
+
+	 你还可以在LINK_DATA的第一个元素后面加上`:tag NAME`用来表示链接显示为NAME. 例如`(info-link :tag "foo" "(emacs)Top")'会创建一个链接连接到Emacs手册,但是显示为foo
+
+	 * (custom-manual INFO-NODE)
+
+	   链接到Info node. INFO-NODE为Info文档中某node的名称,像"(emacs)Top"这样的. 
+
+	   该链接显示为[manual]
+
+	 * (info-link INFO-NODE)
+	   
+	   类似custom-manual,只是链接的显示为Info node的名称
+
+	 * (url-link URL)
+
+	   链接到web页面, 点击它会使用变量`browse-url-browser-function`定义的Web浏览器打开
+
+	 * (emacs-library-link LIBRARY)
+
+	   连接到Emacs Lisp library文件.
+
+	 * (file-link FILE)
+
+	   连接到某个文件,Emacs会用find-file函数打开它
+
+	 * (function-link FUNCTION)
+
+	   链接到某个函数的说明文档,当点击它,会使用describe-function来获取函数说明
+
+	 * (variable-link VARIABLE)
+
+	   连接到某个变量的说明文档
+
+	 * (custom-group-link GROUP)
+
+	   链接到其他的group
+
+   * :load FILE
+
+	 在显示item前先加载FILE
+
+   * :require FEATURE
+
+	 当保存item的值时,执行(require 'FEATURE)
+
+   * :version VERSION
+
+	 表示该item第一次出现在版本为VERSION的Emacs中,或该item的默认值或意义在版本为VERSION的Emacs中更改了.
+
+	 VERSION为字符串类型
+
+   * :package-version '(PACKAGE . VERSION)
+
+	 表示该item第一次出现在版本为VERSION的PACKAGE中,或该item的默认值或意义在版本为VERSION的PACKAGE中更改了.
+
+	 PACKAGE应该是一个符号,为package的正式名称. 而VERSION应该为字符串类型.
+
+	 若PACKAGE为Emacs自带的,则PACKAGE和VERSION需要在变量`customize-package-emacs-version-alist`中
+** customization groups
+
 ** customizable variable
 ** customizable face
-** customization groups
 
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
