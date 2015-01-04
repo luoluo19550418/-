@@ -1273,40 +1273,80 @@
 
   * Hook变量*place-window-hook*
 	
-A hook called whenever a window is placed by rule. Arguments are window group
-and frame
-[Hook] *start-hook*
-A hook called when stumpwm starts.
-[Hook] *internal-loop-hook*
-A hook called inside stumpwm’s inner loop.
-[Hook] *focus-frame-hook*
-A hook called when a frame is given focus. The hook functions are called with 2
-arguments: the current frame and the last frame.
-[Hook] *new-frame-hook*
-A hook called when a new frame is created. the hook is called with the frame as an
-argument.
-*message-hook*
-A hook called whenever stumpwm displays a message. The hook function is passed
-any number of arguments. Each argument is a line of text.
-[Hook] *top-level-error-hook*
-Called when a top level error occurs. Note that this hook is run before the error is
-dealt with according to *top-level-error-action*.
-[Hook] *focus-group-hook*
-A hook called whenever stumpwm switches groups. It is called with 2 arguments: the
-current group and the last group.
-[Hook] *key-press-hook*
-A hook called whenever a key under *top-map* is pressed. It is called with 3 argu-ment: the key, the (possibly incomplete) key sequence it is a part of, and command
-value bound to the key.
-[Hook] *root-click-hook*
-A hook called whenever there is a mouse click on the root window. Called with 4
-arguments, the screen containing the root window, the button clicked, and the x and
-y of the pointer.
-[Hook] *mode-line-click-hook*
-Called whenever the mode-line is clicked. It is called with 4 arguments, the mode-line,
-the button clicked, and the x and y of the pointer.
-[Hook] *urgent-window-hook*
-A hook called whenever a window sets the property indicating that it demands the
-user’s attention
-[Hook] *event-processing-hook*
-A hook called inside stumpwm’s inner loop, before the default event processing takes
-place. This hook is run inside (with-event-queue ...).
+    当某个window依照rule被安置时触发该hook. window group and frame作为参数传递
+
+  * Hook变量*start-hook*
+
+    当stumwm启动时触发该hook
+
+  * Hook变量*internal-loop-hook*
+
+    在stumpwm的内部循环时触发该hook
+
+  * Hook变量*focus-frame-hook*
+
+    当frame获得焦点时,触发该hook. The hook functions接收两个参数: 当前frame和上一个获得焦点的frame
+
+  * Hook变量*new-frame-hook*
+
+    当新frame创建时触发该hook. 该hook函数接收一个参数:新创建frame的名字.
+
+  * Hook变量*message-hook*
+
+    当stumwm显示message时触发该hook. 该hook函数接收任意长度的参数:message的每一行文字都作为一个参数. 
+
+  * Hook变量*top-level-error-hook*
+
+    当top level error发生时触发该hook. 
+	
+	注意: 该hook在stumpwm根据变量*top-level-error-action*做出相应的error处理动作前就触发了 .
+
+  * Hook变量*focus-group-hook*
+
+    当stumpwm切换group时触发该hook. 该hook函数接收两个参数: 当前group和上一个group.
+
+  * Hook变量*key-press-hook*
+
+    当在*top-map*下的快捷键被触动时触发该hook. 该hook函数接收3个参数: the key, the (possibly incomplete) key sequence it is a part of, and command value bound to the key.
+	
+  * Hook变量*root-click-hook*
+	
+    当用鼠标点击root window时触发该hook. 该hook函数接收4个参数, 包含该root window的screen, 点击的按钮, 光标所在的x和y坐标.
+
+  * Hook变量*mode-line-click-hook*
+
+    当mode-line点击时触发该hook. 该hook函数接收4个参数: mode-line, 点击的button, 光标所在的x和y坐标.
+	
+  * Hook变量*urgent-window-hook*
+
+    当将一个window标注为urgent时,触发该hook
+	
+  * Hook变量*event-processing-hook*
+	
+    A hook called inside stumpwm’s inner loop, before the default event processing takes place. This hook is run inside (with-event-queue ...).
+* Modules
+  一个module是一个ASDF系统,它为stumpwm添加更多的功能. 
+
+  StumpWM会在*data-dir*/modules目录下搜索可用module. 默认情况下该目录为`~/.stumpwm.d/modules`
+
+  * (load-module module-name)
+
+	加载module
+
+  * 函数(list-modules)
+
+	列出可用的module列表
+
+  * 变量*load-path*
+
+	搜索module的路径列表
+
+  * (add-to-load-path path)
+
+	若path包含asdf system,并且不再*load-path*中,则将它添加到*load-path*中
+
+  * 函数(init-load-path path)
+
+	递归创建包含module的路径列表. 每次stumpwm启动时,都会使用*module-dir*作为参数来调用该函数
+
+  * 函数(find-module name)
