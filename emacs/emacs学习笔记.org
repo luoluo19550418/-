@@ -597,17 +597,18 @@
       * 保存该文件
       * 可以把宏保存到.emacs中，这样宏就会自动加载进来了
    9. 加载宏文件            ：M-x load-file
-** Emacs下的版本控制
+** VC
    1. VC命令汇总
       * C-x v v  / M-x vc-next-action               ：前进到下一个合乎逻辑的版本控制状态
       * C-x v d  / M-x vc-directory                 ：列出某个子目录下所有的已注册版本
       * C-x v =  / M-x vc-diff                      ：生成一份版本差异报告
         * 可以加前缀C-u，那么会提示输入一个文件名和两个修订号，比较该文件的两个修订号之间的而区别
-	* 如果输入文件名时输入的是目录名称，则VC把该目录力全部已注册文件的指定版本之间的差异全部报告出来
-	* VC输出的差异报告，可以通过patch转换为一个补丁包
+	    * 如果输入文件名时输入的是目录名称，则VC把该目录力全部已注册文件的指定版本之间的差异全部报告出来
+	    * VC输出的差异报告，可以通过patch转换为一个补丁包
       * C-x v u  / M-x vc-revert-buffer             ：丢弃修改
       * C-x v ~  / M-x vc-version-other-window      ：在另一窗口打开指定修订版
       * C-x v l  / M-x vc-print-log                 ：显失某文件的修订日志
+	  * C-x v g  / M-x vc-annotate                  ：为文件的每一行都显示一份说明，说明了最后一次更新的时间和人。 可以按l来查看相关的log，按d来查看相关的diff
       * C-x v i  / M-x vc-register                  ：把文件注册到版本控制系统
       * C-x v h  / M-x vc-insert-headers            ：给文件加上供版本控制系统使用的标题块
       * C-x v r  / M-x vc-retrieve-snapshot         ：签出一个已命名的项目快照
@@ -1651,7 +1652,9 @@
 
    * 
 	 
-** 
+** 启用linum-mode可以显示行数
+
+** 启用goto-address-mode允许你在buffer中高亮并点击URL
 * NOTE
   1. 文本标记是与编辑缓冲区而不是窗口关联的，每个编辑缓冲区职能有一个文本标记
   2. 每个窗口都能记住自己的光标位置
