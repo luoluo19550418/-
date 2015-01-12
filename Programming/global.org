@@ -1,0 +1,222 @@
+#+TITLE: global
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 基本使用
+
+  * 创建tag数据库
+
+	在项目根目录下允许gtags,会自动遍历当前目录及其子目录中的文件,生产tag数据库. 
+
+	gtags会生成三个tag数据库:
+
+    | GTAGS  | definition database |
+    |--------+---------------------|
+    | GRTAGS | reference database  |
+    | GPATH  | path name database  |
+
+	一旦在项目根目录创建好了tag数据库,就可以在项目的任一子目录中直接而运行global命令来进行查找
+
+  * 查找tag定义在哪个文件中
+
+	#+BEGIN_SRC sh
+      $ cd /home/user/ROOT
+      $ global func1
+      DIR1/fileB.c            # func1() is defined in fileB.c
+      $ cd DIR1
+      $ global func1
+      fileB.c                 # relative path from DIR1
+      $ cd ../DIR2
+      $ global func1
+      ../DIR1/fileB.c         # relative path from DIR2
+	#+END_SRC
+
+  * 查找tag在哪些文件中有调用
+
+	#+BEGIN_SRC sh
+	$ global -r func2
+    ../DIR1/fileA.c         # func2() is referred from fileA.c
+	#+END_SRC
+
+  * global支持POSIX正则表达式
+
+	#+BEGIN_SRC sh
+	$ cd /home/user/ROOT
+    $ global 'func[1-3]'
+    DIR1/fileB.c            # func1, func2 and func3 are matched
+    DIR2/fileC.c
+	#+END_SRC
+
+  * -x选项会列出详细信息
+
+	#+BEGIN_SRC sh
+      $ global func2
+      DIR2/fileC.c
+      $ global -x func2
+      func2              2 DIR2/fileC.c       func2(){ i++; }
+      func2              4 DIR2/fileC.c       func2(){ i--; }
+	#+END_SRC
+
+  * -a选项输出绝对路径
+
+	#+BEGIN_SRC sh
+	$ global -a func1
+    /home/user/ROOT/DIR1/fileB.c
+	#+END_SRC
+
+  * -s选项列出未定义在GTAGS中的symbol的位置
+
+	#+BEGIN_SRC sh
+	$ global -xs X
+    X                  1 DIR2/fileC.c #ifdef X
+	#+END_SRC
+
+  * -g选项列出符合指定pattern的位置
+
+	#+BEGIN_SRC sh
+	$ global -xg '#ifdef'
+    #ifdef             1 DIR2/fileC.c #ifdef X
+	#+END_SRC
+
+  * -O选项表示只在text文件中搜索
+
+  * -o选项表示同时搜索source文件和text文件
+
+  * -l选项表示只在当前目录下搜索
+
+  * -e -G -i选项的作用类型egrep中的相应选项
+
+  * --result=grep选项表示输出结果使用grep的输出格式输出.
+
+  * -P选项表示只在匹配指定pattern的路径中搜索
+
+	#+BEGIN_SRC sh
+	$ global -P fileB
+    DIR1/fileB.c
+    $ global -P '1/'
+    DIR1/fileA.c
+    DIR1/fileB.c
+    $ global -P '\.c$'
+    DIR1/fileA.c
+    DIR1/fileB.c
+    DIR2/fileC.c
+	#+END_SRC
+
+  * -f选项列出指定文件中的tags列表
+
+	#+BEGIN_SRC sh
+	$ global -f DIR2/fileC.c
+    func2              2 DIR2/fileC.c   func2(){ i++; }
+    func2              4 DIR2/fileC.c   func2(){ i--; }
+    func3              6 DIR2/fileC.c   func3(){
+	#+END_SRC
+
+  * -l选项limits the range of retrieval under the current directory.
+
+	#+BEGIN_SRC sh
+	$ cd DIR1
+    $ global -xl func[1-3]
+    func1        1 fileB.c      func1(){...}
+	#+END_SRC
+
+* Applied Usage
+
+  * 使用gtags -f fileList.txt可以指定只根据fileList.txt中所列文件来建立tag数据库
+
+	#+BEGIN_SRC sh
+	$ find . -type f -print >/tmp/list     # make a file set
+    $ vi /tmp/list                         # customize the file set
+    $ gtags -f /tmp/list
+	#+END_SRC
+
+  * 可以通过配置`GTAGSROOT'环境变量来改变tag数据库文件的存放地点
+
+	#+BEGIN_SRC sh
+      $ mkdir /var/dbpath
+      $ cd /cdrom/src                 # the root of source tree
+      $ gtags /var/dbpath             # make tag files in /var/dbpath
+      $ export GTAGSROOT=`pwd`
+      $ export GTAGSDBPATH=/var/dbpath
+      $ global func
+	#+END_SRC
+
+  * 若想查找那些没有定义在项目中的symbol的位置,则你可以通过配置`GTAGSLIBPATH'环境变量来指定库的目录
+
+	你需要在`GTAGSLIBPATH'中定义的每个目录中都执行一次gtags命令.
+
+	#+BEGIN_SRC sh
+	$ pwd
+    /develop/src/mh                 # this is a source project
+    $ gtags
+    $ ls G*TAGS
+    GRTAGS  GTAGS
+    $ global mhl
+    uip/mhlsbr.c                    # mhl() is found
+    $ global strlen                 # strlen() is not found
+    $ (cd /usr/src/lib; gtags)      # library source
+    $ (cd /usr/src/sys; gtags)      # kernel source
+    $ export GTAGSLIBPATH=/usr/src/lib:/usr/src/sys
+    $ global strlen
+    ../../../usr/src/lib/libc/string/strlen.c  # found in library
+    $ global access
+    ../../../usr/src/sys/kern/vfs_syscalls.c   # found in kernel
+	#+END_SRC
+
+	当然还有一种简单的方法,就是通过链接让第三方库的目录作为项目根目录下的目录.
+
+	#+BEGIN_SRC sh
+	$ ln -s /usr/src/lib .
+    $ ln -s /usr/src/sys .
+    $ gtags
+    $ global strlen
+    lib/libc/string/strlen.c
+    $ global access
+    sys/kern/vfs_syscalls.c
+	#+END_SRC
+
+  * 若你忘了要查询symbol的完整名称,则可以使用-c(complete)命令.
+
+	#+BEGIN_SRC sh
+      $ global -c kmem                # maybe k..k.. kmem..
+      kmem_alloc
+      kmem_alloc_pageable
+      kmem_alloc_wait
+      kmem_free
+      kmem_free_wakeup
+      kmem_init
+      kmem_malloc
+      kmem_suballoc                   # This is what I need!
+      $ global kmem_suballoc
+      ../vm/vm_kern.c
+	#+END_SRC
+
+  * 使用global -u增量更新tag数据库信息
+
+	#+BEGIN_SRC sh
+      $ gtags
+      $ cd kernel
+      $ vi user.c                             # modify user.c
+      ...
+      :wq
+      $ global -vu                            # -v means verbose
+      [Sat May 29 00:31:41 JST 2010] Gtags started.
+      Tag found in '/usr/local/src/linux-2.6.32'.
+      Incremental updating.
+      [Sat May 29 00:31:43 JST 2010] Updating 'GTAGS' and 'GRTAGS'.
+      [1/1] deleting tags of kernel/user.c
+      [1/1] extracting tags of kernel/user.c
+      Global databases have been modified.
+      [Sat May 29 00:31:51 JST 2010] Done.
+
+      $ global -vu                            # try again
+      [Sat May 29 00:33:16 JST 2010] Gtags started.
+      Tag found in '/usr/local/src/linux-2.6.32'.
+      Incremental updating.
+      Global databases are up to date.       # do nothing
+      [Sat May 29 00:33:19 JST 2010] Done.
+
+	#+END_SRC
+
+  * 使用htags可以生成HTML的信息
+
+	运行htags后,会在当前目录下生成一个HTML目录,存放的是HTML格式的信息
