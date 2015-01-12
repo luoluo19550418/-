@@ -1311,11 +1311,11 @@
 	
   * Hook变量*root-click-hook*
 	
-    当用鼠标点击root window时触发该hook. 该hook函数接收4个参数, 包含该root window的screen, 点击的按钮, 光标所在的x和y坐标.
+    当用鼠标点击root window时触发该hook. 该hook函数接收4个参数, 包含该root window的screen, 点击的光标是左键(1),中间键(2)还是右键(3), 光标所在的x和y坐标.
 
   * Hook变量*mode-line-click-hook*
 
-    当mode-line点击时触发该hook. 该hook函数接收4个参数: mode-line, 点击的button, 光标所在的x和y坐标.
+    当mode-line点击时触发该hook. 该hook函数接收4个参数: mode-line, 点击的光标是左键(1),中间键(2)还是右键(3), 光标所在的x和y坐标.
 	
   * Hook变量*urgent-window-hook*
 
