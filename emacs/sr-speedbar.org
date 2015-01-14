@@ -2,8 +2,10 @@
 #+AUTHOR: DarkSun
 #+OPTIONS: ^:{}
 
+* 介绍
+  sr-speedbar可以让speedbar嵌入当前frame中,而不是以单独一个frame的形态游离在外. 这样可以方便地操作speedbar
 * 安装
-  将sr-speedbar.el放入load-path中,然后添加下列代码到~/.emacs文件中
+  将[[http://www.emacswiki.org/emacs/sr-speedbar.el][sr-speedbar.el]] 放入load-path中,然后添加下列代码到~/.emacs文件中
   #+BEGIN_SRC emacs-lisp
   (require 'sr-speedbar)
   #+END_SRC

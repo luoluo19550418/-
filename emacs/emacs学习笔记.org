@@ -1575,6 +1575,14 @@
 
 	   在开启Next-Error-Follow minor mode后,可用使用M-n和M-p来代替M-g M-n / M-g M-p
 
+	 * C-p / C-n 进入上一/下一行
+
+	 * o / C-o 打开当前位置,光标跟随/不跟随过去
+
+	 * e 进入occur-edit-mode进行编辑
+
+	 * C-c C-c 退出occur-edit-mode
+
 	 * q命令退出*occur output* buffer
 
    * 让occur命令作用于某个major mode的所有buffer中
@@ -1655,6 +1663,38 @@
 ** 启用linum-mode可以显示行数
 
 ** 启用goto-address-mode允许你在buffer中高亮并点击URL
+   
+** ibuffer
+   * Filtering commands:
+     | Key | Bindings                        |
+     | / m | Add a filter by a major mode    |
+     | / n | Add a filter by buffer name.    |
+     | / c | Add a filter by buffer content. |
+     | / f | Add a filter by filename        |
+     | / > | Add a filter by buffer size     |
+     | / < | Add a filter by buffer size     |
+     | / / | Remove all filters in effect    |
+
+   * Filter group commands:
+     | Key | Bindings                            |
+     | / g | Create a filter group from filters  |
+     | TAB | Move to next filter group           |
+     | M-p | Move to previous filter group       |
+     | / \ | Remove all active filter groups     |
+     | / S | Save the current groups with a name |
+     | / R | Restore previously saved groups     |
+     | / X | Delete previously saved groups      |
+
+   * Sorting commands:
+     | Key | Bindings                          |
+     | ,   | Rotate between sorting modes      |
+     | s i | Reverse current sorting order     |
+     | s a | Sort buffers by alphabet          |
+     | s f | Sort buffers by filename          |
+     | s v | Sort buffers by last viewing time |
+     | s s | Sort buffers by size              |
+     | s m | Sort buffers by major modes       |
+   To quit ibuffer, press q.
 * NOTE
   1. 文本标记是与编辑缓冲区而不是窗口关联的，每个编辑缓冲区职能有一个文本标记
   2. 每个窗口都能记住自己的光标位置
