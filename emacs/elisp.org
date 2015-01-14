@@ -1612,7 +1612,15 @@
 
    * (custom-variable-p arg)
 
-	 判断arg是否为可配置变量, 这意味着这个变量是带有`standard-value'属性的symbol或者带有`custom0autoload'属性的symbol,或者由其他可配置变量组成的alist
+	 判断arg是否为可配置变量, 这意味着这个变量是带有`standard-value'属性的symbol或者带有`custom-autoload'属性的symbol,或者由其他可配置变量组成的alist
+
+   * (custom-set-variables &rest args)
+
+	 根据arg中的说明,更改配置项
+
+	 每个arg的格式为'(配置项 配置项的值表达式 [is-NOW [REQUEST-features-list [doc-string]]])
+
+	 
 *** Customization Type
 	所有的customization type都实现为widget. customization widget可以通过`C-M-i'或`M-<TAB>'来补全
 **** Simple Types
@@ -1807,8 +1815,36 @@
 	 * :validate FUNCTION
 
 	   使用FUNCTION校验配置项的值是否有效. FUNCTION函数接收一个参数:表示CUSTOMIZATION TYPE的widget. 若该函数判断widget是当前值是有效的,则返回 *nil* ,否则返回包含无效数据的widget,并设置该widget的`:error'属性为出错描述.
+**** Defining New Types
+
+	 定义新Type就是为一个Composite Types命一个名字. 由于一个type就是一个widget,因此使用define-widget来实现
+	 #+BEGIN_SRC emacs-lisp
+       (define-widget 'binary-tree-of-string 'lazy
+         "A binary tree made of cons-cells and strings."
+         :offset 4
+         :tag "Node"
+         :type '(choice (string :tag "Leaf" :value "")
+                        (cons :tag "Interior"
+                              :value ("" . "")
+                              binary-tree-of-string
+                              binary-tree-of-string)))
+	 #+END_SRC
+	 
+	 这里define-widget的第一个参数为表示新widget type的symbol. 
+
+	 第二个参数为一个已经存在的widget,表示新widget type的类别,一般用'lazy
+
+	 第三个参数为doc-string
+
+	 :type参数描述了所代表的composite type说明
 ** customizable face
 
+   * (custom-set-faces &rest args)
+	 
+	 根据arg,更改face配置项.
+
+	 一个arg的格式为'(FACE SPEC [is-Now [doc-string]])
+* Loading
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
