@@ -313,83 +313,83 @@
    	 * unintern
    	 * mapatoms
 
-***** Char
-   	  类似C,Elisp中的Char其实就是integer(值从0到(max-char)的范围都可以认为是character). Char类型的字面量结构为`?字母`,例如
-   	  #+BEGIN_SRC emacs-lisp
+** Char
+   类似C,Elisp中的Char其实就是integer(值从0到(max-char)的范围都可以认为是character). Char类型的字面量结构为`?字母`,例如
+   #+BEGIN_SRC emacs-lisp
 
-       	(message "%d" ?A)      ;65
-       	(message "%d" ?\.)     ;46 标点一般在前面加\
-       	(message "%d" ?我)     ;25105
+	 (message "%d" ?A)      ;65
+	 (message "%d" ?\.)     ;46 标点一般在前面加\
+	 (message "%d" ?我)     ;25105
 
-       	?\a ;=> 7                 ; control-g, `C-g'
-       	?\b ;=> 8                 ; backspace, <BS>, `C-h'
-       	?\t ;=> 9                 ; tab, <TAB>, `C-i'
-       	?\n ;=> 10                ; newline, `C-j'
-       	?\v ;=> 11                ; vertical tab, `C-k'
-       	?\f ;=> 12                ; formfeed character, `C-l'
-       	?\r ;=> 13                ; carriage return, <RET>, `C-m'
-       	?\e ;=> 27                ; escape character, <ESC>, `C-['
-       	?\s ;=> 32                ; space character, <SPC>
-       	?\\ ;=> 92                ; backslash character, `\'
-       	?\d ;=> 127               ; delete character, <DEL>
-       	?\uNNNN                                 ;这里N为16进制数,表示U+NNNN的Unicode字符
-       	?\U00NNNNNN                             ;
+	 ?\a ;=> 7                 ; control-g, `C-g'
+	 ?\b ;=> 8                 ; backspace, <BS>, `C-h'
+	 ?\t ;=> 9                 ; tab, <TAB>, `C-i'
+	 ?\n ;=> 10                ; newline, `C-j'
+	 ?\v ;=> 11                ; vertical tab, `C-k'
+	 ?\f ;=> 12                ; formfeed character, `C-l'
+	 ?\r ;=> 13                ; carriage return, <RET>, `C-m'
+	 ?\e ;=> 27                ; escape character, <ESC>, `C-['
+	 ?\s ;=> 32                ; space character, <SPC>
+	 ?\\ ;=> 92                ; backslash character, `\'
+	 ?\d ;=> 127               ; delete character, <DEL>
+	 ?\uNNNN                                 ;这里N为16进制数,表示U+NNNN的Unicode字符
+	 ?\U00NNNNNN                             ;
 
-       	?\x十六进制代码            ; ?\x41 = \?A
-       	?\三个八进制代码           ; ?\001 = `C-a`
+	 ?\x十六进制代码            ; ?\x41 = \?A
+	 ?\三个八进制代码           ; ?\001 = `C-a`
 
-   	  #+END_SRC
+   #+END_SRC
 
-   	  
-   	  * 没有charp,因为字符就是整数,但是有char-or-string-p函数
-   	  * 使用char-equal比较字符时,需要注意case-fold-search变量的值,t表示忽略大小写
-****** Control characters
-	   Ctrl-N的字面表达式为`?\^字母`(这里的字母不区分大小写)
-	   #+BEGIN_SRC emacs-lisp
-	   
-	   ?\^I ; == ?\^i  == C-i == 9
-	   #+END_SRC
+   
+   * 没有charp,因为字符就是整数,但是有char-or-string-p函数
+   * 使用char-equal比较字符时,需要注意case-fold-search变量的值,t表示忽略大小写
+*** Control characters
+	Ctrl-N的字面表达式为`?\^字母`(这里的字母不区分大小写)
+	#+BEGIN_SRC emacs-lisp
+	
+	?\^I ; == ?\^i  == C-i == 9
+	#+END_SRC
 
-	   还可以表示为`?\C-字母`
-	   #+BEGIN_SRC emacs-lisp
-       	 ?\C-g                                   ;== ?\^g == C-g
-	   #+END_SRC
+	还可以表示为`?\C-字母`
+	#+BEGIN_SRC emacs-lisp
+	  ?\C-g                                   ;== ?\^g == C-g
+	#+END_SRC
 
-	   需要注意的是,?\C-G不时?\C-S-g的意思,它跟?\C-g的意义一样
-	   由于历史的原因,Emacs把<DEL>看成是C-?
-****** Meta Character
-	   M-N的字面表示方式为`?\M-字母`
-****** Shift Character
-	   ?\S-N
-****** Alt Character
-	   ?\A-N
-****** Hyper Character
-	   ?\H-N
-****** Super Character
-	   ?\s-N
-***** 其他类型
-   	  * Buffer
-   	  * Marker
-   	  * Window
-   	  * Frame
-   	  * Terminal
-   	  * Window Configuration
-   	  * Frame Configuration
-   	  * Process
-   	  * Stream
-	   	* nil指`standard-input`和`standard-output`
-	   	* t指代`从minibuffer输入`或输出到`echo area`
-   	  * Keymap
-   	  * Overlay
-	   	Overlay用来給buffer的一部分内容加上不同的显示风格
-   	  * Font
-***** 循环结构
-   	  需要使用`#N=`和`#N#`来定义循环点和引用循环点,这里N为数字
-   	  #+BEGIN_SRC emacs-lisp
+	需要注意的是,?\C-G不时?\C-S-g的意思,它跟?\C-g的意义一样
+	由于历史的原因,Emacs把<DEL>看成是C-?
+*** Meta Character
+	M-N的字面表示方式为`?\M-字母`
+*** Shift Character
+	?\S-N
+*** Alt Character
+	?\A-N
+*** Hyper Character
+	?\H-N
+*** Super Character
+	?\s-N
+** 其他类型
+   * Buffer
+   * Marker
+   * Window
+   * Frame
+   * Terminal
+   * Window Configuration
+   * Frame Configuration
+   * Process
+   * Stream
+	 * nil指`standard-input`和`standard-output`
+	 * t指代`从minibuffer输入`或输出到`echo area`
+   * Keymap
+   * Overlay
+	 Overlay用来給buffer的一部分内容加上不同的显示风格
+   * Font
+** 循环结构
+   需要使用`#N=`和`#N#`来定义循环点和引用循环点,这里N为数字
+   #+BEGIN_SRC emacs-lisp
 
-       '(#1=(a) b #1#)
-       #1='(a #1#)
-   	  #+END_SRC
+	'(#1=(a) b #1#)
+	#1='(a #1#)
+   #+END_SRC
 ** 数据类型之间的转换
    * number-to-string / string-to-number
    * concat可以将序列转换成字符串
@@ -1845,6 +1845,66 @@
 
 	 一个arg的格式为'(FACE SPEC [is-Now [doc-string]])
 * Loading
+  * (load filename &optional missing-ok nomessage nosuffix must-suffix)
+	
+	load先查找filename.elc文件,再查找filename.el文件,再查找filename文件
+
+	若开启了Auto-Compression-mode(默认开启),则load在查找后一个文件前还会查找前一个文件的压缩版本(参见变量`jka-compr-load-suffixes').
+	
+	若nosuffix参数为非nil,则load不会查找filename.elc和filename.el,但不影响auto-compression-mode的作用
+
+	若must-suffix参数为非nil,则load认为加载的文件名后缀必须为.el和.elc(或他们的压缩版本),除非filename中包含了明确的目录名称.
+	
+	若参数missing-ok,则在找不到要加载的文件时,不抛出错误,只是返回nil
+
+	若`load-prefer-newer'配置项为非nil,则load会挑选filename.elc和filename.el中最近较新的那个来加载
+
+	若filename为相对路径,则load会在变量`load-path'中定义的路径中查询,查询到的第一个存在文件作为要加载的文件. 需要注意的是:需要在`load-path'中添加nil才回在当前路径搜索要load的文件
+
+	load在加载文件时,会同时设置变量`load-file-name'的值为加载文件的文件名.
+
+	若load顺利加载文件,则返回t
+
+  * (load-file filename)
+
+	加载filename所明确指定的文件,并不会为它添加.el会.elc后缀(但不影响Auto Compression Mode的作用)
+
+	若filename为相对路径,则认为是相对于当前路径来说的. (该函数并不涉及到load-path变量)
+
+  * (load-library library)
+
+	类似load
+
+  * 变量`load-file-name'
+
+	存储的是load时实际加载的文件名称.
+
+  * 变量`load-in-progress'
+
+	若Emacs正在加载某个文件,则该值为非nil,否则为nil
+
+  * 变量`load-read-functioin'
+
+	该变量指明的函数,用于替代`load'和`eval-region'中的`read'函数
+
+	该变量默认为nil,表示`read'
+
+  * 变量`load-suffixes'
+
+	load在搜索文件时,会根据该变量中设置的后缀,添加到filename参数后面来寻找文件.
+
+	默认为'(".elc" ".el")
+
+  * 变量`load-file-rep-suffixes'
+
+	This is a list of suffixes that indicate representations of the same file.
+
+	该变量一般以""开头,若开了Auto Compression Mode则会把`jka-compr-load-suffixes'的内容也加进去.
+
+  * (get-load-suffixes)
+
+	
+
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
