@@ -1903,7 +1903,11 @@
 
   * (get-load-suffixes)
 
-	
+	返回load函数尝试添加的文件后缀. 它的值一般是`load-suffixes'与`load-file-rep-suffixes'的集合.
+
+  * 配置项load-prefer-newer
+
+	若该配置项为非nil,则load会检测所有可能的加载文件,并挑选最新的那个来加载
 
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
