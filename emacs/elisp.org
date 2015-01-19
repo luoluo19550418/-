@@ -2061,6 +2061,13 @@
 	 若执行bodys时抛出error,不会unload已加载的文件,但是会阻止bodys中的下面语句的执行.
 
 	 一般该宏没什么用.
+* Byte Compilation
+  Elisp的Byte Compilation为伪编译,它将lisp编译为字节码格式,由特定的字节码解释器解释,而不是编译为与硬件相关的代码. 这使得它的速度会稍微慢点,但同时也保证了不同硬件平台之间的可移植性
+
+  若希望某个lisp file不被编译,设置file-local变量no-byte-compile的值为t
+  格式为:`;; -*-no-byte-compile: t; -*-'
+  
+
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
