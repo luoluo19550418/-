@@ -2472,10 +2472,23 @@
 
 ** 替换doc-string中的key binding
 
-   
-   
+   当doc-string中要引用绑定的键序列时,使用特殊的引用形式可以通过函数`substitute-command-keys'转换为指定命令真实的绑定键序列.
+
+   * `\[COMMAND]'
+	 
+	 显示调用COMMAND时的键序列,若COMMAND没有绑定键序列,则显示为M-x COMMAND
+
+   * `\{MAPVAR}'
  
-  
+	 使用函数`describe-bindings'显示MAPVAR所表示的keymap中的summary
+
+   * `\<MAPVAR>'
+
+	 转换为空值,该形式的说明会产生一个副作用:it specifies MAPVAR's value as the keymap for any following `\[COMMAND]' sequences in this documentation string.
+
+   * `\='
+	 
+	 引用接下来的那个字符;例如`\=\['在显示时显示为`\[',而`\=\='显示为`\='
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
