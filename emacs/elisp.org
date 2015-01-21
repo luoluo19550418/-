@@ -2270,11 +2270,212 @@
 
 *** Output Functions
 
+	* (print object &optional stream)
+
+	  输出object的文本表示到stream中.
+
+	  输出时,在object的前后都会增加一个回车. 并且会输出引用字符
+	  #+BEGIN_SRC emacs-lisp
+        (progn (print 'The\ cat\ in)
+               (print "the hat")
+               (print " came back"))
+        ;; -|
+        ;; -| The\ cat\ in
+        ;; -|
+        ;; -| "the hat"
+        ;; -|
+        ;; -| " came back"
+        ;; => " came back"
+	  #+END_SRC
+
+	  该函数返回object的文本表示字符串
+
+	* (prin1 object &optional stream)
+
+	  类似print,但是不会在object的文本表示前后添加回车
+	  #+BEGIN_SRC emacs-lisp
+        (progn (prin1 'The\ cat\ in)
+               (prin1 "the hat")
+               (prin1 " came back"))
+        ;; -| The\ cat\ in"the hat"" came back"
+        ;; => " came back"
+	  #+END_SRC
+	  
+	* (princ object &optional stream)
+
+	  该函数输出object的文本表示到stream中,并返回参数object.
+
+	  该函数一般用来输出对人可读的信息(而不是对read函数可以读),因此该函数并不会插入引用字符,也不会在字符串两边加上双引号,更不会自动插入空格分隔两次调用间的内容
+	  #+BEGIN_SRC emacs-lisp
+        (progn
+          (princ 'The\ cat)
+          (princ " in the \"hat\""))
+        ;; -| The cat in the "hat"
+        ;; => " in the \"hat\""
+	  #+END_SRC
+
+	* (terpri &optional stream) 
+
+	  输出newline到stream中
+
+	* (write-char char &optional stream)
+
+	  输出char到stream中,返回参数char
+
+	* (prin1-to-string object &optional noescape)
+
+	  该函数返回一个字符串,该字符串的内容就是(prin1 object)的输出
+	  #+BEGIN_SRC emacs-lisp
+        (prin1-to-string 'foo) ;; => "foo"
+        (prin1-to-string (mark-marker)) ;; => "#<marker at 2773 in strings.texi>"
+	  #+END_SRC
+
+	  若参数noescape为非nil,则输出时不使用引用字符
+	  #+BEGIN_SRC emacs-lisp
+        (prin1-to-string "foo")                 ; => "\"foo\""
+        (prin1-to-string "foo" t)               ; => "foo"
+	  #+END_SRC
+
+	  也可以使用format函数实现该功能
+
+	* 宏(with-output-to-string bodys...)
+
+	  该宏在将`standard-output'设置为一个字符串的环境下执行bodys,然后返回该字符串
+	  #+BEGIN_SRC emacs-lisp
+        (with-output-to-string
+          (princ "The buffer is ")
+          (princ (buffer-name)))                ;=>"The buffer is foo"
+	  #+END_SRC
+
+	* (pp object &optional stream)
+
+	  类似prin1,但是输出的格式更方便阅读.
 	
+*** Output Variables
+	
+	* standard-output
 
-** 
+	  当参数stream为nil时,使用该变量的值
+
+	* print-quoted
+
+	  若该值为非nil,表示使用简写形式输出quoted forms.例如
+	  (quote foo)输出为'foo, (function foo)输出为#'foo
+
+	* print-escape-newlines
+
+	  若该值为非nil,则表示字符串中的newline字符,会被输出为\n,formfeed符会被输出为\f
+
+	  该参数影响prin1和print函数的输出方式,但是不能影响prnc的输出
+	  #+BEGIN_SRC emacs-lisp
+        (prin1 "a\nb")
+        -| "a
+        -| b"
+        => "a
+           b"
+
+        (let ((print-escape-newlines t))
+          (prin1 "a\nb"))
+        -| "a\nb"
+        => "a
+           b"
+	  #+END_SRC
+
+	* print-escape-nonascii
+
+	  若该变量值为非nil,则字符串中的unibyte格式非ascii字符输出为\XXX的格式.
+
+	  该参数影响prin1和print函数
+
+	* print-escape-multibyte
+
+	  若该变量值为非nil,则字符串中的mutibyte格式非ascii字符输出为\XXX的格式.
+
+	  该参数影响prin1和print函数
+
+	* print-length
+
+	  该变量指明了输出list,vector或bool-vector时,能输出最多多少个元素. 若超过这么多个元素,则使用引号缩写
+	  #+BEGIN_SRC emacs-lisp
+        (setq print-length 2)                   ; => 2
+        (print '(1 2 3 4 5))                    ; => (1 2 ...)
+        -| (1 2 ...)
+	  #+END_SRC
    
+	  nil表示无限制
 
+	* print-level
+
+	  该变量值指明了输出时()和[]能够嵌套的最大深度,超过这个深度会用省略号代替,nil表示无限制
+
+	* 配置项eval-expression-print-length/eval-expression-print-level
+
+	  eval-expression中使用的print-length/print-level版本
+
+	* print-circle
+
+	  若该值为非nil,则在输出时开启探测object是否有循环结构
+
+	* print-gensym
+
+	  若该值为非nil,则输出时开启探测symbol是否是uninterned.
+
+	  这时,uninterned symbol输出时会带有前缀#:
+
+	* print-continuous-numbering
+
+	  If non-`nil', that means number continuously across print calls. 
+	  This affects the numbers printed for `#N=' labels and `#M#' references.  
+	  Don't set this variable with `setq'; you should only bind it temporarily to `t' with `let'. 
+	  When you do that, you should also bind `print-number-table' to `nil'
+
+	* print-number-table
+
+	  This variable holds a vector used internally by printing to implement the `print-circle' feature.  
+	  You should not use it except to bind it to `nil' when you bind `print-continuous-numbering'.
+
+	* float-output-format
+
+	  该变量指明了输出float类型数字时的格式. 默认为nil,表示在不丢失精度的情况下,使用最短的格式输出.
+
+* Documentation
+
+** 获取doc-string
+
+   * (documentation-property symbol property &optional verbatim)
+
+	 查看symbol的property属性中存储的doc-string,它会自动从DOC文件中或编译的字节码代码中抽取出对应的doc-string
+
+	 若参数verbatim为nil,则,找到的doc-string会传入函数`substitute-command-keys'进行键绑定说明的转换
+	 #+BEGIN_SRC emacs-lisp
+       (documentation-property 'command-line-processed
+                               'variable-documentation) ; => "Non-nil once command line has been processed"
+       (symbol-plist 'command-line-processed)           ; => (variable-documentation 188902)
+       (documentation-property 'emacs 'group-documentation) ; => "Customization of the One True Editor."
+	 #+END_SRC
+
+   * (documentation function &optional verbatim)
+
+	 该函数返回function的doc-string,其中function可以是macro,named keyboard macro,special forms,oridnary function
+
+	 若参数verbatim为nil,则,找到的doc-string会传入函数`substitute-command-keys'进行键绑定说明的转换
+
+	 若function没有函数定义,则抛出`void-function'错误,若函数定义没有doc-string,则返回nil
+
+   * (face-documentation face)
+	 
+	 返回face的doc-string
+
+   * doc-directory
+
+	 DOC文件的存放路径,Emacs可能要从DOC文件中读取doc-string
+
+** 替换doc-string中的key binding
+
+   
+   
+ 
+  
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
