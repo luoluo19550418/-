@@ -2489,6 +2489,48 @@
    * `\='
 	 
 	 引用接下来的那个字符;例如`\=\['在显示时显示为`\[',而`\=\='显示为`\='
+	
+** 将键序列输出为文本格式
+   * (key-description sequence &optional prefix)
+
+	 将sequence中的input event转换为文本格式
+	 #+BEGIN_SRC emacs-lisp
+       (key-description [?\M-3 delete])        ; => "M-3 <delete>"
+       (key-description [delete] "\M-3")       ; => "M-3 <delete>"
+	 #+END_SRC
+
+   * (single-key-description event &optinal no-angles)
+
+	 将input event转换为文本形式字符串. 
+
+	 若参数no-angle为非nil,则在包围在function keys和event symols的尖括号会被忽略,这是为了与旧版本的Emacs兼容.
+	 #+BEGIN_SRC emacs-lisp
+       (single-key-description ?\C-x)          ; => "C-x"
+       (key-description "\C-x \M-y \n \t \r \f123") ; => "C-x SPC M-y SPC C-j SPC TAB SPC RET SPC C-l 1 2 3"
+       (single-key-description 'delete)             ; => "<delete>"
+       (single-key-description 'C-mouse-1)          ; => "<C-mouse-1>"
+       (single-key-description 'C-mouse-1 t)        ; => "C-mouse-1"
+	 #+END_SRC
+
+   * (text-char-description character)
+
+	 返回描述character的字符串,类似`single-key-description'的作用
+	 #+BEGIN_SRC emacs-lisp
+       (text-char-description ?\C-c)           ; => "^C"
+       (text-char-description ?\M-m)           ; => "\xed"
+       (text-char-description ?\C-\M-m)        ; => "\x8d"
+       (text-char-description (+ 128 ?m))      ; => "M-m"
+       (text-char-description (+ 128 ?\C-m))   ; => "M-^M"
+	 #+END_SRC
+
+   * 命令(read-kbd-macro string &optional need-vector)
+
+	 `key-description'的逆操作
+
+	 参数string中包含了用空格分隔的key descriptions,该函数会返回一个string或vector,包含了对应的events.
+	 
+	 若参数need-vector,则总是返回vector
+
 * Elisp中的函数
   Elisp中的函数,是跟C++不同的. C++中的函数必须有一个函数名,然而Elisp中的函数没有函数名,只是你可以把它与一个symbol相连接,这样这个symbol的名字就暂时作为该函数的函数名了.
 
@@ -2558,6 +2600,10 @@
 	 若参数有&rest,则MAX为many.
 
 	 若subr为special form,则该函数返回'unevalled
+
+   * (interactive-form function)
+
+	 获取function的interactive信息
 ** 匿名函数
 *** 获取匿名函数
 	获取匿名函数,主要有三种方法:
@@ -3535,6 +3581,185 @@
 	 * 使用=比较两个检测结果
 
    * 执行M-x profiler-stop结束监控过程
+* Command Loop
+  当进入Emacs后,Emacs会循环读取key sequences,读取对应的命令,并显示结果. 这个过程称为Command Loop.
+** Command Loop概述
+
+   1. command loop第一步是调用函数`read-key-sequence'来读取key sequence,并转换为一个command或keyboard macro.
+
+   2. 在执行command前,调用`undo-boundary'来保存undo信息
+
+   3. 执行`pre-command-hook'中的函数
+
+	  在执行command前,会触发`pre-command-hook',这时变量`this-command'的值为将要运行的command,而`last-command'的值为上一次运行的command
+		 
+	  执行该hook参数时,不抛出quitting,也不抛出error,但会把抛出error的函数移除该hook
+
+   4. Emacs通过调用`command-execute'来读取传递給command的参数列表
+
+	  1. 若command为keyboard macro,则Emacs通过`execute-kbd-macro'来执行command
+
+	  2. 若command为命令(interactively callable function),则通过`call-interactively'来读取参数并执行command
+
+   5. 执行`post-command-hook'中的函数
+
+	  在执行command后,会触发`post-command-hook',这时变量`this-command'的值为刚运行的command,而`last-command'的值为再上一次运行的command
+
+	  执行该hook参数时,不抛出quitting,也不抛出error,但会把抛出error的函数移除该hook
+** Command
+   所谓Command,不仅仅指的带有top-level `interactive' form的函数. 还可以是声明为interactive的autoload object,某些primitive functions,以及strings和vectors(被当成是keyboard macro来看待),
+   
+   * (commandp object &optional for-call-interactively)
+
+	 判断object是否为command
+
+	 若参数for-call-interactively为非nil,则只有在object能被`call-interactively'调用时才返回t,这时keyboard macro返回nil
+
+   * (command-execute command &optional record-flag keys special)
+
+	 执行command
+
+	 若command为string或vector,则被认为是keyboard macro,会使用`execute-kbd-macro'执行command. 否则连同参数keys和record-flag一起传递給`call-interactively'一起调用
+
+	 参数special,若为非nil,则表示忽略preifix argument但是不clear它. 常用来执行特殊event
+
+   * 命令(execute-extended-command prefix-argument)
+
+	 该命令使用`completing-read'从minibuffer中读取命令,并用`command-execute'执行该命令,并返回执行结果
+
+	 若读取的命令需要prefix argument,则会将参数prefix-argument传递給它.
+
+	 当用interactively的方式运行该命令时,参数prefix-argument的值就是传递給`execute-extended-command'的prefix-argument
+
+	 默认情况下,M-x执行的就是该命令
+
+** 如何分辨Command是否通过Interactive方式调用
+   一个比较好的方法是在interactive form中设置某个标识为非nil. 例如
+   #+BEGIN_SRC emacs-lisp
+     (defun foo (&optional print-message)
+       (interactive "p")
+       (when print-message
+         (message "foo")))
+   #+END_SRC
+   
+
+   另一种方法是使用函数`called-interactively-p'
+
+   * (called-interactively-p kind)
+
+	 若正在执行的function是通过`call-interactively'调用的,则返回t
+	 
+	 参数kind只能是'interactive或'any
+
+	 若参数kind为'interactive,则只有当function是直接由用户调用的情况下,才返回t(例如if the user typed a key sequence bound to the calling function, but _not_ if the user ran a keyboard macro that called the function)
+	 #+BEGIN_SRC emacs-lisp
+       (defun foo ()
+         (interactive)
+         (when (called-interactively-p 'any)
+           (message "Interactive!")
+           'foo-called-interactively))
+
+       ;; Type `M-x foo'.
+       -| Interactive!
+
+       (foo)                                   
+       => ni
+	 #+END_SRC
+
+	 若参数kind为'any,则包括keyboard macro在内,也返回t
+	 #+BEGIN_SRC emacs-lisp
+       (defun bar ()
+         (interactive)
+         (message "%s" (list (foo) (called-interactively-p 'any))))
+
+       ;; Type `M-x bar'.
+       -| (nil t)
+	 #+END_SRC
+   
+** generic command
+
+   第一次执行用M-x COMMAND<RET>来执行generic command,Emacs会提示你选择哪一种具体实现,并保存选择信息,下一次就不会询问了. 若执行时带了prefix argument,则又会重复该过程.
+
+   COMMAND的不同实现存储在变量`COMMAND-alternatives'中,只有在该变量存在时,才能使用宏`define-alternatives'定义COMMAND的另一个实现方式.
+
+   If CUSTOMIZATIONS is non-`nil', it should consist of alternating `defcustom' keywords (typically `:group' and `:version') and values to add to the declaration of `COMMAND-alternatives'.
+
+   * 宏(define-alternatvies comand &rest customizations)
+
+	 定义新命令COMMAND,参数COMMAND为一个symbol
+
+** 获取Command Loop中的信息
+
+   * last-command
+
+	 上次运行的command名称
+
+	 当一个command从command loop中退出时,会从`this-command'中复制该值
+
+   * real-last-command
+
+	 类似`last-command',但不会被Lisp程序所修改
+
+   * last-repeatable-command
+
+	 类似`last-command'但不保存input event. 这里面保存的是`repeat'命令会重复执行的command
+
+   * this-command
+
+	 正在执行的命令名称,但有些命令会在执行时人工修改该值
+
+   * this-original-command
+
+	 类似this-command,但当command remapping发生时,`this-command'存储的是实际运行的command名称,而`this-original-command'存储的是触发的原始command的名称
+
+   * (this-command-keys)
+
+	 返回调用command的key sequence,返回类型为string或vector
+
+	 但若command调用了`read-key-sequence',则返回的是最后读取到的key sequence
+	 #+BEGIN_SRC emacs-lisp
+       (this-command-keys)
+       ;; Now use `C-u C-x C-e' to evaluate that.
+       => "^U^X^E"
+	 #+END_SRC
+
+   * (this-command-keys-vector)
+
+	 类似`this-command-keys',只是返回的值总是vector
+
+   * (clear-this-command-keys &optional keep-record)
+
+	 This function empties out the table of events for `this-command-keys' to return.  
+
+     Unless KEEP-RECORD is non-`nil', it also empties the records that the function `recent-keys' will subsequently return.
+	 
+	 一般常用于读取一个密码后
+
+   * last-nomenu-event
+
+	 该变量斥候最后发生的input event(不包括mouse menu event)
+
+	 使用该变量的一个场景是用来告诉`x-popup-menu'在哪里弹出一个menu. 在`y-or-n-p'内也用到了该变量值
+
+   * last-command-event
+
+	 This variable is set to the last input event that was read by the command loop as part of a command
+	 
+	 在`self-insert-command'中用到该变量来决定插入哪个character
+	 #+BEGIN_SRC emacs-lisp
+       last-command-event
+       ;; Now use `C-u C-x C-e' to evaluate that.
+       => 5
+
+       ;; The value is 5 because that is the ASCII code for `C-e'.
+	 #+END_SRC
+
+   * last-event-frame
+
+	 该变量记录了最后的input event是在哪个frame中调用的.
+
+	 Usually this is the frame that was selected when the event was generated, but if that frame has redirected input focus to another frame, the value is the frame to which the event was redirected.
+
 * Number相关函数
   * 判断是否为自然数(0+正整数)
 
