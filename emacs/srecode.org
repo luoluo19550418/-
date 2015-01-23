@@ -3,175 +3,175 @@
 #+EMAIL: lujun9972@gmail.com
 #+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
 
-* ¿ìËÙÈëÃÅ
-** ÇĞ»»SRecodeÄ£Ê½
-   ½øÈëSRecode minor modeºó,½øÈëprogn-mode»áÔÚ²Ëµ¥ÉÏÏÔÊ¾Ò»¸öSRecode²Ëµ¥
+* å¿«é€Ÿå…¥é—¨
+** åˆ‡æ¢SRecodeæ¨¡å¼
+   è¿›å…¥SRecode minor modeå,è¿›å…¥progn-modeä¼šåœ¨èœå•ä¸Šæ˜¾ç¤ºä¸€ä¸ªSRecodeèœå•
    * M-x srecode-minor-mode
    * M-x global-srecode-minor-mode
    * (srecode-minor-mode 1) / (srecode-minor-mode -1)
    * (global-srecode-minor-mode 1) / (global-srecode-minor-mode -1)
-** ×Ô¶¨ÒåtemplateËÑË÷Â·¾¶
-   * ¿ÉÒÔ°Ñ×Ô¶¨ÒåµÄtemplate·Åµ½~/.srecodeÖĞ
-   * »òÕß¸ü¸Äsrecode-map-load-pathÑ¡Ïî
-** ²åÈëtemplate
-   * Í¨¹ı²Ëµ¥²åÈëtemplate
-   * Ö´ĞĞº¯Êı(srecode-insert template-name &rest dict-entries)
+** è‡ªå®šä¹‰templateæœç´¢è·¯å¾„
+   * å¯ä»¥æŠŠè‡ªå®šä¹‰çš„templateæ”¾åˆ°~/.srecodeä¸­
+   * æˆ–è€…æ›´æ”¹srecode-map-load-pathé€‰é¡¹
+** æ’å…¥template
+   * é€šè¿‡èœå•æ’å…¥template
+   * æ‰§è¡Œå‡½æ•°(srecode-insert template-name &rest dict-entries)
 
-	 ²åÈëÖ¸¶¨Ãû³ÆµÄtemplateµ½µ±Ç°bufferµÄ¹â±ê´¦. dict-entriesĞèÒªÌí¼ÓµÄ¸½¼ÓÄ¿Â¼Öµ?
+	 æ’å…¥æŒ‡å®šåç§°çš„templateåˆ°å½“å‰bufferçš„å…‰æ ‡å¤„. dict-entrieséœ€è¦æ·»åŠ çš„é™„åŠ ç›®å½•å€¼?
    * M-x srecode-insert
 
-	 srecode-insert»áÌáÊ¾ÊäÈëtemplateÃû³Æ. Ã¿¸ômajor modeÓĞ²»Í¬µÄtemplateÃû³ÆÁĞ±í. Ò»°ãÀ´ËµtemplateÃû³ÆµÄ¸ñÊ½ÎªCONTEXT:NAME. ÕâÀïCONTEXT¿ÉÄÜÊÇÒ»Ğ©ÀàËÆfile»òdeclarationÕâÑùµÄÖµ. ²»Í¬µÄCONTEXT¿ÉÒÔÓĞÏàÍ¬ÖµµÄNAME
-* ÓÃ»§×Ô¶¨ÒåµÄTemplates
-  SRecode´´½¨²¢Î¬»¤Ò»·İmajor-modeÓëtemplateÎÄ¼şµÄÓ³Éä¹ØÏµ,¸ÃÓ³Éä¹ØÏµ´æ´¢ÔÚÒ»·İÎÄ¼şÖĞ,¸ÃÎÄ¼şÂ·¾¶ÓÉ±äÁ¿`srecode-map-save-file`Éè¶¨
+	 srecode-insertä¼šæç¤ºè¾“å…¥templateåç§°. æ¯éš”major modeæœ‰ä¸åŒçš„templateåç§°åˆ—è¡¨. ä¸€èˆ¬æ¥è¯´templateåç§°çš„æ ¼å¼ä¸ºCONTEXT:NAME. è¿™é‡ŒCONTEXTå¯èƒ½æ˜¯ä¸€äº›ç±»ä¼¼fileæˆ–declarationè¿™æ ·çš„å€¼. ä¸åŒçš„CONTEXTå¯ä»¥æœ‰ç›¸åŒå€¼çš„NAME
+* ç”¨æˆ·è‡ªå®šä¹‰çš„Templates
+  SRecodeåˆ›å»ºå¹¶ç»´æŠ¤ä¸€ä»½major-modeä¸templateæ–‡ä»¶çš„æ˜ å°„å…³ç³»,è¯¥æ˜ å°„å…³ç³»å­˜å‚¨åœ¨ä¸€ä»½æ–‡ä»¶ä¸­,è¯¥æ–‡ä»¶è·¯å¾„ç”±å˜é‡`srecode-map-save-file`è®¾å®š
 
-  Ã¿¸ö×Ô¶¨ÒåtemplateÎÄ¼ş¶¼ÒÑÒ»¸ömajor modeÏà¹ØÁª. ÔÚ×Ô¶¨ÒåtemplateÎÄ¼şÖĞ,Äã¿ÉÒÔÊ¹ÓÃÓëºËĞÄtemplateÎÄ¼şÏàÍ¬µÄnameºÍcontext. Í¨¹ıÉèÖÃÓÅÏÈ¼¶¹ØÏµ,Äã¿ÉÒÔÓÅÏÈÊ¹ÓÃ×Ô¶¨ÒåµÄtemplate¶ø²»ÊÇºËĞÄ×Ô´øµÄtemplate
+  æ¯ä¸ªè‡ªå®šä¹‰templateæ–‡ä»¶éƒ½å·²ä¸€ä¸ªmajor modeç›¸å…³è”. åœ¨è‡ªå®šä¹‰templateæ–‡ä»¶ä¸­,ä½ å¯ä»¥ä½¿ç”¨ä¸æ ¸å¿ƒtemplateæ–‡ä»¶ç›¸åŒçš„nameå’Œcontext. é€šè¿‡è®¾ç½®ä¼˜å…ˆçº§å…³ç³»,ä½ å¯ä»¥ä¼˜å…ˆä½¿ç”¨è‡ªå®šä¹‰çš„templateè€Œä¸æ˜¯æ ¸å¿ƒè‡ªå¸¦çš„template
 
-  TemplateÎÄ¼şÊÇÒÔ.srtÎªºó×ºÃû. µ±´ò¿ªsrtÎÄ¼şÊ±,»á×Ô¶¯½øÈëSRecode templateĞ´×÷Ä£Ê½, ¿ÉÒÔÊ¹ÓÃSRecode²Ëµ¥²åÈëÄÚÈİµ½Õâ¸ö¿ÕµÄtemplateÎÄ¼şÖĞ. Ò²¿ÉÒÔÊ¹ÓÃ"Edit Template"²Ëµ¥ÏîÀ´ĞŞ¸ÄÒÑ½ü´æÔÚµÄtemplate. 
+  Templateæ–‡ä»¶æ˜¯ä»¥.srtä¸ºåç¼€å. å½“æ‰“å¼€srtæ–‡ä»¶æ—¶,ä¼šè‡ªåŠ¨è¿›å…¥SRecode templateå†™ä½œæ¨¡å¼, å¯ä»¥ä½¿ç”¨SRecodeèœå•æ’å…¥å†…å®¹åˆ°è¿™ä¸ªç©ºçš„templateæ–‡ä»¶ä¸­. ä¹Ÿå¯ä»¥ä½¿ç”¨"Edit Template"èœå•é¡¹æ¥ä¿®æ”¹å·²è¿‘å­˜åœ¨çš„template. 
 
-  Èç¹ûÄãÔÚ×Ô¶¨ÒåTemplateÖĞ¸üĞÂÁË`declaration:function`µÄÄÚÈİ,Ôò¸Ã²¿·ÖÄÚÈİ»á¸²¸ÇsRecode×Ô´øµÄÄÚÈİ. Higher level applications should always use declaration:function when generating their own code, so higher level templates will then adopt your changes to declaration:function into themselves. 
+  å¦‚æœä½ åœ¨è‡ªå®šä¹‰Templateä¸­æ›´æ–°äº†`declaration:function`çš„å†…å®¹,åˆ™è¯¥éƒ¨åˆ†å†…å®¹ä¼šè¦†ç›–sRecodeè‡ªå¸¦çš„å†…å®¹. Higher level applications should always use declaration:function when generating their own code, so higher level templates will then adopt your changes to declaration:function into themselves. 
 
   You can also override variables. Core variables are stored in the SRecode root template file default.srt, and that contains the copyright usually used, and some basic file setup formats. Override variables like this by specifying a mode of default like this: 
   #+BEGIN_SRC srt
     set mode "default"
   #+END_SRC
-* SRecodeµÄ×é³É²¿·Ö
-  SRecodeÓÉ¶à¸ö²ã´Î×é³É
+* SRecodeçš„ç»„æˆéƒ¨åˆ†
+  SRecodeç”±å¤šä¸ªå±‚æ¬¡ç»„æˆ
 ** Template Layer
-   Õâ¸ö²ã´Î¸ºÔğ±àĞ´,±àÒëtemplate, Ëü¶¨ÒåÁËtemplateµÄÓï·¨¹æ·¶.
+   è¿™ä¸ªå±‚æ¬¡è´Ÿè´£ç¼–å†™,ç¼–è¯‘template, å®ƒå®šä¹‰äº†templateçš„è¯­æ³•è§„èŒƒ.
 
-   templateĞèÒª±£´æÔÚ.srtÎÄ¼şÖĞ
+   templateéœ€è¦ä¿å­˜åœ¨.srtæ–‡ä»¶ä¸­
 
-   ËäÈ»SRecode templateÊÇÎªÒÔSRecodeÎª»ù´¡µÄ³ÌĞò¶øÉè¼Æ³öÀ´µÄ,µ«ÊÇËüÒ²¿ÉÒÔÓÃÔÚÆÕÍ¨µÄ±à¼­¹ı³ÌÖĞ.
+   è™½ç„¶SRecode templateæ˜¯ä¸ºä»¥SRecodeä¸ºåŸºç¡€çš„ç¨‹åºè€Œè®¾è®¡å‡ºæ¥çš„,ä½†æ˜¯å®ƒä¹Ÿå¯ä»¥ç”¨åœ¨æ™®é€šçš„ç¼–è¾‘è¿‡ç¨‹ä¸­.
 ** Template Manager
-   Template Manager¸ºÔğÎªµ±Ç°bufferÑ¡ÔñºÍ¼ÓÔØtemplateÎÄ¼ş. Template ManagerÓÅÏÈÑ¡ÔñÓÃ»§×Ô¶¨ÒåµÄtemplate,×îºóÑ¡ÔñÏµÍ³¼¶±ğµÄÄ¬ÈÏtemplate. Í¬Ê±Template ManagerÎªÃ¿¸öapplication²ã´Î±£´æ×Ô¼ºµÄtemplate,Ê¹Ö®²»ÓëÍ¨ÓÃtemplate»ìºÏÔÚÒ»Æğ.
+   Template Managerè´Ÿè´£ä¸ºå½“å‰bufferé€‰æ‹©å’ŒåŠ è½½templateæ–‡ä»¶. Template Managerä¼˜å…ˆé€‰æ‹©ç”¨æˆ·è‡ªå®šä¹‰çš„template,æœ€åé€‰æ‹©ç³»ç»Ÿçº§åˆ«çš„é»˜è®¤template. åŒæ—¶Template Managerä¸ºæ¯ä¸ªapplicationå±‚æ¬¡ä¿å­˜è‡ªå·±çš„template,ä½¿ä¹‹ä¸ä¸é€šç”¨templateæ··åˆåœ¨ä¸€èµ·.
 ** Dictionary
-   Dictionary´æ´¢ÁË±äÁ¿µÄÖµ. ±äÁ¿³£³£ÓÃÓÚtemplateµÄºê¶¨ÒåÖĞ. Ê¹ÓÃ±äÁ¿¿ÉÒÔÊ¹µÃÍ¨ÓÃtemplate±äµÃÌØ»¯.
+   Dictionaryå­˜å‚¨äº†å˜é‡çš„å€¼. å˜é‡å¸¸å¸¸ç”¨äºtemplateçš„å®å®šä¹‰ä¸­. ä½¿ç”¨å˜é‡å¯ä»¥ä½¿å¾—é€šç”¨templateå˜å¾—ç‰¹åŒ–.
 
-   ±äÁ¿µÄÖµ¿ÉÒÔÓĞÈıÖÖÀàĞÍ:×Ö·û´®,Ò»¸ödictionaryµÄÁĞ±í»òsrecode-dictionary-compound-value¶ÔÏóµÄ×ÓÀà.
+   å˜é‡çš„å€¼å¯ä»¥æœ‰ä¸‰ç§ç±»å‹:å­—ç¬¦ä¸²,ä¸€ä¸ªdictionaryçš„åˆ—è¡¨æˆ–srecode-dictionary-compound-valueå¯¹è±¡çš„å­ç±».
 ** Template Insertion
-   Template InsertionÌá¹©ÁË¶ÔTemplate LayerµÄÀ©Õ¹¹¦ÄÜ.  A wide range of custom variables are available for mixing derived data as macros into the plain text of a template.
+   Template Insertionæä¾›äº†å¯¹Template Layerçš„æ‰©å±•åŠŸèƒ½.  A wide range of custom variables are available for mixing derived data as macros into the plain text of a template.
 
-   ´ËÍâ,template»¹ÓĞÒ»Ğ©Ô¤¶¨ÒåµÄ±äÁ¿,ÕâĞ©±äÁ¿Ìá¹©ÁËÀàËÆµ±Ç°ÎÄ¼şÃû,ÓÃ»§Ãû,µ±Ç°Ê±¼äµÈÖµ. ´ËÍâ,ÓĞĞ©±äÁ¿ÊÇÓëmajor-modeÏà¹ØµÄ,ÀıÈç²ÎÊı`:el`»ò`:cpp`
+   æ­¤å¤–,templateè¿˜æœ‰ä¸€äº›é¢„å®šä¹‰çš„å˜é‡,è¿™äº›å˜é‡æä¾›äº†ç±»ä¼¼å½“å‰æ–‡ä»¶å,ç”¨æˆ·å,å½“å‰æ—¶é—´ç­‰å€¼. æ­¤å¤–,æœ‰äº›å˜é‡æ˜¯ä¸major-modeç›¸å…³çš„,ä¾‹å¦‚å‚æ•°`:el`æˆ–`:cpp`
 ** Template Insertion Context
-   ¿ÉÒÔÎªÎÄ¼şÖĞµÄtemplateÌá¹©context(ÉÏÏÂÎÄ»·¾³)µÄĞÅÏ¢. Í¨¹ı¸Ã¹¦ÄÜÊ¹µÃ¿ÉÒÔÍ¨¹ıÃû×Ö×Ô¶¯Ñ¡Ôñtemplate, Ò²¿ÉÒÔÈÃtemplateÔÚ²»Í¬µÄÉÏÏÂÎÄ»·¾³ÖĞÓĞÏàÍ¬µÄÃû×Ö.
+   å¯ä»¥ä¸ºæ–‡ä»¶ä¸­çš„templateæä¾›context(ä¸Šä¸‹æ–‡ç¯å¢ƒ)çš„ä¿¡æ¯. é€šè¿‡è¯¥åŠŸèƒ½ä½¿å¾—å¯ä»¥é€šè¿‡åå­—è‡ªåŠ¨é€‰æ‹©template, ä¹Ÿå¯ä»¥è®©templateåœ¨ä¸åŒçš„ä¸Šä¸‹æ–‡ç¯å¢ƒä¸­æœ‰ç›¸åŒçš„åå­—.
 
-   ±ê×¼µÄÉÏÏÂÎÄ±êÊ¶ÓĞfile,declaraionºÍclassdecl.
+   æ ‡å‡†çš„ä¸Šä¸‹æ–‡æ ‡è¯†æœ‰file,declaraionå’Œclassdecl.
 
-   ÉÏÏÂÎÄ»·¾³ĞÅÏ¢Ò²¿ÉÒÔ×Ô¶¯´ÓSemanticµÄ½âÎö×´Ì¬ÖĞÍÆµ¼³öÀ´.
+   ä¸Šä¸‹æ–‡ç¯å¢ƒä¿¡æ¯ä¹Ÿå¯ä»¥è‡ªåŠ¨ä»Semanticçš„è§£æçŠ¶æ€ä¸­æ¨å¯¼å‡ºæ¥.
 ** Applications
-   Íê³É¾ßÌåÓÃ»§ÈÎÎñµÄÃüÁîÒ²Éæ¼°µ½±àĞ´Emacs Lisp´úÂë. ApplicationÊÇ×î¸ßµÄ²ã´ÎÁË. Ã¿¸öapplication¶¼ËûÃÇ×Ô¼ºµÄtemplateÎÄ¼şºÍÂß¼­,ÕâĞ©templateÎÄ¼şºÍÂß¼­±»ÓÃÀ´Ìî³ädictionary²ã´ÎºÍ¶¨Î»¹â±ê.
+   å®Œæˆå…·ä½“ç”¨æˆ·ä»»åŠ¡çš„å‘½ä»¤ä¹Ÿæ¶‰åŠåˆ°ç¼–å†™Emacs Lispä»£ç . Applicationæ˜¯æœ€é«˜çš„å±‚æ¬¡äº†. æ¯ä¸ªapplicationéƒ½ä»–ä»¬è‡ªå·±çš„templateæ–‡ä»¶å’Œé€»è¾‘,è¿™äº›templateæ–‡ä»¶å’Œé€»è¾‘è¢«ç”¨æ¥å¡«å……dictionaryå±‚æ¬¡å’Œå®šä½å…‰æ ‡.
 
-   SRecode×Ô´øÁËÒ»¸öapplicationµÄÀı×Ó`srecode-document`,Ëü¿ÉÒÔÎªSemantic±êÇ©×Ô¶¯´´½¨×¢ÊÍ. 
+   SRecodeè‡ªå¸¦äº†ä¸€ä¸ªapplicationçš„ä¾‹å­`srecode-document`,å®ƒå¯ä»¥ä¸ºSemanticæ ‡ç­¾è‡ªåŠ¨åˆ›å»ºæ³¨é‡Š. 
 ** Field Editing
-   Èç¹û±äÁ¿`srecode-insert-ask-variable-method`µÄÖµÎª`'field`,Ôò¸Ã±äÁ¿µÄÖµ»áÍ¨¹ıÔÚbufferÖĞ´´½¨ÓòµÄ·½Ê½À´»ñÈ¡,¶ø²»ÊÇÓÃÎÊÎÊÌâµÄ·½Ê½À´»ñÈ¡. 
+   å¦‚æœå˜é‡`srecode-insert-ask-variable-method`çš„å€¼ä¸º`'field`,åˆ™è¯¥å˜é‡çš„å€¼ä¼šé€šè¿‡åœ¨bufferä¸­åˆ›å»ºåŸŸçš„æ–¹å¼æ¥è·å–,è€Œä¸æ˜¯ç”¨é—®é—®é¢˜çš„æ–¹å¼æ¥è·å–. 
 
-   ¶à¸öÓò¿ÉÒÔ¹ØÁªÆğÀ´,ÕâÑùµÄ»°,¸üĞÂÒ»¸öÓòµÄÖµ,»áÍ¬Ê±¸üĞÂÆäËû¹ØÁªÓòµÄÖµ
+   å¤šä¸ªåŸŸå¯ä»¥å…³è”èµ·æ¥,è¿™æ ·çš„è¯,æ›´æ–°ä¸€ä¸ªåŸŸçš„å€¼,ä¼šåŒæ—¶æ›´æ–°å…¶ä»–å…³è”åŸŸçš„å€¼
    
 * SRecode Minor Mode
-  SRecode Minor Mode¶¨ÒåÁËÒ»ÏµÁĞÒÔC-c /¿ªÍ·µÄ¼üĞòÁĞÀ´µ÷ÓÃ²»Í¬µÄtemplateºÍtemplate applications
+  SRecode Minor Modeå®šä¹‰äº†ä¸€ç³»åˆ—ä»¥C-c /å¼€å¤´çš„é”®åºåˆ—æ¥è°ƒç”¨ä¸åŒçš„templateå’Œtemplate applications
 
-  Èç¹û±äÁ¿`srecode-takeover-INS-key`ÉèÖÃÎªt,Ôò¿ÉÒÔÊ¹ÓÃ<Insert>°´¼üÀ´²åÈëÄ£°å
+  å¦‚æœå˜é‡`srecode-takeover-INS-key`è®¾ç½®ä¸ºt,åˆ™å¯ä»¥ä½¿ç”¨<Insert>æŒ‰é”®æ¥æ’å…¥æ¨¡æ¿
 
-  ×îÖØÒªµÄÃüÁîÊÇ`srecode-insert`,ËüµÄ¼ü°ó¶¨Îª`C-c / /`»òÕßÊÇ<insert insert>
+  æœ€é‡è¦çš„å‘½ä»¤æ˜¯`srecode-insert`,å®ƒçš„é”®ç»‘å®šä¸º`C-c / /`æˆ–è€…æ˜¯<insert insert>
 
-  ³£ÓÃµÄ¼ü°ó¶¨ÓĞ:
+  å¸¸ç”¨çš„é”®ç»‘å®šæœ‰:
   * C-c / /
 	
-	¸ÃÃüÁîÔÚminibufferÌáÊ¾ÄãÊäÈëtemplateÃû×Ö,È»ºó²åÈëÖ¸¶¨Ãû×ÖµÄtemplate
+	è¯¥å‘½ä»¤åœ¨minibufferæç¤ºä½ è¾“å…¥templateåå­—,ç„¶åæ’å…¥æŒ‡å®šåå­—çš„template
 
-  * C-c / Ğ¡Ğ´×ÖÄ¸
+  * C-c / å°å†™å­—æ¯
 	
-	Ô¤Áô½o²åÈëtemplateµÄ¼ü°ó¶¨
+	é¢„ç•™çµ¦æ’å…¥templateçš„é”®ç»‘å®š
 
-  * C-c / ´óĞ´×ÖÄ¸
+  * C-c / å¤§å†™å­—æ¯
 
-	Ô¤Áô½otemplate applicationµÄ¼ü°ó¶¨
+	é¢„ç•™çµ¦template applicationçš„é”®ç»‘å®š
 
   * C-c / E
 	
-    ±à¼­template´úÂë
+    ç¼–è¾‘templateä»£ç 
 
   * C-c / .
 	
-	ÔÙ²åÈëÒ»´ÎÉÏ´Î²åÈëµÄtemplate
+	å†æ’å…¥ä¸€æ¬¡ä¸Šæ¬¡æ’å…¥çš„template
 
-* ±àĞ´Template
-  ´ò¿ªSRecodeÎÄ¼ş(ºó×ºÃûÎªsrt),Ôò»á½øÈësrecode-template-mode,ÔÚÕâÀï¿ÉÒÔÉè¼Ætemplate. SRecodeÎÄ¼şÓÉ±äÁ¿ÉèÖÃºÍÄ£°åÉùÃ÷×é³É.
+* ç¼–å†™Template
+  æ‰“å¼€SRecodeæ–‡ä»¶(åç¼€åä¸ºsrt),åˆ™ä¼šè¿›å…¥srecode-template-mode,åœ¨è¿™é‡Œå¯ä»¥è®¾è®¡template. SRecodeæ–‡ä»¶ç”±å˜é‡è®¾ç½®å’Œæ¨¡æ¿å£°æ˜ç»„æˆ.
 
-  ÏÂÃæÊÇÒ»Ğ©±àĞ´templateÊ±ÒªÓÃµ½µÄÊõÓï
+  ä¸‹é¢æ˜¯ä¸€äº›ç¼–å†™templateæ—¶è¦ç”¨åˆ°çš„æœ¯è¯­
 
   * template file
 	
-	ºó×ºÃûÎª.srtµÄÎÄ¼ş,°üº¬ÓĞsetting,variableºÍtemplateµÈÄÚÈİ
+	åç¼€åä¸º.srtçš„æ–‡ä»¶,åŒ…å«æœ‰setting,variableå’Œtemplateç­‰å†…å®¹
 
   * template
 	
-	´ú±íÁËÒ»¿é´ø²åÈëÎÄ±¾µÄÓĞÃûÏî, Õâ¿éÎÄ±¾±»±àÒë³ÉÒ»ÏµÁĞµÄ¿É²åÈëÏî. ÕâĞ©¿É²åÈëÏî¿ÉÒÔÊÇ×Ö·û´®³£Á¿ºÍºê(macro).
+	ä»£è¡¨äº†ä¸€å—å¸¦æ’å…¥æ–‡æœ¬çš„æœ‰åé¡¹, è¿™å—æ–‡æœ¬è¢«ç¼–è¯‘æˆä¸€ç³»åˆ—çš„å¯æ’å…¥é¡¹. è¿™äº›å¯æ’å…¥é¡¹å¯ä»¥æ˜¯å­—ç¬¦ä¸²å¸¸é‡å’Œå®(macro).
 
   * macro
 	
-	ºêÊÇÔÚÄ£°åÎÄ¼şÖĞ½«±»Ìæ»»³ÉÆäËûÖµµÄÄÇĞ©ÎÄ±¾.
+	å®æ˜¯åœ¨æ¨¡æ¿æ–‡ä»¶ä¸­å°†è¢«æ›¿æ¢æˆå…¶ä»–å€¼çš„é‚£äº›æ–‡æœ¬.
 
   * dictionary
 	
-	Ò»·İ°üº¬¼üÖµ¶ÔµÄ±í¸ñ
+	ä¸€ä»½åŒ…å«é”®å€¼å¯¹çš„è¡¨æ ¼
 
   * subdictionary
 	
-	Ò»¸ödictionaryÄÚµÄÖµÒ²¿ÉÒÔÊÇdictionary,ÔòµÚ¶ş¸ödictionary±»³ÆÎªsubdictionary.
+	ä¸€ä¸ªdictionaryå†…çš„å€¼ä¹Ÿå¯ä»¥æ˜¯dictionary,åˆ™ç¬¬äºŒä¸ªdictionaryè¢«ç§°ä¸ºsubdictionary.
 
   * variable
 	
-	ËùÎ½±äÁ¿Ö¸µÄdictionaryÖĞµÄ¼ü.
+	æ‰€è°“å˜é‡æŒ‡çš„dictionaryä¸­çš„é”®.
 
 ** Variables
 
-   ±äÁ¿¿ÉÒÔ±»ÉèÖµ,È»ºóÔÚtemplateÖĞÊ¹ÓÃ. ¶àÊıµÄ±äÁ¿Í¨¹ıtemplate²ÎÊıÀ´±»ÉèÖµ,ÉÙ²¿·ÖµÄ±äÁ¿¿ÉÒÔÊÇÔÚsystem templateÉèÖÃµÄ²ÎÊı.
+   å˜é‡å¯ä»¥è¢«è®¾å€¼,ç„¶ååœ¨templateä¸­ä½¿ç”¨. å¤šæ•°çš„å˜é‡é€šè¿‡templateå‚æ•°æ¥è¢«è®¾å€¼,å°‘éƒ¨åˆ†çš„å˜é‡å¯ä»¥æ˜¯åœ¨system templateè®¾ç½®çš„å‚æ•°.
 
-   µ±À©Õ¹templateÊ±,»á°Ñ±äÁ¿´æ´¢ÔÚdictionaryÖĞ,Ã¿Ïîdictionary entry¾ÍÊÇÒ»¸ö±äÁ¿. templateÖĞ¶¨ÒåµÄvariable¿ÉÒÔÓµÓĞÀà×Ö·û´®µÄÖµ.
+   å½“æ‰©å±•templateæ—¶,ä¼šæŠŠå˜é‡å­˜å‚¨åœ¨dictionaryä¸­,æ¯é¡¹dictionary entryå°±æ˜¯ä¸€ä¸ªå˜é‡. templateä¸­å®šä¹‰çš„variableå¯ä»¥æ‹¥æœ‰ç±»å­—ç¬¦ä¸²çš„å€¼.
 
-   ¿ÉÒÔÓÃÀàËÆÏÂÃæµÄÓï¾äÀ´ÉèÖÃÒ»¸övariableµÄÖµ
+   å¯ä»¥ç”¨ç±»ä¼¼ä¸‹é¢çš„è¯­å¥æ¥è®¾ç½®ä¸€ä¸ªvariableçš„å€¼
    #+BEGIN_SRC srt
      set VARNAME "some value"   
    #+END_SRC
    
 *** String Values
-	±äÁ¿µÄÖµ¿ÉÒÔÊÇ×Ö·û´®,×Ö·û´®ÖĞ¿ÉÒÔ°üº¬°üÀ¨»»ĞĞ·ûÔÚÄÚµÄÈÎºÎ×Ö·û. ×Ö·û´®ÓÉEmacs Lisp reader¸ºÔğ½âÎö,Òò´Ë\n,\tºÍ\"¶¼±»Ö§³Ö
+	å˜é‡çš„å€¼å¯ä»¥æ˜¯å­—ç¬¦ä¸²,å­—ç¬¦ä¸²ä¸­å¯ä»¥åŒ…å«åŒ…æ‹¬æ¢è¡Œç¬¦åœ¨å†…çš„ä»»ä½•å­—ç¬¦. å­—ç¬¦ä¸²ç”±Emacs Lisp readerè´Ÿè´£è§£æ,å› æ­¤\n,\tå’Œ\"éƒ½è¢«æ”¯æŒ
 
-	templateÖĞµÄ×Ö·û´®²»»á±»½âÎö,such as template escape characters.
+	templateä¸­çš„å­—ç¬¦ä¸²ä¸ä¼šè¢«è§£æ,such as template escape characters.
 	
 *** Multi-string Values
-	±äÁ¿µÄÖµ¿ÉÒÔÊÇ¶à¸ö×Ö·û´®.  ÉèÖÃµÄ·½·¨ÀàËÆÓÚstring value,Ö»ÊÇÓĞ¶à¸östring value¶øÓÃ:
+	å˜é‡çš„å€¼å¯ä»¥æ˜¯å¤šä¸ªå­—ç¬¦ä¸².  è®¾ç½®çš„æ–¹æ³•ç±»ä¼¼äºstring value,åªæ˜¯æœ‰å¤šä¸ªstring valueè€Œç”¨:
 	#+BEGIN_SRC srt
       set NAME "this" "-mode"    
 	#+END_SRC
-	ÕâÁ½¸ö×Ö·û´®»áÆ´½ÓÔÚÒ»Æğ.
+	è¿™ä¸¤ä¸ªå­—ç¬¦ä¸²ä¼šæ‹¼æ¥åœ¨ä¸€èµ·.
 
-	Ò»¸ö³£ÓÃ·¨ÊÇ´ÓdictionaryÖĞÈ¡³öÖ¸¶¨±äÁ¿µÄÖµ²¢Æ´½Óµ½Ò»¸ö×Ö·û´®ÉÏ. Ê¹ÓÃ`macro`¹Ø¼ü×ÖÈ¡³ö±äÁ¿ÖĞµÄÖµ. ÀıÈç
+	ä¸€ä¸ªå¸¸ç”¨æ³•æ˜¯ä»dictionaryä¸­å–å‡ºæŒ‡å®šå˜é‡çš„å€¼å¹¶æ‹¼æ¥åˆ°ä¸€ä¸ªå­—ç¬¦ä¸²ä¸Š. ä½¿ç”¨`macro`å…³é”®å­—å–å‡ºå˜é‡ä¸­çš„å€¼. ä¾‹å¦‚
 	#+BEGIN_SRC srt
       set NAME macro "MODE" "-mode"
 	#+END_SRC
-	»á´ÓdictionaryÖĞ³éÈ¡³öÃûÎª`MODE`µÄ±äÁ¿Öµ,È»ºóÔÚÎ²²¿½ÓÉÏ×Ö·û´®"-mode"
+	ä¼šä»dictionaryä¸­æŠ½å–å‡ºåä¸º`MODE`çš„å˜é‡å€¼,ç„¶ååœ¨å°¾éƒ¨æ¥ä¸Šå­—ç¬¦ä¸²"-mode"
 *** Section Show
-	Ê¹ÓÃvariableÀ´Õ¹Ê¾template section. ËùÎ½SectionÊÇÒ»¶ÎÓÃsection macro°üÎ§µÄtemplateÆ¬¶Î. 
-	*×÷ÕßÉù³Æ2008Äê5ÔÂ11ÈÕºó¾ÍÔÙÒ²Ã»ÓĞÊ¹ÓÃ¸Ã¹¦ÄÜÁË,ËüÒ²²»È·¶¨Õâ¸ö¹¦ÄÜÊÇ·ñÄÜÕı³£Ê¹ÓÃ,Òò´Ë»¹ÊÇ²»ÒªÊ¹ÓÃ¸Ã¹¦ÄÜÎªºÃ*
+	ä½¿ç”¨variableæ¥å±•ç¤ºtemplate section. æ‰€è°“Sectionæ˜¯ä¸€æ®µç”¨section macroåŒ…å›´çš„templateç‰‡æ®µ. 
+	*ä½œè€…å£°ç§°2008å¹´5æœˆ11æ—¥åå°±å†ä¹Ÿæ²¡æœ‰ä½¿ç”¨è¯¥åŠŸèƒ½äº†,å®ƒä¹Ÿä¸ç¡®å®šè¿™ä¸ªåŠŸèƒ½æ˜¯å¦èƒ½æ­£å¸¸ä½¿ç”¨,å› æ­¤è¿˜æ˜¯ä¸è¦ä½¿ç”¨è¯¥åŠŸèƒ½ä¸ºå¥½*
 *** Special Variables
-	ÓĞÒ»Ğ©±äÁ¿¾ßÓĞÌØÊâµÄº¬Òå,ËûÃÇµÄÖµµÄ¸Ä±äÄÜ¹»Ó°ÏìÄ£°åÔÚ±àÒëÊ±µÄÊôĞÔ:
+	æœ‰ä¸€äº›å˜é‡å…·æœ‰ç‰¹æ®Šçš„å«ä¹‰,ä»–ä»¬çš„å€¼çš„æ”¹å˜èƒ½å¤Ÿå½±å“æ¨¡æ¿åœ¨ç¼–è¯‘æ—¶çš„å±æ€§:
 	* escape-start
 
-	  ¸Ã±äÁ¿µÄÖµÊÇÒ»¸ö×Ö·ûĞòÁĞ,Ëü±êÊ¶ÁËtemplate macro nameµÄ¿ªÊ¼. 
+	  è¯¥å˜é‡çš„å€¼æ˜¯ä¸€ä¸ªå­—ç¬¦åºåˆ—,å®ƒæ ‡è¯†äº†template macro nameçš„å¼€å§‹. 
 	  #+BEGIN_SRC srt
         set escape_start "$"
 	  #+END_SRC
 	  
 	* escape-end
 
-	  ¸Ã±äÁ¿µÄÖµÊÇÒ»¸ö×Ö·ûĞòÁĞ,Ëü±êÊ¶ÁËtemplate macro nameµÄ½áÊø. 
+	  è¯¥å˜é‡çš„å€¼æ˜¯ä¸€ä¸ªå­—ç¬¦åºåˆ—,å®ƒæ ‡è¯†äº†template macro nameçš„ç»“æŸ. 
 	  #+BEGIN_SRC srt
         set escape_end "$"      
 	  #+END_SRC
 
-	  Èç¹ûÄãĞèÒª²åÈë±äÁ¿`escape_start`ºÍ`escape_end`ÖĞµÄ×Ö·û,ÔòÄãĞèÒªÎªÕâĞ©×Ö·û×¨ÃÅÉèÖÃÒ»¸ö±äÁ¿,ÀıÈç
+	  å¦‚æœä½ éœ€è¦æ’å…¥å˜é‡`escape_start`å’Œ`escape_end`ä¸­çš„å­—ç¬¦,åˆ™ä½ éœ€è¦ä¸ºè¿™äº›å­—ç¬¦ä¸“é—¨è®¾ç½®ä¸€ä¸ªå˜é‡,ä¾‹å¦‚
 	  #+BEGIN_SRC srt
         set escape_start "$"
         set escape_end "$"
@@ -180,20 +180,20 @@
 
 	* mode
 	  
-	  ËüµÄÖµÊÇÒ»¸ö¸ömajor modeµÄÃû×Ö,Ëü±íÊ¾ÎÄ¼şÖĞËùÓĞÄ£°å¶¼Óë¸Ãmajor modeÏà¹Ò¹³.
+	  å®ƒçš„å€¼æ˜¯ä¸€ä¸ªä¸ªmajor modeçš„åå­—,å®ƒè¡¨ç¤ºæ–‡ä»¶ä¸­æ‰€æœ‰æ¨¡æ¿éƒ½ä¸è¯¥major modeç›¸æŒ‚é’©.
 
-	  Ò»¸ömajor mode¿ÉÒÔÓĞ¶à¸öÄ£°åÎÄ¼ş. 
+	  ä¸€ä¸ªmajor modeå¯ä»¥æœ‰å¤šä¸ªæ¨¡æ¿æ–‡ä»¶. 
 	  #+BEGIN_SRC srt
         set mode "emacs-lisp-mode"
 	  #+END_SRC
 
 	* priority
 	  
-	  ¸Ã±äÁ¿µÄÖµÊÇÒ»¸öÊı×Ö,¾ö¶¨ÁËÔÚËÑË÷templateÊ±µÄË³Ğò. ÏµÍ³templateÄ£Ê½Ê¹ÓÃµÍÓÅÏÈ¼¶,×Ô¶¨ÒåtemplateÄ£Ê½Ê¹ÓÃ¸ßÓÅÏÈ¼¶. ÄãÒ²¿ÉÒÔÊ¹ÓÃÕâ¸ö±äÁ¿À´Ö¸¶¨ÓÅÏÈ¼¶.
+	  è¯¥å˜é‡çš„å€¼æ˜¯ä¸€ä¸ªæ•°å­—,å†³å®šäº†åœ¨æœç´¢templateæ—¶çš„é¡ºåº. ç³»ç»Ÿtemplateæ¨¡å¼ä½¿ç”¨ä½ä¼˜å…ˆçº§,è‡ªå®šä¹‰templateæ¨¡å¼ä½¿ç”¨é«˜ä¼˜å…ˆçº§. ä½ ä¹Ÿå¯ä»¥ä½¿ç”¨è¿™ä¸ªå˜é‡æ¥æŒ‡å®šä¼˜å…ˆçº§.
 
-	  Èô¶à¸ötemplateÓµÓĞÍ¬ÑùµÄCONTEXTºÍNAME,ÔòÊ¹ÓÃ×î¸ßÓÅÏÈ¼¶µÄtemplate
+	  è‹¥å¤šä¸ªtemplateæ‹¥æœ‰åŒæ ·çš„CONTEXTå’ŒNAME,åˆ™ä½¿ç”¨æœ€é«˜ä¼˜å…ˆçº§çš„template
 
-	  Èô¶à¸öÎÄ¼şÓµÓĞÍ¬ÑùµÄÓÅÏÈ¼¶,Ôòµ÷ÓÃµÄË³ĞòÊÇÎ´ÖªµÄ. Èç¹ûÃ»ÓĞtemplate nameÆ¥Åä,ÔòÎŞËùÎ½ÓÅÏÈ¼¶
+	  è‹¥å¤šä¸ªæ–‡ä»¶æ‹¥æœ‰åŒæ ·çš„ä¼˜å…ˆçº§,åˆ™è°ƒç”¨çš„é¡ºåºæ˜¯æœªçŸ¥çš„. å¦‚æœæ²¡æœ‰template nameåŒ¹é…,åˆ™æ— æ‰€è°“ä¼˜å…ˆçº§
 	  
 	  #+BEGIN_SRC srt
         set priority "35"      
@@ -201,7 +201,7 @@
 
 	* application
 
-	  ÈôÏë±êÊ¶templateÎÄ¼şÖĞµÄÄ£°åÖ»ÄÜ¸øÄ³¸öÌØ¶¨µÄapplicationÊ¹ÓÃ,ÔòÖ¸¶¨¸Ã±äÁ¿µÄÖµ. Ä³¸öapplicationÌØ¶¨µÄtemplate file±»±£´æÔÚtemplate²Ö¿âÖĞ,ÔÚÒ»°ãµÄÄ£°å²åÈëÊ±²»»á±»µ÷ÓÃ.
+	  è‹¥æƒ³æ ‡è¯†templateæ–‡ä»¶ä¸­çš„æ¨¡æ¿åªèƒ½ç»™æŸä¸ªç‰¹å®šçš„applicationä½¿ç”¨,åˆ™æŒ‡å®šè¯¥å˜é‡çš„å€¼. æŸä¸ªapplicationç‰¹å®šçš„template fileè¢«ä¿å­˜åœ¨templateä»“åº“ä¸­,åœ¨ä¸€èˆ¬çš„æ¨¡æ¿æ’å…¥æ—¶ä¸ä¼šè¢«è°ƒç”¨.
 
 	  The application with a particular name will access these templates from Lisp code.  
 	  
@@ -211,32 +211,32 @@
 
 	* project
 	  
-	  Èç¹ûÄ£°åÎÄ¼şÖĞµÄÄ³Ğ©templateÖ»ÓĞÔÚÄ³¸öÌØ¶¨Ä¿Â¼ÏÂ²ÅÓĞÓÃ,Ôò¿ÉÒÔÎª¸ÃÄ£°åÎÄ¼şÉèÖÃËùÊôµÄ"project".
+	  å¦‚æœæ¨¡æ¿æ–‡ä»¶ä¸­çš„æŸäº›templateåªæœ‰åœ¨æŸä¸ªç‰¹å®šç›®å½•ä¸‹æ‰æœ‰ç”¨,åˆ™å¯ä»¥ä¸ºè¯¥æ¨¡æ¿æ–‡ä»¶è®¾ç½®æ‰€å±çš„"project".
 
-	  Îªproject±äÁ¿ÉèÖÃÄ³¸öÄ¿Â¼Â·¾¶Ãû,ÔòÖ»ÓĞÔÚ¸ÃÄ¿Â¼ÏÂµÄÎÄ¼ş²ÅÄÜÊ¹ÓÃ¸ÃÄ£°åÎÄ¼şÖĞµÄtemplate
+	  ä¸ºprojectå˜é‡è®¾ç½®æŸä¸ªç›®å½•è·¯å¾„å,åˆ™åªæœ‰åœ¨è¯¥ç›®å½•ä¸‹çš„æ–‡ä»¶æ‰èƒ½ä½¿ç”¨è¯¥æ¨¡æ¿æ–‡ä»¶ä¸­çš„template
 
-	  peojectËùÊôµÄÄ£°åÎÄ¼ş,ÆäÓÅÏÈ¼¶½éÓÚSRecode»ù´¡Ä£°åºÍÓÃ»§×Ô¶¨ÒåÄ£°åÖ®¼ä.
+	  peojectæ‰€å±çš„æ¨¡æ¿æ–‡ä»¶,å…¶ä¼˜å…ˆçº§ä»‹äºSRecodeåŸºç¡€æ¨¡æ¿å’Œç”¨æˆ·è‡ªå®šä¹‰æ¨¡æ¿ä¹‹é—´.
 
 	  #+BEGIN_SRC srt
         set project "/tmp/testproject"      
 	  #+END_SRC
 *** Automatic Loop Variables
 
-	ÈôÓÃµ½ÁËsection macro,Ôò that section is repeated for each subdictionary bound to the loop variable. 
+	è‹¥ç”¨åˆ°äº†section macro,åˆ™ that section is repeated for each subdictionary bound to the loop variable. 
 	
-	Each dictionary added will automatically get values for positional macros which will enable different sections. ³£ÓÃµÄautomatic section variablesÓĞ:
-	* first¡ªThe first entry in the table. 
-	* notfirst¡ªNot the first entry in the table. 
-	* last¡ªThe last entry in the table 
-	* notlast¡ªNot the last entry in the table
+	Each dictionary added will automatically get values for positional macros which will enable different sections. å¸¸ç”¨çš„automatic section variablesæœ‰:
+	* firstâ€”The first entry in the table. 
+	* notfirstâ€”Not the first entry in the table. 
+	* lastâ€”The last entry in the table 
+	* notlastâ€”Not the last entry in the table
 	  
 *** Compound Variable Values
 	
-	±äÁ¿¿ÉÒÔÓĞ¸´ºÏÖµ. ËùÎ½¸´ºÏÖµµÄÒâË¼ÊÇ,¸Ã±äÁ¿µÄÖµÊÇÒ»¸öEIEIO¶ÔÏó,ËüÊÇ`srecode-dictionary-compound-value`µÄ×ÓÀà.
+	å˜é‡å¯ä»¥æœ‰å¤åˆå€¼. æ‰€è°“å¤åˆå€¼çš„æ„æ€æ˜¯,è¯¥å˜é‡çš„å€¼æ˜¯ä¸€ä¸ªEIEIOå¯¹è±¡,å®ƒæ˜¯`srecode-dictionary-compound-value`çš„å­ç±».
 
-	Ö»ÄÜÍ¨¹ıLisp´úÂëÀ´´´½¨¸´ºÏÖµ±äÁ¿.
+	åªèƒ½é€šè¿‡Lispä»£ç æ¥åˆ›å»ºå¤åˆå€¼å˜é‡.
 ** Templates
-   ËùÎ½templateÊÇÖ¸¿ÉÒÔ²åÈëbufferµÄÒ»¶ÎÎÄ±¾Ä£Ê½. Ò»¸ö×î»ù±¾µÄtemplate¿´ÆğÀ´ÏñÕâÑù:
+   æ‰€è°“templateæ˜¯æŒ‡å¯ä»¥æ’å…¥bufferçš„ä¸€æ®µæ–‡æœ¬æ¨¡å¼. ä¸€ä¸ªæœ€åŸºæœ¬çš„templateçœ‹èµ·æ¥åƒè¿™æ ·:
    #+BEGIN_SRC srt
       template TEMPLATENAME :arg1 :arg2
       "Optional documentation string"
@@ -246,11 +246,11 @@
       bind "a"
    #+END_SRC
    
-   template´æ´¢ÔÚÒ»¸ötemplate±í¸ñÖĞ,²¢ÇÒÓÃTEMPLATENAME×÷ÎªË÷Òı.
+   templateå­˜å‚¨åœ¨ä¸€ä¸ªtemplateè¡¨æ ¼ä¸­,å¹¶ä¸”ç”¨TEMPLATENAMEä½œä¸ºç´¢å¼•.
 
-   ÉÏÃæÀı×ÓÖĞ,documentation stringÊÇ¿ÉÑ¡µÄ. ¸ÃËµÃ÷×Ö·û´®»á°ïÖúÊ¹ÓÃÕßÖªµÀÔÚÊ²Ã´Çé¿öÏÂÊ¹ÓÃ¸ÃÄ£°å±È½ÏºÃ.
+   ä¸Šé¢ä¾‹å­ä¸­,documentation stringæ˜¯å¯é€‰çš„. è¯¥è¯´æ˜å­—ç¬¦ä¸²ä¼šå¸®åŠ©ä½¿ç”¨è€…çŸ¥é“åœ¨ä»€ä¹ˆæƒ…å†µä¸‹ä½¿ç”¨è¯¥æ¨¡æ¿æ¯”è¾ƒå¥½.
 
-   Á½ĞĞ'----'Ö®¼äËù°üº¬µÄ´úÂëÔòÎªÒ»¶Îtemplate´úÂë
+   ä¸¤è¡Œ'----'ä¹‹é—´æ‰€åŒ…å«çš„ä»£ç åˆ™ä¸ºä¸€æ®µtemplateä»£ç 
 *** Template Section Dictionaries
 *** Template Macro
 ** Contexts
