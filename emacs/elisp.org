@@ -3760,6 +3760,41 @@
 
 	 Usually this is the frame that was selected when the event was generated, but if that frame has redirected input focus to another frame, the value is the frame to which the event was redirected.
 
+** Quitting
+   当Lisp函数正在运行时,可以按下`C-g',让Emacs退出当前的工作.
+
+   然而当command loop在等待keyboard input时,按下C-g并不会引发quitting,Emacs只是把它当成一个普通的input character.
+
+   when `C-g' follows a prefix key, they combine to form an undefined key. The effect is to cancel the prefix key as well as any prefix argument.
+   
+   而当在minibuffer中输入时,`C-g'的意义又不一样,它中断并退出minibuffer
+
+   `C-g'通过设置变量`quit-flag'为t来表示要quit,Emacs检查该变量的值并产生quitting
+
+   若想在执行Lisp函数时阻止quitting的产生,只需要将变量`inhibit-quit'绑定为非nil值即可.这时,即使`quit-falg'设置为t,依然不会产生quitting
+
+   * quit-flag
+
+	 该值为非nil,除非`inhibit-quit'被设置为非nil,否则Emacs立即退出当前执行的任务.
+
+   * inhibit-quit
+
+	 当`quit-flag'设置为非nil时,该变量决定Emacs是否执行退出
+
+   * 宏(with-local-quit body...)
+
+	 该宏执行body,执行过程中,即使`inhibit-quit'设置为非nil,也运行产生quitting. 
+
+	 若body运行过程中,被quitting中断,则返回nil,否则返回最后语句的执行结果.
+
+	 若进入`with-local-quit'时,`inhibit-quit'为nil,则执行body时若产生quitting,则Emacs设置`quit-flag'并产生一个普通quit.
+
+	 若进入`with-local-quit'是,`inhibit-quit'为非nil,这时普通的quitting被推迟. 非nil的`quit-flag'会触发一种特殊的quit--local quit. 它会终止body的执行并退出`with-local-quit'. *退出`with-local-quit'后的`quit-flag'依然为非nil*.
+
+   * (keyboard-quit)
+
+	 该函数设置产生quit的条件,默认绑定到C-g
+
 * InputEvent
   
   Emacs Command Loop读取一系列的"input event"来表示键盘/鼠标的动作,或发送给Emacs的系统事件.
@@ -4149,7 +4184,6 @@
 
    定义如何处理特殊event的keymap为变量`special-event-map'
 
-   
 ** 区分Events
    每个event都有一个"event type",用于区分event.
 
@@ -6341,3 +6375,25 @@ buffer-string to get the whole buffer content.
   * 变量emacs-version
   * 变量emacs-major-version
   * 变量emacs-minor-version
+* wait function
+  wait function用于等待一段时间或等待input.
+
+  * (sit-for seconds &optional nodisp)
+
+	sit-for等待一段时间或直到收到某个input event. 在这段时间内Emacs会实时更新屏幕显示.
+
+	若等待不是由收到input而中断的,则返回t,否则返回nil
+
+	参数seconds可以是浮点数. (sit-for 0)等价于(redisplay),它只是立即更新屏幕显示.
+
+	若参数nodisp为非nil,则sit-for在等价期间不会更新屏幕显示.
+
+	在Emacs处于batch mode时,`sit-for'不能被interrupt event中断,这时等价于`sleep-for'
+
+  * (sleep-for seconds &optional millisec)
+
+	该函数等价seconds秒,等待期间不会被input event打断,也不会更新屏幕显示. 它总是返回nil
+
+	参数seconds可以为浮点数.
+
+	参数millisec表示在等待seconds秒后,再等待millisec毫秒
