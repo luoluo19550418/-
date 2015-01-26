@@ -4573,6 +4573,15 @@
     The input method function should test the values of `overriding-local-map' and `overriding-terminal-local-map'; 
     if either of these variables is non-`nil', the input method should put its argument into a list and return that list with no further processing.
 
+* Keymaps
+  input event与command的对应关系被记录在名为"keymaps"的结构体中. 每个event type对应一个command或另一个keymap. 
+
+  当一个event type绑定到另一个keymap时,这个keymap被用于查找下一个input event的对应关系.
+
+  这个从event sequence一直找到某个command的过程,被成为"key lookup"
+
+** Key Sequences
+   
 * Number相关函数
   * 判断是否为自然数(0+正整数)
 
