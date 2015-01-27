@@ -4724,9 +4724,216 @@
 
   当一个event type绑定到另一个keymap时,这个keymap被用于查找下一个input event的对应关系.
 
+  若某个event sequence找到的是一个keymap,则我们称该key sequence为"prefix key". 否则则为"complete key". 
+
   这个从event sequence一直找到某个command的过程,被成为"key lookup"
 
+  Emacs中有三类keymap:
+
+  * global map
+
+	由所有buffer所共享
+
+  * local keymap
+
+	由buffer指定的major mode所决定,会覆盖global map的key sequence
+
+  * minor mode keymaps
+
+	由buffer所开启的minor mode所决定,会覆盖global map和local keymap的key sequence
 ** Key Sequences
+   
+   "Key sequence",简称为"key",是指一个或多个input event做组成的序列集合. input event包括characters,function keys,mouse actions或system events
+   
+   当用vector来表示key sequences时,每个vector的元素都是character,每个character表示一个input event. 例如`[?\C-x ?l]'表示key sequence `C-x l'
+
+   * (kbd keyseq-text)
+
+	 将string类型的keyseq-text转换为key sequence.
+	 #+BEGIN_SRC emacs-lisp
+       (kbd "C-x") => "\C-x"
+       (kbd "C-x C-f") => "\C-x\C-f"
+       (kbd "C-x 4 C-f") => "\C-x4\C-f"
+       (kbd "X") => "X"
+       (kbd "RET") => "\^M"
+       (kbd "C-c SPC") => "\C-c "
+       (kbd "<f1> SPC") => [f1 32]
+       (kbd "C-M-<down>") => [C-M-down]
+	 #+END_SRC
+** Keymaps的内部结构
+   keymap是一个list,它的car为'keymap. 剩下的元素可以是如下格式:
+
+   * '(EVENT-TYPE . BINDING)
+
+	 该EVENT-TYPE对应着BINDING,这里的BINDING可以是一个command,或keymap或symbol(这时取该symbol的function definition)
+
+   * '(EVENT-TYPE ITEM-NAME . BINDING)
+
+	 该event-type对应着binding,同时该binding也是一个名为ITEM-NAME的simple menu item
+
+   * '(EVENT-TYPE ITEM-NAME HELP-STRING . BINDING)
+
+	 该event-type对应着binding,同时该bingding也是一个名为ITEM-NAME的菜单项,而带有help string
+
+   * '(EVENT-TYPE menu-item . DETAILS)
+
+	 EVENT-TYPE对应着的绑定,同时也是一个extended menu item
+
+   * '(t . BINDING)
+
+	 设置BINDING为"default key binding". 任何不能找到对应项的event-type都执行该binding
+
+   * 某char-table
+
+   * 某string
+
+   * 某parent-keymap
+
+	 若元素为keymap,则表示该keymap所定义的绑定关系都嵌入到包含该keymap的keymap中来.
+
+
+   有一点需要注意:key `M-a'在keymap中被分拆表示为`<ESC> a'(只有在meta与另一个普通字符关联时,才被分拆),而`M-<end>'直接存储为`M-<end>'
+
+   * (keymapp object)
+
+	 判断object是否为keymap,若object为symbol,则判断该symbol对应的function definition是否为keymap
+	 #+BEGIN_SRC emacs-lisp
+       (keymapp '(keymap))                     ; => t
+       (fset 'foo '(keymap))
+       (keymapp 'foo)                          ; => t
+       (keymapp (current-global-map))          ; => t
+	 #+END_SRC
+** 创建keymap
+
+   * (make-sparse-keymap &optional prompt)
+
+	 创建一个空的keymap
+
+	 若传递了参数prompt,则其称为keymap的overall prompt string. 你只能为menu keymap设置该值,因为任何被设了overall prompt string的keymap都被人是menu
+
+   * (make-keymap &optional prompt)
+
+	 类似(make-spare-keymap),但是它所创建的不是空keymap,而是包含了一个char-table,这个char-table包含了所有的不带modifier的characters
+
+	 新产生的keymap绑定所有这些characters到nil
+
+   * (copy-keymap keymap)
+
+	 深拷贝keymap.  However, recursive copying does not take place when the definition of a character is a symbol whose function definition is a keymap; the same symbol appears in the new copy.
+	 
+	 #+BEGIN_SRC emacs-lisp
+       (setq map (copy-keymap (current-local-map)))
+           => (keymap
+                ;; (This implements meta characters.)
+                (27 keymap
+                    (83 . center-paragraph)
+                    (115 . center-line))
+                (9 . tab-to-tab-stop))
+
+           (eq map (current-local-map))
+               => nil
+           (equal map (current-local-map))
+               => t
+
+	 #+END_SRC
+** keymap的继承
+   若keymap中的element为某keymap,则该被包含的keymap的内容会被内嵌到包含的keymap中,即实现了keymap的继承机制.
+
+   我们称被包含的keymap为parent-keymap
+
+   如果parent-keymap中的绑定关系被更改了,则这些改变也会影响到继承keymap(因为keymap中的元素为指向parent-keymap的引用). 反过来则不会影响parent-keymap,这是因为使用define-key更改的绑定是直接记录在继承的keymap中的
+
+   * (keymap-parent keymap)
+
+	 获取keymap中的parent-keymap
+
+   * (set-keymap-parent keymap parent-keymap)
+
+	 设置参数parent-keymap为keymap的parent keymap,若参数parent-keymap为nil,则清空keymap的所有parent keymap
+
+	 该函数返回参数parent-keymap
+
+	 若keymap本身为其他sub-keymap的parent keymap,则该操作也会影响到sub-keymap
+
+   * (make-composed-keymap maps &optional parent)
+
+	 若希望创建一个keymap,这个keymap继承于多个keymap, 则需要使用该函数
+
+	 该函数创建一个keymap,该keymap集合了maps中的所有keymap的绑定信息. 还可以为它设置一个parent keymap
+
+	 参数maps可以是单个的keymap,或者一个由keymap组成的list.
+
+	 当Emacs在创建的这个keymap中搜索event type的绑定信息时,Emacs会按顺序搜索maps中的keymap,最后搜索parent. 以找到的第一个符合条件的绑定为准.
+
+	 需要注意的是: *maps中的nil绑定会覆盖parent中的绑定信息,但是不会覆盖maps中的其他keymap的绑定信息*
+	 #+BEGIN_SRC emacs-lisp
+       (defvar help-mode-map
+         (let ((map (make-sparse-keymap)))
+           (set-keymap-parent map
+                              (make-composed-keymap button-buffer-map special-mode-map))
+           ... map) ... )
+
+	 #+END_SRC
+** 标准Emacs prefix key keymap
+
+   * esc-map
+
+	 global keymap. 默认绑定到<ESC>
+
+   * help-map
+
+	 global keymap. 默认绑定到C-h
+
+   * mode-specific-map
+
+	 global keymap. 默认绑定到C-c
+
+   * ctl-x-map
+
+	 global keymap. 默认绑定到C-x
+
+   * mule-keymap
+
+	 global keymap. 默认绑定到C-x <RET>
+
+   * ctl-x-4-map
+
+	 global keymap. 默认绑定到C-x 4
+
+   * ctl-x-5-map
+
+	 global keymap. 默认绑定到C-x 5
+
+   * 2C-mode-map
+
+	 global keymap. 默认绑定到C-x 6
+
+   * vc-prefix-map
+
+	 global keymap. 默认绑定到C-x v
+
+   * goto-map
+
+	 global keymap. 默认绑定到M-g
+
+   * search-map
+
+	 global keymap. 默认绑定到M-s
+
+   * facemenu-keymap
+	 
+	 global keymap. 默认绑定到M-o
+
+   * (define-prefix-command symbol &optioinal mapvar prompt)
+
+	 该函数创建一个sparse keymap并存储在symbol的function definition中, 这样绑定到该symbol的key sequence就称为了"prefix key"
+
+	 该函数返回symbol
+
+	 该函数同时也会设置symbol的value为该keymap,但若参数mapvar为非nil,则symbol的值为mapvar
+
+	 若参数prompt为非nil,则它称为该keymap的overall prompt string. 同样的,请只有当该keymap为menu时才这么做
+** 
    
 * Number相关函数
   * 判断是否为自然数(0+正整数)
