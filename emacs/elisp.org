@@ -4933,8 +4933,150 @@
 	 该函数同时也会设置symbol的value为该keymap,但若参数mapvar为非nil,则symbol的值为mapvar
 
 	 若参数prompt为非nil,则它称为该keymap的overall prompt string. 同样的,请只有当该keymap为menu时才这么做
-** 
+** Active Keymaps
+
+   active keymaps按照优先级从高到底以此为:
+
+   1. 由光标/鼠标点所在的string的keymap property指定的keymap
+
+   2. minor mode开启的keymap
+
+	  由变量`emulation-mode-map-alists',`minor-mode-overriding-map-alist'和`minor-mode-map-alist'决定
+
+   3. 当前buffer的local keymap
+
+	  一般由buffer的major mode决定
+
+   4. global keymap
    
+	  由变量`global-map'决定
+
+   除了上面的常见keymaps外,Emacs还提供了一些方法让程序员激活其他的keymaps.
+
+   1. 变量`overriding-local-map'指定的keymap会替代除了globa keymap之外的其他三种常见keymap
+
+   2. `overriding-terminal-local-map'指定的keymap的优先级高过其他任何keymaps(包括`overriding-local-map'指定的keymap),
+      *常用于临时修改keybinding(参见函数`set-transient-map')*
+
+   总结来说,搜索active keymap的顺序为:
+   #+BEGIN_SRC emacs-lisp
+     (or (if overriding-terminal-local-map
+             (FIND-IN overriding-terminal-local-map))
+         (if overriding-local-map
+             (FIND-IN overriding-local-map)
+           (or (FIND-IN (get-char-property (point) 'keymap))
+               (FIND-IN-ANY emulation-mode-map-alists)
+               (FIND-IN-ANY minor-mode-overriding-map-alist)
+               (FIND-IN-ANY minor-mode-map-alist)
+               (if (get-text-property (point) 'local-map)
+                   (FIND-IN (get-char-property (point) 'local-map))
+                 (FIND-IN (current-local-map)))))
+         (FIND-IN (current-global-map)))
+
+     ;; In the above pseudo-code, if a key sequence starts with a mouse event (*note Mouse Events::), that event's position is used instead of point, and the event's buffer is used instead of the current buffer. 
+   #+END_SRC
+   下面是一些相关函数与变量:
+
+   * (current-active-maps &optional olp position)
+
+	 当前环境下处于激活状态的keymap的list.
+
+	 正常情况下,该函数的返回值会忽略掉`overriding-local-map'和`overriding-terminal-local-map'的值,但若参数olp为非nil,则不会忽略掉这俩个变量的值. 
+
+	 参数position可以是`event-start'函数返回的event position或buffer position,表示使用position所在的string的keymap property指定的keymap代替光标或鼠标点所在的stirng的keymap property
+
+   * (key-binding key &optional accept-defaults no-remap position)
+
+	 该函数根据key在当前active 的keymaps中查找对应的binding.
+
+	 参数accept-default控制是否检查default binding,即keymap中格式为(t . binding)的元素
+
+	 当command被重映射过,key-binding默认会查找被重新映射过的binding,但若参数no-remap为非nil,则`key-binding'会忽略重映射
+
+	 参数position可以是`event-start'函数返回的event position或buffer position,表示使用position所在的string的keymap property指定的keymap代替光标或鼠标点所在的stirng的keymap property
+	 #+BEGIN_SRC emacs-lisp
+       (key-binding "\C-x\C-f")                ; => find-file
+	 #+END_SRC
+
+   * global-map
+
+	 改变量额值为默认的global keymap
+
+   * (current-global-map)
+
+	 返回当前global keymap的 *引用而不是拷贝*.
+
+   * (current-local-map)
+
+	 该函数返回当前buffer的local keymap的 *引用而不是拷贝*
+
+   * (current-minor-mode-maps)
+
+	 返回当前minor mode开启的keymaps的list
+
+   * (use-global-map keymap)
+
+	 设置keymap为global keymap
+
+   * (use-local-map keymap)
+
+	 设置keymap为当前buffer的local keymap(大多数major mode命令都使用该函数来设置local keymap)
+
+	 参数keymap可以为nil,表示不设置local keymap
+
+   * minor-mode-map-alist
+
+	 该变量是一个由元素'(variable . keymap)组成的alist.
+
+	 它表示,当变量variable的值为非nil时,对应的keymap处于激活状态,否则若变量variable的值为nil,则keymap被禁用. 这里keymap可以是一个keymap或者一个function definition为keymap的symbol
+
+	 通常情况下变量variable被用于控制是否启用某个minor mode
+
+   * minor-mode-overriding-map-alist
+
+	 该变量运行major mode覆盖特定minor mode的key binding.
+
+	 该alist的元素跟`minor-mode-map-alist'类似,也是(VARIABLE . KEYMAP)
+
+	 若统一变量variable,同时在`minor-mode-overriding-map-alist'和`minor-mode-map-alist'中出现,则使用`minor-mode-overriding-map-alist'中的对应keymap覆盖`minor-mode-map-alist'中的keymap
+
+   * overriding-local-map
+
+	 该值若为nil,则该值所指定的keymap会覆盖除了global map外的所有keymap
+
+   * overriding-terminal-local-map
+
+	 若为非nil,则该变量所表示的keymap,会优先于`overriding-local-map',buffer的local keymap,text property或overlay keymap和其他所有的minor mode keymap
+
+	 改变了为terminal local variable,不能设置为buffer-local
+
+   * overriding-local-map-menu-flag
+
+	 若该值为非nil,则表示`overriding-local-map'和`overriding-terminal-local-map'的值可以影响到menu bar的显示, 默认为nil
+
+	 需要注意的是,无论是否影响menu bar的显示,`overriding-local-map'和`overriding-terminal-local-map'依然会影响到通过menu bar产生的key sequence的执行情况
+
+   * special-event-map
+
+	 存放special event与command对应关系的keymap.
+
+	 若某event type在该keymap中有binding,则该event type被认为是特殊的,并且该event所对应的绑定command会直接被函数`read-event'所执行
+
+   * emulation-mode-map-alist
+
+	 This variable holds a list of keymap alists to use for emulation modes.  
+     It is intended for modes or packages using multiple minor-mode keymaps. 
+     Each element is a keymap alist which has the same format and meaning as `minor-mode-map-alist', or a symbol with a variable binding which is such an alist.  
+     The "active" keymaps in each alist are used before `minor-mode-map-alist' and `minor-mode-overriding-map-alist'.
+
+   * (set-transient-map keymap &optional keep-pred on-exit)
+
+	 该函数临时增加keymap作为优先级最高的keymap
+
+	 正常情况下,keymap只会被使用一次,来查找紧接着的下一个key sequence的binding. 但若参数keep-pred为t则keymap一直有效,直到某个key sequence在keymap中找不到binding为止.
+
+	 参数on-exit,若为非nil,则需要是一个不带参数的回调函数,会在map失效时调用该函数.
+.
 * Number相关函数
   * 判断是否为自然数(0+正整数)
 
