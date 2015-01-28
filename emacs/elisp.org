@@ -4765,7 +4765,7 @@
 
    * '(EVENT-TYPE . BINDING)
 
-	 该EVENT-TYPE对应着BINDING,这里的BINDING可以是一个command,或keymap或symbol(这时取该symbol的function definition)
+	 该EVENT-TYPE对应着BINDING
 
    * '(EVENT-TYPE ITEM-NAME . BINDING)
 
@@ -4779,7 +4779,7 @@
 
 	 EVENT-TYPE对应着的绑定,同时也是一个extended menu item
 
-   * '(t . BINDING)
+   * '([t] . BINDING)
 
 	 设置BINDING为"default key binding". 任何不能找到对应项的event-type都执行该binding
 
@@ -5077,6 +5077,277 @@
 
 	 参数on-exit,若为非nil,则需要是一个不带参数的回调函数,会在map失效时调用该函数.
 .
+** Key Lookup
+
+   根据key sequence在指定keymap中查找binding的过程,称为"Key lookup"
+
+   key lookup的过程只使用key sequence中各event的event type作为查找的条件,而忽略event的其他部分. 当event为mouse event时,甚至可以使用symbol类型的mouse event type来代替list类型的整个event.
+
+   通过key lookup找到的binding,我们称之为"keymap entry". 
+
+   这里的BINDING可以是以下几种类型的对象
+
+   * nil
+
+   * command/lambda表达式
+
+   * string/vector
+
+	 bingding为keyboard macro
+
+   * keymap
+
+   * list
+
+	 这时list的格式应该为'(other-keymap . other-event-type),表示为"indirect entry"
+
+	 即,它会在other-keymap中搜索other-event-type表示的binding
+
+	 该功能重用与为某个key创建其他key的引用.
+
+   * symbol
+
+	 使用symbol的function definition
+
+   * 其他类型
+
+	 上面几种类型的binding找到回,都会当成command被execute-command执行.
+
+	 但若不是上面几种类型的其他类型,则不会被当成command看待
+*** 相关函数
+	* (lookup-key keymap key &optional accept-defaults)
+
+	  返回key在keymap中的binding
+	  #+BEGIN_SRC emacs-lisp
+        (lookup-key (current-global-map) "\C-x\C-f") ; => find-file
+        (lookup-key (current-global-map) (kbd "C-x C-f")) ; => find-file
+        (lookup-key (current-global-map) "\C-x\C-f12345") ; => 2
+	  #+END_SRC
+	  
+	  If the string or vector KEY is not a valid key sequence according to the prefix keys specified in KEYMAP, it must be "too long" and have extra events at the end that do not fit into a single key sequence.  
+	  Then the value is a number, the number of events at the front of KEY that compose a complete key.
+
+	  若参数accept-defaults不为nil,则`lookup-key'在找不到key的binding是,会使用default binding
+
+	  若key为meta character+普通character则会被分拆为一个由两个character组成的sequence:`meta-prefix-char'表示的值+普通character
+	  #+BEGIN_SRC emacs-lisp
+        (lookup-key (current-global-map) "\M-f") ; => forward-word
+        (lookup-key (current-global-map) "\ef")  ; => forward-word
+	  #+END_SRC
+
+	  Unlike `read-key-sequence', this function does not modify the specified events in ways that discard information .
+	  In particular, it does not convert letters to lower case and it does not change drag events to clicks.
+
+	* (undefined)
+
+	  该函数常用于keymap中用于undefine某个key. 
+
+	  它调用`ding',但是不会引发error
+
+	* (local-key-binding key &optional accept-default)
+
+	  该函数在当前的local keymap(由major-mode决定的)中查找key的binding
+
+	  参数accept-defaults决定了是否检查default binding
+
+	* (global-key-binding key &optional accept-defaults)
+	  
+	  该函数在global keymap中查找key的binding
+
+	  参数accept-defaults决定了是否检查default binding
+
+	* (minor-mode-key-binding key &optional accept-defaults)
+
+	  该函数返回所有active minor mode中key所对应的binding. 
+
+	  返回的值为由'(MODENAME . BINDING)组成的alist
+
+	  若第一个找到的binding不是prefix definition(即binding不为keymap或function definition不为keymap的symbol),则接下来的其他minor mode中的binding都会忽略掉,因为他们都会被找到的该binding所屏蔽掉.
+	  Similarly, the list omits non-prefix bindings that follow prefix bindings.
+	  
+	  参数accept-defaults决定了是否检查default binding
+
+	* 配置项meta-prefix-char
+
+	  该变量为meta作为prefix时的character code,用于将代meta的character转换为一个由两个character组成的sequence. 默认为27,表示<ESC>的character code
+	  #+BEGIN_SRC emacs-lisp
+        meta-prefix-char                    ; The default value.
+             => 27
+        (key-binding "\M-b")
+             => backward-word
+        ?\C-x                               ; The print representation
+             => 24                          ;   of a character.
+        (setq meta-prefix-char 24)
+             => 24
+        (key-binding "\M-b")
+             => switch-to-buffer            ; Now, typing `M-b' is
+                                            ;   like typing `C-x b'.
+
+        (setq meta-prefix-char 27)          ; Avoid confusion!
+             => 27                          ; Restore the default value!
+	  #+END_SRC
+** Changing Key Binding
+   
+   * (define-key keymap key binding)
+
+	 该函数设置keymap中的key的对应binding. 
+
+	 若参数key为`[t]',则表示设置default binding
+
+   * (substitute-key-definition olddef newdef keymap &optional oldmap)
+
+	 该函数扫描keymap中的所有binding为olddef的key,并rebind这些key到newdef. 该函数返回nil
+
+	 若参数oldmap为非nil,则表示 *只有在oldmap中包含的key才参与替换.*
+
+   * (suppress-keymap keymap &optional nodigits)
+
+	 该函数将keymap中的所有binding为`self-insert-command'的key都重映射到`undefined'上,使得插入文本变得不可能.
+
+	 若nodigits为nil,则`suppress-keymap'重新映射数字的binding为`dgit-argument',重新映射`-'为`negative-argument'
+
+	 若nodigits为非nil,则数字和`-'都跟字符一样映射为`undefined'
+
+	 由于该函数会更改keymap的结构,因此当该keymap被其他keymap引用时,很容易产生问题,因此,一般参数keymap都为新创建的keymap
+
+   * (global-set-key key binding)
+
+	 设置global keymap中key的绑定
+	 #+BEGIN_SRC emacs-lisp
+       (global-set-key KEY BINDING)
+       ;; ==
+       (define-key (current-global-map) KEY BINDING)
+	 #+END_SRC
+
+   * (global-unset-key key)
+
+	 删除global-keymap中key的绑定
+	 #+BEGIN_SRC emacs-lisp
+       (global-unset-key KEY)
+       ;; ==
+       (define-key (current-global-map) KEY nil)
+	 #+END_SRC
+
+   * (local-set-key key binding)
+
+	 设置local keymap中key的绑定
+	 #+BEGIN_SRC emacs-lisp
+       (local-set-key KEY BINDING)
+       ;; ==
+       (define-key (current-local-map) KEY BINDING)
+	 #+END_SRC
+
+   * (local-unset-key key)
+
+	 取消local keymap中key的绑定
+	 #+BEGIN_SRC emacs-lisp
+       (local-unset-key KEY)
+       ;; ==
+       (define-key (current-local-map) KEY nil)
+	 #+END_SRC
+** Remapping Commands
+   
+   A special kind of key binding can be used to "remap" one command to another, without having to refer to the key sequence(s) bound to the original command.  
+
+   To use this feature, make a key binding for a key sequence that starts with the dummy event `remap', followed by the command name you want to remap; 
+
+   例如,要用`my-kill-line'替代`kill-line',可以这样:
+   #+BEGIN_SRC emacs-lisp
+   (define-key my-mode-map [remap kill-line] 'my-kill-line)
+   #+END_SRC
+   
+   需要注意的是: *remap只对active keymap才生效*
+   另外, *不能对已经remap的binding再做remap*. 例如
+   #+BEGIN_SRC emacs-lisp
+     (define-key my-mode-map [remap kill-line] 'my-kill-line)
+     (define-key my-mode-map [remap my-kill-line] 'my-other-kill-line) ;不会生效
+   #+END_SRC
+   
+   要取消remap,只需要remap到nil即可
+   #+BEGIN_SRC emacs-lisp
+     (define-key my-mode-map [remap kill-line] nil)
+   #+END_SRC
+
+   * (command-remapping command &optional position keymap)
+
+	 该命令返回当前active-keymap中被remap的command(a symbol)被remap到什么binding
+
+	 若command没有被remap,或者不是symbol类型,则该函数返回nil.
+
+	 参数position可以通过指定buffer position或mouse event position来决定当前active的keymap
+
+	 若指定了参数keymaps,则使用参数keymaps中的keymap代替但钱active keymaps. *该参数在position为非nil时被忽略*
+** 用于转换event sequence的keymap
+
+   当`read-key-sequence'函数读取key sequence时,它使用"translation keymaps"来转换特定的event sequence为其他的event sequence. 
+
+   这些translation keymap按优先级排列分别为:`input-decode-map',`local-function-key-map'和`key-translation-map'
+   
+   当读取key sequence时,Emacs会针对其中的每个event作一次检查,若在translation keymap中发现有对应的binding,则将该event转换为绑定的event
+   
+   #+BEGIN_QUOTE
+   For example, VT100 terminals send `<ESC> O P' when the keypad key
+   <PF1> is pressed.  On such terminals, Emacs must translate that
+   sequence of events into a single event `pf1'.  This is done by
+   "binding" `<ESC> O P' to `[pf1]' in `input-decode-map'.  Thus, when you
+   type `C-c <PF1>' on the terminal, the terminal emits the character
+   sequence `C-c <ESC> O P', and `read-key-sequence' translates this back
+   into `C-c <PF1>' and returns it as the vector `[?\C-c pf1]'.
+   #+END_QUOTE
+   
+   Translation keymaps take effect only after Emacs has decoded the keyboard input (via the input coding system specified by `keyboard-coding-system').
+   
+   * input-decode-map
+
+	 该变量的keymap转换的是由功能键产生的key sequence(This variable holds a keymap that describes the character sequences sent by function keys on an ordinary character terminal.)
+
+   * local-function-key-map
+
+	 This variable holds a keymap similar to `input-decode-map' except that it describes key sequences which should be translated to alternative interpretations that are usually preferred.  
+     It applies after `input-decode-map' and before `key-translation-map'.
+
+	 注意: *若`local-function-key-map'中的某个key与minior mode keymap,local keymap或global keymap有冲突,则该key会被忽略而不会作转换*
+
+   * key-translation-map
+
+	 类似`input-decode-map'. 区别在于它的优先级比较低.
+
+	 与`input-decode-map'类似,与`local-function-key-map'不同,该keymap不存在与其他普通keymap冲突就不生效的情况.
+
+   You can use `input-decode-map', `local-function-key-map', and `key-translation-map' for more than simple aliases, by using a function, instead of a key sequence, as the "translation" of a key. Then this function is called to compute the translation of that key.
+
+   The key translation function receives one argument, which is the prompt that was specified in `read-key-sequence'--or `nil' if the key sequence is being read by the editor command loop.  In most cases you can ignore the prompt value.
+   
+** Scanning keymaps
+   * (accessible-keymaps keymap &optional prefix)
+
+	 该函数返回指定keymap中所有可以到达的'(key . binding)的alist
+
+   * (map-keymap function keymap)
+
+	 该函数对keymap中的每个binding都调用function执行一次. function接收两个参数:event type和binding
+
+	 若keymap包含parent-keymap,该parent-keymap中的binding也被执行,这话似一个不断递归的过程.
+
+   * (where-is-internal comand &optional keymap firstonly noindirect no-remap)
+
+	 该函数返回一个list,包含了在keymaps中绑定到command的所有key sequence.
+
+	 *参数command可以任意object,该函数使用`eq'与keymap的binding进行比较*
+
+	 若参数keymap为nil,则搜索范围为当前active的keymaps(不管`overriding-local-map'的值).
+
+	 若参数keymap为keymap,则搜索范围为参数keymap和global keymap
+
+	 若参数keymap为keymap组成的list,则搜索范围仅仅是指定的这些keymaps
+
+   * 命令(describe-binding &optional prefix buffer-or-name)
+
+	 该命令列出当前key binding并显示在*Help*
+
+	 若参数prefix为非nil,则只列出以prefix为prefix key的key sequence
+
+	 默认绑定为`C-h b'
 * Number相关函数
   * 判断是否为自然数(0+正整数)
 
@@ -5762,12 +6033,19 @@ buffer-string to get the whole buffer content.
 	  #+END_SRC
 ** Array相关函数
    * (arrayp object)
+
 	 判断object是否为array
+
    * (aref array index)
+
 	 获取array中index所指的element的引用
+
    * (aset array index object)
+	 
 	 设置array中第index的元素为object,该函数返回object
+
    * (fillarray array object)
+
 	 将array中所有元素都填充为object
 	 #+BEGIN_SRC emacs-lisp
        (setq a [a b c d e f g])                ; => [a b c d e f g]
@@ -5775,16 +6053,24 @@ buffer-string to get the whole buffer content.
        a                                       ; => [0 0 0 0 0 0 0]
        (setq s "When in the course")           ; => "When in the course"
        (fillarray s ?-)                        ; => "------------------"
-
 	 #+END_SRC
+
 *** Vector相关函数
+
 	* (vectorp object)
+
 	  判断object是否为vector
+
 	* (vector &rest objects)
+
 	  创建由objects组成的vector
+
 	* (make-vector N object)
+
 	  创建由N个object组成的vector
+
 	* (vconcat &rest sequences)
+
 	  将sequences中的element,转换到vector中
 	  #+BEGIN_SRC emacs-lisp
         (setq a (vconcat '(A B C) '(D E F)))    ; => [A B C D E F]
@@ -5792,6 +6078,7 @@ buffer-string to get the whole buffer content.
         (vconcat)                               ; => []
         (vconcat [A B C] "aa" '(foo (6 7)))     ; => [A B C 97 97 foo (6 7)]
 	  #+END_SRC
+
 *** Char-Table相关函数
 	* (char-table-p object)
 	  判断object是否为char-table类型的
