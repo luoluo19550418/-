@@ -7121,6 +7121,212 @@ buffer-string to get the whole buffer content.
      #+END_SRC
 ** 神奇的handler
    * 在Emacs里，底层的文件操作函数都可以托管给elisp中的函数，这样只要用elisp实现了某种类型文件的基本操作，就能像编辑本地文件一样编辑其它类型文件了
+* Processes
+  Emacs可以同步或异步的方式创建子进程,并以process对象的形式表现出来.
+
+  除了管理Emacs的子进程之外,Emacs还可以管理操作系统中的其他非Emacs子进程.
+
+  * (processp object)
+
+	判断object是否为Emacs的子进程
+** 创建子进程
+
+   可以使用`start-process'创建异步进程,并获得process object. 也可以使用`call-process'和`call-process-region'创建同步进程.
+
+   Emacs创建的子进程继承了Emacs的运行环境,但可以使用`process-environment'覆盖默认的运行环境.
+
+   参数program表示要执行的程序名称. 需要注意: *program应该只包含要执行的程序名称,而不能包括参数*
+
+   参数buffer-orname指定了程序的输出显示在哪个buffer中,nil表示丢弃输出. unless a custom filter function handles it. 对于同步进程,可以指定输出到文件中而不是buffer
+
+   参数args表示传递到程序的参数,所有的args都是string类型的. 在这些string中, *扩展字符和其他shell特殊字符并不会经过shell展开*,因为参数是直接传递给指定程序的.
+
+   * 配置项exec-suffixes
+
+	 一个包含后缀字符串的list. 当搜索可执行程序时,会添加该列表中的后缀到执行程序名称的后面.
+
+   * exec-directory
+
+	 该变量是一个表示目录的字符串,该目录存放的是Emacs自带的一些程序
+
+   * 配置项exec-path
+
+	 当Emacs创建子进程时,若参数program为相对路径,会从该list中指定的目录中搜索要执行的程序. 
+
+	 该list中的每个元素都是一个表示目录的字符串,若为nil则表示default directory(变量`default-directory'的值)
+
+   * (shell-quote-argument argument)
+
+	 转义argument,使得返回的字符串以shell语法来看,其真实的内容就是argument
+
+	 该函数常用于将特殊参数按字面上的意义转递給shell去执行
+	 #+BEGIN_SRC emacs-lisp
+       ;; This example shows the behavior on GNU and Unix systems.
+       (shell-quote-argument "foo > bar")      ; => "foo\\ \\>\\ bar"
+
+       ;; This example shows the behavior on MS-DOS and MS-Windows.
+       (shell-quote-argument "foo > bar")      ; => "\"foo > bar\""
+	 #+END_SRC
+	 
+	 * (split-string-and-unquote string &optional separators)
+
+	   该函数常用于将一个字符串分拆成由独立的command-line argument组成的list,可以直接作为创建子进程时的arg参数来使用
+
+	   该函数根据正则separators的要求将string进行分拆, 并对substring进行反引用
+
+	 * (combine-and-quote-string list-of-strings &optional seprator)
+
+	   该函数可以认为是`split-string-and-unquote'的反作用.
+
+	   该函数将list-of-string合并成一个单独的string, 若有必要的话,还会对list中的每个string先做一次引用转换.
+
+	 * (call-process program &optional infile destination display &rest args)
+
+	   同步调用program,这时Emacs会暂停一直等到子进程结束,并返回结束码
+
+	   若参数infile不为nil,表示program从哪个文件读取输入. nil表示从null device读取输入
+
+       若参数display为非nil,则`call-process'会在有内容输出时,刷新buffer的显示.
+	   
+	   参数args表示传递給program的参数
+
+	   参数destination表示program的output输出到哪:
+
+	   * buffer-or-string
+
+		 插入到buffer中
+
+	   * t
+
+		 插入到当前buffer
+
+	   * nil
+
+		 丢弃输出
+
+	   * 0
+
+		 丢弃输出,并且不等待子进程结束就直接返回nil.
+
+	   * (:file FILE-NAME)
+
+		 覆盖FILE-NAME指代的文件内容
+
+	   * (REAL-DESTINATION ERROR-DESTINATION)
+
+		 区分输出stdout和stderr. 
+
+		 若error-destination为nil表示丢弃stderr,若为t表示与stdout输出到一个地方,若为字符串表示输出stderr到文件中.
+
+		 注意: *你无法将error-destincation设置为某个buffer*,因为实现起来太难了.
+
+	 * (process-file program &optional infile buffer display &rest args)
+
+	   类似`call-process',但根据变量`default-directory'的值不同,可能会invoke a file handler
+
+	   参数的意思跟`call-process'极其相似,其区别在于:
+
+	   * Some file handlers may not support all combinations and forms of the arguments INFILE, BUFFER, and DISPLAY.
+
+	   * 当file handler被调用时,该file handler根据参数program来决定应该运行哪个程序. 
+
+		 例如,suppose that a handler for remote files is invoked.  Then the path that is used for searching for the program might be different from `exec-path'
+
+	   * 参数infile也可能调用file handler. 该file handler可能与`process-file'自己选择的file-handler不一样
+
+	   * 若参数buffer使用'(REAL-DESTINATION ERROR-DESTINATION)这样的格式,并且ERROR-DESTINATION为表示文件的字符串,则跟infile一样,可能调用起其他的file-handler
+
+	 * process-file-side-effect
+
+	   该变量指定了当调用`process-file'时,是否可以修改远程文件.
+
+	   默认为t,表示可以修改.
+
+	   *该参数只能用在let-binding中,不要用在setq中*
+
+	 * (call-process-region start end program &optional delete destination display &rest args)
+
+	   类似`call-process',该函数同步调用子进程,并将从start到end处的文本作为进程的stdin. 
+
+	   若参数delete为非nil,则会删掉从start到end处的文本内容,这在参数destination为t时,可以实现替代的功能.
+
+	 * (call-process-shell-command command &optional infile destination display &rest args)
+
+	   该函数同步执行shell命令command
+
+	   其参数说明与`call-process'类似
+
+	 * (process-file-shell-command command &optional infile destination display &rest args)
+
+	   类似`call-process-shell-command',但是内部使用`process-file'代替`call-process'
+
+	 * (shell-command-to-string command)
+
+	   该函数将command作为shell command来执行,并将执行结果作为string返回
+
+	 * (process-lines program &rest args)
+	   
+	   该函数运行program,等待它执行完成,然后以字符串list的形式返回输出.
+
+	   若参数program退出时返回非0的退出码,该函数会抛出error
+
+	 * (start-process name buffer-or-name program &rest args)
+
+	   该函数异步创建PROGRAM子进程,并返回一个process object.
+
+	   参数NAME指定了返回process object的名称. 若改名称的process已经存在,则NAME会被修改(通过在后面添加<1>,<2>...)成唯一的名称. 
+	   
+	   参数BUFFER-OR-NAME是与process相关联的buffer
+
+	   若PROGRAM为nil,则Emacs创建一个新的伪终端(pty)并且将它的input和output与BUFFER-OR-NAME指定的buffer相关联,但是不会去创建子进程,而且参数ARGS被忽略
+
+	   #+BEGIN_SRC emacs-lisp
+         (start-process "my-process" "foo" "sleep" "100")
+         ;;=> #<process my-process>
+
+         (start-process "my-process" "foo" "ls" "-l" "/bin")
+         ;;=> #<process my-process<1>>
+	   #+END_SRC
+
+	 * (start-file-process name buffer-or-name program &rest args)
+
+	   类似`start-process',但是根据`default-directory'的值不同,可能会调用file handler
+
+	   This function does not try to invoke file name handlers for PROGRAM or for the PROGRAM-ARGS.
+
+	   有些file handler不能支持`start-file-process'(例如函数`ange-ftp-hook-function'). 这种情况下,该函数什么也不做并返回nil
+
+	 * (start-process-shell-command name buffer-or-name command)
+
+	   类似`start-process',只是它使用shell来执行COMMAND. 使用哪种shell由变量`shell-file-name'决定
+
+	   与直接用`start-process'来执行COMMAND相比,使用shell来执行COMMAND的好处在于可以使用shell特性来处理参数力的通配符. 
+	   也正因为这样,当在命令中包含任何特殊字符时,都需要使用`shell-quote-argument'来转义. 
+	   同样的,执行的命令来自于用户的输入,则为了安全考虑,也需要做一下转义
+
+	 * (start-file-process-shell-command name buffer-or-name command)
+
+	   类似`start-process-shell-command',但是在内部使用`start-file-process'代替`start-process'
+
+	 * process-connection-type
+	   
+	   Emacs通过"pty"或"pipe"来控制异步进程. 具体使用哪种方式由该变量的值决定.
+
+	   non-nil表示使用pty,nil表示使用pipe
+
+	   #+BEGIN_SRC emacs-lisp
+         (let ((process-connection-type nil))  ; use a pipe
+           (start-process ...))
+	   #+END_SRC
+
+	   对于那些用户可见的进程,使用"pty"更好点,因为它允许用户在进程与它的子进程之间进行job control(`C-c',`C-z'等操作)
+	   
+	   而对于程序内部使用的进程来说,偏向使用"pipe",因为它更有效率,and because they are immune to stray character injections that ptys introduce for large (around 500 byte) messages. 而且pty的总数是有限制的,最好不要浪费
+** Deleting Processes
+
+   delete process会立即断开Emacs与process的连接,并且Emacs会发送信号去终止process的执行,并调用process sentinel
+
+   
 * Dired-mode相关函数
   * 获取dired中marked file
 
