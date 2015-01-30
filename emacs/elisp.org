@@ -7326,7 +7326,267 @@ buffer-string to get the whole buffer content.
 
    delete process会立即断开Emacs与process的连接,并且Emacs会发送信号去终止process的执行,并调用process sentinel
 
+   要注意: *process被删除掉,不代表process object会被立刻回收* 有些函数可以接收表示被删除process的process object,但是尝试对它作IO操作,发发送信号給它时,会爆出错误.
+
+   * 配置项delete-exited-processes
+
+	 该变量决定了当一个process终止运行了,是否自动删除它.
+
+	 若为nil则不自动删除,直到运行`list-processes'命令才作删除
+
+	 非nil表示process退出时,自动删除它
+
+   * (delete-process process)
+
+	 该函数主动删除process,会发送`SIGKILL'信号来关闭进程.
+
+	 参数process可以是一个process,process的名称,process关联的buffer,process关联的buffer名称.
+	 #+BEGIN_SRC emacs-lisp
+       (delete-process "*shell*")              ; => nil
+	 #+END_SRC
+** 获取process的信息
+   * 命令(list-processes &optional query-only buffer)
+
+	 该命令显示所有living process,并且会删除那些状态为`Exited'或`Signaled'的process. 该函数返回nil
+
+	 参数buffer指定了结果显示到哪个buffer中,默认为`*Process List*',它的major mode需要是Process Menu mode
+
+	 若参数query-only为非nil,则只列出那些query flag为非nil的process
+
+   * (process-list)
+
+	 列出为删除掉的process的列表
+	 #+BEGIN_SRC emacs-lisp
+       (process-list)
+       => (#<process display-time> #<process shell>)
+	 #+END_SRC
+
+   * (get-process name)
+
+	 获取名称为name的process object,若没有,则返回nil
+	 #+BEGIN_SRC emacs-lisp
+       (get-process "shell")
+       => #<process shell>
+	 #+END_SRC
+
+   * (process-command process)
+
+	 该函数返回PROCESS的执行命令. 该结果为string的列表,第一个元素为执行的program,剩下的元素为args
+	 #+BEGIN_SRC emacs-lisp
+       (process-command (get-process "shell"))
+                 => ("bash" "-i")
+	 #+END_SRC
+
+   * (process-contact process &optional key)
+
+	 该函数返回serial process/network的set up的相关信息
+
+	 参数process可能为一个process,也可能一个connection
+
+	 若参数KEY为nil,则返回serial process的'(PORT SPEED)信息,或返回network process的'(HOSTNAME SERVICE)信息
+
+	 若参数KEY为t,则返回的值包含了connection,server或serial port的完整信息(即使用`make-network-process'或`make-serial-process'创建process时指定的所有keyword的值)
+
+	 若参数KEY为某个特定的keyword,则只返回对应的value
+
+	 若process为普通的child process则该函数总是返回t
+
+   * (process-id process)
+
+	 获取PROCESS的pid
+
+   * (process-name process)
+
+	 以string的形式返回PROCESS的名字
+
+   * (process-status process-or-name-or-buffer)
+
+	 以symbol类型返回process的状态
+
+	 参数process-or-name-or-buffer必须是process,buffer或process-name中的一个.
+
+	 返回值说明如下:
+	 * 'run
+
+	   进程正在运行
+
+	 * 'stop
+
+	   进程被暂停执行,但等到时间片后会继续执行
+
+	 * 'exit
+
+	   进程已经退出
+
+	 * 'signal
+
+	   进程已经收到致命signal
+
+	 * 'open
+
+	   process为network connection,该连接是open的
+
+	 * 'closed
+
+	   process为network connection,该连接已关闭
+
+	 * 'connect
+
+	   process为non-blocking connection,等待连接完成
+
+	 * 'failed
+
+	   process为non-blocking connection,连接失败
+
+	 * 'listen
+
+	   process为network server,正在监听
+
+	 * nil
+
+	   process不存在
+
+   * (process-live-p process)
+
+	 process是否alive.
+
+	 所谓alive指的它的status为'run,'open,'listen,'connect或stop
+
+   * (process-type process)
+
+	 返回process的类型. 
+
+     'network表示process为network connection或server
+
+	 'serial表示process为serial port connection
+
+	 'real表示process为real subprocess
+
+   * (process-exit-status process)
+
+	 返回PROCESS的exit status或被kill时的signal number. 若PROCESS没有终止运行,则返回0
+
+   * (process-tty-name process)
+
+	 该函数返回PROCESS用来与Emacs交流时使用的terminal name
+
+	 若process使用pipe,则返回nil
+
+	 若process表示一个在remote host上运行的程序,则terminal name为process的peroperty `remote-tty'
+
+   * (process-coding-system process)
+
+	 以'(DECODE . ENCODE)的格式描述decode process的输出时使用到编码,和encode process的输入时使用的编码
+
+   * (set-process-coding-system process &optional decoding-system encoding-sytem)
+
+	 设置ENCODE/DECODE PROCESS的输入/输出时使用的编码规则
+
    
+   每个process跟symbol类型,也带有自己的property list.
+
+   * (process-get process property)
+
+	 获取process的property的value
+
+   * (process-put process property value)
+
+	 设置process的property的值为value
+
+   * (process-plist process)
+
+	 获取process的plist
+
+   * (set-process-plist process plist)
+
+	 设置process的plist
+** 与Process的交互
+*** Sending Input to Processes
+	可以使用如下命令为异步process的stdio流发送数据,在这些函数中,参数 *PROCESS可以为process object或process的名称,或buffer或buffer的名称,或nil表示当前buffer的process*
+
+	* (process-send-string process string)
+
+	  給process的stdio发送string,该函数返回nil
+
+	* (process-send-region process start end)
+
+	  将region的内容作为process的stdio
+
+	  参数START,END必须是integer或marker,否则会报错
+
+	* (process-send-eof &optional process)
+
+	  传递eof到process的stdio
+
+	  process若为nil,则表示属于当前buffer的process
+	  
+	  该函数返回process
+
+	* (process-running-child-p &optional process)
+
+	  该函数告诉你,process是否将对terminal的控制权交给了它的child process.
+
+	  注意: *当Emacs无法分辨时,也返回t*
+*** Sending Signals to Processes
+
+	每个发送signal給process的函数都接收两个可选参数:PROCESS和CURRENT-GROUP
+
+	参数PROCESS必须为process object或process的名称或buffer或buffer name或nil(表示当前buffer的process).
+
+	参数CURRENT-GROUP是一个标志,当运行一个job-control shell作为Emacs的subprocess时,该标志的不同值才有不同的意思.
+	
+	当参数CURRENT-GROUP的值为非nil,则信号是发送到Emacs与subprocess交互所使用的那个Terminal的process-group,而不是process的process group.  *若process本身就是个job-control shell,表示中断的是shell的current subjob而不是shell本身(注意,这时Emacs是在与shell的当前job交互而不是shell交互)*
+	
+	若参数CURRENT-GROUOP的值为nil,则信号发送到Emacs的直接子进程的process group.  *若subproces为job-control shell,这就是shell本身*
+
+	当Emacs使用pipe与subprocess交互时,参数CURENT-GROUP是无效的.
+
+	* (interrupt-process &optioal process current-group)
+
+	  发送SIGINT給process
+
+	* (kill-process &optioal process current-group)
+
+	  发送SIGKILL
+
+	* (quit-process &optioal process current-group)
+	  
+	  发送SIGQUIT
+
+	* (stop-process &optioal process current-group)
+	  
+	  发送SIGSTP. 进程暂停后,可以使用`continue-process'再次让它运行起来
+
+	* (continue-process &optioal process current-group)
+	 
+	  发送SIGCONT
+
+	* 命令(signal-process process signal)
+
+	  向process发信号
+
+	  参数signal必须为一个整数,或以signal为名称的symbol
+
+	  参数process除了可以使process object,process的名称,buffer,和buffer的名称外,可以为 *process的pid*,这允许你发送信号給非Emacs的子进程
+***  Receiving Output from Process
+
+	 subprocess的stdout会传递給"filter function"来处理. 
+
+	 默认的filter function只是简单的将内容插入到process相关联的buffer中去, 若process没有相关联的buffer,则丢弃该输出
+
+	 当subprocess结束运行后,Emacs reads any pending output, 然后就不再从subprocess中读取任何输出了,即使这时候subprocess的child process还有输出也不管.
+
+	 需要注意的是:subprocess的输出只有当Emacs处于waiting时才回被读取,即Emacs读取terminal input或调用`accept-process-output'时才会被读取.
+
+	 在某些操作系统中,当Emacs读取subprocess的输出时,输出的内容是以一小块一小块的方式被读取的,这就照成了读取的效率低下. 通过设置`process-adaptive-read-buffering'可以适当提高一些效率,因为它对这些进程进行延迟读取,等他们产生更多的输出时再读取出来.
+
+	 *要区分subprocess中的stdout和stderr是不可能的,因为Emacs通常在pty中调用子进程,而pty只有一个stdout,若想区分他们,只能将其中一个重定向到文件中*
+**** Process Buffers
+	 process的关联buffer有两个用处:存储process的输出内容和决定何时kill掉该process. 
+
+**** Filter Function
+**** Decoding Output
+**** Accepting Output
 * Dired-mode相关函数
   * 获取dired中marked file
 
