@@ -7863,6 +7863,100 @@ buffer-string to get the whole buffer content.
 
 	 Transaction queues的实现依靠filter function
 ** Network Connection
+   Emacs Lisp程序可以创建TCP/UDP链接(通过内建/外部支持,甚至还能创建加密的网络连接)，既能创建客户端,也能创建服务端.
+
+   Elisp把网络链接看成时跟subprocess类似的东西，也用process object来表示。当然这种process object没有pid，也不能对它发送信号什么的。
+
+   通过调用`make-network-process‘可以创建Network connection和Network server。 该函数接受keyword参数`:server t’表示创建Network server process. `:type datagram'表示创建UDP链接
+
+   可以通过`stop-process'和`continue-process'来stop/resume network process的操作.
+   对于server process来说,stop意味着不再接收新连接请求.
+   对于network connection来说,stop意味着不再接收输入流
+*** 创建客户端
+    * (open-network-stream name buffer host service &rest parameters)
+
+      该函数创建一个TCP连接(可选择加密),并返回一个process object
+
+      参数NAME表示该process object的名称,若有重复名称则会自动添加编号
+
+      参数BUFFER为与该connection相连的buffer. 默认情况下connection的输出会插入到该buffer中. 若BUFFER为nil表示没有连接的buffer
+
+      参数HOST和SERVICE指明了要连接的服务端的地址和端口. 其中host为字符串类型,SERVICE可以为字符串也可以为整数
+
+      剩下的参数PARAMETERS,是各种keyword参数:
+
+      * :nowait BOOLEAN
+
+        若为飞nil,则表示创建异步连接
+
+      * :type TYPE
+
+        连接的类型.
+
+        | TYPE          | 说明                                                                                                                     |
+        |---------------+--------------------------------------------------------------------------------------------------------------------------|
+        | plain         | 普通的,未加密的链接                                                                                                      |
+        | tls / ssl     | TLS链接                                                                                                                  |
+        | nil / network | 自动决定类型. 若系统支持参数:success和:capability-command,则先尝试通过STARTTLS建立加密链接,若失败了,使用普通的未加密链接 |
+        | starttls      | 类似nil,但是若通过STARTTLS创建链接失败了,则关闭该链接                                                                    |
+        | shell         | shell connection                                                                                                         |
+
+      * :always-query-capabilities BOOLEAN
+
+        若为非nil,则总是询问server端能支持的特性,及时创建的只是普通的链接
+
+      * :capability-command CAPABILITY-COMMAND
+
+        定义查询server端支持特性时的命令串
+
+      * :end-of-command REGEXP
+
+        匹配command结束的正则表达式
+
+      * :end-of-capability REGEXP
+
+        匹配CAPABILITY-COMMAND命令串结束的正则表达式,默认为:end-of-command的值
+
+      * :starttls-function FUNCTION
+
+        该function应该能接收一个参数,该参数为服务端对CAPABILITY-COMMAND的回应.
+
+        该function应该返回nil或激活STARTTLS的命令
+
+      * :success REGEXP
+
+        使用该正则表达式来判断是否正常开启STARTTLS特性
+
+      * :use-starttls-if-possible BOOLEAN
+
+        若值为非nil,计时Emacs没有内建TLS支持,也尝试开启STARTTLS特性
+
+      * :client-certificate LIST-OR-T
+
+        可以以'(KEY-FILE CERT-FILE)的格式明确指明了certificate key file和certificate file的地址
+
+        或者t表示通过查询`auth-source'来获取信息
+
+      * :return-list CONS-OR-NIL
+
+        指明`make-network-stream'的返回值. 
+
+        若为nil则返回process object
+
+        否则返回'(PROCESS-OBJECT . PLIST). 其中PLIST包含如下keyword:
+
+        * :greeting STRING-OR-NIL
+
+          表示服务端返回的欢迎信息
+
+        * :capabilities STRING-OR-NIL
+
+          表示服务端的支持的特性信息
+
+        * :type SYMBOL
+
+          链接的类型,可能为'plain或'tls
+*** 服务端
 * Dired-mode相关函数
   * 获取dired中marked file
 
