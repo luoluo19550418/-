@@ -7344,7 +7344,7 @@ buffer-string to get the whole buffer content.
 	 #+BEGIN_SRC emacs-lisp
        (delete-process "*shell*")              ; => nil
 	 #+END_SRC
-** 获取process的信息
+** process的属性
    * 命令(list-processes &optional query-only buffer)
 
 	 该命令显示所有living process,并且会删除那些状态为`Exited'或`Signaled'的process. 该函数返回nil
@@ -7482,7 +7482,124 @@ buffer-string to get the whole buffer content.
 
 	 设置ENCODE/DECODE PROCESS的输入/输出时使用的编码规则
 
+   * (process-buffer process)
+
+	 该函数返回PROCESS的关联buffer
+
+	 process的关联buffer有两个用处:存储process的输出内容和决定何时kill掉该process. 
+
+	 关闭与process相关联的buffer,也会关闭对应的process. 
+
+   * (process-mark process)
+
+	 返回PROCESS的process-mark,
+	 
+	 默认的filter函数会将process的输出插入到关联的buffer. 插入的位置由函数`process-mark'的返回值决定,通常情况下,为buffer的尾端
+
+   * (set-process-buffer process buffer)
+
+	 该函数设置PROCESS的关联buffer,若参数BUFFER为nil,则PROCESS无关联buffer
+
+   * (get-buffer-process buffer-or-name)
+
+	 返回关联到该buffer的未删除process
+
+	 若有多个process关联到该buffer,则只会返回其中之一的process
    
+   * (process-filter process)
+
+	 返回PROCESS的filter function
+
+	 subprocess的stdout会传递給"filter function"来处理. 
+
+   * (set-process-filter process filter)
+
+	 设置PROCESS的filter function,若FILTER为nil表示使用默认的filter function
+
+	 filter functiion需要接收2个参数:关联的process和输出的字符串. 
+
+	 一般情况下,会在filter function中屏蔽调quitting. 否则按下C-g可能会发生无法预料的结果. 
+
+	 在执行filter function时抛出的error默认情况下会自动被捕获,这样就不会影响正在执行的program. 然而若`debug-on-error'为non-nil,则error不会被自动捕获,这使得使用Lisp debugger调试filter function称为i可能.
+
+	 一个普通的filter function模板大概如下:
+	 #+BEGIN_SRC emacs-lisp
+       (defun ordinary-insertion-filter (proc string)
+         (when (buffer-live-p (process-buffer proc))
+           (with-current-buffer (process-buffer proc)
+             (let ((moving (= (point) (process-mark proc))))
+               (save-excursion
+                 ;; Insert the text, advancing the process marker.
+                 (goto-char (process-mark proc))
+                 (insert string)
+                 (set-marker (process-mark proc) (point)))
+               (if moving (goto-char (process-mark proc)))))))
+	 #+END_SRC
+	 
+	 Note that Emacs automatically saves and restores the match data while executing filter functions.
+	  
+	 另外,需要注意: *传递給filter function的输出内容,可能是任意大小的一块输出,很可能一整个句子会被拆分成很多块传递过来.*
+	  
+   * (process-sentinel process)
+
+	 返回process的sentinel
+
+   * (set-process-sentinel process sentinel)
+
+	 设置process的sentinel. 若参数sentinel为nil,则使用默认的sentinel(它仅仅将message插入process buffer中)
+	 #+BEGIN_SRC emacs-lisp
+	   (defun msg-me (process event)
+			   (princ
+				 (format "Process: %s had the event `%s'" process event)))
+		   	(set-process-sentinel (get-process "shell") 'msg-me)
+				 => msg-me
+		   	(kill-process (get-process "shell"))
+				 -| Process: #<process shell> had the event `killed'
+				 => #<process shell>
+	 #+END_SRC
+
+   	 "process sentinel"是一种函数,该函数在每次所关联的process的status发生改变时,都会被调用一次(包括程序退出时)
+
+   	 sentinel function接收两个参数:process和描述事件类型的字符串
+	 
+   	 其中字符串格式有下面几种:
+
+	 * "finished\n"
+
+	 * "exited abnormally with code EXITCODE\n"
+
+	 * "NAME-OF-SIGNAL\n"
+
+	 * "NAME-OF-SIGNAL (core dumped)\n"
+
+   	 类似fileter function, 只有在Emacs处于waiting状态时,才会调用sentinel function. 
+
+   	 Emacs不会使用一个队列来保持调用sentinel的原因,它只记录当前状态和发生改变的原因. 因此若状态在很短时间内发生连续变化,只能触发一次sentinel的调用. 不过由于process终止运行后就不会再发生状态变更了,所以process终止操作总会触发一次sentinel
+
+   	 *每次运行process sentinel前,Emacs都会明确地检查一次process是否有输出*
+
+   	 *若sentinel要将输出写到process buffer中时,一定要记得检查buffer是否还在,往被kill掉的buffer中写入会引发错误.* 可以用`(buffer-name (process-buffer PROCESS))'是否为nil来检查buffer是否存在
+
+   	 sentinel在处理quiting和error时,跟filter function一样. 默认情况下都会屏蔽quitting和自动捕获error
+	 
+   	 在sentinel的执行期间,process的sentinel会临时设置为nil,以防止sentinel的重复调用
+
+   	 Note that Emacs automatically saves and restores the match data while executing sentinels.
+
+   * (waiting-for-user-input-p)
+
+	 当sentinel或fileter function正在运行时,该函数返回nil.
+
+   * (process-query-on-exit-flag process)
+
+	 返回PROCESS的query flag
+
+	 每个程序都由个query flag,若参数为t,则表示kill该process之前询问用户是否确定要作这项操作,默认为t
+
+   * (set-process-query-on-exit-flag process flag)
+
+	 设置process的query flag
+
    每个process跟symbol类型,也带有自己的property list.
 
    * (process-get process property)
@@ -7581,12 +7698,171 @@ buffer-string to get the whole buffer content.
 	 在某些操作系统中,当Emacs读取subprocess的输出时,输出的内容是以一小块一小块的方式被读取的,这就照成了读取的效率低下. 通过设置`process-adaptive-read-buffering'可以适当提高一些效率,因为它对这些进程进行延迟读取,等他们产生更多的输出时再读取出来.
 
 	 *要区分subprocess中的stdout和stderr是不可能的,因为Emacs通常在pty中调用子进程,而pty只有一个stdout,若想区分他们,只能将其中一个重定向到文件中*
-**** Process Buffers
-	 process的关联buffer有两个用处:存储process的输出内容和决定何时kill掉该process. 
+	   
+	 * (accept-process-output &optional process seconds millisec just-this-one)
 
-**** Filter Function
-**** Decoding Output
-**** Accepting Output
+	   该函数允许Emacs读取PROCESS的输出. 
+
+	   若参数PROCESS为非nil,则该函数会一直等待,直到从PROCESS读取到输出为止.
+
+	   参数SECONDS和MILLISEC为超时时间. 由于参数SECONDS可以是浮点型,因此参数MILLISEC不推荐使用.
+
+	   若参数PROCESS为非nil,而参数JUST-THIS-ONE为非nil,则只有该process的输出被处理. 
+	   若JUST-THIS-ONE为一个整数,则还会暂停定时器的执行
+
+	   若`accept-process-output'等待超时而没有读到任何东西,则返回nil
+** Accessing Other Processes
+   Emacs除了可以与自己创建的subprocess交互外,也能与同机器上的其他进程交互,这些进程称为"System process"
+   
+   * (list-system-processes)
+
+	 列出所有正在运行的进程pid的list
+
+   * (process-attributes pid)
+
+	 返回指定system process的属性组成的alist
+
+	 这些属性有:
+
+	 * euid
+
+	   effective user id
+
+	 * user
+
+	 * egid
+
+	   The group id of the effective user id
+
+	 * group
+
+	 * comm
+
+	   运行该process的command
+
+	 * state
+
+	   该process的状态码
+       | 状态码 | 说明                                                                  |
+       | "D"    | uninterruptible sleep (usually I/O)                                   |
+       | "R"    | running                                                               |
+       | "S"    | interruptible sleep (waiting for some event)                          |
+       | "T"    | stopped, e.g., by a job control signal                                |
+       | "Z"    | "zombie": a process that terminated, but was not reaped by its parent |
+
+	 * ppid
+
+	 * pgrp
+
+	 * sess
+
+	   session ID of the process
+
+	 * ttname
+
+	   process的控制终端的名称
+
+	 * tpgid
+
+	   The numerical process group ID of the foreground process group that uses the process's terminal.
+
+	 * minflt
+
+	   The number of minor page faults caused by the process since its beginning.  
+       (Minor page faults are those that don't involve reading from disk.)
+
+	 * majflt
+
+	   The number of major page faults caused by the process since its beginning.  
+       (Major page faults require a disk to be read, and are thus more expensive than minor page faults.)
+
+	 * cminflt / cmajft
+
+	   Like `minflt' and `majflt', but include the number of page faults for all the child processes of the given process.
+ 
+	 * utime
+
+	   process在user context下的运行时间(消耗CPU时间片的时间)
+
+	 * stime
+
+	   process在system context下的运行时间
+
+	 * time
+
+	   utime+stime
+
+	 * cutime / cstime / ctime
+
+	   类似utime,stime,time,但是包括指定process下的子进程
+
+	 * pri
+
+	   优先级
+
+	 * nice
+
+	 * thcount
+
+	   process中的进程数
+
+	 * start
+
+	   process开始的时间
+
+	 * etime
+
+	   process开始后,经过了多少时间
+
+	 * vsize
+
+	   process占用虚拟内存的大小,kb为单位
+
+	 * rss
+
+	   process占用物理空间的大小,kb为单位
+
+	 * pcpu
+
+	   占cpu的百分比
+
+	 * pmen
+
+	   占总物理内存的百分比
+
+	 * args
+
+	   command的参数
+** 交易队列
+
+   通过交易队列,可以使用交易与process进行通讯.
+
+   首先使用`tq-create'创建交易队列,然后使用`tq-enqueue'发送交易
+
+   * (tq-create process)
+
+	 创建与PROCESS通讯的交易队列
+
+	 参数PROCESS必须可读写的,既可以是子进程, *也可以是网络连接.*
+
+   * (tq-equeue queue question regexp closure fn &optional delay-question)
+
+	 发送交易到队列QUEUE
+
+	 参数QUESTION为发送的消息
+
+	 参数FN为当answer回来时的回调函数. 他接收两个参数:参数CLOSURE和接收到的answer
+
+	 参数REGEXP为一个正则表达式,该正则表达式应该匹配整个完整答案结束时的文本. `tq-enqueue'使用该正则来判断answer是否已经接收完全
+
+	 若参数DELAY-QUESTION为非nil,则会暂缓question的发送,直到process对之前的question都回应完后再发送. 对某些process来说,这样会得到比较靠谱的answer
+
+   * (tq-close queue)
+
+	 等待所有的交易完成,然后关闭队列
+
+	 Transaction queues的实现依靠filter function
+** Network Connection
 * Dired-mode相关函数
   * 获取dired中marked file
 
