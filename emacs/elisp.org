@@ -7862,7 +7862,7 @@ buffer-string to get the whole buffer content.
 	 等待所有的交易完成,然后关闭队列
 
 	 Transaction queues的实现依靠filter function
-** Network Connection
+** Network Process
    Emacs Lisp程序可以创建TCP/UDP链接(通过内建/外部支持,甚至还能创建加密的网络连接)，既能创建客户端,也能创建服务端.
 
    Elisp把网络链接看成时跟subprocess类似的东西，也用process object来表示。当然这种process object没有pid，也不能对它发送信号什么的。
@@ -7872,7 +7872,183 @@ buffer-string to get the whole buffer content.
    可以通过`stop-process'和`continue-process'来stop/resume network process的操作.
    对于server process来说,stop意味着不再接收新连接请求.
    对于network connection来说,stop意味着不再接收输入流
-*** 创建客户端
+   
+
+   通过带参数`:server t'调用`make-network-process'创建的network server. 它接受客户端的连接请求,并创建一个新的process object表示这个新的network connection.
+   这个新生成的表示network connection的process object有如下几个特征:
+   * connection process的名称为server process的名称+客户端唯一标识
+   * 若server process没有默认的filter function,则connection process没有自己独立的process buffer. 否则Emacs为process buffer创建自己独立的buffer,buffer名称为server的buffer名称或process名称加上client的唯一标识
+   * connection process的链接类型,filter connection和sentinel都继承至server process
+   * connection process的process contact信息根据client端的地址信息来设置
+   * connection process的本地地址根据用于该链接的端口号决定
+   * client process的plist初始化为server process的plist一样
+*** 创建表示网络连接/网络服务的process object
+	* (make-network-process &rest args)
+
+	  该函数创建一个network connection或network server,并返回一个process object.
+
+	  这里参数args可能是以下keyword:
+
+	  * :name NAME
+
+		使用NAME作为process的名称
+
+	  * :type TYPE
+
+		定义链接类型. nil表示TCP链接; 'datagram表示UDP链接;'seqpacket表示"sequenced packet stream"链接
+
+	  * :server SERVER-FLAG
+
+		若参数为非nil,表示创建network server,否则为创建Network connection
+
+		若为stream type server(TCP类型的server),则该参数必须为一个整数,表示最大可以等待的连接数
+
+	  * :host HOST
+
+		表示要连接的host. 它可以是一个表示Internet地址的字符串,或symbol 'local.
+
+		若为Network Server指定host,则Network Client必须连接到这个HOST的请求才会被接受
+
+	  * :service SERVICE
+
+		SERVICE指定了要连接的端口. 它可以是表示service名称的字符串,或者表示端口号的整数
+
+		对于Network server.该参数还可以为t,表示让系统自己选择一个未用的port
+
+	  * :family FAMILY
+
+		FAIMILY指定了链接协议的种类.
+
+		nil表示由系统自动选择.
+
+		'local表示为Unix socket,这种情况下:host参数可以被忽略
+
+		'ipv4或'ipv6表示使用IPv4和IPv6
+
+	  * :Local LOCAL-ADDRESS
+
+		对于Network Server. LOCAL-ADDRSS为监听的地址.
+
+		该参数会覆盖FAMILY,HOST和SERVICE的值
+
+		其中LOCAL-ADDRESS的格式根据FAMILY的不同而不同
+
+		- IPv4的地址使用一个5元素的vector表示[A B C D Port]
+
+		- IPv6的地址使用一个9元素的vector表示[A B C D E F G H Port]
+
+		- 本地地址使用字符串表示
+
+	  * :remote REMOTE-ADDRESS
+
+		对于Network connection来说REMOTE-ADDRESS为要连接到的地址. 该参数会覆盖FAMILY,HOST和SERVICE
+
+		对于UDP Server来说,REMOTE-ADDRESS指定了remote datagram address的初始设置
+
+		REMOTE-ADDRESS的格式参见LOCAL-ADDRESS的格式
+
+	  * :nowait BOOL
+
+		若BOOL为非nil,则对于TCP connection来说,函数不等待连接完成就返回.
+
+		当链接连接成功或失败后,会调用process的sentinel function
+
+	  * :stop STOPPED
+
+		若STOPPED为非nil,则创建的network connection或network server处于stopped状态
+
+	  * :buffer BUFFER
+
+		使用BUFFER作为process buffer
+
+	  * coding CODING
+
+		设置process的编码,格式为'(DECODING ENCODING)
+
+	  * :noquery QUERY-FLAG
+
+		初始化process的query flag,若为非nil,则在delete 该process时会提升用户确认
+
+	  * :filter FILTER
+
+		初始化process的filter function
+
+	  * :filter-multibyte MULTIBYTE
+
+		若MULTIBYTE为非nil,则传递给process filter function的字符串为multbyte格式的.否则为unibyte格式的. 
+
+	    默认为参数`enable-multibyte-characters'的值
+
+	  * :sentinel SENTINEL
+
+		初始化process的sentinel
+
+	  * :log LOG
+
+		初始化Network server的log function. 
+
+		每次server接受一次client发起的连接请求就会调用一次log function.
+
+		传递给log function的参数有:SERVER,CONNECTION和MESSAGE
+
+	  * :plist PLIST
+
+		初始化process的plist
+
+	  下面的参数是转为network connection使用的
+
+	  * :bindtodevice DEVICE-NAME
+
+		指定绑定到哪张网卡,只有从该网卡接受到的报文才会被处理,若DEVICE-NAME为nil,表示任何网卡
+
+	  * broadcast BROADCAST-FLAG
+
+		对于datagram process来说,若BROADCAST-FLAG为非nil,则process会接受发送到广播域的UDP报文,也能将UDP报文发送到广播域
+
+		对TCP 链接无效
+
+	  * :dontroute DONTROUTE-FLAG
+
+		若DONTROUTE-FLAG为非nil,则表示不由路,及只能发送报文给统一网段的地址
+
+	  * :keepalive KEEPALIVE-FLAG
+
+		若为TCP链接,且KEEPALIVE-FLAG为非nil,则开启low-level keep-alive messages交换功能
+
+	  * linger LINGER-ARG
+
+		若LINGER-ARG为非nil,则会在关闭链接前会等待链路上的报文都转发成功后才关闭.
+
+		若LINGER-ARG为整数,它表示等待报文转发的最大时间.
+
+		默认参数nil表示关闭链接时直接丢弃所有未转发的报文
+
+	  * :oobinline OOBINLINE-FLAG
+
+		若为TCP链接,且OOBINLINE-FLAG为非nil,则接受out-of-band数据包
+
+	  * :priority PRIORITY
+
+		设置数据包的优先级,为整数.
+
+		该参数与系统,协议都相关
+
+	  * :reuseaddr REUSEADDR-FLAG
+
+		该参数对stream server process生效.
+
+	    默认REUSEADDR-FLAG为非nil,表示该服务可以立刻重用指定的端口.
+
+		若REUSEADDR-FLAG为nil,表示在一个进程使用了指定端口后,一段时间内该端口不能被其他进程所使用.
+
+	* (set-network-process-option process option value &optional no-error)
+
+	  设置已存在network process的网络属性,可设置的属性参见`make-network-process'中的属性(但不包括reuseaddr属性)
+
+	  若参数NO-ERROR为非nil,则当设置的参数不支持时不会抛出error,只返回nil
+
+	  若设置成功,则返回t
+
     * (open-network-stream name buffer host service &rest parameters)
 
       该函数创建一个TCP连接(可选择加密),并返回一个process object
@@ -7956,7 +8132,786 @@ buffer-string to get the whole buffer content.
         * :type SYMBOL
 
           链接的类型,可能为'plain或'tls
-*** 服务端
+		  
+	* (process-datagram-address process)
+
+	  若PROCESS为UDP connection或UDP server. 则该函数返回remote peer address
+
+	* (set-process-datagram-address process address)
+
+	  若PROCESS为UDP connection或UDP server. 则该函数设置remote peer address为ADDRESS
+*** 测试Network特性
+	要测试本机上的make-network-process支持哪些特写特性,可以使用`featurep'函数:
+	#+BEGIN_SRC emacs-lisp
+       (featurep 'make-network-process '(KEYWORD VALUE))
+	#+END_SRC
+	它表示`make-network-process'时KEYWORD的值是否为VALUE
+	
+	下面是一些例子
+    | KEYWORD VALUE PAIRS | 说明                                                             |
+    |---------------------+------------------------------------------------------------------|
+    | (:nowait t)         | Non-`nil' if non-blocking connect is supported.                  |
+    | (:type datagram)    | Non-`nil' if datagrams are supported.                            |
+    | (:family local)     | Non-`nil' if local (a.k.a. "UNIX domain") sockets are supported. |
+    | (:family ipv6)      | Non-`nil' if IPv6 is supported.                                  |
+    | (:service t)        | Non-`nil' if the system can select the port for a server.        |
+	
+	也可以使用如下格式的form来测试指定的network选项是否能设置
+	#+BEGIN_SRC emacs-lisp
+      (featurep 'make-network-process 'KEYWORD)
+	#+END_SRC
+*** 其他Network函数
+	这里的函数,需要操作系统的支持.
+
+	* (network-interface-list)
+
+	  该函数返回当前机器中各网卡的描述列表.
+
+	  该列表的格式为一个由'(NAME . ADDRESS)组成的alist
+	  #+BEGIN_SRC emacs-lisp
+        (network-interface-list)
+        ;; ("wlan3" . [192 168 8 113 0]) ("lo" . [127 0 0 1 0])
+	  #+END_SRC
+
+	* (network-interface-info interface-name)
+
+	  该函数返回指定网卡的信息.
+
+	  该信息是一个格式格式为'(ADDR BROADECAST-ADDR NETMASK HARDWARE-ADDR FLAGS)的list
+	  #+BEGIN_SRC emacs-lisp
+        (network-interface-info "wlan3")
+        ;; (
+        ;; [192 168 8 113 0]
+        ;; [192 168 8 255 0]
+        ;; [255 255 255 0 0]
+        ;; (1 . [8 16 120 53 33 177])
+        ;; (multicast running broadcast up))
+	  #+END_SRC
+	  
+	* (format-network-address address &optional omit-port)
+
+	  该函数将lisp格式的网络地址转换为字符串表示
+
+	  参数OMIT-PORT表示转换时是否不带端口信息
+** Serial Port Process
+   通过`make-serial-process'创建serial port process可以与serial port通讯
+
+   serial port process可以通过`serial-process-configure'实时的修改配置,而不用关闭后重新连接.
+
+   * (make-serial-process &rest args)
+
+	 该函数创建serial port process及其相关连的buffer. 在内部会使用函数`serial-process-configure'进行真正的配置工作
+
+	 args可以是如下keyword参数:
+
+	 * :port PORT
+
+	   serial port的名称(Unix下为/dev/ttyS0,Win下为COM1或\\.\COM10)
+
+	 * :speed SPEED
+
+	   serial port的速率
+
+	 * :name NAME
+
+	   process的名称,可能会添加后缀以保证唯一
+
+	 * :buffer BUFFER-OR-NAME
+
+	   相关连的buffer,若忽略该参数则与:name的参数值一样
+
+	 * :coding CODING
+
+	   读取的编码格式,参数格式为'(DECODING . ENCODING)
+
+	 * :noquery QUERY-FLAG
+
+	   初始化process的query flag. 决定被关闭时是否提示用户确认
+
+	 * :stop BOOL
+
+	   创建的process是否一开始就处于stopped状态,这是process不能接受数据,但是可以发送数据
+
+	 * :filter FILTER
+
+	   设置rocess filter function
+
+	 * :sentinel SENTINEL
+
+	   设置process的sentinel
+
+	 * :plist PLIST
+
+	   设置process的初始plist
+
+	 * :bytesize BYTESIZE
+
+	   设置每个byte包含多少bit,可以为7或8. 默认为8
+
+	 * :parity PARITY
+
+	   可以为nil,'odd或'even
+
+	 * :stopbits STOPBITS
+
+	   每个byte中用于终止传输的stopbit的位数. 可以是1或2. 默认为1
+
+	 * :flowcontrol FLOWCONTROL
+
+	   flow的类型决定了如何使用该链接. 可以是nil(不使用流控制特性),'hw(使用RTS/CTS硬件流控制),'sw(使用XON/XOFF软件流控制)
+
+	 可以通过函数`process-conntact'查看那些参数可以被修改.
+
+   * (serial-process-configure &rest args)
+
+	 重新设置serial port process的属性
+* 操作系统相关
+** 操作系统环境相关
+   * system-configureation
+
+	 the standard GNU configuration name for the hardware/software configuration of your system,字符串类型
+
+   * system-type
+
+	 表示操作系统类型的symbol
+
+	 * 'aix
+	 * 'berkeley-unix
+	 * 'cygwin
+	 * 'darwin
+	 * 'gnu
+	 * 'gnu/linux
+	 * 'gnu/kfreebsd
+	 * hpux
+	 * irix
+	 * ms-dos
+	 * usg-unix-v
+	 * windows-nt
+
+   * 配置项mail-host-address
+
+	 email地址,若该参数为非nil,则会用来替代`system-name'作为email地址.
+
+   * 命令(getenv var &optional frame)
+
+	 获取环境变量VAR的值.若找不到对应的环境变量,返回nil 
+
+	 参数VAR为字符串
+
+	 在Emacs中环境变量存放在变量`process-environment'中
+
+   * 命令(setenv variable &optional value substitute)
+
+	 该命令设置环境变量VARIABLE的值为VALUE,返回VARIABLE的新值或nil(表示从环境中删除该变量)
+
+	 参数VARIABLE为字符串类型,VALUE可以为nil或字符串
+
+	 若VALUE为nil或忽略(interactively with prefix argument)时,`setenv'从环境变量中删除VARIABLE, *这时`setenv'返回被删除的VARIABLE*
+
+	 若参数SUBSTITUTE为非nil,Emacs调用函数`substitute-env-vars'来扩展环境变量的值为VALUE(什么意思??)
+
+   * process-environment
+
+	 保持了系统变量的值,`getenv'和`setenv'都是通过设置改变量的值进行的.
+
+	 在实际应用中,经常会用let form临时改变该参数的值
+
+	 若参数中包括了重复的元素,则只有地一个元素生效
+
+   * initial-environment
+
+	 改变了存储的是Emacs从父进程中集成到的环境变量
+
+   * path-separator
+
+	 在搜索路径变量(PATH)中分隔各路径的分隔符. unix类操作系统为":",win下为";"
+
+   * (parse-colon-path path)
+
+	 接受搜索路径的字符串($PATH的值),并根据path-separator进行分割,返回各个目录组成的list
+	 #+BEGIN_SRC emacs-lisp
+       (parse-colon-path ":/foo:/bar")
+       ;; => (nil "/foo/" "/bar/")
+	 #+END_SRC
+
+   * invocation-name
+
+	 调用的Emacs可执行文件的名称,不包括目录名称
+
+   * invocation-directory
+
+	 调用的Emacs,可执行文件所在的目录,若无法决定,则返回nil
+
+   * installation-directory
+	 
+	 若为非nil,则指定了当Emacs无法在标准安装路径下找`lib-src'和`etc'子目录时,Emacs应该到在哪个目录下查找`lib-src'和`etc'子目录.
+
+   * (load-average &optional use-float)
+
+	 返回最近1分钟,5分钟和15分钟的系统负载
+
+	 默认情况下该函数返回的值为百分比,但若参数use-float为非nil,则直接使用小数代替
+	 #+BEGIN_SRC emacs-lisp
+       (load-average)
+       ;; => (169 48 36)
+       (load-average t)
+       ;; => (1.69 0.48 0.36)
+	 #+END_SRC
+
+   * (emacs-pid)
+
+	 emacs的pid
+ 
+   * tty-erase-char
+
+	 该变量存储的是在Emacs启动前,系统d额终端驱动所选择的删除键
+
+** 用户信息
+
+   * (user-login-name &optional uid) / user-login-name
+
+	 获取username
+
+	 若环境变量`LOGNAME'或`USER'有值,则返回该值. 否则根据 *effective UID(而不是real UID)* 计算该值
+
+   * (user-real-login-name) / user-real-login-name
+
+	 该函数根据Emacs的real UID计算用户名,而不管`LOGNAME',`USER'和effective UID
+
+   * (user-full-name &optional uid) / user-full-name
+
+	 该函数获取用户的全名
+
+	 若环境变量`NAME'有值,则返回它.
+
+	 若Emacs进程的uid不属于任何已知用户,则返回"unkown"
+
+	 参数uid可以为nil,或一个表示uid的数字或一个表示登录名的字符串. 若根据指定的uid无法找到名称,则返回nil
+
+   * (user-real-uid)
+
+	 用户的real uid,若uid太大了超过整数的范围,则可能使用浮点数
+
+   * (user-uid)
+
+	 用户的effective uid
+
+   * (group-gid)
+
+	 Emacs进程的effective GID
+
+   * (group-real-gid)
+
+	 Emacs进程的real GID
+
+   * (system-users)
+
+	 列出该系统所有的用户名列表. 
+
+	 若Emacs不能获取到这些信息,则返回只包含`user-real-login-name'的列表
+	 #+BEGIN_SRC emacs-lisp
+       (system-users)
+       ;;("cl-builder"
+       "dictd" "statd" "dnsmasq" "memcache" "sshd" "ftp" "mysql" "Debian-exim" "lujun9972" "saned" "hplip" "speech-dispatcher" "rtkit" "pulse" "kernoops" "usbmux" "avahi" "avahi-autoipd" "whoopsie" "lightdm" "colord" "messagebus" "syslog" "libuuid" "nobody" "gnats" "irc" "list" "backup" "www-data" "proxy" "uucp" "news" "mail" "lp" "man" "games" "sync" "sys" "bin" "daemon" "root")
+	 #+END_SRC
+
+   * (system-groups)
+
+	 系统中所有的用户组列表. 
+
+	 若Emacs不能获取到这些信息,则返回nil
+	 #+BEGIN_SRC emacs-lisp
+       (system-groups)
+       ;;("cl-builder" "dictd" "memcache" "ftp" "mysql" "winbindd_priv" "Debian-exim" "sambashare" "lujun9972" "saned" "rtkit" "utempter" "pulse-access" "pulse" "avahi" "avahi-autoipd" "ssh" "mlocate" "whoopsie" "netdev" "nopasswdlogin" "lightdm" "ssl-cert" "lpadmin" "colord" "scanner" "bluetooth" "messagebus" "fuse" "syslog" "crontab" "libuuid" "nogroup" "users" "games" "staff" "plugdev" "sasl" "video" "utmp" "shadow" "gnats" "src" "irc" "list" "operator" "backup" "www-data" "dip" "audio" "sudo" "tape" "floppy" "cdrom" "voice" "fax" "dialout" "kmem" "proxy" "man" "uucp" "news" "mail" "lp" "disk" "tty" "adm" "sys" "bin" "daemon" "root")
+	 #+END_SRC
+** 播放声音
+   * (play-sound sound)
+
+	 播放指定SOUND. 
+
+	 参数SOUND的格式为'(sound PROPERTIES...),其中PROPERTIES可以是以下keyword参数
+
+	 * :file FILE
+
+       声音文件的地址. sound-file必须是.wav或.au格式的. 可以是绝对路径或相对`data-directory'的相对路径
+
+	 * :data DATA
+
+	   表示使用DATA作为声音的内容,而不用从:file中读取. 
+
+	   参数DATA必须是包含声音比特流的字符串
+
+	 * :volume VOLUME
+
+	   指定了音量的大小. 取值范围从0到1
+
+	 * :device DEVICE
+
+	   指定通过哪台设备播放声音. DEVICE为字符串
+
+   * (play-sound-file file &optional volume device)
+
+	 播放声音文件
+
+   * play-sound-functions
+
+	 在播放声音前,会触发该hook. 每个函数都接受一个参数:描述sound的plist
+** Batch Mode
+   在启动Emacs时若带了参数`batch'会使得Emacs进入batch mode,这种状态下的Emacs不能与用户交互,任何输出到echo area的信息都会输出到Emacs的stdout, 任何从minibufer读取的输入都被链接到Emacs的stdin中.
+
+   该模式常用于使用Emacs来运行某个elisp程序,程序运行完成后,Emacs就退出了.
+
+   * noninteractive
+
+	 该参数指明了Emacs是否运行在Batch Mode下
+** Session管理
+
+   Emacs支持X Session Management Protocol,该协议用于suspend/restart应用程序. 
+   在X window系统中,一个名为"session manager"的程序负责保持正在运行的程序的状态. 
+   当X server关闭时,session manager会要求应用程序保存它们的状态,并推迟X server关闭直到收到应用程序的回应. 此时应用程序也可能会取消这次关闭.
+
+   当session manager重启挂起的session时,它会引导应用程序分别加载自己保存的状态. 
+   session manager是通过给应用程序调用是添加一个特殊的参数来引导应用程序加载状态的. 
+   对于Emacs来说,该参数为"--smid SESSION"
+
+   * emacs-save-session-functions
+
+	 Emacs通过调用该hook来支持状态的保存.
+
+	 当session manager通知Emacs说window系统要关闭时,Emacss会调用该hook中的函数. 
+     每个函数调用是都不带参数,并且会将当前buffer设置为临时buffer.
+	 最终,Emacs保持buffer到文件中,该文件被成为"session file"
+
+	 当session manager重启挂起的Emacs时,Emacs会自动通过执行函数`emacs-session-restore'来加载session file
+
+	 若`emacs-save-session-functions'中有函数返回非nil的值,则Emacs会通知Session manager取消这次关闭.
+** Desktop Notificatino
+
+   若Emacs编译时开启了D-Bus支持,则通过加载`notifications'库,Emacs可以给某些操作系统发送"通知"
+
+   * (notifications-notify &rest params)
+
+	 通过D-Bus,使用Freedesktop notification protocol发送通知,该函数返回一个整数作为通知的id
+
+	 参数params可以是如下keyword参数
+
+	 * :bus BUS
+
+	   D-Bus bus. 该参数只有在bus不是`:session'时使用
+
+	 * :title TITLE
+
+	   通知的标题
+
+	 * :body TEXT
+
+	   通知的内容. 某些notification server甚至支持HTML标签
+
+	 * :app-name NAME
+
+	   发送通知的应用程序名称. 默认为`notifications-application-name'
+
+	 * :replaces-id ID
+
+	   表示该通知要替代指定id的原先通知. ID必须是之前`notifications-notify'调用的返回值
+
+	 * :app-icon ICON-FILE
+
+	   通知的图标文件. 若ICON-FILE为nil则不显示图标. 默认为`notifications-application-icon'
+
+	 * :actions (KEY TITLE KEY TITLE...)
+
+	   一系列要应用的动作. KEY和TITLE都是字符串. 其中TITLE会在通知上以按钮的形式展现.
+
+	   若要设置默认动作(通常该动作在点击notification时触发)的key为"default".
+
+	 * :timeout TIMEOUT
+
+	   显示多少毫秒后自动关闭. 默认值-1表示超时时间遵照notification server的设置. 0表示无限时间
+
+	 * :urgency URGENCY
+
+	   紧急的级别. 可以是'low,'normal或'critical
+
+	 * :action-items
+
+	   若设置了该关键字,则TITLE string of the action也被解释为icon name
+
+	 * :category CATEGORY
+
+	   通知的类型,字符串格式
+
+	 * :desktop-entry FILENAME
+
+	   This specifies the name of the desktop filename representing the calling program, like `"emacs"'.
+
+	 * :image-data (WIDTH HEIGHT ROWSTRIDE HAS-ALPHA BITS CHANNELS DATA)
+
+	   这是一个raw data 图像格式描述了宽,高,rowstride,是否有alpha通道,每个sample的比特数,通道和图像数据
+
+	 * :image-path PATH
+
+	   PATH为一个URI(目前只支持"file"类型)或"$XDG_DATA_DIRS/icon"目录下的某个icon theme的名称
+
+	 * :sound-file FILENAME
+
+	   弹出通知时,播放声音文件
+
+	 * :sound-name NAME
+
+	   "$XDG_DATA_DIRS/sound"目录下定义的sound theme
+
+	 * :suppress-sound
+
+	   若设置了,则不播放任何声音.
+
+	 * :resident
+
+	   若设置了该参数,则即使对该通知做了动作,该通知也不会自动关闭,除非明确的对该通知发出关闭操作
+
+	 * :transient
+
+	   若设置了该参数,则server会认为该通知是暂时的,而忽略server的持久化能力(?When set the server will treat the notification as transient and by-pass the server's persistence capability, if it should exist?)
+
+	 * :x POSITION / :y POSITION
+
+	   定义通知在屏幕上的显示位置
+
+	 * :on-action FUNCTION
+
+	   当按下了表示action的按钮时,会调用该函数. 该函数接受两个参数:notification id和action key
+
+	 * :on-close FUNCTION
+
+	   当通知因为超时或人为关闭时调用该函数. 该函数接受两个参数:notification id和关闭的REASON.
+
+	   函数中的REASON参数可以是:
+
+	   * 'expired
+
+		 由于超时而关闭
+
+	   * 'dismissed
+
+		 被人为关闭
+
+	   * 'close-notification
+
+		 通过调用`notifications-close-notification'函数来关闭
+
+	   * 'undefined
+
+		 notification server未告知原因
+
+	   #+BEGIN_SRC emacs-lisp
+       (defun my-on-action-function (id key)
+       (message "Message %d, key \"%s\" pressed" id key))
+       ;; => my-on-action-function
+
+       (defun my-on-close-function (id reason)
+       (message "Message %d, closed due to \"%s\"" id reason))
+       ;; => my-on-close-function
+
+       (notifications-notify
+       :title "Title"
+       :body "This is <b>important</b>."
+       :actions '("Confirm" "I agree" "Refuse" "I disagree")
+       :on-action 'my-on-action-function
+       :on-close 'my-on-close-function)
+       ;; => 22
+
+       这时会弹出一个message window. 按下 "I agree"
+       ;; => Message 22, key "Confirm" pressed
+       ;;    Message 22, closed due to "dismissed"
+	   #+END_SRC
+
+	 * (notifications-close-notification notification-id &optional bus)
+
+	   关闭指定id的通知. 参数BUS可以是一个表示D-Bus连接的字符串.默认为:session
+
+	 * (noifications-get-capabilities &optional bus)
+
+	   返回notification server支持的特性的列表. 
+
+       它的返回值是一个由sybmol组成的list:
+
+	   * :actions
+
+		 The server will provide the specified actions to the user
+
+	   * :body
+		 
+		 支持定义Body的内容
+
+	   * :body-hyperlinks
+
+		 body中支持超链接
+
+	   * :body-images
+
+		 body中支持嵌入图片
+
+	   * :body-markup
+
+		 支持在body中嵌入标记
+
+	   * :icon-muti
+
+		 server会把图片数组中的每帧整合成一个动画
+
+	   * :icon-static
+
+		 server只显示图片数组中的地一个帧图片,该参数与:icon-multi互斥
+
+	   * persistence
+
+		 支持通知的持久化
+
+	   * :sound
+
+		 支持播放声音
+
+	 * (notifications-get-server-information)
+	   
+	   以字符串列表的形式返回notification server的信息. 
+
+       返回值的格式为'(NAME VENDOR VERSION SPEC-VERSION). 其中:
+
+	   * NAME 为server的产品名称
+
+	   * VENDOR 为vendor名称. 常见的有"KDE"和"GNOME"
+
+	   * VERSION 为server的版本号
+
+	   * SPEC-VERSION 为The specification version the server is compliant with
+	
+** File Notification
+
+   若编译Emacs时链接了`gfilenotify',`inotify',`w32notify'或其他对应的库,通过加载`filenotify'库,Emacs可以监视文件系统中文件的改变.
+
+   * (file-notify-add-watch file flag callback)
+
+	 为文件FILE添加监视器. 该函数返回添加的监视器的descriptor. 
+
+	 若FILE无法被监视,则该函数抛出错误`file-notify-error'
+
+	 注意: *有些文件系统不能监视文件是否发生改变. 因此该函数返回非nil的值并不一定表示文件的改变一定会通知到Emacs*
+
+	 参数FLAG为一个列表,指明了要监视FILE的哪些改变:
+
+	 * 'change
+
+	   文件内容改变
+
+	 * 'attribute-change
+
+	   文件属性改变
+
+	 参数FILE可以是某个文件,也可以是目录. 若FILE为目录,则会监视该目录下的所有文件,但不递归监视子目录.
+
+	 当监视的事件发生时,Emacs会调用CALLBACK函数,并传递EVENT作为参数. 其中EVENT的格式为:
+	 '(DESCRIPTOR ACTION FILE [FILE1])
+
+	 其中DESCRIPTOR即为监视器的描述符
+
+	 ACTION为事件描述,它的可能值有:
+	 * 'created
+	 * 'deleted
+	 * 'changed
+	 * 'renamed
+	 * 'attribute-changed
+
+	 FILE和FILE1为事件发生的文件名称.
+
+	 下面是一个例子
+	 #+BEGIN_SRC emacs-lisp
+     (require 'filenotify)
+     ;; => filenotify
+
+     (defun my-notify-callback (event)
+     (message "Event %S" event))
+     ;; => my-notify-callback
+
+     (file-notify-add-watch
+     "/tmp" '(change attribute-change) 'my-notify-callback)
+     ;; => 35025468
+
+     (write-region "foo" nil "/tmp/foo")
+     ;; => Event (35025468 created "/tmp/.#foo")
+     ;;    Event (35025468 created "/tmp/foo")
+     ;;    Event (35025468 changed "/tmp/foo")
+     ;;    Event (35025468 deleted "/tmp/.#foo")
+
+     (write-region "bla" nil "/tmp/foo")
+     ;; => Event (35025468 created "/tmp/.#foo")
+     ;;    Event (35025468 changed "/tmp/foo") [2 times]
+     ;;    Event (35025468 deleted "/tmp/.#foo")
+
+     (set-file-modes "/tmp/foo" (default-file-modes))
+     ;; => Event (35025468 attribute-changed "/tmp/foo") 
+	 #+END_SRC
+	 
+	 根据不同的底层库的实现不同,rename操作可能被认为是一个rename操作或一个delete+create操作
+
+	 It can be expected, when a directory is watched, and both FILE and FILE1 belong to this directory.  Otherwise, the actions `deleted' and `created' could be returned in a random order.
+	 #+BEGIN_SRC emacs-lisp
+     (rename-file "/tmp/foo" "/tmp/bla")
+     ;; => Event (35025468 renamed "/tmp/foo" "/tmp/bla")
+
+     (file-notify-add-watch
+     "/var/tmp" '(change attribute-change) 'my-notify-callback)
+     ;; => 35025504
+
+     (rename-file "/tmp/bla" "/var/tmp/bla")
+     ;; => ;; gfilenotify
+     ;;    Event (35025468 renamed "/tmp/bla" "/var/tmp/bla")
+
+     ;; => ;; inotify
+     ;;    Event (35025504 created "/var/tmp/bla")
+     ;;    Event (35025468 deleted "/tmp/bla")
+	 #+END_SRC
+
+   * (file-notify-rm-watch descriptor)
+
+	 删除指定的监视器
+** 动态加载
+   Emacs supports such on-demand loading of support libraries for *some of its features.*
+
+   需要注意: *不是所有的特性都能使用这种方式动态加载*
+   
+   * dynamic-library-alist
+
+	 该参数是一个由动态库和对应的动态库文件组成的alist.
+
+	 该alist中每个元素的格式为'(LIBRARY FILES...)
+
+	 例如:
+	 #+BEGIN_SRC emacs-lisp
+       (setq dynamic-library-alist
+             '((xpm "libxpm.dll" "xpm4.dll" "libXpm-nox4.dll")
+               (png "libpng12d.dll" "libpng12.dll" "libpng.dll"
+                    "libpng13d.dll" "libpng13.dll")
+               (jpeg "jpeg62.dll" "libjpeg.dll" "jpeg-62.dll"
+                     "jpeg.dll")
+               (tiff "libtiff3.dll" "libtiff.dll")
+               (gif "giflib4.dll" "libungif4.dll" "libungif.dll")
+               (svg "librsvg-2-2.dll")
+               (gdk-pixbuf "libgdk_pixbuf-2.0-0.dll")
+               (glib "libglib-2.0-0.dll")
+               (gobject "libgobject-2.0-0.dll")))
+	 #+END_SRC
+** 定时器
+
+   Emacs只有在空闲时才会调用定时器,即在等待输入,`site-for'函数和`read-event'函数时才会触发定时器.
+
+   Emacs会在触发定时器前将`inhibit-quit'设置为t,这是因为从定时器函数中推出很容易产生不一致状态.
+
+   通过定时器函数修改buffer会导致undo命令分不清哪些改动是人工改动的,哪些改动是触发器函数修改的. 因此一般不再定时器函数中修改buffer,若要修改,注意在修改buffer前和修改buffer后调用一次`undo-boundary'函数
+
+   定时器函数也应该避免调用会导致Emacs等待的函数,因为这样的话又会导致其他定时器函数的处罚,可能产生无法预期的后果. 若真要等待一段时间后再执行,请再分配一个新的定时器来处罚
+
+   If a timer function calls functions that can change the match data, it should save and restore the match data
+   
+   * 命令(run-at-time time repeat function &rest args)
+
+	 设置等时间为TIME时,用参数ARGS调用FUNCTON函数.
+
+	 若参数repeat为某个数字,则会每隔repeat秒后执行一次. 若repeat为nil表示只执行一次
+
+	 参数TIME可以是一个相对时间或一个绝对时间:
+	 #+BEGIN_QUOTE
+	 Absolute times may be specified using a string with a limited
+     variety of formats, and are taken to be times _today_, even if
+     already in the past.  The recognized forms are `XXXX', `X:XX', or
+     `XX:XX' (military time), and `XXam', `XXAM', `XXpm', `XXPM',
+     `XX:XXam', `XX:XXAM', `XX:XXpm', or `XX:XXPM'.  A period can be
+     used instead of a colon to separate the hour and minute parts.
+
+     To specify a relative time as a string, use numbers followed by
+     units.  For example:
+
+    `1 min'
+          denotes 1 minute from now.
+
+    `1 min 5 sec'
+          denotes 65 seconds from now.
+
+    `1 min 2 sec 3 hour 4 day 5 week 6 fortnight 7 month 8 year'
+          denotes exactly 103 months, 123 days, and 10862 seconds from
+          now.
+
+     For relative time values, Emacs considers a month to be exactly
+     thirty days, and a year to be exactly 365.25 days.
+
+     Not all convenient formats are strings.  If TIME is a number
+     (integer or floating point), that specifies a relative time
+     measured in seconds.  The result of `encode-time' can also be used
+     to specify an absolute value for TIME.
+
+     In most cases, REPEAT has no effect on when _first_ call takes
+     place--TIME alone specifies that.  There is one exception: if TIME
+     is `t', then the timer runs whenever the time is a multiple of
+     REPEAT seconds after the epoch.  This is useful for functions like
+     `display-time'.
+
+     The function `run-at-time' returns a timer value that identifies
+     the particular scheduled future action.  You can use this value to
+     call `cancel-timer' (see below).
+	 #+END_QUOTE
+	 
+   * 配置项timer-max-repeats
+
+	 由于Emacs只有在空闲时才会执行定时器,这时有可能会推迟定时器的执行. 但推迟定时器执行的动作不会对下一次定时器执行的时间产生影响. 
+	 即使说,若下一次定时器函数触发的时间并不是在上一次执行时间的基础上累加的. 因此推迟的时间太长,很可能会致使连续几次执行定时器函数.
+
+     该变量则限定了一次性定时器函数所能执行的最大的循环次数
+
+   * 命令(run-with-idle-time secs repeat function &rest args)
+
+	 设置一个定时器,该定时器在下次Emacs空闲了SECS秒后执行
+
+	 参数SECS可以是数字,也可以是`current-dile-time'返回的对象
+
+	 若参数REPEAT为nil表示定时器只触发一次. 若为非nil表示 *每次Emacs空闲时间超过SECS秒后都触发一次*
+	 #+BEGIN_QUOTE
+	  Do not write an idle timer function containing a loop which does a
+	 certain amount of processing each time around, and exits when
+	 `(input-pending-p)' is non-`nil'.  This approach seems very natural but
+	 has two problems:
+	 
+     * It blocks out all process output (since Emacs accepts process
+     output only while waiting).
+	 
+     * It blocks out any idle timers that ought to run during that time.
+	 
+	 Similarly, do not write an idle timer function that sets up another
+	 idle timer (including the same idle timer) with SECS argument less than
+	 or equal to the current idleness time.  Such a timer will run almost
+	 immediately, and continue running again and again, instead of waiting
+	 for the next time Emacs becomes idle.  The correct approach is to
+	 reschedule with an appropriate increment of the current value of the
+	 idleness time, as described below.
+	 #+END_QUOTE
+
+   * (current-idle-time)
+
+	 若Emacs处于空闲状态,该函数返回Emacs空闲的时间. 格式与`current0time'一致,为(SEC-HIGH SEC-LOW MICROSEC PICOSEC
+
+	 若Emacs不处于idle状态,`current-idle-time'返回nil
+
+   * (cancel-timer timer)
+
+	 取消定时器
+
+   * 宏(with-timeout (seconds timeout-forms...) bodys...)
+
+	 执行bodys,但设置了超时时间为SECONDS秒.
+
+	 若BODY在SECONDS秒内执行完成,则`with-timeout'返回正常的bodys执行结果.
+
+	 但若BODY在执行期间超时了,则会执行timeout-forms,并返回timeout-forms的执行结果
+
+	 该宏的内部使用定时器来完成超时功能,因此若Emacs执行bodys的过程中,没有等待输入的情况,则超时的功能没什么作用.
 * Dired-mode相关函数
   * 获取dired中marked file
 
