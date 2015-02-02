@@ -8456,6 +8456,12 @@ buffer-string to get the whole buffer content.
    * play-sound-functions
 
 	 在播放声音前,会触发该hook. 每个函数都接受一个参数:描述sound的plist
+
+   * (set-message-beep SOUND)
+
+	 设置beep蜂鸣时的声音. 
+
+	 参数SOUND可以是nil,'asterisk,'exclamation,'hand,'question,'ok或'silent
 ** Batch Mode
    在启动Emacs时若带了参数`batch'会使得Emacs进入batch mode,这种状态下的Emacs不能与用户交互,任何输出到echo area的信息都会输出到Emacs的stdout, 任何从minibufer读取的输入都被链接到Emacs的stdin中.
 
