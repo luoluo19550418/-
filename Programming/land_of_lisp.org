@@ -2,56 +2,56 @@
 #+AUTHOR: DarkSun
 #+OPTIONS: ^:{}
 
-* ��������
+* 变量类型
 
 ** symbol
-   * symbol�Ǵ�Сд�����е�
+   * symbol是大小写不敏感的
 
    * 
 
 ** Number
-   * number��Ϊ�����͸�����, �������ֲ�ͬ������,���1��1.0�ǲ���eq��
+   * number分为整数和浮点数, 这是两种不同的类型,因此1和1.0是不能eq的
 
-   * �������������г�������ʱ,�����������������,�򷵻�һ��������,������һ���Ǹ�����,�򷵻�С������ֵ
+   * 当对两整数进行除法计算时,若发生除不尽的情况,则返回一个有理数,若其中一个是浮点数,则返回小数近似值
 	 #+BEGIN_SRC lisp
        (/ 4 6)
-       ; 2/3  ��elisp��Ϊ0
+       ; 2/3  在elisp中为0
        
        (/ 4.0 6)
-       ; 0.6666667 elisp��Ϊ0.6666666666666
+       ; 0.6666667 elisp中为0.6666666666666
 	 #+END_SRC
-* �������
+* 定义变量
 
-** ����top-level����
-   * (defparameter ������ ֵ)
+** 定义top-level变量
+   * (defparameter 变量名 值)
 
-	 һ���ȫ�ֱ�������**��������,����*small*
+	 一般对全局变量都用**包含起来,例如*small*
 	 
-	 ��ζ�ͬһ��������defparameter���޸�����ֵ
+	 多次对同一变量运用defparameter会修改它的值
 
-   * (defvar ���� ֵ)
+   * (defvar 变量 值)
 
-	 ����defparameter,���Ƕ�ζ�ͬһ����ʹ��defvar,�����޸���ԭ��ֵ
+	 类似defparameter,但是多次对同一变量使用defvar,不会修改其原有值
 
-   * (setf ���� ֵ)
+   * (setf 变量 值)
 
-** ����ֲ�����
-   * (let ((���� ��ʼֵ)...) body)
-* ���庯��
+** 定义局部变量
+   * (let ((变量 初始值)...) body)
+* 定义函数
 
-** ����ȫ�ֺ���
-   * (defun ������ (�����б�) ������)
+** 定义全局函数
+   * (defun 函数名 (参数列表) 函数体)
 	 
-	 ����һ��ȫ�ֺ���
+	 定义一个全局函数
 
-** ����ֲ�����
-   * (flet ((�ֲ����� �����б� ������) ...) body...)
+** 定义局部函数
+   * (flet ((局部函数 参数列表 函数体) ...) body...)
 
-	 ����ֲ�����,��body�ڿ���ʹ�þֲ�����
+	 定义局部函数,在body内可以使用局部函数
 
-   * (labels ((�ֲ����� �����б� ������) ...)  BODY)
+   * (labels ((局部函数 参数列表 函数体) ...)  BODY)
 
-	 ����flet,�����ں���ľֲ������п���ʹ��ǰ��ľֲ�����. ����let*
+	 类似flet,但是在后面的局部函数中可以使用前面的局部函数. 类似let*
 
 	 #+BEGIN_SRC lisp
        (labels ((a (n)
@@ -61,33 +61,104 @@
          (b 10))
 	 #+END_SRC
 
-* �ṹ
+* 泛型编程
+  泛型编程即使用相同的代码处理不同类型的数据结构的编程方式.
 
-** �����ж�
-   * (case expr ((����ֵ1 ����ֵ2 ...) forms����...) ... (otherwise Ĭ��forms����...))
+** Sequence相关函数
+   
+   Sequence其实并不是一个具体的类型,它可以是string,array或list
+
+   * find-if
+
+	 查找第一个匹配的元素
 	 
-	 case��expr������ֵ,Ȼ�󽫽�����Ӿ��е������� *eq�Ƚ�*, *t��ִ��forms����. ����Ҫע���������ֵΪ�Ƿŵ�()����Ϊ�б�����ʽ, ����Ĭ��ֵ����Ҫ�ŵ�()��,����ԭ����ʽ*,'otherwiseҲ������t����
+   * count
 
-	 ����case����ʹ��eq���Ƚ�,���һ��������symbol���ж�,�����ܶ�string���ж�
+	 计算某个元素在序列中出现的次数
+	 
+   * position
 
-** �����жϵ���
+	 指定元素在序列中的位置,从0开始计算
+	 
+   * some
+	 
+	 序列中是否有元素符合某个特定的条件
+   
+   * every
 
-   һ���ԭ����,��eq���Ƚ�symbol,��equal���Ƚ�����������
+	 序列中是否所有元素符合某个特定的条件
+
+   * reduce
+
+     Reduce two-argument FUNCTION across SEQ.
+
+   * (map TYPE FUNCTION SEQUENCES...)
+
+	 map类似mapcar,只是mapcar只支持list类型,而map支持所有Sequence类型
+
+	 且map需要提供一个参数,表示返回的类型
+	 #+BEGIN_SRC emacs-lisp
+       (map 'list #'identity "123456")
+       ;; =>(49 50 51 52 53 54)
+	 #+END_SRC
+
+   * (subseq SEQ START &optional END)
+
+	 从序列中截取序列偏单
+	 #+BEGIN_SRC lisp
+       (subseq "america" 2 6)        ;start从0开始算
+       ;; "eric"                               
+	 #+END_SRC
+
+   * (sort SEQ PREDICATE-FUNCTION)
+
+	 对SEQ进行排序
+	 #+BEGIN_SRC lisp
+       (sort '(5 8 2 4 9 3 6) #'<)
+       ;; =>(2 3 4 5 6 8 9)
+	 #+END_SRC
+	
+** 使用defmethod定义自己的泛型函数
+   根据参数类型不同而自动选择相应版本函数的功能被称为类型分发
+   #+BEGIN_SRC lisp
+     (defmethod add ((a number) (b number))
+       (+ a b))
+
+     (defmethod add ((a list) (b list))
+       (append a b))
+
+     (add 3 4) ;;=> 7
+     (add '(1 2) '(3 4))    ;;=>'(1 2 3 4)
+   #+END_SRC
+   
+   通过整合defstruct和defmethod,基本上可以组成一个简单的面向对象系统
+* 结构
+
+** 条件判断
+   * (case expr ((条件值1 条件值2 ...) forms操作...) ... (otherwise 默认forms操作...))
+	 
+	 case对expr进行求值,然后将结果与子句中的条件作 *eq比较*, *t则执行forms操作. 这里要注意的是条件值为是放到()中作为列表的形式, 最后的默认值则不需要放到()中,保留原子形式*,'otherwise也可以用t代替
+
+	 由于case中是使用eq作比较,因此一般用来对symbol作判断,而不能对string作判断
+
+** 关于判断等于
+
+   一般的原则是,用eq来比较symbol,用equal来比较其他的类型
    * eq
 
-	 �Ƚ�˫������ͬһ������ʱΪt
+	 比较双方就是同一个对象时为t
 
    * eql
 
-	 ����eq,���ܱȽ����ֺ��ַ�,�������͸�����֮��ıȽ�Ϊnil
+	 除了eq,还能比较数字和字符,但整数和浮点数之间的比较为nil
 
    * equal
 
-	 �Ƚ�ͬ�����͵Ķ����Ƿ��������
+	 比较同样类型的对象是否字面相等
 
    * equalp
 
-	 ������equalһ��,���Ƚ�����ʱ���Բ�ͬ������,�Ƚ��ַ���ʱ���Դ�Сд
+	 基本与equal一致,但比较数字时忽略不同的类型,比较字符串时忽略大小写
 	 #+BEGIN_SRC lisp
        CL-USER> (equalp 1 1.0)
        T
@@ -97,28 +168,28 @@
    
    * =
 
-	 ֻ���ڱȽ�����
+	 只用于比较数字
    
    * string-equal
 
-	 ֻ���ڱȽ��ַ���
+	 只用于比较字符串
 
    * char-equal
 
-	 ֻ���ڱȽ��ַ�,���Դ�Сд
+	 只用于比较字符,忽略大小写
 
-* ���ݽṹ
+* 数据结构
 ** association list / alist
-*** �ṹ˵��
+*** 结构说明
 
-	 association list������C�����е�map,���ĽṹΪ
+	 association list类似于C语言中的map,它的结构为
 
 	 #+BEGIN_SRC lisp
        (defparameter *alist-example* '((key1 value1)
                                        (key2 value2)))
 	 #+END_SRC
-*** ��ز���
-	* ����keyȡkey-value��ֵ��
+*** 相关操作
+	* 根据key取key-value键值对
 
 	  (assoc key alist)
 
@@ -126,53 +197,52 @@
         (assoc 'garden *nodes*)
 	  #+END_SRC
 
-	  ��ʹ��assoc��alist��ȡ��ֵ��ʱ,ֻ��ȡ���ֵĵ�һ�����������ļ�ֵ��. ��˿���ֱ����push���Ҫ�޸�Ϊ���¼�ֵ�Էŵ�alist��ǰ��,�Դ���ģ����ϼ�ֵ�Ե��޸�,ͬʱ�������ϼ�ֵ�Ե���ʷ.
+	  当使用assoc在alist中取键值对时,只会取发现的第一个符合条件的键值对. 因此可以直接用push命令将要修改为的新键值对放到alist的前面,以此来模拟对老键值对的修改,同时保留了老键值对的历史.
 ** array
+*** 结构说明
 
-*** �ṹ˵��
+	数组类似C中的数组,索引也是从0开始的.
+*** 相关操作
+	* 新建数组
 
-	��������C�е�����,����Ҳ�Ǵ�0��ʼ��.
-*** ��ز���
-	* �½�����
+	  (make-array 数组长度)
 
-	  (make-array ���鳤��)
+	* 获取数组内容的引用
 
-	* ��ȡ�������ݵ�����
+	  (aref 数组 索引)
 
-	  (aref ���� ����)
+	* 给数组元素赋值
 
-	* ������Ԫ�ظ�ֵ
-
-	  (setf (aref ���� ����) ��ֵ)
+	  (setf (aref 数组 索引) 新值)
 
 	* 
 ** Hash table
-*** �ṹ˵��
+*** 结构说明
 
 	
-*** ��ز���
+*** 相关操作
 
-	* �����µ�hashtable
+	* 创建新的hashtable
 	  
 	  (make-hash-table)
 
-	* ��ȡkey��value
+	* 获取key的value
 
 	  (gethash key hash-table)
 
-	  �ú����᷵������ֵ,��һ��ֵΪkey��value,�ڶ���ֵ�����Ƿ���hash-table���ҵ���ָ����key
+	  该函数会返回两个值,第一个值为key的value,第二个值标明是否在hash-table中找到了指定的key
 	
-	* ����key��value
+	* 设置key的value
 
 	  (setf (gethash key hash-table) newValue)
   
 ** struct
 
-*** �ṹ˵��
+*** 结构说明
 
-	����C�е�struct
-*** ��ز���
-	* ����struct
+	类似C中的struct
+*** 相关操作
+	* 定义struct
 	  (defstruct NAME
 	     SLOTS...)
 		 
@@ -184,7 +254,7 @@
           favorite-color)
       #+END_SRC
 
-	* ������
+	* 创建类
 	  (make-NAME :SLOT1 VALUE1 :SLOT2 VALUE2 ... )
 	  
 	  #+BEGIN_SRC lisp
@@ -194,24 +264,24 @@
                                        :favorite-color "blue"))
 	  #+END_SRC
 
-	* ��ȡstruct�е�����ֵ
+	* 获取struct中的属性值
 
-	  (����-������ ����)
+	  (类名-属性名 对象)
 
 	  #+BEGIN_SRC lisp
         (PERSON-age *bob*)
 	  #+END_SRC
 
-	* ����struct�е�����ֵ
+	* 设置struct中的属性值
 
-	  (setf (����-������ ����) ֵ)
+	  (setf (类名-属性名 对象) 值)
 
 	  #+BEGIN_SRC lisp
         (setf (PERSON-age *bob*) 36)
 	  #+END_SRC
-* ��д��ʽ
+* 简写形式
 ** Quasiquoting
-   ʹ��'`'���Ը���lisp����data-mode,��ͬʱ����ͨ��','�������lispƬ����ʱ����code-mode
+   使用'`'可以告诉lisp进入data-mode,但同时可以通过','将后面的lisp片段临时进入code-mode
 
    #+BEGIN_SRC lisp
      (defun describe-path (edge)
@@ -222,7 +292,7 @@
    #+END_SRC
 ** higher-order functions 
    
-   ����Ϊ�������������������ĺ�������Ϊhigher-order functions. ��ʹ��higher-order functions��Ϊ����ʱ,һ��ʹ��#'������ ��Ϊ(function ������)����д
+   被作为变量被传入其他函数的函数被称为higher-order functions. 在使用higher-order functions作为变量时,一般使用#'函数名 作为(function 函数名)的缩写
    #+BEGIN_SRC lisp
      (mapcar #'car '((foo bar)(baz qux)))
      ; (foo baz)
@@ -230,9 +300,9 @@
      (mapcar (function car) '((foo bar)(baz qux)))
      ; (foo baz)
    #+END_SRC
-** �ַ�
+** 字符
 
-   һ����˵�ַ�����������ʽΪ"#\�ַ�",��������Щ�ǿɼ��ַ�,common lispҲ����������Ķ���:#\newline,#\tab,#\space
+   一般来说字符的字面量格式为"#\字符",但对于那些非可见字符,common lisp也进行了特殊的定义:#\newline,#\tab,#\space
 ** array
 
    #(e1 e2 ...)
@@ -241,31 +311,31 @@
    #s(HASH-TABLE ...)
 ** struct
 
-   #S(���� :����1 ֵ1 :����2 ֵ2...)
+   #S(类名 :属性1 值1 :属性2 值2...)
 
    #+BEGIN_SRC lisp
      (defparamter *that-guy* #S(PERSON :name "Bob" :age 30 :waist-size 32 :favorite-color "blue"))
    #+END_SRC
-* ���к���
+* 已有函数
 
-** bit����
+** bit控制
    * (ash value count)
 
-	 ��value�Ķ����������ƶ�countλ,��countΪ��,��ʵ�������ƶ�
+	 把value的二进制向左移动count位,若count为负,则实际向右移动
 
-** ����list
-   * (remove-if-not #'�жϺ��� list)
+** 过滤list
+   * (remove-if-not #'判断函数 list)
 
 	 
-** IO����
+** IO操作
 
-   * print/read �Լ��������ʽ�����/����,��print��ֵ�ܹ�ֱ�ӱ�read����ȡ,����ԭԭcommon lisp����
-   * princ ������ʶ��ķ�ʽ�����
-   * read-line �����е����붼��Ϊ�ַ���������
-   * prin1-to-string/write-to-string ��objectת��Ϊ�ַ�����ʽ
-   * (with-open-file (stream���� �ļ��� :direction :output :if-exists :supersede) body )
+   * print/read 以计算机的形式来输出/输入,且print的值能够直接被read所读取,并还原原common lisp对象
+   * princ 以人类识别的方式来输出
+   * read-line 将所有的输入都作为字符串来处理
+   * prin1-to-string/write-to-string 将object转换为字符串形式
+   * (with-open-file (stream名称 文件名 :direction :output :if-exists :supersede) body )
 
-	 ����һ�������,������ļ���
+	 创建一个输出流,输出到文件中
 
 	 #+BEGIN_SRC lisp
        (with-open-file (my-stream
@@ -275,7 +345,7 @@
                        (princ "Hello File!" my-stream))
 	 #+END_SRC
 
-	 ͨ���ض���*output-stream*�����ķ���,����ʵ������ض���
+	 通过重定义*output-stream*变量的方法,可以实现输出重定向
 
 	 #+BEGIN_SRC lisp
        (defun dot->png (fname thunk)
@@ -287,50 +357,50 @@
          (ext:shell (concatenate 'string "dot -Tpng -O " fname)))
 	 #+END_SRC
    * 
-** �ַ�/�ַ�������
-   * (string-trim ��trim���ַ��б� �ַ���)
+** 字符/字符串操作
+   * (string-trim 待trim的字符列表 字符串)
      
-     trim�ַ���
+     trim字符串
 
-   * (char-upcase �ַ�) 
+   * (char-upcase 字符) 
      
-     ת���ַ�Ϊ��д��ʽ
+     转换字符为大写形式
 
-   * (char-downcase �ַ�)
+   * (char-downcase 字符)
 
-	 ת���ַ�ΪСд��ʽ
+	 转换字符为小写形式
 
    * (substitute-if NEW PREDICATE SEQ)
 
-	 ��SEQ�е�ÿ��Ԫ��ʹ��PREDICATE�����ж�,��Ȼ��t����NEW����
+	 对SEQ中的每个元素使用PREDICATE函数判断,对然会t的用NEW代替
 
-** ����ת��
-   * (coerce ���� ����)
+** 类型转换
+   * (coerce 对象 类型)
 
-	 ǿ������ת��
+	 强制类型转换
 
-   * (complement �жϺ���)
+   * (complement 判断函数)
 
-	 �����жϺ�����ȡ������
+	 返回判断函数的取反函数
 
    * 
 
-* ��ֵ
+* 多值
 
-   * �������ض�ֵ
+   * 函数返回多值
 
 	 (values value1 value2 ...)
 
-   * �����ֵ
+   * 捕获多值
 
-	 (multiple-value-bind (����1 ����2 ...) (���ض�ֵ�ĺ���) ������1����2��FORMS)
+	 (multiple-value-bind (变量1 变量2 ...) (返回多值的函数) 带变量1变量2的FORMS)
 
    * 
 
-* �ṹ����
+* 结构控制
 ** loop
 
-*** ���������б�
+*** 生成数字列表
 	#+BEGIN_SRC lisp
       (loop repeat 10
             collect 1
