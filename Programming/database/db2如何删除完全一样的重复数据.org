@@ -1,0 +1,10 @@
+#+TITLE: db2如何删除完全一样的重复数据
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+若在建表的时候没有设立唯一性约束,而碰巧又插入了两笔一模一样的数据,该如何删除其中的一笔数据呢?
+
+假设有一张名为Test的表,其中有两个属性Col1和Col2,可以使用以下语句来操作:
+#+BEGIN_SRC sql
+  delete from (select Col1,row_number() over (partition by Col1 order by Col1 ) as rn,a.* from Test a) where rn <>1
+#+END_SRC

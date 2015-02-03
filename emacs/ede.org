@@ -1,0 +1,4 @@
+#+TITLE: ede
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
