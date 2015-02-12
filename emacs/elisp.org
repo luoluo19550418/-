@@ -472,6 +472,16 @@
    * string转换为symbol
 
 	 (intern string)
+** 类型判断
+   * (cl-typep object type)
+
+	 检查object是否为type类型.
+
+	 参数type为common lisp形式
+
+   * (type-of object)
+
+	 返回object的 *基本* 类型
 * elisp中的等于
 ** eq
    eq用于判断两个Object是否为同一个Object
@@ -737,6 +747,10 @@
 
    * (dotimes (var count [result]) bodys)
 	 类似dolist,但var的值的范围为[0,count)
+
+   * (do (var initial [step-form]) (end-test [RESULT-FORM] bodys...))
+
+	 类似for(var=initial;end-test;var=step-form){bodys...}
 ** 使用catch/throw模拟goto语句
    可以在catch中使用throw来跳出循环,throw语句会跳转到catch处,例如
    #+BEGIN_SRC emacs-lisp
@@ -2859,6 +2873,17 @@
        (mapconcat (function (lambda (x) (format "%c" (1+ x))))
                   "HAL-8000"
                   "")                          ; => "IBM.9111"
+	 #+END_SRC
+
+   * (cl-maplist function list...)
+
+	 类似mapcar,但调用function的参数为(cdr list)
+
+	 #+BEGIN_SRC emacs-lisp
+       (maplist #'(lambda (x) x)
+                '(a b c))
+       ;; ((a b c) (b c) (c))
+
 	 #+END_SRC
 ** 废弃函数
    类似变量一样,函数也可以被标注为废弃的.
@@ -7137,7 +7162,7 @@ buffer-string to get the whole buffer content.
 
    参数program表示要执行的程序名称. 需要注意: *program应该只包含要执行的程序名称,而不能包括参数*
 
-   参数buffer-orname指定了程序的输出显示在哪个buffer中,nil表示丢弃输出. unless a custom filter function handles it. 对于同步进程,可以指定输出到文件中而不是buffer
+   参数buffer-or-name指定了程序的输出显示在哪个buffer中,nil表示丢弃输出. unless a custom filter function handles it. 对于同步进程,可以指定输出到文件中而不是buffer
 
    参数args表示传递到程序的参数,所有的args都是string类型的. 在这些string中, *扩展字符和其他shell特殊字符并不会经过shell展开*,因为参数是直接传递给指定程序的.
 
@@ -7516,7 +7541,7 @@ buffer-string to get the whole buffer content.
 
 	 设置PROCESS的filter function,若FILTER为nil表示使用默认的filter function
 
-	 filter functiion需要接收2个参数:关联的process和输出的字符串. 
+	 filter function需要接收2个参数:关联的process和输出的字符串. 
 
 	 一般情况下,会在filter function中屏蔽调quitting. 否则按下C-g可能会发生无法预料的结果. 
 
