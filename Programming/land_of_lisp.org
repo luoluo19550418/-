@@ -118,9 +118,39 @@
        ;; =>(2 3 4 5 6 8 9)
 	 #+END_SRC
 	
-** 使用defmethod定义自己的泛型函数
+* 类
+  通过整合defstruct和defmethod,基本上可以组成一个简单的面向对象系统(类=结构体+方法)
+
+** 使用defstruct定义类的结构
+  
+   #+BEGIN_SRC lisp
+     (defstruct Person                       ;定义一个Person结构体
+       (sex 'male)
+       name
+       age)                                  
+
+     (defstruct (Student (:include Person))  ;定义Student为Person的子类
+       school
+       grade
+       class
+       id)
+   #+END_SRC
+   
+   用elisp表示为
+   #+BEGIN_SRC emacs-lisp
+     (defclass Person nil  
+       ('(sex male) 'name 'age))
+
+     (make-Person :name "dk"
+                  :age 28)
+
+     (defclass Student (Person)
+       ('scholl 'grade 'class 'id))
+   #+END_SRC
+** 使用defmethod重载变量或定义子类函数
    根据参数类型不同而自动选择相应版本函数的功能被称为类型分发
    #+BEGIN_SRC lisp
+     ;; 重载add函数--elisp不支持该使用方法
      (defmethod add ((a number) (b number))
        (+ a b))
 
@@ -129,9 +159,23 @@
 
      (add 3 4) ;;=> 7
      (add '(1 2) '(3 4))    ;;=>'(1 2 3 4)
+
+     ;; 定义子类函数
+     (defmethod who-you-are? ((p Person))
+       (message "my name is %s" (Person-name p)))
+
+     (defmethod who-you-are? ((s Student))   ;重载基类Person的函数
+       (message "my id is %s" (Student-id s)))
    #+END_SRC
    
-   通过整合defstruct和defmethod,基本上可以组成一个简单的面向对象系统
+   使用elisp表达为
+   #+BEGIN_SRC emacs-lisp
+     ;; (defmethod who-you-are ((p Person))
+     ;;   (message "my name is %s" (Person-name p)))
+
+     ;; (who-you-are (make-Person :name "dk"
+     ;;                         :age 28))
+   #+END_SRC
 * 结构
 
 ** 条件判断
@@ -417,3 +461,46 @@
 ** dotimes
 
    (dotimes (var count [result]) body...)
+* stream
+** 判断函数
+   * (output-stream-p object)
+
+   * (input-stream-p object)
+** 文件流
+   * (with-open-file (stream file-path &keywords) bodys)
+
+	 临时创建一个名为stream的文件流,指定到file-path. 供bodys中使用
+
+	 keywords中的:direction可以指明是输入流还是输出流
+	 
+	 * :direction :input
+
+	   输入流
+
+	 * :direction :output
+
+	   输出流
+
+	 * :if-exist :error
+
+	   若文件已存在,则报错
+
+	 * :if-exist :supersede
+
+	   若文件已存在,直接覆盖
+** 字符串流
+   * (make-string-output-stream)
+
+	 创建一个字符串输出流
+
+   * (make-string-input-stram)
+
+	 创建一个字符串输出流
+
+   * (get-output-stream-string string-output-stream)
+
+	 获取string-output-stream中存储的字符串
+
+   * (with-output-to-string (output-stream) bodys...)
+
+	 bodys中所有输出到output-stream的内容都被收集来作为字符串返回
