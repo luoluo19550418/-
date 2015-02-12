@@ -1,0 +1,353 @@
+#+TITLE: ansi-common-lisp
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+* Lisp对函数的求值顺序为从左至右对实参求值
+* 列表
+** 集合
+   * (member-if PREDICATE LIST [keyword value])
+
+	 List中的元素,是否有符合PREDICATE的
+
+	 支持的keyword有:key
+
+   * (adjoin item list [keyword value])
+
+	 当list中没有item时,才将item加入list中
+
+	 支持的keywrod有:test,:test-not,:key
+
+   * (union list1 list2 [keyword value])
+	 
+	 两个集合的并集
+
+   * (intersection list1 list2 [keyword value])
+	 
+	 两个集合的交集
+
+   * (set-difference list1 list2 [keyword value])
+	 
+	 求补集
+** 序列
+
+   * (subseq seq start &optonal end)
+
+	 复制seq的一部分,范围为[start,end)
+	 #+BEGIN_SRC lisp
+       (subseq '(a b c d) 1 2)                 ;=>(b)
+       (subseq '(a b c d) 1 )                  ;=>(b c d)
+	 #+END_SRC
+
+   * (copy-list list)
+
+	 返回list的拷贝
+
+   * (reverse list)
+   
+	 返回翻转的list
+
+   * (sort list predicate)
+
+	 根据predicate来对list中的元素进行排序,该函数会破坏list的原始值
+
+	 若希望原list的值不变,使用copy-list函数
+
+   * (some predicate seq1...seqN)
+
+	 seqs中是否有元素能符合(predicate element1...elementN)
+
+   * (every predicate seq1...seqN)
+
+	 seqs中是否所有元素都符合(predicate element1...elementN)
+** 栈
+   * (push obj list)
+
+	 压入一个obj到list的第一个元素位置. 这里的list其实是一个generialized variable
+	 #+BEGIN_SRC lisp
+       (setf x '(b))                           ; (B)
+       (push 'a x)                             ; (A B)
+       x                                       ; (A B)
+	 #+END_SRC
+
+   * (pop list)
+
+	 返回list的第一个元素,并从list中移除该元素
+	 #+BEGIN_SRC lisp
+       (setf y x)                              ; (A B)
+       (pop x)                                 ; (A)
+       x                                       ; (B)
+       y                                       ; (A B)
+	 #+END_SRC
+
+   * (pushnew obj list [keyword value])
+
+	 类似push,但是实现时用adjoin代替了cons,即它只push未见的obj
+	 #+BEGIN_SRC lisp
+       (let ((x '(a b)))
+         (pushnew 'c x)
+         (pushnew 'a x)
+         x)
+       ;; (C A B)
+	 #+END_SRC
+* 特殊数据结构
+** 数组
+
+   使用字面常量来表示数组,可以使用#Na这个语法,其中n为数组的维度.
+   #+BEGIN_SRC lisp
+     #2a((b nil nil) (nil nil nil))
+   #+END_SRC
+
+   * (make-array dimen-list [keyword value])
+
+	 创建数组,其中dimen-list为表示数组维度的list.
+	 #+BEGIN_SRC lisp
+       (setf arr (make-array '(2 3) :initial-element nil))
+       ;; #<Simple-Array T (2 3) BFC4FE>
+	 #+END_SRC
+
+	 若想创建一维数组,则dimen-list可以直接使用整数代替
+	 #+BEGIN_SRC lisp
+       (setf vec (make-array 4 :initial-element nil))
+       ;; #(NIL NIL NIL NIL)
+	 #+END_SRC
+
+	 从未初始化的数组中取元素,结果为未定义
+
+   * (vector object1...objectN)
+	 
+	 vector即一维数组,可以通过该方法直接构造由objectN组成的vector
+	 #+BEGIN_SRC lisp
+       (vector "a" 'b 3)
+       ;; #("a" b 3)
+	 #+END_SRC
+
+   * (aref array idx1...idxN)
+
+	 取出数组中的元素,idxN以0为开始
+	 #+BEGIN_SRC lisp
+       (aref arr 0 0)
+       ;; NIL
+	 #+END_SRC
+
+   * (svref vector idx)
+
+	 类似aref,但专用于从vector中取值.idx从0开始
+
+   * (setf (aref array idx1...idxN) value)
+
+	 替换数组中的某个元素.
+** 字符与字符串
+   字符用#\c来表示.
+
+   * (char-code char)
+  
+	 返回char相关的数组
+
+   * (code-char code)
+
+	 返回code相关的字符
+
+   * (char< c1 c2) / (char<= c1 c2) / (char= c1 c2) / (char>= c1 c2) / (char> c1 c2) / (char/= c1 c2)
+	 
+	 字符比较
+
+   * (aref str idx)
+
+	 将str当array来看待
+
+   * (char str idx)
+
+	 取str中第idx个的char,比aref更快
+
+   * (equal str1 str2)
+
+	 比较字符串,大小写敏感
+	 #+BEGIN_SRC lisp
+       (equal "fred" "fred")
+       ;; T
+       (equal "fred" "Fred")
+       ;; NIL
+	 #+END_SRC
+
+   * (string-equal str1 str2)
+
+	 忽略大小写比较字符串
+	 #+BEGIN_SRC lisp
+       (string-equal "fred" "Fred")
+       ;; T
+	 #+END_SRC
+
+   * (format nil fmt object1...objectN)
+
+	 参照格式fmt,返回字符串
+
+   * (concatenate type sequence1...sequencesN)
+
+	 将sequences按type指定的格式连接起来
+	 #+BEGIN_SRC lisp
+       (concatenate 'string "not " "to worry")
+       ;; "not to worry"
+	 #+END_SRC
+** 序列
+
+   序列包括list,array和string. 
+
+   许多序列函数接收一个或多个keyword:
+   | 参数      | 用途                 | 缺省值   |
+   |-----------+----------------------+----------|
+   | :key      | 应用至每个元素的函数 | identity |
+   | :test     | 作来比较的函数 | eql      |
+   | :from-end | 若为真，反向工作。 | nil      |
+   | :start    | 起始位置         | 0        |
+   | :end      | 若有给定，结束位置。 | nil      |
+
+   * (position object seq [keyword value])
+
+	 获取object在seq中的位置
+	 #+BEGIN_SRC lisp
+       (position #\a "fantasia")
+       ;; 1
+       (position #\a "fantasia" :start 3 :end 5)
+       ;; 4
+       (position #\a "fantasia" :from-end t)
+       ;; 7
+       (position 'a '((c d) (a b)) :key #'car)
+       ;; 1
+       (position '(a b) '((a b) (c d)))
+       ;; NIL
+       (position '(a b) '((a b) (c d)) :test #'equal)
+       ;; 0
+       (position 3 '(1 0 7 5) :test #'<)       ;:test 关键字参数可以是任何接受两个实参的函数。举例来说，给定 < ，我们可以询问第一个使第一个参数比它小的元素位置
+       ;; 2
+	 #+END_SRC
+
+   * (position-if predicate seq [keyword value])
+
+	 找到seq中满足predicate的元素位置
+
+   * (find item seq [keyword value])
+
+	 寻找seq中第一个item,并返回该item. 若没找到则返回nil
+
+   * (find-if predicate seq [keyword value])
+
+	 寻找seq中第一个符合predicate的item,并返回该item,若没找到则返回nil
+
+   * (remove elt seq [keyword value]) / (remove-if predicate seq [keyword value]) / (remove-duplicates seq [keyword value])
+
+   * (reduce fn seq)
+** 结构体
+   * (defstruct NAME SLOT1...SLOTN)
+
+	 其中NAME可以使结构名称symbol或(结构名称symbol (keyword1 value1)...(keyword2 value2))这种格式
+	 #+BEGIN_SRC lisp
+       (defstruct (point (:conc-name p)
+                         (:print-function print-point))
+         (x 0)
+         (y 0))
+
+       (defun print-point (p stream depth)
+         (format stream "#<~A, ~A>" (px p) (py p)))
+	 #+END_SRC
+     :conc-name指定了要放在字段前面的名字，并用这个名字来生成存取函数。预设是 point- ；现在变成只有 p 。不使用缺省的方式使代码的可读性些微降低了，只有在需要常常用到这些存取函数时，你才会想取个短点的名字。
+
+     :print-function是在需要显示结构出来看时，指定用来打印结构的函数 ── 需要显示的情况比如，要在顶层显示时。这个函数需要接受三个实参：要被印出的结构，在哪里被印出，第三个参数通常可以忽略。 [2] 我们会在 7.1 节讨论流（stream）。现在来说，只要知道流可以作为参数传给 format 就好了。
+
+	 其中参数SLOTN可以是属性名symbol或(属性名symbol 默认值form)这种格式
+	 #+BEGIN_SRC lisp
+       (defstruct polemic
+         (type (progn
+                 (format t "What kind of polemic was it? ")
+                 (read)))
+         (effect nil))
+
+	 #+END_SRC
+** HashTable
+   * (make-hash-table &rest KEYWORD-ARGS)
+
+	 创建hash table
+
+	 支持的keyword有:test :size
+
+   * (gethash key hashtable)
+
+	 获取hashtable中key对应的value
+
+	 返回两个值,第一个值为对应value,第二个值为表示是否找到key的标识
+
+   * (remhash key hashtable)
+
+	 移除hashtable中对应key的entry
+
+   * (maphash fn hashtable)
+
+	 fn接收两个参数,hashtable中的key和value
+
+	 maphash返回nil
+* 控制结构
+** Blocks
+   * (progn bodys...)
+
+   * (block NAME &rest BODYS)
+
+	 参数NAME为symbol标识该block的名称. 
+
+	 在bodys中可以使用(return-from NAME &optional RESULT)退出该block
+	 #+BEGIN_SRC lisp
+       (block head
+         (format t "Here we go.")
+         (return-from head 'idea)
+         (format t "We'll never see this."))
+       ;; Here we go.
+       ;; IDEA
+	 #+END_SRC
+
+	 参数NAME还可以是nil,这时可以使用(return &optional result)来返回该block
+	 #+BEGIN_SRC lisp
+       (block nil
+         (return 27))
+       ;; 27
+	 #+END_SRC
+
+     *许多接受一个表达式主体的 Common Lisp 操作符，皆隐含在一个叫做 nil 的区块里。*
+     比如，所有由 do 构造的迭代函数
+	 #+BEGIN_SRC lisp
+       (dolist (x '(a b c d e))
+         (format t "~A " x)
+         (if (eql x 'c)
+             (return 'done)))
+       ;; A B C
+       ;; DONE
+	 #+END_SRC
+
+	 *使用 defun 定义的函数主体，都隐含在一个与函数同名的区(对elisp不成立,elisp中可以使用cl-defun代替)*
+	 #+BEGIN_SRC lisp
+       (defun foo ()
+         (return-from foo 27))
+	 #+END_SRC
+** Context
+
+   * let / let*
+     概念上说，一个 let 表达式等同于函数调用. 即
+     #+BEGIN_SRC lisp
+       (let ((x 7)
+             (y 2))
+         (format t "Number")
+         (+ x y))
+       ;; 等价于
+       (funcall (lambda (x y) (format t "Number") (+ x y))
+                7
+                2)
+     #+END_SRC
+	 
+	 一个let*等于嵌套的let
+
+   * (destructuring-binding ARGS-PATTERN EXPR &rest bodys)
+
+	 该宏中的ARGS-PATTERN与EXPR需要有相同的结构. 它将EXPR中对应的结构与ARGS-PATTERN中的参数一一对应.
+	 #+BEGIN_SRC lisp
+       (destructuring-bind (w (x y) . z) '(a (b c) d e)
+         (list w x y z))
+       ;; (A B C (D E))
+	 #+END_SRC
+
+** 条件判断
