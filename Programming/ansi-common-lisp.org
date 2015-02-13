@@ -351,3 +351,164 @@
 	 #+END_SRC
 
 ** 条件判断
+
+** 提前退出
+   
+   * 在block中可以使用return/return-from退出
+
+   * 使用catch throw语句
+
+	 一个 catch 表达式接受一个标签（tag），标签可以是任何类型的对象，伴随着一个表达式,表达式中一个带有特定标签的 throw 会导致 catch 表达式直接返回:
+	 #+BEGIN_SRC lisp
+       (defun super ()
+         (catch 'abort
+           (sub)
+           (format t "We'll never see this.")))
+
+       (defun sub ()
+         (throw 'abort 99))
+
+       (super)
+       ;; 99
+	 #+END_SRC
+
+   * error语句可以直接中断程序的正常执行
+
+   * 使用unwind-protect来保证程序被打断时依然执行清理操作
+
+	 一个 unwind-protect 接受任何数量的实参，并返回第一个实参的值。然而即便是第一个实参的求值被打断时，剩下的表达式仍会被求值
+	 #+BEGIN_SRC lisp
+       (setf x 1)
+       ;; 1
+       (catch 'abort
+         (unwind-protect
+             (throw 'abort 99)
+           (setf x 2)))
+       ;; 99
+
+       x
+       ;; 2
+	 #+END_SRC
+
+* 函数
+
+** 全局函数
+   
+   * (fboundp symbol)
+
+	 symbol是否与某个function相关联
+
+   * (symbol-function symbol)
+
+	 返回与该symbol相关联的function
+
+   * 通过setf和symbol-function可以为函数分配名称
+
+	 #+BEGIN_SRC lisp
+       (setf (symbol-function 'add2)
+             #'(lambda (x) (+ x 2)))
+       (add2 1)
+       ;; 3
+	 #+END_SRC
+
+*** defun
+
+	若defun的函数名称为列表(setf f),则你定义了当 setf 第一个实参是 f 的函数调用时，所会发生的事情
+
+	在函数名是这种形式 (setf f) 的函数定义中，第一个实参代表新的数值，而剩余的实参代表了传给f的参数
+
+	现在任何 primo 的 setf ，会是上面后者的函数调用:
+	#+BEGIN_SRC lisp
+      (defun primo (lst) (car lst))
+
+      (defun (setf primo) (val lst)
+        (setf (car lst) val))
+
+      (let ((x (list 'a 'b 'c)))
+        (setf (primo x) 480)
+        x)
+      ;; (480 b c)
+	#+END_SRC
+
+	* 通过调用documentation可以获取函数的文档字符串
+	  
+	  #+BEGIN_SRC lisp
+        (defun foo (x)
+          "Implements an enhanced paradigm of diversity"
+          x)
+        (documentation 'foo 'function)
+        ;; "Implements an enhanced paradigm of diversity"
+	  #+END_SRC
+** 局部函数
+   局部函数可以使用labels来定义,它是一种像是給函数使用的let. 只是它的第一个实参是新局部函数的定义,而不是变量说明.
+
+   #+BEGIN_SRC lisp
+	 (labels ((add10 (x) (+ x 10))
+			  (consa  (x) (cons 'a x)))
+	   (consa (add10 3)))
+	 ;; (A . 13)
+   #+END_SRC
+
+   与let不同的是,由 labels 表达式所定义的局部函数，可以被其他任何在此定义的函数引用，包括自己。所以这样定义一个递归的局部函数是可能的：
+
+   #+BEGIN_SRC lisp
+	 (labels ((len (lst)
+				   (if (null lst)
+					   0
+					 (+ (len (cdr lst)) 1))))
+	   (len '(a b c)))
+	 ;; 3
+   #+END_SRC
+
+   *do表达式可以被解释成调用递归函数* 这样形式的 do :
+
+   #+BEGIN_SRC lisp
+	 (do ((x a (b x))
+		  (y c (d y)))
+		 ((test x y) (z x y))
+	   (f x y))
+	 ;; 等同于
+	 (labels ((rec (x y)
+				(cond ((test x y)
+					   (z x y))
+					  (t
+					   (f x y)
+					   (rec (b x) (d y))))))
+	   (rec a c))
+   #+END_SRC
+** 参数列表
+*** 可选参数
+
+	&optional之后的参数都是可选参数,默认为nil
+
+	也可以为可选参数设置默认值,格式为(&optional (参数 默认值))
+	#+BEGIN_SRC lisp
+      (defun philosoph (thing &optional (property 'fun))
+        (list thing 'is property))
+
+      (philosoph 'death)
+      ;; (death is fun)
+	#+END_SRC
+*** 剩余参数
+
+	&rest后的参数接收任意多的参数,并将他们组合成list
+
+*** 关键字参数
+
+	&key后面的参数,会作为关键字参数. 关键字参数缺省值也为nil,但可以在形参列表中明确地指定缺省值
+	#+BEGIN_SRC lisp
+      (defun keylist (a &key x y z)
+        (list a x y z))
+      ;; KEYLIST
+      (keylist 1 :y 2)
+      ;; (1 NIL 2 NIL)
+      (keylist 1 :y 3 :x 2)
+      ;; (1 2 3 NIL)
+	#+END_SRC
+
+	destructuring-bind宏也支持关键字参数:
+	#+BEGIN_SRC lisp
+      (destructuring-bind ((&key w x) &rest y) '((:w 3) a)
+        (list w x y))
+      ;; (3 NIL (A))
+	#+END_SRC
