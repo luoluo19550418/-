@@ -465,3 +465,445 @@
        (multiple-value-list (values 'a 'b 'c))
        ;; (A B C)
 	 #+END_SRC
+
+** 提前退出
+   
+   * 在block中可以使用return/return-from退出
+
+   * 使用catch throw语句
+
+	 一个 catch 表达式接受一个标签（tag），标签可以是任何类型的对象，伴随着一个表达式,表达式中一个带有特定标签的 throw 会导致 catch 表达式直接返回:
+	 #+BEGIN_SRC lisp
+       (defun super ()
+         (catch 'abort
+           (sub)
+           (format t "We'll never see this.")))
+
+       (defun sub ()
+         (throw 'abort 99))
+
+       (super)
+       ;; 99
+	 #+END_SRC
+
+   * error语句可以直接中断程序的正常执行
+
+   * 使用unwind-protect来保证程序被打断时依然执行清理操作
+
+	 一个 unwind-protect 接受任何数量的实参，并返回第一个实参的值。然而即便是第一个实参的求值被打断时，剩下的表达式仍会被求值
+	 #+BEGIN_SRC lisp
+       (setf x 1)
+       ;; 1
+       (catch 'abort
+         (unwind-protect
+             (throw 'abort 99)
+           (setf x 2)))
+       ;; 99
+
+       x
+       ;; 2
+	 #+END_SRC
+
+* 函数
+
+** 全局函数
+   
+   * (fboundp symbol)
+
+	 symbol是否与某个function相关联
+
+   * (symbol-function symbol)
+
+	 返回与该symbol相关联的function
+
+   * 通过setf和symbol-function可以为函数分配名称
+
+	 #+BEGIN_SRC lisp
+       (setf (symbol-function 'add2)
+             #'(lambda (x) (+ x 2)))
+       (add2 1)
+       ;; 3
+	 #+END_SRC
+
+*** defun
+
+	若defun的函数名称为列表(setf f),则你定义了当 setf 第一个实参是 f 的函数调用时，所会发生的事情
+
+	在函数名是这种形式 (setf f) 的函数定义中，第一个实参代表新的数值，而剩余的实参代表了传给f的参数
+
+	现在任何 primo 的 setf ，会是上面后者的函数调用:
+	#+BEGIN_SRC lisp
+      (defun primo (lst) (car lst))
+
+      (defun (setf primo) (val lst)
+        (setf (car lst) val))
+
+      (let ((x (list 'a 'b 'c)))
+        (setf (primo x) 480)
+        x)
+      ;; (480 b c)
+	#+END_SRC
+
+	* 通过调用documentation可以获取函数的文档字符串
+	  
+	  #+BEGIN_SRC lisp
+        (defun foo (x)
+          "Implements an enhanced paradigm of diversity"
+          x)
+        (documentation 'foo 'function)
+        ;; "Implements an enhanced paradigm of diversity"
+	  #+END_SRC
+** 局部函数
+   局部函数可以使用labels来定义,它是一种像是給函数使用的let. 只是它的第一个实参是新局部函数的定义,而不是变量说明.
+
+   #+BEGIN_SRC lisp
+	 (labels ((add10 (x) (+ x 10))
+			  (consa  (x) (cons 'a x)))
+	   (consa (add10 3)))
+	 ;; (A . 13)
+   #+END_SRC
+
+   与let不同的是,由 labels 表达式所定义的局部函数，可以被其他任何在此定义的函数引用，包括自己。所以这样定义一个递归的局部函数是可能的：
+
+   #+BEGIN_SRC lisp
+	 (labels ((len (lst)
+				   (if (null lst)
+					   0
+					 (+ (len (cdr lst)) 1))))
+	   (len '(a b c)))
+	 ;; 3
+   #+END_SRC
+
+   *do表达式可以被解释成调用递归函数* 这样形式的 do :
+
+   #+BEGIN_SRC lisp
+	 (do ((x a (b x))
+		  (y c (d y)))
+		 ((test x y) (z x y))
+	   (f x y))
+	 ;; 等同于
+	 (labels ((rec (x y)
+				(cond ((test x y)
+					   (z x y))
+					  (t
+					   (f x y)
+					   (rec (b x) (d y))))))
+	   (rec a c))
+   #+END_SRC
+** 参数列表
+*** 可选参数
+
+	&optional之后的参数都是可选参数,默认为nil
+
+	也可以为可选参数设置默认值,格式为(&optional (参数 默认值))
+	#+BEGIN_SRC lisp
+      (defun philosoph (thing &optional (property 'fun))
+        (list thing 'is property))
+
+      (philosoph 'death)
+      ;; (death is fun)
+	#+END_SRC
+*** 剩余参数
+
+	&rest后的参数接收任意多的参数,并将他们组合成list
+
+*** 关键字参数
+
+	&key后面的参数,会作为关键字参数. 关键字参数缺省值也为nil,但可以在形参列表中明确地指定缺省值
+	#+BEGIN_SRC lisp
+      (defun keylist (a &key x y z)
+        (list a x y z))
+      ;; KEYLIST
+      (keylist 1 :y 2)
+      ;; (1 NIL 2 NIL)
+      (keylist 1 :y 3 :x 2)
+      ;; (1 2 3 NIL)
+	#+END_SRC
+
+	destructuring-bind宏也支持关键字参数:
+	#+BEGIN_SRC lisp
+      (destructuring-bind ((&key w x) &rest y) '((:w 3) a)
+        (list w x y))
+      ;; (3 NIL (A))
+	#+END_SRC
+
+** 函数内变量作用域
+*** 闭包
+
+   	我们可以产生共享变量的数个闭包。下面我们定义共享一个计数器的两个函数:
+   	#+BEGIN_SRC lisp
+      (let ((counter 0))
+       	(defun reset ()
+          (setf counter 0))
+       	(defun stamp ()
+          (setf counter (+ counter 1))))
+   	#+END_SRC
+
+*** 动态作用域
+
+	common lisp中一个在let内的局部变量,默认处于lexical scope下, 这时符号引用到上下文中符号名字被定义时的变量上.
+
+	而动态作用域，我们在环境中函数被调用的地方寻找变量。要使一个变量是动态作用域的，我们需要在任何它出现的上下文中声明它是special(该变量我们称之为特殊变量)。
+	#+BEGIN_SRC lisp
+	  (let ((x 10))
+		(defun foo ()
+		  (declare (special x))               ;声明x处于动态作用域下
+		  x))
+	#+END_SRC
+
+	则函数内的 x 就不再引用到函数定义里的那个词法变量，但会引用到函数被调用时，当下所存在的任何特别变量 x :
+	#+BEGIN_SRC lisp
+	  (let ((x 20))
+		(declare (special x))
+		(foo))
+	  ;; 20
+	#+END_SRC
+   
+	通过在顶层调用 setf 来配置全局变量，是隐式地将变量声明为特殊变量:
+	#+BEGIN_SRC lisp
+	  (setf x 30)
+	  ;; 30
+	  (foo)
+	  ;; 30
+	#+END_SRC
+	在一个文件里的代码，如果你不想依赖隐式的特殊声明，可以使用defparameter 取代，让程序看起来更简洁。
+** 编译
+
+   * (compiled-function-p fn)
+
+	 参数fn是否为已编译的函数
+
+   * (compile fn)
+
+	 编译函数fn
+
+	 当被编译的函数fn包含内部函数fn-in时,fn-in也会被编译. 例如:
+	 #+BEGIN_SRC lisp
+       (defun make-adder (n)
+         (lambda (x)
+           (+ x n)))
+       ;; make-addr
+       (compile 'make-adder)
+       ;; MAKE-ADDER
+       (compiled-function-p (make-adder 2))
+       ;; T
+	 #+END_SRC
+
+   * (compile-file file)
+
+	 编译整个file
+
+* 流
+** 字符流
+*** 使用文件作为流
+**** open
+	 开启一个文件的基本函数是 open 。它接受一个路径名以及大 量的选择性关键字参数:
+
+	 * :direction说明了输入还是输出流
+	   * :input
+	   * :output
+	   * :io
+
+	 * if-exists说明了创建输出流时如果文件已存在怎么办
+	   * :supersede表示覆盖
+
+	 #+BEGIN_SRC lisp
+       (setf str (open path :direction :output
+                       :if-exists :supersede))
+       ;; #<Stream C017E6>
+	 #+END_SRC
+
+	 路径名是一种指定一个文件的可移植方式。路径名包含了六个部分：host、device、directory、name、type 及 version。
+	 你可以通过调用 make-pathname 搭配一个或多个对应的关键字参数 来产生一个路径。在最简单的情况下，你可以只指明名字，让其他的部分留为缺省：
+	 #+BEGIN_SRC lisp
+       (setf path (make-pathname :name "myfile"))
+       ;; #P"myfile"
+	 #+END_SRC
+**** with-open-file宏
+	 (with-open-file (stream path [keyword value]) bodys)
+
+	 创建一个stream指向path文件,提供給bodys中使用
+*** 输入流函数
+**** read-line
+
+	 (read-line &optional stream error default-value)
+
+	 读取stream中的一行内行作为字符串返回
+
+**** read
+
+	 (read &optional stream error default-value)
+
+	 读取stream中的一个lisp object
+
+**** read-from-string
+	 (read-from-string str &optional error default-value)
+
+	 从str中读取一个lisp object.
+
+	 参数error表示读取到字符串结尾时是否报错.
+
+	 参数default-value表示若读取到文件结尾时不报错,则返回哪个值.
+
+	 该函数返回两个值,第一个值为读取到的object. 第二个值为停止读取字符串的位置
+
+**** read-char
+
+	 从字符串中读取一个char
+
+**** peek-char
+
+	 从字符串中读取一个char,但该char不会从字符串流中移除
+	
+*** 输出流函数
+	
+**** prin1
+
+	 以程序可读的形式产生输出.例如 prin1 会印出字符串左右的双引号
+	 #+BEGIN_SRC lisp
+       (prin1 "Hello")
+       ;; "Hello"
+       ;; "Hello"
+	 #+END_SRC
+
+**** princ
+
+	 以人可读的格式产生输出. 例如princ不会打印出字符串左右的双引号
+	 #+BEGIN_SRC lisp
+       (princ "Hello")
+       ;; Hello
+       ;; "Hello"
+	 #+END_SRC
+
+**** terpri
+
+	 输出eof
+
+**** format
+	 
+** 二进制流
+
+* 符号
+** 符号名称  
+   以使用(symbol-name symbol)获取symbol的名称字符串
+
+   缺省情况下，Common Lisp 在读入时，会把符号名字所有的英文字母都转成大写。代表 Common Lisp 缺省是不分大小写的：
+   #+BEGIN_SRC lisp
+     (eql 'abc 'Abc)
+     ;; T
+     (CaR '(a b c))
+     ;; A
+   #+END_SRC
+
+   若symbol名字包含空白，或其它可能被读取器认为是重要的字符的符号，要用特殊的语法来引用。
+
+   任何存在垂直杠 (vertical bar)之间的字符序列将被视为符号。可以如下这般在符号的名字中，放入任何字符：
+   #+BEGIN_SRC lisp
+     (list '|Lisp 1.5| '|| '|abc| '|ABC|)
+     ;; (|Lisp 1.5| || |abc| ABC)
+   #+END_SRC
+   当这种符号被读入时，不会有大小写转换
+
+   NOTE: *垂直杠是一种表示符号的特殊语法。它们不是符号的名字之一*
+   #+BEGIN_SRC lisp
+     (symbol-name '|a b c|)
+     ;; "a b c
+   #+END_SRC
+	 
+   如果想要在符号名称内使用垂直杠，可以放一个反斜线在垂直杠的前面
+** 属性列表
+
+   在 Common Lisp 里，每个符号都有一个属性列表（property-list）或称为 plist 。
+
+   * (get symbol property)
+
+     返回在符号的属性列表中，与键值相关的数值：
+     #+BEGIN_SRC lisp
+     (get 'alizarin 'color)
+     ;; NIL
+     #+END_SRC
+   
+   * (setf (get symbol property) newValue)
+   
+	 为symbol的property赋值
+     #+BEGIN_SRC lisp
+     (setf (get 'alizarin 'color) 'red)
+     ;; RED
+     (get 'alizarin 'color)
+     ;; RED
+     #+END_SRC
+
+   * (symbol-plist symbol)
+
+	 返回symbol中的plist
+** 包(Package)
+
+   概念上来说，包是将名字映射到符号的符号表（symbol-tables）。
+   每个普通的符号都属于一个特定的包。
+   符号属于某个包，我们称为符号被包所有（intern）。
+   函数与变量用符号作为名称。包借由限制哪个符号可以访问来实现模块化（modularity），也是因为这样，我们才可以引用到函数与变量。
+   
+   在第一次输入一个新符号的名字时，Lisp 会产生一个新的符号对象，并将它归到到当下的包所有（缺省是 common-lisp-user 包)。
+
+   但也可以通过给入字符串与选择性包参数给 intern 函数，来捕获一个名称为字符串名的符号:
+
+   * (intern symbol-name &optional package)
+
+	 创建名为symbol-name的symbol.
+
+	 该函数返回两个值:第一个值是创建的symbol. 第二个值表示该symbol是否早就存在于package中
+	 #+BEGIN_SRC lisp
+       (intern "RANDOM-SYMBOL")
+       ;; RANDOM-SYMBOL
+       ;; NIL
+	 #+END_SRC
+
+   * 引用其他包里的符号
+
+	 语法为:`package:symbol'
+
+   * 使用defpackage定义package
+	 
+	 #+BEGIN_SRC lisp
+       (defpackage "MY-APPLICATION"            ;定义新包名为my-application
+         (:use "COMMON-LISP" "MY-UTILITIES")   ;继承了两个包: common-lisp 与 my-utilities ，这代表着可以不需要用包修饰符（package qualifiers）来存取这些包所导出的符号。
+         (:nicknames "APP")                    ;创建昵称app,别的包可以这样引用到这些符号，比如 app:win 。
+         (:export "WIN" "LOSE" "DRAW"))        ; my-application 包本身只输出三个符号: WIN 、LOSE以及DRAW
+	 #+END_SRC
+
+   * 使用in-package切换当前默认包
+	 #+BEGIN_SRC lisp
+       (in-package my-application)
+	 #+END_SRC
+** 关键字
+
+   在 keyword包中的符号 (称为关键字)有两个独特的性质：它们总是对自己求值，以及可以在任何地方引用它们，如 :x 而不是 keyword:x
+   
+   为什么使用关键字而不用一般的符号？因为关键字在哪都可以存取。一个函数接受符号作为实参，应该要写成预期关键字的函数。举例来说，这个函数可以安全地在任何包里调用:
+   #+BEGIN_SRC lisp
+     (defun noise (animal)
+       (case animal
+         (:dog :woof)
+         (:cat :meow)
+         (:pig :oink)))
+   #+END_SRC
+** 符号与变量
+
+   Lisp 有一件可能会使你困惑的事情是，符号与变量的从两个非常不同的层面互相关联。
+   当符号是特别变量（special variable）的名字时，变量的值存在符号的 value 栏位。symbol-value函数引用到那个栏位，所以在符号与特殊变量的值之间，有直接的连接关系。
+
+   而对于词法变量（lexical variables）来说，事情就完全不一样了。
+   一个作为词法变量的符号只不过是个占位符（placeholder）。
+   编译器会将其转为一个寄存器（register）或内存位置的引用位址。
+   在最后编译出来的代码中，我们无法追踪这个符号 (除非它被保存在调 试器「debugger」的某个地方)。因此符号与词法变量的值之间是没有连接的；只要一有值，符号就消失了。
+* 数字
+
+  Common Lisp 提供了四种不同类型的数字：整数、浮点数、比值与复数。
+  * 整数写成一串数字：如 2001 。
+  * 浮点数是可以写成一串包含小数点的数字，如 253.72 ，或是用科学表示法，如 2.5372e2 。
+  * 比值是写成由整数组成的分数：如 2/3 。
+  * 复数 a+bi 写成 #c(a b) ，其中 a 与 b 是任两个类型相同的实数。
+
+  谓词 integerp 、 floatp 以及 complexp 针对相应的数字类型返回真
+
+  常量most-positive-fixnum 与 most-negative-fixnum 表示一个实现不使用大数所可表示的最大与最小的数字大小
