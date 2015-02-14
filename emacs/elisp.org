@@ -7380,7 +7380,7 @@ buffer-string to get the whole buffer content.
 
    * (process-list)
 
-	 列出为删除掉的process的列表
+	 列出未删除掉的process的列表
 	 #+BEGIN_SRC emacs-lisp
        (process-list)
        => (#<process display-time> #<process shell>)
@@ -8020,7 +8020,7 @@ buffer-string to get the whole buffer content.
 
 		初始化process的plist
 
-	  下面的参数是转为network connection使用的
+	  下面的参数是专为network connection使用的
 
 	  * :bindtodevice DEVICE-NAME
 
