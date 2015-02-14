@@ -669,3 +669,128 @@
 **** format
 	 
 ** 二进制流
+
+* 符号
+** 符号名称  
+   以使用(symbol-name symbol)获取symbol的名称字符串
+
+   缺省情况下，Common Lisp 在读入时，会把符号名字所有的英文字母都转成大写。代表 Common Lisp 缺省是不分大小写的：
+   #+BEGIN_SRC lisp
+     (eql 'abc 'Abc)
+     ;; T
+     (CaR '(a b c))
+     ;; A
+   #+END_SRC
+
+   若symbol名字包含空白，或其它可能被读取器认为是重要的字符的符号，要用特殊的语法来引用。
+
+   任何存在垂直杠 (vertical bar)之间的字符序列将被视为符号。可以如下这般在符号的名字中，放入任何字符：
+   #+BEGIN_SRC lisp
+     (list '|Lisp 1.5| '|| '|abc| '|ABC|)
+     ;; (|Lisp 1.5| || |abc| ABC)
+   #+END_SRC
+   当这种符号被读入时，不会有大小写转换
+
+   NOTE: *垂直杠是一种表示符号的特殊语法。它们不是符号的名字之一*
+   #+BEGIN_SRC lisp
+     (symbol-name '|a b c|)
+     ;; "a b c
+   #+END_SRC
+	 
+   如果想要在符号名称内使用垂直杠，可以放一个反斜线在垂直杠的前面
+** 属性列表
+
+   在 Common Lisp 里，每个符号都有一个属性列表（property-list）或称为 plist 。
+
+   * (get symbol property)
+
+     返回在符号的属性列表中，与键值相关的数值：
+     #+BEGIN_SRC lisp
+     (get 'alizarin 'color)
+     ;; NIL
+     #+END_SRC
+   
+   * (setf (get symbol property) newValue)
+   
+	 为symbol的property赋值
+     #+BEGIN_SRC lisp
+     (setf (get 'alizarin 'color) 'red)
+     ;; RED
+     (get 'alizarin 'color)
+     ;; RED
+     #+END_SRC
+
+   * (symbol-plist symbol)
+
+	 返回symbol中的plist
+** 包(Package)
+
+   概念上来说，包是将名字映射到符号的符号表（symbol-tables）。
+   每个普通的符号都属于一个特定的包。
+   符号属于某个包，我们称为符号被包所有（intern）。
+   函数与变量用符号作为名称。包借由限制哪个符号可以访问来实现模块化（modularity），也是因为这样，我们才可以引用到函数与变量。
+   
+   在第一次输入一个新符号的名字时，Lisp 会产生一个新的符号对象，并将它归到到当下的包所有（缺省是 common-lisp-user 包)。
+
+   但也可以通过给入字符串与选择性包参数给 intern 函数，来捕获一个名称为字符串名的符号:
+
+   * (intern symbol-name &optional package)
+
+	 创建名为symbol-name的symbol.
+
+	 该函数返回两个值:第一个值是创建的symbol. 第二个值表示该symbol是否早就存在于package中
+	 #+BEGIN_SRC lisp
+       (intern "RANDOM-SYMBOL")
+       ;; RANDOM-SYMBOL
+       ;; NIL
+	 #+END_SRC
+
+   * 引用其他包里的符号
+
+	 语法为:`package:symbol'
+
+   * 使用defpackage定义package
+	 
+	 #+BEGIN_SRC lisp
+       (defpackage "MY-APPLICATION"            ;定义新包名为my-application
+         (:use "COMMON-LISP" "MY-UTILITIES")   ;继承了两个包: common-lisp 与 my-utilities ，这代表着可以不需要用包修饰符（package qualifiers）来存取这些包所导出的符号。
+         (:nicknames "APP")                    ;创建昵称app,别的包可以这样引用到这些符号，比如 app:win 。
+         (:export "WIN" "LOSE" "DRAW"))        ; my-application 包本身只输出三个符号: WIN 、LOSE以及DRAW
+	 #+END_SRC
+
+   * 使用in-package切换当前默认包
+	 #+BEGIN_SRC lisp
+       (in-package my-application)
+	 #+END_SRC
+** 关键字
+
+   在 keyword包中的符号 (称为关键字)有两个独特的性质：它们总是对自己求值，以及可以在任何地方引用它们，如 :x 而不是 keyword:x
+   
+   为什么使用关键字而不用一般的符号？因为关键字在哪都可以存取。一个函数接受符号作为实参，应该要写成预期关键字的函数。举例来说，这个函数可以安全地在任何包里调用:
+   #+BEGIN_SRC lisp
+     (defun noise (animal)
+       (case animal
+         (:dog :woof)
+         (:cat :meow)
+         (:pig :oink)))
+   #+END_SRC
+** 符号与变量
+
+   Lisp 有一件可能会使你困惑的事情是，符号与变量的从两个非常不同的层面互相关联。
+   当符号是特别变量（special variable）的名字时，变量的值存在符号的 value 栏位。symbol-value函数引用到那个栏位，所以在符号与特殊变量的值之间，有直接的连接关系。
+
+   而对于词法变量（lexical variables）来说，事情就完全不一样了。
+   一个作为词法变量的符号只不过是个占位符（placeholder）。
+   编译器会将其转为一个寄存器（register）或内存位置的引用位址。
+   在最后编译出来的代码中，我们无法追踪这个符号 (除非它被保存在调 试器「debugger」的某个地方)。因此符号与词法变量的值之间是没有连接的；只要一有值，符号就消失了。
+* 数字
+
+  Common Lisp 提供了四种不同类型的数字：整数、浮点数、比值与复数。
+  * 整数写成一串数字：如 2001 。
+  * 浮点数是可以写成一串包含小数点的数字，如 253.72 ，或是用科学表示法，如 2.5372e2 。
+  * 比值是写成由整数组成的分数：如 2/3 。
+  * 复数 a+bi 写成 #c(a b) ，其中 a 与 b 是任两个类型相同的实数。
+
+  谓词 integerp 、 floatp 以及 complexp 针对相应的数字类型返回真
+
+  常量most-positive-fixnum 与 most-negative-fixnum 表示一个实现不使用大数所可表示的最大与最小的数字大小
