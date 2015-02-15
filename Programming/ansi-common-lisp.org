@@ -926,3 +926,124 @@
    #+END_SRC
 
    顺道一提，push 与 pop 都不能定义为 modify-macros，前者因为 place 不是其第一个参数，而后者因为其返回值不是更改后的对象。
+* CLOS
+** 创建对象
+
+   1. 使用defclass定义一个类
+
+	  #+BEGIN_SRC lisp
+        (defclass class (parent-classes...)
+          (slot1...slotN))                      ;CLOS中的slot就是C++中的成员变量
+	  #+END_SRC
+	  例如:
+	  #+BEGIN_SRC lisp
+        (defclass circle ()                     ;创建一个circle类,它没有继承任何基类
+          (radius center))                      ;circle对象有两个成员变量radius和center
+
+	  #+END_SRC
+
+   2. 使用make-instance函数创建对象
+
+	  #+BEGIN_SRC lisp
+        (make-instance class-symbol)
+	  #+END_SRC
+
+	  例如
+	  #+BEGIN_SRC lisp
+        (setf c (make-instance 'circle))
+        ;; #<CIRCLE #XC27496>
+
+	  #+END_SRC
+
+** 对象操作
+
+   1. 使用slot-value获取对象成员变量
+
+	  #+BEGIN_SRC lisp
+        (slot-value obj slot)
+	  #+END_SRC
+
+** slot定义说明
+
+	 传给 defclass 的第三个参数必须是一个槽定义的列表。如上例所示，最简单的槽定义是一个表示其名称的符号。
+	 在一般情况下，一个槽定义可以是一个列表，第一个是槽的名称，伴随著一个或多个属性 (property)。
+	 属性像关键字参数那样指定。
+
+	 * :accessor
+
+	   通过替一个槽定义一个访问器 (accessor)，我们隐式地定义了一个可以引用到槽的函数，使我们不需要再调用 slot-value 函数.
+
+	   例如
+	   #+BEGIN_SRC lisp
+		 (defclass circle ()
+		   ((radius :accessor circle-radius)
+			(center :accessor circle-center)))
+
+		 ;; 那我们能够分别通过 circle-radius 及 circle-center 来引用槽：
+
+		 (setf c (make-instance 'circle))
+		 ;; #<CIRCLE #XC5C726>
+
+		 (setf (circle-radius c) 1)
+		 ;; 1
+
+		 (circle-radius c)
+		 ;; 1
+
+	   #+END_SRC
+
+	 * :writer / :reader
+
+	   通过指定一个 :writer 或是一个 :reader ，而不是 :accessor ，我们可以获得访问器的写入或读取行为
+
+	 * :initform / :initarg
+
+	   要指定一个槽的缺省值，我们可以给入一个 :initform 参数。
+
+	   若我们想要在 make-instance 调用期间就将槽初始化，我们可以用 :initarg 定义一个参数名。
+	   #+BEGIN_SRC lisp
+		 (defclass circle ()
+		   ((radius :accessor circle-radius
+					:initarg :radius
+					:initform 1)
+			(center :accessor circle-center
+					:initarg :center
+					:initform (cons 0 0))))
+
+		 ;; 现在当我们创建一个 circle 类的实例时，我们可以使用关键字参数 :initarg 给槽赋值，或是將槽的值设为 :initform 所指定的缺省值。
+
+		 (setf c (make-instance 'circle :radius 3))
+		 ;; #<CIRCLE #XC2DE0E>
+		 (circle-radius c)
+		 ;; 3
+		 (circle-center c)
+		 ;; (0 . 0)
+	   #+END_SRC
+
+	 * :allocation
+
+	   该参数说明了slot是对象成员变量(:allocation :instance,默认)还是类成员变量(:allocation :instance)
+	   #+BEGIN_SRC lisp
+		 (defclass tabloid ()
+		   ((top-story :accessor tabloid-story
+					   :allocation :class)))
+
+		 ;; 那么如果我们创立两家小报，无论一家的头条是什么，另一家的头条也会是一样的：
+
+		 (setf daily-blab (make-instance 'tabloid)
+				 unsolicited-mail (make-instance 'tabloid))
+		 ;; #<TABLOID #x302000EFE5BD>
+		 (setf (tabloid-story daily-blab) 'adultery-of-senator)
+		 ;; ADULTERY-OF-SENATOR
+		 (tabloid-story unsolicited-mail)
+		 ;; ADULTERY-OF-SENATOR
+
+	   #+END_SRC
+
+	 * :documentation
+
+	   若有给入 :documentation 属性的话，用来作为 slot 的文档字符串。
+
+	 * :type
+
+	   通过指定一个 :type ，你保证一个槽里只会有这种类型的元素
