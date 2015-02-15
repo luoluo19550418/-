@@ -794,3 +794,27 @@
   谓词 integerp 、 floatp 以及 complexp 针对相应的数字类型返回真
 
   常量most-positive-fixnum 与 most-negative-fixnum 表示一个实现不使用大数所可表示的最大与最小的数字大小
+
+* 宏
+  * 使用coerce可以将列表转换为代码
+
+	#+BEGIN_SRC lisp
+      (coerce '(lambda (x) x) 'function)
+      ;; #<Interpreted-Function BF9D96>
+	#+END_SRC
+
+  * 使用compile将列表转换为代码
+
+	而如果你将 nil 作为第一个参数传给 compile ，它会编译作为第二个参数传入的 lambda 表达式。
+	#+BEGIN_SRC lisp
+      (compile nil '(lambda (x) (+ x 2)))
+      ;; #<Compiled-Function BF55BE>
+      ;; NIL
+      ;; NIL
+	#+END_SRC
+
+  * eval将列表当代码来执行
+	#+BEGIN_SRC lisp
+      (eval '(+ 1 2))
+      ;; 3
+	#+END_SRC
