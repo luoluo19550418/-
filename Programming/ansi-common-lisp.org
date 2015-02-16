@@ -963,6 +963,41 @@
         (slot-value obj slot)
 	  #+END_SRC
 
+** 基类
+
+   defclass 接受的第二个参数是一个列出其基类的列表。一个类别继承了所有基类槽的联集
+   #+BEGIN_SRC lisp
+     (defclass graphic ()
+       ((color :accessor graphic-color :initarg :color)
+        (visible :accessor graphic-visible :initarg :visible
+                 :initform t)))
+
+     (defclass screen-circle (circle graphic) ())
+   #+END_SRC
+   这里screen-circle的实例会有四个槽，分别从两个基类继承而来
+
+   基类中的:accessor及:initargs参数可以用在子类中:
+   #+BEGIN_SRC lisp
+     (graphic-color (make-instance 'screen-circle
+                                   :color 'red :radius 3))
+     ;; RED
+   #+END_SRC
+
+   我们也可以为子类定义自己的:initform
+   #+BEGIN_SRC lisp
+     (defclass screen-circle (circle graphic)
+       ((color :initform 'purple)))
+
+     ;; 现在 screen-circle 的实例缺省会是紫色的：
+
+     (graphic-color (make-instance 'screen-circle))
+     ;; PURPLE
+   #+END_SRC
+
+*** 基类的优先级
+	由于CLOS支持多个基类,所有存在基类的优先级问题. 
+
+	优先级以层级最小优先,相同层级的基类,第一个出现的优先.
 ** slot定义说明
 
 	 传给 defclass 的第三个参数必须是一个槽定义的列表。如上例所示，最简单的槽定义是一个表示其名称的符号。
@@ -1047,3 +1082,125 @@
 	 * :type
 
 	   通过指定一个 :type ，你保证一个槽里只会有这种类型的元素
+** 通用函数
+   一个通用函数 (generic function) 是由一个或多个方法组成的一个函数。方法可用defmethod 来定义，与 defun 的定义形式类似：
+   #+BEGIN_SRC lisp
+     ;; 参数未特化的版本
+     (defmethod combine (x y)
+       (list x y))
+
+     ;; 参数特化版本
+     (defmethod combine ((ic class1) (top class2))
+       (format nil "~A ice-cream with ~A topping."
+               (name ic)
+               (name top)))
+   #+END_SRC
+   一个方法的特化指出它是应用至何种类别的参数。刚定义的方法仅能在传给combine的参数分别是class1与classs2的实例时有效
+   
+   方法特化时,可以对任意个参数作特化,也可以使用lisp内建的类型. 例如
+   #+BEGIN_SRC lisp
+     (defmethod combine ((x number) (y number))
+       (+ x y))
+   #+END_SRC
+
+   类似C++的模板,还能对具体的对象作特化,用eql来作决定:
+   #+BEGIN_SRC lisp
+     (defmethod combine ((x (eql 'powder)) (y (eql 'spark)))
+       'boom)
+   #+END_SRC
+
+   方法可以像一般 Common Lisp 函数一样有复杂的参数列表(*但只有必要参数可以被特化*),所有组成通用函数方法的参数列表必须是一致的
+   参数的数量必须一致，同样数量的选择性参数（如果有的话），要嘛一起使用&rest 或是 &key 参数，或者一起不要用。
+   #+BEGIN_SRC lisp
+     下面的参数列表对是全部一致的，
+
+     (x)             (a)
+     (x &optional y) (a &optional b)
+     (x y &rest z)   (a b &key c)
+     (x y &key z)    (a b &key c d)
+
+     而下列的参数列表对不是一致的：
+
+     (x)             (a b)
+     (x &optional y) (a &optional b c)
+     (x &optional y) (a &rest b)
+     (x &key x y)    (a)  
+   #+END_SRC
+** 辅组方法
+   
+   方法可以通过如 :before ， :after 以及 :around 等辅助方法来增强。
+   这称为标准方法组合机制 (standard method combination)。
+   在标准方法组合机制里，调用一个通用函数会调用
+   #+BEGIN_QUOTE
+   
+   1. 最具体的 :around 方法，如果有的话。
+	  
+   2. 否则，依序，
+
+         1. 所有的 :before 方法，从最具体到最不具体。
+         2. 最具体的主方法
+         3. 所有的 :after 方法，从最不具体到最具体
+			
+	返回值为 :around 方法的返回值（情况 1）
+    或是最具体的主方法的返回值（情况 2）。
+   #+END_QUOTE
+
+   辅助方法通过在 defmethod 调用中，在方法名后加上一个修饰关键字 (qualifying keyword)来定义
+   #+BEGIN_SRC lisp
+     (defclass speaker () ())
+
+     (defmethod speak ((s speaker) string)
+       (format t "~A" string))
+     (speak (make-instance 'speaker)
+            "I'm hungry")
+     ;; I'm hungry
+     ;; NIL
+     (defclass intellectual (speaker) ())
+
+     (defmethod speak :before ((i intellectual) string)
+       (princ "Perhaps "))
+
+     (defmethod speak :after ((i intellectual) string)
+       (princ " in some sense"))
+
+     (speak (make-instance 'intellectual)
+            "I am hungry")
+     ;; Perhaps I am hungry in some sense
+     ;; NIL
+   #+END_SRC
+
+   如果有一个替传入通用函数特别定义的 :around 方法，则优先调用 :around 方法，而其它的方法要看 :around 方法让不让它们被运行。
+   一个 :around 或主方法，可以通过调用 call-next-method 来调用下一个方法。
+   在调用下一个方法前，它使用 next-method-p 来检查是否有下个方法可调用。  
+   #+BEGIN_SRC lisp
+     (defclass courtier (speaker) ())
+
+     (defmethod speak :around ((c courtier) string)
+       (format t "Does the King believe that ~A?" string)
+       (if (eql (read) 'yes)
+           (if (next-method-p) (call-next-method))
+         (format t "Indeed, it is a preposterous idea. ~%"))
+       'bow)
+
+     (speak (make-instance 'courtier) "kings will last")
+     ;; Does the King believe that kings will last? yes
+     ;; I think kings will last
+     ;; BOW
+     (speak (make-instance 'courtier) "kings will last")
+     ;; Does the King believe that kings will last? no
+     ;; Indeed, it is a preposterous idea.
+     ;; BOW
+
+     ;; 记得由 :around 方法所返回的值即通用函数的返回值，这与 
+     ;; :before 与 :after 方法的返回值不一样。
+   #+END_SRC
+
+** defgeneric
+
+* 速度
+** 瓶颈规则
+   不管是什么实现，关于优化都可以整理出三点规则：
+   * 它应该关注瓶颈
+   * 它不应该开始的太早
+   * 它应该始于算法。
+   
