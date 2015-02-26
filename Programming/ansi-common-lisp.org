@@ -90,7 +90,6 @@
 	 #+END_SRC
 * 特殊数据结构
 ** 数组
-
    使用字面常量来表示数组,可以使用#Na这个语法,其中n为数组的维度.
    #+BEGIN_SRC lisp
      #2a((b nil nil) (nil nil nil))
@@ -103,6 +102,8 @@
        (setf arr (make-array '(2 3) :initial-element nil))
        ;; #<Simple-Array T (2 3) BFC4FE>
 	 #+END_SRC
+
+	 使用:element-type参数指定数组包含值的种类,这种数组被成为特化数值.
 
 	 若想创建一维数组,则dimen-list可以直接使用整数代替
 	 #+BEGIN_SRC lisp
@@ -391,7 +392,18 @@
 	 #+END_SRC
 
 * 函数
-
+** 破坏性函数
+  | 安全              | 破坏性            |
+  | append            | nconc             |
+  | reverse           | nreverse          |
+  | remove            | delete            |
+  | remove-if         | delete-if         |
+  | remove-duplicates | delete-duplicates |
+  | subst             | nsubst            |
+  | subst-if          | nsubst-if         |
+  | union             | nunion            |
+  | intersection      | nintersection     |
+  | set-difference    | nset-difference   |
 ** 全局函数
    
    * (fboundp symbol)
@@ -669,7 +681,23 @@
 **** format
 	 
 ** 二进制流
+   一个二进制流是一个整数的来源及/或终点，而不是字符。
+   你通过指定一个整数的子类型来创建一个二进制流 ── 当你打开流时，通常是用 unsigned-byte ── 来作为 :element-type 的参数。
 
+   关于二进制流的 I/O 函数仅有两个，read-byte 以及 write-byte 
+   #+BEGIN_SRC lisp
+     (defun copy-file (from to)
+       (with-open-file (in from :direction :input
+                           :element-type 'unsigned-byte)
+                       (with-open-file (out to :direction :output
+                                            :element-type 'unsigned-byte)
+                                       (do ((i (read-byte in nil -1)
+                                               (read-byte in nil -1)))
+                                           ((minusp i))
+                                         (declare (fixnum i))
+                                         (write-byte i out)))))
+     ;; 仅通过指定 unsigned-byte 给 :element-type ，你让操作系统选择一个字节 (byte)的长度。举例来说，如果你明确地想要读写 7 比特的整数，你可以使用：(unsigned-byte 7)
+   #+END_SRC
 * 符号
 ** 符号名称  
    以使用(symbol-name symbol)获取symbol的名称字符串
@@ -1212,3 +1240,250 @@
    * safety (安全) 代表要对目标代码进行错误检查的数量； 
    * space (空间)代表目标代码的大小和内存需求量；
    * debug (调试)代表为了调试而保留的信息量。
+
+   #+BEGIN_SRC lisp
+     (declaim (optimize (speed 3)
+                        (compilation-speed 0)
+                        (safety 0)
+                        (debug 0)))
+   #+END_SRC
+** 类型说明
+   在 Common Lisp 中，类型声明完全是可选的。它们可以让程序运行的更快，但(除非错误)不会改变程序的行为。
+   
+   全局声明以 declaim 伴随一个或多个声明的形式来实现。一个类型声明是一个列表，包含了符号 type ，后跟一个类型名，以及一个或多个变量组成。
+   #+BEGIN_SRC lisp
+     (declaim (type fixnum *count*))
+   #+END_SRC
+   在 ANSI Common Lisp 中，可以省略 type 符号，将声明简写为：
+   #+BEGIN_SRC lisp
+     (declaim (fixnum *count*))
+   #+END_SRC
+   
+   局部声明通过 declare 完成，它接受的参数和 declaim 的一样。声明可以放在那些创建变量的 *代码体* 之前：如 defun 、lambda 、let 、do ，诸如此类。
+   #+BEGIN_SRC lisp
+     (defun poly (a b x)
+       (declare (fixnum a b x))
+       (+ (* a (expt x 2)) (* b x)))
+   #+END_SRC
+
+   你也可以通过 the 为某个表达式的值声明类型。
+   如果我们提前就知道 a 、b 和 x 是足够小的定长数，并且它们的和也是定长数的话，那么可以进行以下声明：
+   #+BEGIN_SRC lisp
+     (defun poly (a b x)
+       (declare (fixnum a b x))
+       (the fixnum (+ (the fixnum (* a (the fixnum (expt x 2))))
+                      (the fixnum (* b x)))))
+   #+END_SRC
+
+   可以通过 make-array 的 :element-type 参数指定数组包含值的种类。这样的数组被称为特化数组(specialized array)。
+   
+   除了在创建数组时指定元素的类型，你还应该在使用数组的代码中声明数组的维度以及它的元素类型。
+   #+BEGIN_SRC lisp
+     (declare (type (vector fixnum 20) v))
+     ;; 以上代码声明了一个仅含有定长数，并且长度固定为 20 的向量。
+   #+END_SRC
+
+   最为通用的数组声明形式由数组类型以及紧接其后的元素类型和一个维度列表构成：
+   #+BEGIN_SRC lisp
+     (declare (type (simple-array fixnum (4 4)) ar))
+   #+END_SRC
+** 避免垃圾回收
+
+   * 填充指针
+
+   * map-into
+
+   * 鼓励编译器在栈上分配对象而不是在堆上
+
+     如果你知道只是临时需要某个东西，你可以通过将它声明为 dynamic extent 来避免在堆上分配空间。
+	 
+	 通过一个动态范围 (dynamic extent)变量声明，你告诉编译器，变量的值应该和变量保持相同的生命期。
+	 #+BEGIN_SRC lisp
+       (defun our-adjoin (obj lst &rest args)
+         (declare (dynamic-extent args))
+         (if (apply #'member obj lst args)
+             lst
+           (cons obj lst)))
+	 #+END_SRC
+** 与其他语言整合
+* Read-Macros
+  宏字符 (macro character)的概念，一个对于 read 有特别意义的字符。
+  每一个这样的字符，都有一个相关联的函数，这函数告诉 read 当遇到这个字符时该怎么处理。
+  你可以变更某个已存在宏字符所相关联的函数，或是自己定义新的宏字符。
+
+  函数 set-macro-character 提供了一种方式来定义读取宏 (read-macros)。
+  它接受一个字符及一个函数，因此当 read 碰到该字符时，它返回调用传入函数后的结果。
+
+  Lisp 中最古老的读取宏之一是 ' ，即 quote 。我们可以定义成：
+  #+BEGIN_SRC lisp
+    (set-macro-character #\'
+                         #'(lambda (stream char)
+                             (list (quote quote) (read stream t nil t))))
+
+    ;; 当 read 在一个普通的语境下遇到 ' 时，它会返回在当前流和字符上调用这个函数的结果。
+  #+END_SRC
+
+  你可以（通过使用 make-dispatch-macro-character ）来定义你自己的派发宏字符（dispatching macro character），但由于 # 已经是一个宏字符，所以你也可以直接使用。
+  六个 # 打头的组合特别保留给你使用：#! 、#? 、##[ 、##] 、#{ 、#} 。
+
+  你可以通过调用 set-dispatch-macro-character 定义新的派发宏字符组合，与 set-macro-character 类似，除了它接受两个字符参数外。
+  下面的代码定义了#? 作为返回一个整数列表的读取宏。
+  #+BEGIN_SRC lisp
+        (set-dispatch-macro-character #\# #\?
+          #'(lambda (stream char1 char2)
+              (list 'quote
+                    (let ((lst nil))
+                      (dotimes (i (+ (read stream t nil t) 1))
+                        (push i lst))
+                      (nreverse lst)))))
+    ;; 现在 #?n 会被读取成一个含有整数 0 至 n 的列表。
+  #+END_SRC
+* Packages
+
+  * package-name 返回包的名字，
+
+	#+BEGIN_SRC lisp
+      (package-name *package*)
+      ;; "COMMON-LISP-USER"
+	#+END_SRC
+
+  * find-package 返回一个给定名称的包
+
+	#+BEGIN_SRC lisp
+      (find-package "COMMON-LISP-USER")
+      ;; #<Package "COMMON-LISP-USER" 4CD15E>
+	#+END_SRC
+
+  * 函数 symbol-package 接受一个符号并返回该符号被 interned 的包
+	
+	#+BEGIN_SRC lisp
+      (symbol-package 'sym)
+      ;; #<Package "COMMON-LISP-USER" 4CD15E>
+	#+END_SRC
+
+  * 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上两个冒号作为前缀：
+	 
+	#+BEGIN_SRC lisp
+      common-lisp-user::sym
+	#+END_SRC
+    但是使用两个冒号作为包的前缀也是很差的风格。这么做你就违反了包本应提供的模块性。如果你不得不使用一个双冒号来参照到一个符号，这是因为某人根本不想让你用。
+
+  * 使用export使得package中的符号在其他package中可见
+
+	这时可以用单冒号来引用package中的符号
+	#+BEGIN_SRC lisp
+      (in-package common-lisp-user)
+      ;; #<Package "COMMON-LISP-USER" 4CD15E>
+      (export 'bar)
+      ;; T
+      (setf bar 5)
+      ;; 5
+      (in-package mine)
+      ;; #<Package "MINE" 63390E>
+      common-lisp-user:bar                    ;此时处于mine package中,使用单冒号引用common-lisp-user的值
+      ;; 5
+	#+END_SRC
+  
+    一个包是一个将名字映对到符号的 Lisp 对象。当前的包总是存在全局变量*package*里。当 Common Lisp 启动时，当前的包会是 *common-lisp-user* ，通常称为用户包 (user package)。
+
+  * 通过import将其他package中的符号引入到当前package中
+
+	#+BEGIN_SRC lisp
+      (import 'common-lisp-user:bar)
+      ;; T
+      bar
+      ;; 5
+	#+END_SRC
+
+  * 使用use-package将其他package中所有exported的符号都引入到当前package中
+
+	#+BEGIN_SRC lisp
+      (use-package 'common-lisp-user)
+      ;; T
+      ;; 现在所有common-lisp-user包所输出的符号，可以不需要使用任何限定符在 mine 包里使用。
+	#+END_SRC
+* Loop语句
+  #+BEGIN_SRC lisp
+     (loop for x from 0 to 9
+            do (princ x))
+    ;; 0123456789
+    ;; NIL
+
+    (loop for x = 8 then (/ x 2)
+            until (< x 1)
+            do (princ x))
+    ;; 8421
+    ;; NIL
+
+    ;; 可以使用 and 来创建复合的 for 子句，同时初始及更新两个变量：
+    (loop for x from 1 to 4
+            and y from 1 to 4
+            do (princ (list x y)))
+    ;; (1 1)(2 2)(3 3)(4 4)
+    ;; NIL
+
+    ;; 另一件在迭代代码通常会做的事是累积某种值。举例来说：
+    (loop for x in '(1 2 3 4)
+            collect (1+ x))
+    ;; (2 3 4 5)
+
+    ;; 一个 collect 子句也可以累积值到一个有名字的变量上。下面的函数接受一个数字的列表并返回偶数与奇数列表：
+    (defun even/odd (ns)
+      (loop for n in ns
+            if (evenp n)
+               collect n into evens
+               else collect n into odds
+            finally (return (values evens odds))))
+
+    ;; 一个 sum 子句和一个 collect 子句类似，但 sum 子句累积一个数字，而不是一个列表。要获得 1 至 n 的和，我们可以写：
+    (defun sum (n)
+      (loop for x from 1 to n
+            sum x))
+  #+END_SRC
+* 状况处理
+
+  * error抛出错误
+
+  * ecase类似case,但没有键值匹配时会抛出错误
+	#+BEGIN_SRC lisp
+      (ecase 1
+        (2 3)
+        (4 5))
+	#+END_SRC
+
+  * check-type宏接受一个位置，一个类型名以及一个选择性字符串，并在该位置的值不是预期的类型时，捕捉一个可修正的错误
+	#+BEGIN_SRC lisp
+      (let ((x '(a b c)))
+        (check-type (car x) integer "an integer")
+        x)
+      ;; Error: The value of (CAR X), A, should be an integer.
+      ;; Options: :abort, :backtrace, :continue
+
+	#+END_SRC
+
+  * assert接受一个测试表达式以及一个有着一个或多个位置的列表，伴随着你可能传给 error 的参数
+	
+	#+BEGIN_SRC lisp
+      (let ((sandwich '(ham on rye)))
+        (assert (eql (car sandwich) 'chicken)
+                ((car sandwich))
+                "I wanted a ~A sandwich." 'chicken)
+        sandwich)
+      ;; Error: I wanted a CHICKEN sandwich.
+      ;; Options: :abort, :backtrace, :continue
+      ;; >> :continue
+      ;; New value of (CAR SANDWICH)? 'chicken
+      ;; (CHICKEN ON RYE)
+
+	#+END_SRC
+
+  * (ignore-errors &rest bodys)
+
+	bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到的状况. 若无错误,则类似progn
+	#+BEGIN_SRC lisp
+      (defun user-input (prompt)
+        (format t prompt)
+        (let ((str (read-line)))
+          (or (ignore-errors (read-from-string str))
+              nil)))
+	#+END_SRC
