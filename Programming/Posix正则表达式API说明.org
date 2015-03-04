@@ -1,0 +1,327 @@
+#+TITLE: Posix正则表达式API说明
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* 头文件
+  #+BEGIN_SRC c
+	#include <regex.h>
+  #+END_SRC
+
+* 基本方法
+** regcomp
+
+   * 函数原型
+
+	 int regcomp(regex_t *preg, const char *regex, int cflags);
+
+   * 功能
+
+	 编译正则表达式，以便regexec方法使用
+
+   * 参数含义
+
+	 * preg
+
+	   preg是一个指向编译后的正则表达式结构的指针，p意思是pointer，reg意思是regex_t类型。
+
+	   regex_t是一个结构体数据类型，用来存放编译后的正则表达式，它的成员re_nsub用来存储正则表达式中的子正则表达式的个数，子正则表达式就是用圆括号包起来的部分表达式。
+
+	 * regex
+
+	   描述正则表达式的字符串。
+
+	 * cflags
+
+	   决定编译的类型。 可选值有:
+	   | 值           | 说明                                                                                |
+	   |--------------+-------------------------------------------------------------------------------------|
+	   | REG_EXTENDED | 扩展的正则表达式，如果不设置则为基本的正则表达式                                    |
+	   | REG_ICASE    | 不区分大小写                                                                        |
+	   | REG_NOSUB    | 不用存储匹配后的结果。如果设置该标志位，那么在regexec将忽略nmatch和pmatch两个参数。 |
+	   | REG_NEWLINE  | 识别换行符。                                                                        |
+
+   * 返回值
+
+	 | 返回值 | 说明 |
+	 |--------+------|
+	 |      0 | 成功 |
+	 | 其他错误码 | 失败   |
+** regexec
+
+   * 函数原型
+
+	 #+BEGIN_SRC c
+	   int regexec(const regex_t *preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags);
+	 #+END_SRC
+
+   * 功能
+
+	 根据编译好的正则表达式，对字符串进行匹配
+
+   * 参数含义
+
+	 * preg
+
+	   经过regcomp编译的正则表达式。
+
+	 * string
+
+	   待匹配的字符串。
+
+	 * nmatch
+
+	   匹配到的字符串的个数。
+
+	 * pmatch
+
+	   匹配到的数组。
+
+	 * eflags
+
+	   匹配的标志,可选的值有:
+
+	   | 值         | 说明                                                    |
+	   |------------+---------------------------------------------------------|
+	   | REG_NOTBOL | 不匹配行的开头，除非在regcomp编译时cflag设置REG_NEWLINE |
+	   | REG_NOTEOL | 不匹配行的结束，除非在regcomp编译时cflag设置REG_NEWLINE |
+
+   * 返回值
+
+	 | 返回值       | 说明 |
+	 |--------------+------|
+	 | 0            | 成功 |
+	 | REG_NOTMATCH | 失败   |
+** 结构体regmatch_t
+
+   regmatch_t 的定义如下
+   #+BEGIN_SRC c
+	 typedef struct {
+		 　　regoff_t  rm_so;
+		 　　regoff_t  rm_eo;
+		 　　} regmatch_t;
+   #+END_SRC
+   其中:
+
+   如果-1==rm_so，表示没有匹配到。
+
+   如果-1!=rm_so，表示string中下一个最大子字符串的偏移量
+
+   rm_eo表示子字符串的长度。
+   
+** regerror
+
+   * 函数原型
+
+	 #+BEGIN_SRC c
+	   size_t regerror(int errcode, const regex_t *preg, char * errbuf, size_t errbuf_size);
+	 #+END_SRC
+
+   * 功能
+
+	 将regcomp和regexec返回的errorcode转换成错误信
+
+   * 参数含义
+
+	 * errorcode
+
+	   错误码，由regcomp或regexec获得。
+
+	 * preg
+
+	   经过regcomp编译的正则表达式。
+
+	 * errbuf
+
+	   存储错误信息的buffer。
+
+	 * errbuf_size
+
+	   errbuf的大小。
+
+   * 返回值
+
+	 返回errbuf存储错误信息所需要的大小。
+	 
+	 | 错误码       | 简写说明                                 |  错误说明                                                 |
+	 |--------------+--------------------------------------------+-------------------------------------------------------|
+	 | REG_BADBR    | BR=back reference                          | 非法使用返回引用操作符                                |
+	 | REG_BADPAT   | PAT=pattern                                | 非法使用正则表达式操作符，例如group和list             |
+	 | REG_BADRPT   | RPT=repetition                             | 非法使用重复的操作符，例如在第一个字符使用 ’*’      |
+	 | REG_EBRACE   | EBRACE=error brace                         | 大括号不匹配                                          |
+	 | REG_EBRACK   | EBRACK=error bracket                       | 中括号不匹配                                          |
+	 | REG_ECOLLATE | ECOLLATE=error collate                     | 非法参数                                              |
+	 | REG_ECTYPE   | ECTYPE=error character type                | 错误的字符类型                                        |
+	 | REG_EEND     | EEND=error end                             | 无具体错误。该错误码在POSIX.2中没有定义               |
+	 | REG_EESCAPE  | EESCAPE=error escape                       | 多余的\                                               |
+	 | REG_EPAREN   | EPAREN=error parenthesis                   | 圆括号不匹配                                          |
+	 | REG_ERANGE   | ERANGE=error range                         | 非法使用范围操作符，例如结束的标识出现在开始标识之前  |
+	 | REG_ESIZE    | ESIZE=error size                           | 编译正则表达式需要的内存大于64kb，在POSIX.2中没有定义 |
+	 | REG_ESPACE   | ESPACE=error space                         | 编译正则表达式已经超出内存空间                        |
+	 | REG_ESUBREG  | ESUBREG=error reference to a subexpression | 非法使用子表达式的引用                                |
+
+   
+** regfree
+
+   * 函数原型
+
+	 #+BEGIN_SRC c
+	   void regfree(regex_t *preg);
+	 #+END_SRC
+
+   * 功能
+
+	 释放由regcomp编译preg的内存
+
+   * 参数含义
+
+	 经过regcomp编译的正则表达式
+
+   * 返回值
+
+	 void
+
+* C++的简单封装
+
+  可以使用C++进行简单的封装,使其更好用一些
+
+  #+BEGIN_SRC cpp
+	// cregex.h
+	#include <vector>
+	#include <string>
+	#include <regex.h>
+	using std::string;
+	using std::vector;
+
+	class CStringMatch;             // 预先声明类
+
+	class CRegex
+	{
+	public:
+		CRegex(const string& sPattern,int cflags=REG_EXTENDED);
+		virtual ~CRegex();
+		string GetErrMsg();
+		CStringMatch Match(const string& sStr,int cflags=0);
+		bool init(const string& sPattern,int cflags=REG_EXTENDED);
+		operator bool() const {return m_isValid;}
+	private:
+		regex_t m_regex;
+		int m_cflags;
+		bool m_isValid;
+		int m_errcode;
+		bool isRegMatchUsed(const regmatch_t& sRegMatch);
+	};
+
+	class CStringMatch
+	{
+	public:
+		CStringMatch(const string& str):m_sStr(str){
+		}
+		virtual ~CStringMatch(){};
+		string GetMatchContent(unsigned int index){
+			return string(m_sStr.c_str()+m_vMatchPlaces[index].rm_so,
+						  m_sStr.c_str()+m_vMatchPlaces[index].rm_eo);
+		}
+		regmatch_t GetMatchPlace(unsigned int index){
+			return m_vMatchPlaces.at(index);
+		}
+		operator bool() const {return m_isValid;}
+	private:
+		string m_sStr;
+		friend CStringMatch CRegex::Match(const string& sStr,int cflags);
+		bool m_isValid;
+		vector<regmatch_t> m_vMatchPlaces;
+	};
+
+  #+END_SRC
+  
+  #+BEGIN_SRC cpp
+	// cregex.cpp
+	#include "cregex.h"
+
+	CRegex::CRegex(const string& sPattern,int cflags)
+	{
+		init(sPattern,cflags);
+	}
+	bool CRegex::init(const string& sPattern,int cflags)
+	{
+		memset(&m_regex,'\0',sizeof(m_regex));
+		m_errcode = regcomp(&m_regex,sPattern.c_str(),cflags);
+		if(m_errcode != 0)
+		{
+			m_isValid = false;
+		}
+		m_isValid = true;
+		return m_isValid;
+	}
+
+	CRegex::~CRegex()
+	{
+		regfree(&m_regex);
+	}
+
+	string CRegex::GetErrMsg()
+	{
+		char szErrMsg[1024+1] = "";
+		regerror(m_errcode, &m_regex, szErrMsg, sizeof(szErrMsg));
+		return szErrMsg;
+	}
+
+	CStringMatch CRegex::Match(const string& sStr,int cflags)
+	{
+		const unsigned int iMax = 20;
+		regmatch_t pResults[iMax];
+		memset(pResults,'\0',sizeof(pResults));
+		CStringMatch cMatchResult(sStr);
+		m_errcode = regexec(&m_regex,sStr.c_str(),iMax,pResults,cflags);
+		if(m_errcode == 0)
+		{
+			cMatchResult.m_isValid = true;
+			unsigned int i = 0;
+			for (i = 0; i < iMax; ++i) {
+				if(isRegMatchUsed(pResults[i]))
+				{
+					cMatchResult.m_vMatchPlaces.push_back(pResults[i]);
+				}
+			}
+		}
+		else
+		{
+			cMatchResult.m_isValid = false;
+		}
+		return cMatchResult;
+	}
+
+	bool CRegex::isRegMatchUsed(const regmatch_t& sRegMatch)
+	{
+		return sRegMatch.rm_so != -1;
+	}
+  #+END_SRC
+  
+  这样使用时,只需要用正则字符串构造一个CRegex对象,并且它的match方法接收一个字符串作为匹配,并返回CStringMatch对象,使用CStringMatch对象的GetMatchContent方法获取捕获的内容
+
+  例如:
+  #+BEGIN_SRC cpp
+    CRegex cRegex("(.*)省(.+)市/县([^行]+(行股份有限公司|股份有限公司|行|社))(.*)");
+    if(cRegex)
+    {
+        CStringMatch cMatches = cRegex.Match(sBankName);
+        if(cMatches)
+        {
+            sBankNameElements.province = cMatches.GetMatchContent(1);
+            sBankNameElements.city = cMatches.GetMatchContent(2);
+            sBankNameElements.bank=cMatches.GetMatchContent(3);
+            sBankNameElements.keywords=cMatches.GetMatchContent(5);
+            DEBUG_LOG("province=[%s],city=[%s],bank=[%s],keywords=[%s]",sBankNameElements.province.c_str(),sBankNameElements.city.c_str(),sBankNameElements.bank.c_str(),sBankNameElements.keywords.c_str());
+            return true;
+        }
+        else
+        {
+            Trace(L_DEBUG, __FILE__, __LINE__, NULL, cRegex.GetErrMsg().c_str());
+        }
+    }
+    else
+    {
+        Trace(L_DEBUG, __FILE__, __LINE__, NULL, cRegex.GetErrMsg().c_str());
+    }
+  #+END_SRC
+ 

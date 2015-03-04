@@ -5744,15 +5744,21 @@ buffer-string to get the whole buffer content.
 ** 修改list变量
 *** 会破坏原参数中的值
    	这里的函数都会直接修改参数中的list
+
    * (push element list)
+
 	 把element放在list的第一位,作用类似cons
+
    * (add-to-list listname element &optional append compare-fn)
+
 	 类似push,但若list中已经有了element,则保持list不变
 
 	 若append为非nil,则将element放在list的最后位置
 
 	 compare-fn默认使用equal进行比较
+
    * (add-to-ordered-list listname element &optional order)
+
 	 这里的order需要是number类型,
 
 	 order的值决定了element的位置,若order为nil,则将element放在list中最后带order的元素后面
@@ -5767,7 +5773,9 @@ buffer-string to get the whole buffer content.
        (add-to-ordered-list 'foo 'f)           ;=>(a c b f e d)  若order为nil,则将element放在list中最后带order的元素后面
 
 	 #+END_SRC
+
    * (setcar cons-ceil object) / (setcdr cons-ceil object)
+
 	 修改cons-ceil的car/cdr部分,并返回参数object作为返回值
 
 	 通过setcdr可以实现删除/添加list中element的目的
@@ -5777,7 +5785,9 @@ buffer-string to get the whole buffer content.
        (setcdr x1 (cddr x1));=>'(a c d)
        (setcdr x1 (append '(1 2) (cdr x1)))    ;=> (a 1 2 c d)
 	 #+END_SRC
+
    * (nconc &rest lists)
+
 	 类似append,所不同的是它直接修改所有参数的last element的cdr,而不会先做copy-sequence操作.
 
 	 由于除了最后一个参数不用被修改之外,其他参数的结构都会被修改,因此除了最后一个参数可以是const list外,其他参数必须是个变量.
@@ -5788,9 +5798,13 @@ buffer-string to get the whole buffer content.
        (nconc x 'z)                            ; => (1 2 3 . z)
        x                                       ; => (1 2 3 . z)
 	 #+END_SRC
+
    * (nreverse list)
+
 	 翻转参数list
+
    * (sort list predicate-less)
+
 	 使用predicate-less进行从小到大的排序,若存在相等的值,则保持相等值的位置不变
 	 #+BEGIN_SRC emacs-lisp
 	 (setq x1 '(1 2 4 3 7 6 5));=>(1 2 4 3 7 6 5)
@@ -5814,7 +5828,9 @@ buffer-string to get the whole buffer content.
 	 #+END_SRC
 
 	 *因此一般情况下,都需要把sort的返回结果赋值回参数list*
+
    * (delq object list)
+
 	 移除list中所有与object相等的element,函数中的q表示使用eq作为比较函数.
 
 	 由于delq在删除list头部的element时,仅仅是返回跳过头部element的cdr位置,而不会改变list参数所指向的位置.
@@ -5825,7 +5841,9 @@ buffer-string to get the whole buffer content.
 	 #+END_SRC
 
 	 *因此使用delq,一般我们也需要将返回值赋值回参数list*
+
    * (delete object seq)
+
 	 delete函数比较特殊,它根据seq的类型不同而有不同的行为.
 
 	 当seq为list类型时,它跟delq一样会修改seq的值,所不同的是它使用equal作为比较函数.
@@ -5846,7 +5864,9 @@ buffer-string to get the whole buffer content.
        (delete '(2) v)             ; => [(1)]
        v                           ; => [(2) (1) (2)]
 	 #+END_SRC
+
    * (delete-dups list)
+
 	 删除list中所有重复的元素,使用equal作为比较函数. 
 
 	 当list中有多个重复元素时,delete-dups保留第一个元素.
@@ -5898,13 +5918,13 @@ buffer-string to get the whole buffer content.
 
 	  test为比较函数,默认为equal
 
-***  更新新值/添加新值
-	  
-	  使用push将新键值对放入alist中即可
-	  #+BEGIN_SRC elisp
-	   	(push '(old-key new-value) *alist*)
-	   	(push '(new-key new-value) *alist*)
-	  #+END_SRC
+*** 更新新值/添加新值
+	 
+	 使用push将新键值对放入alist中即可
+	 #+BEGIN_SRC elisp
+	   (push '(old-key new-value) *alist*)
+	   (push '(new-key new-value) *alist*)
+	 #+END_SRC
 
 *** 删除键值对
 	
