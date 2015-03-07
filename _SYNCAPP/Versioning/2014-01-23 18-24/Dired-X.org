@@ -1,7 +1,0 @@
-* 特性
-  * 过滤不需要的文件显示
-  * 在Dired buffer中guessing shell命令
-  * 在非Dired buffer中执行Dired命令
-  * 根据光标所处文本作为文件名来打开文件
-  * 大量的文件标记命令
-* 

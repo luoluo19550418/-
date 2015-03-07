@@ -1,5 +1,0 @@
-dim a()                #什么动态数组
-redim [preserver] a(n to m)     #preserver关键字，保留原有数组的值，若无，则清空数组的值
-ismissing函数判断指定参数是否
-paramArray
-命名参数: parmName:=parmValue
