@@ -518,6 +518,8 @@
       ;; (1 2 3 NIL)
 	#+END_SRC
 
+	&key后的关键字参数还可以是一个格式为`(参数 默认值 参数传递标志)'的list,其中参数传递标志当该key参数被传值时为t,key参数未传值时为nil
+
 	destructuring-bind宏也支持关键字参数:
 	#+BEGIN_SRC lisp
       (destructuring-bind ((&key w x) &rest y) '((:w 3) a)
