@@ -1,0 +1,39 @@
+#+TITLE: TaskJuggler
+#+AUTHOR: lujun9972
+#+OPTIONS: ^:{}
+
+* 基础说明
+
+  Taskjuggler使用一些文本文件来描述一个项目. 这些文件由一个.tjp文件和多个tji文件组成. 其中tjp为主项目文件,在tjp文件中可以include多个tji文件.
+
+** TJP文件的结构
+  
+   TJP文件为项目的主文件. 每个项目都必须以project header开头. 且project header只能在存在主项目文件中. 所有其他的元素则可以分散到各个tji文件中. 
+
+   project header下面是任意个项目属性的描述,例如accounts,resource,tasks和reports. 且每个project只要要有一个task和一个report.
+   
+   各项目属性中间没有严格的前后关系,但具体某个属性之间还是有先后关系的,例如若想分配一个resource到某task上,则该resource必须先于该task定义. 因此,推荐的属性排列顺序为:
+
+   1. macros
+   2. flags
+   3. accounts
+   4. shifts
+   5. vacations
+   6. resources
+   7. tasks
+   8. accountreports
+   9. resourcereports
+   10. taskreports
+   11. textreports
+   12. exports
+
+* 命令
+
+** tj3
+
+   tj3是TaskJuggler的命令行版的命令,它类似一个编译器一样,接受项目源文件,然后根据其中的内容产生输出文件. 输出的文件存在当前目录下.
+   #+BEGIN_SRC sh
+     tj3 AcSo.tjp
+   #+END_SRC
+
+   若想在项目文件中指定其他文件路径,最好使用`/'作为目录分隔符. 这样该项目文件在所有的操作系统下都能够兼容.
