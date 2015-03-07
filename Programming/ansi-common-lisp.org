@@ -493,7 +493,7 @@
 
 	&optional之后的参数都是可选参数,默认为nil
 
-	也可以为可选参数设置默认值,格式为(&optional (参数 默认值))
+	也可以为可选参数设置默认值,格式为(&optional (参数 默认值)) 或 (&optional (参数 默认值 参数传递标志))
 	#+BEGIN_SRC lisp
       (defun philosoph (thing &optional (property 'fun))
         (list thing 'is property))
@@ -501,6 +501,9 @@
       (philosoph 'death)
       ;; (death is fun)
 	#+END_SRC
+	
+	参数传递标志,用于标识是否传递了实参給参数,一般参数传递标志的名称为参数名称后结`-suppiled-p'
+
 *** 剩余参数
 
 	&rest后的参数接收任意多的参数,并将他们组合成list
@@ -518,12 +521,16 @@
       ;; (1 2 3 NIL)
 	#+END_SRC
 
+	&key后的关键字参数还可以是一个格式为`(参数 默认值 参数传递标志)'的list,其中参数传递标志当该key参数被传值时为t,key参数未传值时为nil
+
 	destructuring-bind宏也支持关键字参数:
 	#+BEGIN_SRC lisp
       (destructuring-bind ((&key w x) &rest y) '((:w 3) a)
         (list w x y))
       ;; (3 NIL (A))
 	#+END_SRC
+	
+	*一般情况下,不要让关键字参数与可选参数/剩余参数混搭,这样会产生很奇怪的后果*
 
 ** 函数内变量作用域
 *** 闭包
@@ -1487,3 +1494,11 @@
           (or (ignore-errors (read-from-string str))
               nil)))
 	#+END_SRC
+* 注释
+  * 4个分号常用于文件头注释
+
+  * 3个分号,通常作为段落注释应用到接下来的一大段代码上
+
+  * 2个分号说明该注释应用于接下来的代码上
+
+  * 1个分号用于行尾注释,说明某个语句
