@@ -94,6 +94,8 @@
    #+BEGIN_SRC lisp
      #2a((b nil nil) (nil nil nil))
    #+END_SRC
+   
+   也可以使用#(...)来表示,但修改字面对象的后果并不确定,因此应当总是使用vector或更为通用的函数make-array来创建 *打算修改的向量*
 
    * (make-array dimen-list [keyword value])
 
@@ -110,6 +112,36 @@
        (setf vec (make-array 4 :initial-element nil))
        ;; #(NIL NIL NIL NIL)
 	 #+END_SRC
+
+	 *make-array也可以用来创建变长向量.* 变长向量除了要跟踪用来保存元素的内存和可访问的槽位数量,还需要跟踪实际存储在向量中的元素数量. 这个数字存放在向量的 *填充指针* 里.
+
+	 为了创建带有填充指针的向量,可以向make-array传递一个:fill-pointer实参.
+	 #+BEGIN_SRC lisp
+       (make-array 5 :fill-pointer 0)
+       ;; #()
+	 #+END_SRC
+
+	 可以使用vector-push与vector-pop为可变向量添加/弹出元素
+	 #+BEGIN_SRC lisp
+       (defparamter *x* (make-array 5 :fill-pointer 0))
+
+       (vector-push 'a *x*)
+       ;; 0
+       ,*x*
+       ;; #(A)
+
+       (vector-pop *x*)
+       ;; A
+       ,*x*
+       #()
+	 #+END_SRC
+
+	 如果要创建一个可以存放任意变长的向量,可以给make-array传递参数:adjustable
+	 #+BEGIN_SRC lisp
+       (make-array 5 :fill-pointer 0 :adjustable t)
+	 #+END_SRC
+	 这时可以使用vector-push-extend来添加元素,它类似vector-push,但当vector满时会自动扩展该数组
+	 
 
 	 从未初始化的数组中取元素,结果为未定义
 
@@ -225,6 +257,10 @@
 
 	 找到seq中满足predicate的元素位置
 
+   * (search sub-seq seq)
+
+	 类似position,只不过是搜索子序列sub-seq的位置
+
    * (find item seq [keyword value])
 
 	 寻找seq中第一个item,并返回该item. 若没找到则返回nil
@@ -236,6 +272,56 @@
    * (remove elt seq [keyword value]) / (remove-if predicate seq [keyword value]) / (remove-duplicates seq [keyword value])
 
    * (reduce fn seq)
+
+   * (merge type seq1 seq2 p-fn)
+
+	 返回按照p-fn该谓语合并两个序列所产生的新序列,若每个序列预先被p-fn排过序了,那么由merge返回的序列也时有序的.
+
+	 merge的第一个参数type指示产生新序列的类型
+	 #+BEGIN_SRC lisp
+       (merge 'vector #(1 3 5) #(2 4 6) #'<)
+       ;; #(1 2 3 4 5 6)
+	 #+END_SRC
+
+   * (subseq seq start &optional end)
+
+	 取子序列,可用于setf. 但不会扩大/缩小一个序列,如果新的值和将被替换的子序列具有不同的长度,那么两者中较短的那一个将决定由多少个字符被实际更改
+
+   * (fill seq item [keyword value])
+
+	 填充seq的内容位item
+
+   * (mismatch seq1 seq2 [keyword value])
+
+	 返回第一个不相匹配的元素的索引
+
+   * (map type fn seq...)
+
+	 返回一个类型位type的新序列,该序列的值位fn作用到seq中各元素的返回值
+
+   * map-into
+
+	 map-into类似map,但它并不产生给定类型的新序列,它将结果放置在一个作为第一个参数传递的序列中
+
+   * (maplist fn list...)
+
+	 与mapcar类似,但是传递给fn的参数位list的car和list的cdr
+
+   * (mapcan fn seq...)
+
+	 类似mapcar,但是使用nconc来将fn返回的结果(必须是list)连接起来
+
+   * (mapcon fn list...)
+
+	 类似maplist,但是使用nconc来将fn返回的结果(必须是list)连接起来
+
+   * (mapc fn seq)
+
+	 类似mapcar,但是返回值只是第一个列表实参
+
+   * (mapl fn list...)
+
+	 类似maplist,但是返回值只是第一个列表实参
 ** 结构体
    * (defstruct NAME SLOT1...SLOTN)
 
@@ -284,6 +370,26 @@
 	 fn接收两个参数,hashtable中的key和value
 
 	 maphash返回nil
+
+** alist
+   
+   * (pairlis key-list value-list &optional alist)
+
+	 通过分开的键和值的列表,创建alist
+
+** plist
+
+   * (getf plist key &optional default)
+
+	 getf只使用eq对key进行比较,从plist中获取value,若没找到,返回default
+
+   * (remprop plist key)
+
+	 删除plist,键eq key的属性
+
+   * (remf plist-place tag)
+
+	 删除plist中键eq tag的属性
 * 控制结构
 ** Blocks
    * (progn bodys...)
@@ -351,6 +457,11 @@
        ;; (A B C (D E))
 	 #+END_SRC
 
+	 其中,ARGS-PATTERN支持宏参数列表中的任何参数类型,比如&optional &rest &key &whole
+
+	 其中&whole如果被指定,必须时参数列表的第一个参数,并且它会绑定到整个参数列表上.
+
+	 在一个&whole参数之后,其他参数还可以像往常那样出现并且像没有&whole那样抽取出参数中的指定部分
 ** 条件判断
 
 ** 提前退出
@@ -393,6 +504,23 @@
 
 * 函数
 ** 破坏性函数
+
+   一般破坏性函数使用在两种情况下:
+
+   * 只对从零构建起来的局部变量使用破坏性函数,这样可以防止其他代码引用到被破坏结构的情况
+	 #+BEGIN_SRC lisp
+       (defun upto(max)
+         (let ((result nil))
+           (dotimes (i max)
+             (push i result))
+           (nreverse result)))
+	 #+END_SRC
+
+   * 将被破坏的结构立即重新复制到含有被破坏结构的变量位置上.
+	 #+BEGIN_SRC lisp
+       (setf foo (delete nil foo))
+	 #+END_SRC
+
   | 安全              | 破坏性            |
   | append            | nconc             |
   | reverse           | nreverse          |
