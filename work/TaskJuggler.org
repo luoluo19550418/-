@@ -6,27 +6,6 @@
 
   Taskjuggler使用一些文本文件来描述一个项目. 这些文件由一个.tjp文件和多个tji文件组成. 其中tjp为主项目文件,在tjp文件中可以include多个tji文件.
 
-** TJP文件的结构
-  
-   TJP文件为项目的主文件. 每个项目都必须以project header开头. 且project header只能在存在主项目文件中. 所有其他的元素则可以分散到各个tji文件中. 
-
-   project header下面是任意个项目属性的描述,例如accounts,resource,tasks和reports. 且每个project只要要有一个task和一个report.
-   
-   各项目属性中间没有严格的前后关系,但具体某个属性之间还是有先后关系的,例如若想分配一个resource到某task上,则该resource必须先于该task定义. 因此,推荐的属性排列顺序为:
-
-   1. macros
-   2. flags
-   3. accounts
-   4. shifts
-   5. vacations
-   6. resources
-   7. tasks
-   8. accountreports
-   9. resourcereports
-   10. taskreports
-   11. textreports
-   12. exports
-
 * 命令
 
 ** tj3
@@ -38,4 +17,370 @@
 
    若想在项目文件中指定其他文件路径,最好使用`/'作为目录分隔符. 这样该项目文件在所有的操作系统下都能够兼容.
 
-* 简要使用说明
+* TJP文件的结构
+ 
+  TJP文件为项目的主文件. 每个项目都必须以project header开头. 且project header只能在存在主项目文件中. 所有其他的元素则可以分散到各个tji文件中. 
+
+  project header下面是任意个项目属性的描述,例如accounts,resource,tasks和reports. 且每个project只要要有一个task和一个report.
+  
+  各项目属性中间没有严格的前后关系,但具体某个属性之间还是有先后关系的,例如若想分配一个resource到某task上,则该resource必须先于该task定义. 因此,推荐的属性排列顺序为:
+
+  1. macros
+  2. flags
+  3. accounts
+  4. shifts
+  5. vacations
+  6. resources
+  7. tasks
+  8. accountreports
+  9. resourcereports
+  10. taskreports
+  11. textreports
+  12. exports
+
+** project property
+   每个TaskJuggler项目文件必须以project property开头. 该property包括项目名称和项目开始/结束日期. 该开始/结束日期不需要特别精确,但只要要能包括近项目中的所有任务. 
+   TaskJuggler会使用开始/结束时间间的时间段来规划任务,因此这个时间段必须要能够包含进项目中的所有任务,但是也不要太大了,这样会比较消耗内存,增加规划计算的时间
+   #+BEGIN_SRC taskjuggler
+   project sms-bank "短信银行" 2015-03-01 +3m {
+   }
+   #+END_SRC
+
+   所有的Taskjuggler property都有一个唯一的id,一个名称和一系列可选的attribute.  
+   其中property的名称是必须有的,而id是可以省略的,TaskJuggler会自动产生一个唯一的id,但这样的话该属性就无法被引用了.
+   attribute则被包含在大括号内. 当然,若一个property没有任何attribute,则大括号可以忽略.
+
+   attribute的结构为`keyword argument1...argumentN'. 例如:
+
+   默认TaskJuggler使用的时区是UTC,若向设置自己的时区,则可以使用`timezone' attribute
+   #+BEGIN_SRC taskjuggler
+   timezone "Europe/Pairs"
+   #+END_SRC
+   需要注意的是,项目头部的开始/结束时间是在重定义timezone之前设定的,因此这时project的开始/结束时间还是以UTC时区为准的. 但是你可以为项目重新设置一次开始/结束时间
+   #+BEGIN_SRC taskjuggler
+   project sms-bank "短信银行" 2015-03-01-0:00-+100
+   #+END_SRC
+
+   `currency' attribute指定了货币单位
+   #+BEGIN_SRC taskjuggler
+   currency "CNY"
+   #+END_SRC
+
+   `timeformat' attribute指定了报告中的日期格式(并不会影响项目文件中指定date的格式)
+   `numberformat'指定了报告中显示数字的格式
+   `currencyformat'指定了报告中显示金额的格式
+   #+BEGIN_SRC taskjuggler
+   timeformat "%Y-%m-%d"
+   numberformat "-" "" "," "." 1
+   currencyformat "(" ")" "," "." 0
+   #+END_SRC
+   
+   `now' attribute用来设置规划器认为当前日期为另一个时间(默认为调用TaskJuggler的时间).
+   还可以使用`now'产生指定日期的项目状态报告
+   #+BEGIN_SRC taskjuggler
+   now 2015-03-11-13:00
+   #+END_SRC
+
+   scenario attribute可以用来创建场景.
+
+   可以创建两个scenario,一个计划中的scenario,一个实际的scenario来进行对比. 两个scenario的任务结构和任务依赖关系需要一样才行.
+  
+   scenario可以嵌套入另一个scenario.这是子scenario共用父级scenario的属性值,除非子scenario的属性定义了自己的值.
+   #+BEGIN_SRC taskjuggler
+   scenario plan "Plan"{
+	 scenario delayed "Delayed"
+   }
+   #+END_SRC
+   我们定义了两个scenario,第一个是plan scenario,第二个是delayed scenario. 这种情况下,所有没有指定所属scenario的attribute都默认属于plan scenario. 
+   要明确指定delayed scenario的attribute,需要在attribute前加前缀`delayed:',例如`delayed:effort 40d'标示实际项目消耗了40天
+
+   下面是一个完整的例子
+   #+BEGIN_SRC taskjuggler
+   project acso "Accounting Software"  2002-01-16 +4m {
+   # Set the default time zone for the project. If not specified, UTC
+   # is used.
+   timezone "Europe/Paris"
+   # Hide the clock time. Only show the date.
+   timeformat "%Y-%m-%d"
+   # Use US format for numbers
+   numberformat "-" "" "," "." 1
+   # Use US financial format for currency values. Don't show cents.
+   currencyformat "(" ")" "," "." 0
+   # Pick a day during the project that will be reported as 'today' in
+   # the project reports. If not specified, the current day will be
+   # used, but this will likely be outside of the project range, so it
+   # can't be seen in the reports.
+   now 2002-03-05-13:00
+   # The currency for all money values is the Euro.
+   currency "USD"
+   
+   # We want to compare the baseline scenario to one with a slightly
+   # delayed start.
+   scenario plan "Plan" {
+    scenario delayed "Delayed"
+    }
+   extend resource {
+    text Phone "Phone"
+    }
+   }
+   #+END_SRC
+
+** Global Attributes
+
+   TaskJuggler中的Property被设置为能够从外部作用域中继承attribute.
+
+   在project property后,我们处于全局作用域范围内,这里设定的attribute会被接下来的所有property所继承.
+   
+   例如:
+   `rate' attribute可以用来设置资源的每日成本.所有接下来定义的资源都会默认继承这个每日成本,当然也可以为某个特定的资源定义自己的成本价格.
+   #+BEGIN_SRC taskjuggler
+   rate 390.0
+   #+END_SRC
+
+   `leave' attribute可以用来设置全局的假日安排, 所有的资源在假日期间不安排工作. `leave' attribute可以有一个名称,而且必须有一个日期或时间段
+   #+BEGIN_SRC taskjuggler
+   leaves holiday "Good Friday" 2015-03-13
+   #+END_SRC
+
+** Macros
+
+   宏是TaskJuggler用来减少输入工作来那个的一种机制. 类似C语言,TaskJuggler中的宏执行的也仅仅是文本替换
+
+   宏总是带有宏名称和括号内的文本模式. 定义宏的格式为`macro macro-name [xxx]'
+   #+BEGIN_SRC taskjuggler
+   macro allocate_developers[
+     allocate dev1
+     allocate dev2
+     allocate dev3
+   ]
+   #+END_SRC
+
+   当要引用宏时,格式为`$(macro-name)'. TaskJuggler就会替代$(macro-name)为文本模式`xxx'
+   #+BEGIN_SRC taskjuggler
+   $(allocate_developers)
+   #+END_SRC
+
+** 定义Flags
+
+   TaskJuggler常用特性之一就是flag. 一旦定义了一个flag,就可以将它与任何property相连(类似tag). 
+
+   当你生成报表时,可以使用flag来过滤不希望展现的property
+
+   定义flag的语法为
+   #+BEGIN_SRC taskjuggler
+   flags flag-name
+   #+END_SRC
+
+   所有的flag在使用前都需要预先定义. 否则会报找不到flag名称的错误
+
+** 定义Account
+
+   资源的使用会需要付出成本. 为了进行成本收益分析,我们需要设置账户记录下成本和收益.
+
+   定义Account的格式为
+   #+BEGIN_SRC taskjuggler
+   account id name
+   #+END_SRC
+   这里id可以是由a-z,A-Z,_和0-9组成,其中数字0-9不能作为id的第一个字符. 
+   
+   例如:
+   #+BEGIN_SRC taskjuggler
+   account cost "Project Cost"{
+     account dev "Development"
+     account doc "Documentation"
+   }
+   account rev "Payments"
+   #+END_SRC
+   account可以嵌套入另一个account中.
+
+   当你在项目中定义了account后,自少需要定义一个默认的balance
+   #+BEGIN_SRC taskjuggler
+   balance cost rev
+   #+END_SRC
+
+** 定义Resource
+
+   任何一个项目都必须包含资源.
+
+   resource的定义格式为
+   #+BEGIN_SRC taskjuggler
+     resource id name{
+       其他attribute或resource
+     }
+   #+END_SRC
+
+   例如:
+   #+BEGIN_SRC taskjuggler
+     resource boss "Paul Henry Bullock" {
+       email "phb@crappysoftware.com"
+       Phone "x100"
+       rate 480
+     }
+     resource dev "Developers" {
+       managers boss
+       resource dev1 "Paul Smith" {
+         email "paul@crappysoftware.com"
+         Phone "x362"
+         rate 350.0
+       }
+       resource dev2 "Sébastien Bono" {
+         email "SBono@crappysoftware.com"
+         Phone "x234"
+       }
+       resource dev3 "Klaus Müller" {
+         email "Klaus.Mueller@crappysoftware.com"
+         Phone "x490"
+         leaves annual 2002-02-01 - 2002-02-05
+       }
+       flags team
+     }
+     resource misc "The Others" {
+       managers boss
+       resource test "Peter Murphy" {
+         email "murphy@crappysoftware.com"
+         Phone "x666"
+         limits { dailymax 6.4h }
+         rate 310.0
+       }
+       resource doc "Dim Sung" {
+         email "sung@crappysoftware.com"
+         Phone "x482"
+         rate 300.0
+         leaves annual 2002-03-11 - 2002-03-16
+       }
+
+       flags team
+     }
+   #+END_SRC
+
+   类似account,resource也必须有一个id和名称, resource也能够嵌套入另一个resource中.
+
+   通过设置`leaves' attribute,可以设定特定时间段内,指定资源不可用. 
+   *需要注意的是* 子property中的leaves attribute并不会覆盖父propery的leaves attribute,相反他们是累加关系. 若想取消父property定义的leaves attribute,需要使用`purge' attribute
+   leaves attribute后接一个时间段.
+
+   通过设置`limits' attribute,可以现在资源每日的使用时间.
+
+   *需要注意的是*,我们在定义了team resource的sub-resource后添加了`flags team'. 这种情况下,这些flag并不会对sub-resource所生效.
+   
+   但若在定义sub-resource之前就定义了flag,则该flag会对sub-resource也生效.
+** 时间段说明
+   TaskJuggler的时间段表示格式为
+   #+BEGIN_SRC taskjuggler
+     <date1> (- <date2> | + <duration> (min | h | d | w | m | y)) 
+   #+END_SRC
+   
+   这里的date可以包括日期和时间,若省略时间则默认为0:0:0,且该时间段并不包括date2
+
+** 定义task
+
+   task的定义语法为
+   #+BEGIN_SRC taskjuggler
+     task id name{
+         sub-task或其他属性
+     }
+   #+END_SRC
+
+   例如
+   #+BEGIN_SRC taskjuggler
+     task sms-bank "短信银行" {
+         task spec "Specification" {
+             effort 20d
+             ${allocate_developers}
+             depends !deliveries.start
+         }
+         task software "Software Development" {
+         }
+         task test "Software testing" {
+         }
+         task manual "Manual" {
+             journalentry 2002-02-28 "User manual completed" {
+                 author boss
+                 summary "The doc writers did a really great job to finish on time."
+             }
+         }
+         task deliveries "Milestones" {
+         }
+     }
+
+     task software "Software Development" {
+         priority 1000
+         task database "Database coupling" {
+             journalentry 2002-02-03 "Problems with the SQL Libary" {
+                 author dev1
+                 alert yellow
+                 summary -8<-
+                 We ran into some compatibility problems with the SQL
+                 Library.
+                 ->8-
+                 details -8<-
+                 We have already contacted the vendor and are now waiting for
+                 their advise.
+                 ->8-
+             }
+         }
+         task gui "Graphical User Interface" {
+         }
+         task backend "Back-End Functions" {
+         }
+     }
+
+     task gui "Graphical User Interface" {
+         effort 35d
+         delayed:effort 40d
+         depends !database, !backend
+         allocate dev2, dev3
+         # Resource dev2 should only work 6 hours per day on this task.
+         limits {
+             dailymax 6h {
+                 resources dev2
+             }
+         }
+     }
+
+   #+END_SRC
+   
+   *不同TaskJuggler property都有各种的命名空间*. 因此resource和task使用同一个id是可行的.
+
+   *task的id不同于其他property的id,它会自动继承父task的id作为前缀*. 因此"Software Development"的完整id应该为sms-bank.software.
+   但taskid还可以写成相对id的形式: 相对id以一个或多个惊叹号开头. Each exclamation mark moves the scope to the next enclosing task. 因此这里`!deliveries.start'换成完整id就是`Acso.deliveries.start'
+   
+   `effor' attribute定义了要完成该task需要花费的人天数. 既然单位是人天数,就意味着我们必须为该任务分配人员. 
+   若給该task分配的资源时间不够长,该任务无法完成.( The task won't finish before the resources could be allocated long enough to reach the specified effort)
+   默认情况下,TaskJuggler认为一天工作8个小时,但是可以通过`dailyworkinghours'属性修改.
+
+   除了`effort' attribute,`length' attribute和`duration' attribute也能用来表示该task需要花费的时间.
+   `length'与`duration'的不同之处在于`length'表示任务的工作天数,而`duration'表示任务的日历天数(包括非工作日期).
+   当使用`length'或`duration'时,就无需指定給该task所分配的资源.
+
+   对任一task来说,只能使用`effor',`length'或`duration'其中之一来定义任务的时长. 
+   *对于Container task来说,不应该分配时长* 它的时长应该根据它的sub-task来自动计算出来.
+
+   `allocate' attribute用于为task分配资源,其格式为
+   #+BEGIN_SRC taskjuggler
+     allocate resource-id
+   #+END_SRC
+
+   `depends' attribute指定了两个task之间的关系. 其格式为
+   #+BEGIN_SRC taskjuggler
+     depends taskid1,taskid2...taskidN
+   #+END_SRC
+   这里taskid可以是完整的taskid或相对的taskid
+
+   `priority' attribute用来标示task的重要程度. 重要程度的从不重要到最重要为1到1000. 
+   若在task中,sub-task前定义了`priority' attribute,则所有的sub-task会继承该attribute
+
+   gui task中的`limit' attribute说明资源dev2每天只花6个小时到gui这个task上.
+   
+   gui task中的`delayed:effort 40d'说明虽然plan scenario中该task的effort为35d,但实际上delayed scenario中的task的effort为40d,即实际比原计划拖延了5天.
+
+   `complete' attribute可以指定task的完成情况. 例如
+   #+BEGIN_SRC taskjuggler
+     task backend "Back-End Functions" {
+         effort 30d
+         complete 95
+         depends !database
+         allocate dev1, dev2
+     }
+   #+END_SRC
+   
