@@ -193,7 +193,7 @@
    #+END_SRC
    account可以嵌套入另一个account中.
 
-   当你在项目中定义了account后,自少需要定义一个默认的balance
+   当你在项目中定义了account后,自少需要定义一个默认的balance, 该`balance' attribute指定了哪些account会被用于成本收益分析报告.
    #+BEGIN_SRC taskjuggler
    balance cost rev
    #+END_SRC
@@ -384,3 +384,99 @@
      }
    #+END_SRC
    
+   实施一项task的花费需要记到某个account中,这时需要用到`chargeset' attribute. 其语法为:
+   #+BEGIN_SRC taskjuggler
+   chargeset account-id
+   #+END_SRC
+   
+   若一项task的花费不仅仅包括资源成本,则还可以使用`charge' attribute修改task的花费. 例如
+   #+BEGIN_SRC taskjuggler
+     task AcSo "Accounting Software" {
+         chargeset dev
+         charge 170 perday
+         task manual "Manual" {
+             effort 10w
+             depends !deliveries.start
+             allocate doc, dev3
+             purge chargeset         # 废除之前的chargeset安排
+             chargeset doc
+             journalentry 2002-02-28 "User manual completed" {
+                 author boss
+                 summary "The doc writers did a really great job to finish on time."
+             }
+         }
+     }
+   #+END_SRC
+   其中,`charge' attribute的第二个参数`perday'表示每天的消耗, 可以用`onstart'表示一次性的固定消耗
+
+** 定义milestone
+   
+   所谓milestone就是没有定义时长的task
+   #+BEGIN_SRC taskjuggler
+     task deliveries "Milestones" {
+         purge chargeset
+         chargeset rev
+
+         task start "Project start" {
+             start ${projectstart}
+             delayed:start 2002-01-20
+             charge 21000.0 onstart
+         }
+
+         task prev "Technology Preview" {
+             depends !!software.backend
+             charge 31000.0 onstart
+             note "All '''major''' features should be usable."
+         }
+
+         task beta "Beta version" {
+             depends !!test.alpha
+             charge 13000.0 onstart
+             note "Fully functional, may contain bugs."
+         }
+
+         task done "Ship Product to Customer" {
+             # maxend 2002-04-17
+             depends !!test.beta, !!manual
+             charge 33000.0 onstart
+             note "All priority 1 and 2 bugs must be fixed."
+         }
+     }
+   #+END_SRC
+
+   每个milestone必须要有一个dependency或一个固定的开始日期. 可以使用`depends' attribute来为milestone设定dependency,也可以使用`start' attribute为milestone设置一个固定的开始日期.
+
+   `maxend' attribute定义了该任务最晚不能晚于指定的日期完成. 该属性在规划阶段没有作用,但可以用来检查是否照成计划延后. 由于task是可能晚于指定的日期的,因此最好使用该属性进行检查,若注释掉该属性会引发一个警告.
+
+** 注释
+   使用#来注释一行
+
+** 定义report
+
+   report的定义与task和resource的定义很类似. report也有继承机制.
+
+   每个report定义,都是以report的类型开始的. 每钟类型的report都有其不同的关注点. `taskreport'列出项目中的task列表. `resourcereport'列出项目中的resource列表. 更一般的报表是`textreport'
+
+   `textreport'不会像`taskreport'和`resourcereport'那样直接显示数据. 它实际上包含了很多个文本区块,这些文本区块是由Rich Text组成的. There can be a building block at the top and bottom, as well as three columns in the center. The column are called left, center and right.
+
+   与其他propery类似,`textreport' property也会有一个名字,且改名字将会作用产生报表文件时的basename. 
+
+   `formats' attribute定义了一个报表文件的导出格式,若没有设置该attribute,则不会导出该报表
+
+   若想要在一个report中包含另一个report的内容,需要用到一个名为`block generator'的东西. 例如
+   #+BEGIN_SRC taskjuggler
+     textreport frame "" {
+         textreport index "Overview" {
+             formats html
+             center '<[report id="overview"]>'  #block generator
+         }
+   #+END_SRC
+   
+   `column' attribute可以指定report中每行显示的那些内容
+   #+BEGIN_SRC taskjuggler
+     taskreport overview "" {
+         columns bsi { title 'WBS' },
+         name, start, end, effort, cost,
+         revenue, chart { ${TaskTip} }
+         }
+   #+END_SRC
