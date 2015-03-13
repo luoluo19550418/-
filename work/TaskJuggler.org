@@ -159,7 +159,17 @@
    #+BEGIN_SRC taskjuggler
    $(allocate_developers)
    #+END_SRC
+*** 预定义宏
+   	| 预定义的宏   | 说明                                                          |
+   	|--------------+---------------------------------------------------------------|
+   	| projectstart | project的开始日期                                             |
+   	| projectend   | project的结束日期                                             |
+   	| now          | 当前日期,可以用`now'关键字修改,`timeformat'不会影响到它的格式 |
+   	| today        | 类似now,但会根据`timeformat'修改其格式                        |
+   	|              |                                                               |
+*** 环境变量扩展
 
+	$(VAR)这种语法会扩展为环境变量VAR的实际值
 ** 定义Flags
 
    TaskJuggler常用特性之一就是flag. 一旦定义了一个flag,就可以将它与任何property相连(类似tag). 
@@ -462,15 +472,6 @@
    与其他propery类似,`textreport' property也会有一个名字,且改名字将会作用产生报表文件时的basename. 
 
    `formats' attribute定义了一个报表文件的导出格式,若没有设置该attribute,则不会导出该报表
-
-   若想要在一个report中包含另一个report的内容,需要用到一个名为`block generator'的东西. 例如
-   #+BEGIN_SRC taskjuggler
-     textreport frame "" {
-         textreport index "Overview" {
-             formats html
-             center '<[report id="overview"]>'  #block generator
-         }
-   #+END_SRC
    
    `column' attribute可以指定report中每行显示的那些内容
    #+BEGIN_SRC taskjuggler
@@ -480,3 +481,188 @@
          revenue, chart { ${TaskTip} }
          }
    #+END_SRC
+
+   `tooltip' attribute可以实现当鼠标放在列上时,显示更明细的说明. 
+
+   `tooltip' attribute的第一个参数为决定tooltip是否激活的逻辑表达式. 报表中的每一行都会计算一次该逻辑表达式.
+   可以定义多个tooltip,但只有第一个符合逻辑表达式的tooptip会显示.
+
+   `tooltip' attribute的第二个参数为tooltip的内容模板,在该模板中可以使用"query generator"来引用task attribute(比如开始,结束日期).
+   #+BEGIN_SRC taskjuggler
+     macro TaskTip [
+     tooltip istask() -8<-                     # istask()函数只有在处于task line时才为true
+     '''Start: ''' <-query attribute='start'->
+     '''End: ''' <-query attribute='end'->
+     ----
+     '''Resources:'''
+
+     <-query attribute='resources'->
+     ----
+     '''Precursors: '''
+
+     <-query attribute='precursors'->
+     ----
+     '''Followers: '''
+
+     <-query attribute='followers'->
+     ->8-
+     ]
+   #+END_SRC
+
+   报表中的`timeformat'可以指定显示日期的格式:
+   #+BEGIN_SRC taskjuggler
+     timeformat "%a %Y-%m-%d"
+   #+END_SRC
+
+   报表中的`loadunit'可以指定任务消耗的单位
+   #+BEGIN_SRC taskjuggler
+     loadunit days
+   #+END_SRC
+
+   报表中的`caption'可以指定报表的标题
+
+   `header' attribute,`center' attribute,`footer' attribute都是"Rich Text" attribute. 
+
+   `navigator' property可以创建一个导航条:
+   #+BEGIN_SRC taskjuggler
+     navigator navbar {
+         hidereport @none
+     }
+   #+END_SRC
+   这里hidereport为一个过滤属性,后面的逻辑表达式决定了哪些report可以包含该导航条. "@none"表示不过滤
+
+** Rich Text
+   "Rich Text"的值可以是一个包含在单引号或双引号中的字符串,但若其内容需要包含多行内容或者包含有单引号或双引号,则需要转义,这样很麻烦. 
+   可以使用"-8<-"和"->8-"(形状酷似剪刀,因此称为剪刀符)标记内容的开始和结束位置. 并且"-8<-"后,"->8-"前需要紧跟一个分行符. The indentation of the following line defines the indentation that will be ignored for all lines of the string
+   #+BEGIN_SRC taskjuggler
+	 header -8<-
+		 === Project Overview ===
+
+		 The project is structured into 3 phases.
+
+		 # Specification
+		 # <-reportlink id='frame.development'->
+		 # Testing
+
+		 === Original Project Plan ===
+	 ->8-
+   #+END_SRC
+
+   Rich Text的语法很类似于MediaWiki markup的语法
+*** Block Markup
+
+	所有的块标记都是由空行分隔的. 块标记符号必须处于块的第一行的最开头的地方. 任何以空格开始的行都被认为是预先格式化好的文本,这时会保留该格式原封不动,也不会去解释其中的标记符号.
+
+	块标记不能嵌套.
+
+   	"Rich Text"中的章节标题用"== XXXX =="来表示,其中"=="表示一级章节,"==="表示二级章节,以此类推. 
+   	#+BEGIN_SRC markdown
+      == Headline Level 1 ==
+      === Headline Level 2 ===
+      ==== Headline Level 3 ====
+   	#+END_SRC
+
+   	"Rich Text"中"----"会生成一个水平分割线
+   	#+BEGIN_SRC markdown
+      ----
+   	#+END_SRC
+
+   	"Rich Text"中的章节,用空行来分隔.
+
+   	"Rich Text"中的计数列表用"# xxx"来表示. 目前支持三个级别
+   	#+BEGIN_SRC markdown 
+      # Enumeration Level 1
+      ## Enumeration Level 2
+      ### Enumeration Level 3
+   	#+END_SRC
+
+   	"Rich Text"中的无计数列表用"* xxx"来表示. 目前支持三个级别
+   	#+BEGIN_SRC markdown
+      ,* Enumeration Level 1
+      ,** Enumeration Level 2
+      ,*** Enumeration Level 3
+   	#+END_SRC
+*** In-Line Markups
+	与Block Markup不同,In-Line Markup不需要它一定出现在行头.
+	#+BEGIN_SRC markdown
+      This is an ''italic'' word.
+      This is a '''bold''' word.
+      This is a ''''monospaced'''' word.
+      This is a '''''italic and bold''''' word.
+	#+END_SRC
+	
+	可以使用<fcol:color>text</fcol>为text加上颜色. 目前支持的颜色有:black, maroon, green, olive, navy, purple, teal, silver, gray, red, lime, yellow, blue, fuchsia, aqua 和 white.
+	#+BEGIN_SRC markdown
+      This is a <fcol:green>green</fcol> word
+	#+END_SRC
+	也可以使用<fcol:#XXX>text</fcol>为text加上颜色. 例如
+	#+BEGIN_SRC markdown
+      This is a <fcol:#FFFF>green</fcol> word
+	#+END_SRC
+	
+	可以使用[URL]或[URL Comment]这种格式来创建连接到外部文档的链接
+	#+BEGIN_SRC markdown
+      [http://www.taskjuggler.org]
+      [http://www.taskjuggler.org The TaskJuggler Web Site]
+	#+END_SRC
+
+	使用=[[item]]=或=[[item|Comment]]=这种格式可以创建本地引用. 这时创建链接时,会自动在第一个参数后加上后缀".html"
+	#+BEGIN_SRC markdown
+      [[item]]
+      [[item|An item]]
+	#+END_SRC
+	
+	添加图片的语法跟创建本地引用的语法很类似,但需要使用"alt=Comment"来标识Comment
+	#+BEGIN_SRC markdown
+      [[File:image.jpg]]
+      [[File:image.jpg|alt=An image Comment]]
+	#+END_SRC
+	目前支持的图片格式有: .jpg, .gif, .png and .svg.
+	
+** 
+   若想引用其他report的内容,可以使用"=[[report-file-name]]="中,其中report-file-name不带文件后缀.
+   #+BEGIN_SRC taskjuggler
+	 footer -8<-
+	 === Staffing ===
+
+	 All project phases are properly staffed. See [[ResourceGraph]] for
+	 detailed resource allocations.
+
+	 === Current Status ===
+
+	 The project started off with a delay of 4 days. This slightly affected
+	 the original schedule. See [[Deliveries]] for the impact on the
+	 delivery dates.
+	 ->8-
+   #+END_SRC
+
+   若想要在一个report中包含另一个report的内容,需要用到一个名为`block generator'的东西. 其格式为
+   #+BEGIN_SRC taskjuggler
+   <[report id="report-id"]
+   #+END_SRC
+   例如
+   #+BEGIN_SRC taskjuggler
+	textreport frame "" {
+		textreport index "Overview" {
+			formats html
+			center '<[report id="overview"]>'  #block generator
+		}
+   #+END_SRC
+   
+   除了report外,`block generator'还能包含其他内容,例如naviagtor
+   #+BEGIN_SRC taskjuggler
+	 textreport frame "" {
+		 header -8<-
+		 == Accounting Software Project ==
+		 <[navigator id="navbar"]>
+		 ->8-
+		 footer "----"
+		 textreport index "Overview" {
+			 formats html
+			 center '<[report id="overview"]>'
+		 }
+	 }
+   #+END_SRC
+* TaskJuggler的语法
+
+  
