@@ -612,57 +612,124 @@
       [[item|An item]]
 	#+END_SRC
 	
+   	若想引用其他report的内容,可以使用"=[[report-file-name]]="中,其中report-file-name不带文件后缀.
+   	#+BEGIN_SRC taskjuggler
+	  footer -8<-
+	  === Staffing ===
+
+	  All project phases are properly staffed. See [[ResourceGraph]] for
+	  detailed resource allocations.
+
+	  === Current Status ===
+
+	  The project started off with a delay of 4 days. This slightly affected
+	  the original schedule. See [[Deliveries]] for the impact on the
+	  delivery dates.
+	  ->8-
+   	#+END_SRC
+
 	添加图片的语法跟创建本地引用的语法很类似,但需要使用"alt=Comment"来标识Comment
 	#+BEGIN_SRC markdown
       [[File:image.jpg]]
       [[File:image.jpg|alt=An image Comment]]
 	#+END_SRC
 	目前支持的图片格式有: .jpg, .gif, .png and .svg.
+
+	甚至我们还可以设置图片的垂直位置：
+	#+BEGIN_SRC markdown
+      [[File:image.svg|text-bottom]]
+	#+END_SRC
+	这里text－bottom还可以是top，middle，bottom，baseline，sub，super，text-top
+
+	若希望插入不解析的存文本，可以使用
+	#+BEGIN_SRC markdown
+      <nowiki> This is not '''bold''' text. </nowiki>
+	#+END_SRC
+
+	还可以在<html>...</html>中插入纯html代码
 	
-** 
-   若想引用其他report的内容,可以使用"=[[report-file-name]]="中,其中report-file-name不带文件后缀.
-   #+BEGIN_SRC taskjuggler
-	 footer -8<-
-	 === Staffing ===
+** Block and Inline Generator
 
-	 All project phases are properly staffed. See [[ResourceGraph]] for
-	 detailed resource allocations.
+   Generator是一个非常有用的功能，它允许你插入任意复杂的内容到Rich Text中。 Block generator会创建一个文本块,而inline generator产生一个可以插入文本段落中的元素.
+*** Block generator
+   	Block generator的语法为:
+   	#+BEGIN_SRC markdown
+      <[generator_name parameter1="value1" ... ]>
+   	#+END_SRC
+	其中generator_name为分辨generator的唯一标志.
 
-	 === Current Status ===
+	这里parameter的值根据不同类型的Block Generator而支持不同的参数
+    | generator类型 | paramter | 说明                  |
+    |---------------+----------+-----------------------|
+    | navigator     | id       | 插入指定id的navigator |
+    | report        | id       | 插入指定id的report    |
+	   
+	例如:
 
-	 The project started off with a delay of 4 days. This slightly affected
-	 the original schedule. See [[Deliveries]] for the impact on the
-	 delivery dates.
-	 ->8-
-   #+END_SRC
-
-   若想要在一个report中包含另一个report的内容,需要用到一个名为`block generator'的东西. 其格式为
-   #+BEGIN_SRC taskjuggler
-   <[report id="report-id"]
-   #+END_SRC
-   例如
-   #+BEGIN_SRC taskjuggler
-	textreport frame "" {
-		textreport index "Overview" {
-			formats html
-			center '<[report id="overview"]>'  #block generator
-		}
-   #+END_SRC
-   
-   除了report外,`block generator'还能包含其他内容,例如naviagtor
-   #+BEGIN_SRC taskjuggler
+   	若想要在一个report中包含另一个report的内容
+   	#+BEGIN_SRC taskjuggler
 	 textreport frame "" {
-		 header -8<-
-		 == Accounting Software Project ==
-		 <[navigator id="navbar"]>
-		 ->8-
-		 footer "----"
 		 textreport index "Overview" {
 			 formats html
-			 center '<[report id="overview"]>'
+			 center '<[report id="overview"]>'  #block generator
 		 }
-	 }
-   #+END_SRC
+   	#+END_SRC
+   	
+   	#+BEGIN_SRC taskjuggler
+	  textreport frame "" {
+		  header -8<-
+		  == Accounting Software Project ==
+		  <[navigator id="navbar"]>
+		  ->8-
+		  footer "----"
+		  textreport index "Overview" {
+			  formats html
+			  center '<[report id="overview"]>'
+		  }
+	  }
+   	#+END_SRC
+
+*** Inline generator
+   	Inline generator的语法为:
+   	#+BEGIN_SRC markdown
+      <-generator_name parameter1="value1" ... ->
+   	#+END_SRC
+	其中generator_name为分辨generator的唯一标志.
+	
+	这里parameter的值根据不同类型的Block Generator而支持不同的参数
+    | generator类型 | paramter       | 说明                                                                                               |
+    |---------------+----------------+----------------------------------------------------------------------------------------------------|
+    | reportlink    | id             | 插入一条链接,连接到指定id的report处                                                                |
+    | reportlink    | attributes     | 一个属性集合,会覆盖所引用report的相关属性. 该属性集合只有在使用tj3d web server时才生效             |
+    | query         | family         | 指定一个task或resource是否可以被查询                                                               |
+    | query         | property       | 被查询的task/resource的id                                                                          |
+    | query         | scopeproperty  | scope property的id. 若property为task,则该值必须是个resource id,反之亦然                            |
+    | query         | attribute      | attribute的id,支持的attribute包括copyright, currency, end, name, now, projectid, start and version |
+    | query         | scenario       | scenario的id                                                                                       |
+    | query         | start          | 当前report报告期间的开始日期                                                                       |
+    | query         | end            | 当前report报告期间的结束日期                                                                       |
+    | query         | loadunit       | The loadunit that should be used in case the requested attribute is an effort or duration value.   |
+    | query         | timeformat     | 指定日期类型attribute的格式                                                                        |
+    | query         | numberformat   | 指定数字类型attribute的格式                                                                        |
+    | query         | currencyformat | 指定货币类型attribute的格式                                                                             |
+
+	例如:
+	#+BEGIN_SRC taskjuggler
+      taskreport "All" {
+          formats html
+          columns name { 
+              celltext 1 -8<-
+              <-query attribute="name"-> <-reportlink id="taskRep"
+              attributes="hidetask plan.id != \"<-id->\""->
+              ->8-
+          }, start, end
+      }
+      taskreport taskRep "Task" {
+          formats html
+      } 
+	#+END_SRC
+
+
 * TaskJuggler的语法
 
   
