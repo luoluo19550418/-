@@ -730,6 +730,129 @@
 	#+END_SRC
 
 
-* TaskJuggler的语法
+* TaskJuggler的命令
 
-  
+  TaskJuggler是一个命令行程序，它的所有功能都通过在shell下敲命令来实现。
+
+** tj3
+   tj3读取项目文件的内容,并做出规划,生成报表.
+
+   tj3至少要接一个tjp文件作为参数:
+   #+BEGIN_SRC sh
+     tj3 tutorial.tjp
+   #+END_SRC
+
+   tj3还有许多运行时选项,可以使用--help选项获取明细说明:
+   #+BEGIN_SRC sh
+     tj3 --help
+   #+END_SRC
+
+** tj3man
+
+   tj3man提供一个快速查看语法引用的途径. 
+
+   当不带参数运行tj3man时,会列出一个包含所有语法关键字的列表.
+
+   有时,同一个关键字在不同的上下文环境中代表着不同的意义,这些关键字会以`keyword.context'的格式显示. 例如
+   #+BEGIN_EXAMPLE
+     全局环境,resource环境,task环境和timesheet环境中有shift关键字,这时会列出下面这些shift关键字:
+
+     shift
+     shift.resource
+     shift.task
+     shift.timesheet
+   #+END_EXAMPLE
+
+   若只想查看某个关键字的意义,可以将该关键字作为参数传递給tj3man
+   #+BEGIN_SRC sh
+     tj3man shift.task
+   #+END_SRC
+
+   tj3man还支持使用html格式查看帮助,语法为:
+   #+BEGIN_SRC sh
+     tj3man --html <keyword>
+   #+END_SRC
+
+   默认情况下,tj3man使用firefox显示html格式的帮助信息.
+
+   要想获得更多关于tj3man的用法,可以使用--help选项
+   #+BEGIN_SRC sh
+     tj3man --help
+   #+END_SRC
+
+** tj3d
+
+   tj3d为TaskJuggler的守护进程. 出于安全的考虑,它只接收本地链接的服务请求,且每个客户端都必须有一个认证key.
+
+   在使用tj3d之前,需要先准备一个名为`.taskjuglerrc'或`taskjuggler.rc'的配置文件. 该配置文件的必须跟你的project file放在同一个目录下
+
+   该配置文件格式为`YAML'. 所有的设置以章节的方式组织,每个章节的名称必须以`_'开头:
+   #+BEGIN_EXAMPLE
+     _global:
+       authKey: topsecret
+       _log:
+         logLevel: 3
+         outputLevel: 3
+   #+END_EXAMPLE
+   上面这段配置,为所有的TaskJuggler组件设置了一个认证key:`topsecret'. 当然,可以把`topsecret'设置为任意的字符序列
+
+   配置文件中的`_log'节决定了输出哪些日志. tj3d的日志信息存在一个名为`tj3d.log'的日志文件中. 
+
+   出于调试的目的,可以使用`-d'选项让tj3d输出日志到屏幕上,这时可以指定日志的输出级别:
+   | outputLevel | 说明               |
+   |-------------+--------------------|
+   |           0 | 无日志输出         |
+   |           1 | 只输出致命错误     |
+   |           2 | 致命错误和普通错误 |
+   |           3 | 2+information信息    |
+   |           4 | 3+调试信息             |
+   
+   默认情况下`tj3d'会在当前目录,当前用户的homg目录和/etc目录下搜索配置文件. 但你也可以使用`-c'选项来指定配置文件的路径
+
+   更详细的关于tj3d的帮助,使用命令`tj3d --help'
+
+** tj3client
+
+   需要使用`tj3client'来对TaskJuggler服务进行操作,比如添加/删除项目,查看项目的当前状态,查看某个项目的report等.
+
+   `tj3client'必须提供正确的认证key才能连接上`tj3d'
+
+   要想添加一个项目到`tj3d'中,则可以:
+   #+BEGIN_SRC sh
+     tj3client add yourproject.tjp
+   #+END_SRC
+   
+   想显示目前`tj3d'的状态,可以
+   #+BEGIN_SRC sh
+     tj3client status
+   #+END_SRC
+   
+   要查看某个项目的所有报表列表,可以
+   #+BEGIN_SRC sh
+     tj3client list-reports <project_id>
+   #+END_SRC
+   
+   要查看具体某个项目的某个报表,可以
+   #+BEGIN_SRC sh
+     tj3client report <project_id> <report_id>
+   #+END_SRC
+   
+   要停止`tj3d'继续提供服务,可以
+   #+BEGIN_SRC sh
+     tj3client terminate
+   #+END_SRC
+
+   使用`tj3client --help'可以看到`tj3client'所支持的所有命令.
+
+** tj3web
+
+   这是一个web服务器,用来以HTML的格式来展示项目报表. tj3web需要`tj3d'运行在同一台机器上才能正常的服务.
+
+   默认情况下该web服务器监听8080端口,但可以在配置文件的`_global'节中通过配置`webServerPort'的值来实现:
+   #+BEGIN_EXAMPLE
+     _global:
+       authKey: topsecret
+       webServerPort: 8080
+   #+END_EXAMPLE
+
+   使用web浏览器查看`http://localhost:8080/taskjuggler' 就能看到一个所有加载入`tj3d'的项目列表,点击项目名称就能看到该项目中的所有报表列表.
