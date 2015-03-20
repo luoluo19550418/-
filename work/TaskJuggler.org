@@ -6,16 +6,7 @@
 
   Taskjuggler使用一些文本文件来描述一个项目. 这些文件由一个.tjp文件和多个tji文件组成. 其中tjp为主项目文件,在tjp文件中可以include多个tji文件.
 
-* 命令
 
-** tj3
-
-   tj3是TaskJuggler的命令行版的命令,它类似一个编译器一样,接受项目源文件,然后根据其中的内容产生输出文件. 输出的文件存在当前目录下.
-   #+BEGIN_SRC sh
-     tj3 AcSo.tjp
-   #+END_SRC
-
-   若想在项目文件中指定其他文件路径,最好使用`/'作为目录分隔符. 这样该项目文件在所有的操作系统下都能够兼容.
 
 * TJP文件的结构
  
@@ -80,50 +71,62 @@
    #+BEGIN_SRC taskjuggler
    now 2015-03-11-13:00
    #+END_SRC
+*** scenario
 
-   scenario attribute可以用来创建场景.
+	TaskJuggler可以使用多个场景来比较当某写条件发生变化时，会对我们的计划产生什么影响。
+	
+   	TaskJuggler中默认就有一个名为`plan'的场景,但我们也可以使用scenario property来创建新的场景. 不同的场景可以继承自同一个公共的场景,每个子场景之间只有些许的不同.
+	*需要注意的是,每个场景必须具有相同的任务结构,只是任务的属性可以不同*
 
-   可以创建两个scenario,一个计划中的scenario,一个实际的scenario来进行对比. 两个scenario的任务结构和任务依赖关系需要一样才行.
-  
-   scenario可以嵌套入另一个scenario.这是子scenario共用父级scenario的属性值,除非子scenario的属性定义了自己的值.
-   #+BEGIN_SRC taskjuggler
-   scenario plan "Plan"{
-	 scenario delayed "Delayed"
-   }
-   #+END_SRC
-   我们定义了两个scenario,第一个是plan scenario,第二个是delayed scenario. 这种情况下,所有没有指定所属scenario的attribute都默认属于plan scenario. 
-   要明确指定delayed scenario的attribute,需要在attribute前加前缀`delayed:',例如`delayed:effort 40d'标示实际项目消耗了40天
+   	scenario可以嵌套入另一个scenario.这是子scenario共用父级scenario的属性值,除非子scenario的属性定义了自己的值.
+	
+	例如我们可以创建三个scenario,一个计划中的场景,一个实际的场景,还有一个用来测试用的场景
+   	#+BEGIN_SRC taskjuggler
+      project "Example" 2007-05-29 - 2007-07-01 {
+        timezone "America/Denver"
+        scenario plan "Planned Scenario" {
+          scenario actual "Actual Scenario"
+          scenario test "Test Scenario" {
+            active no
+          }
+        }
+      }
+   	#+END_SRC
+   	我们定义了三个场景:plan,actual和test. 其中actual和test场景都是plan场景的子场景. 
+	这种情况下,所有没有指定所属scenario的attribute都默认属于plan场景. 若想要明确指定某个场景的attribute,则需要在attribute前加上前缀`<场景名>:' 例如:例如`delayed:effort 40d'表示实际项目消耗了40天
 
-   下面是一个完整的例子
-   #+BEGIN_SRC taskjuggler
-   project acso "Accounting Software"  2002-01-16 +4m {
-   # Set the default time zone for the project. If not specified, UTC
-   # is used.
-   timezone "Europe/Paris"
-   # Hide the clock time. Only show the date.
-   timeformat "%Y-%m-%d"
-   # Use US format for numbers
-   numberformat "-" "" "," "." 1
-   # Use US financial format for currency values. Don't show cents.
-   currencyformat "(" ")" "," "." 0
-   # Pick a day during the project that will be reported as 'today' in
-   # the project reports. If not specified, the current day will be
-   # used, but this will likely be outside of the project range, so it
-   # can't be seen in the reports.
-   now 2002-03-05-13:00
-   # The currency for all money values is the Euro.
-   currency "USD"
-   
-   # We want to compare the baseline scenario to one with a slightly
-   # delayed start.
-   scenario plan "Plan" {
-    scenario delayed "Delayed"
-    }
-   extend resource {
-    text Phone "Phone"
-    }
-   }
-   #+END_SRC
+	若想临时不对某个场景作规划,可以在该场景中设置`active' attribute为`no',就像上面的"test"场景一样.
+
+   	下面是一个完整的例子
+   	#+BEGIN_SRC taskjuggler
+   	project acso "Accounting Software"  2002-01-16 +4m {
+   	# Set the default time zone for the project. If not specified, UTC
+   	# is used.
+   	timezone "Europe/Paris"
+   	# Hide the clock time. Only show the date.
+   	timeformat "%Y-%m-%d"
+   	# Use US format for numbers
+   	numberformat "-" "" "," "." 1
+   	# Use US financial format for currency values. Don't show cents.
+   	currencyformat "(" ")" "," "." 0
+   	# Pick a day during the project that will be reported as 'today' in
+   	# the project reports. If not specified, the current day will be
+   	# used, but this will likely be outside of the project range, so it
+   	# can't be seen in the reports.
+   	now 2002-03-05-13:00
+   	# The currency for all money values is the Euro.
+   	currency "USD"
+   	
+   	# We want to compare the baseline scenario to one with a slightly
+   	# delayed start.
+   	scenario plan "Plan" {
+     scenario delayed "Delayed"
+     }
+   	extend resource {
+     text Phone "Phone"
+     }
+   	}
+   	#+END_SRC
 
 ** Global Attributes
 
@@ -380,8 +383,10 @@
    `priority' attribute用来标示task的重要程度. 重要程度的从不重要到最重要为1到1000. 
    若在task中,sub-task前定义了`priority' attribute,则所有的sub-task会继承该attribute
 
-   gui task中的`limit' attribute说明资源dev2每天只花6个小时到gui这个task上.
+   gui task中的`limits' attribute说明资源dev2每天只花6个小时到gui这个task上.
    
+   若不想像`limits'那样严格进行约束,可以使用`warn'代替,它不会严格约束资源的使用,但会提出警告
+
    gui task中的`delayed:effort 40d'说明虽然plan scenario中该task的effort为35d,但实际上delayed scenario中的task的effort为40d,即实际比原计划拖延了5天.
 
    `complete' attribute可以指定task的完成情况. 例如
@@ -741,6 +746,7 @@
    #+BEGIN_SRC sh
      tj3 tutorial.tjp
    #+END_SRC
+   若想在项目文件中指定其他文件路径,最好使用`/'作为目录分隔符. 这样该项目文件在所有的操作系统下都能够兼容.
 
    tj3还有许多运行时选项,可以使用--help选项获取明细说明:
    #+BEGIN_SRC sh
