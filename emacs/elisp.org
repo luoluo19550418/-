@@ -7116,7 +7116,7 @@ buffer-string to get the whole buffer content.
      #+END_SRC
    * 得到某个目录的全部或者符合某个正则表达式的文件名,directory-files-attributes返回的列表包含了file-attributes得到的信息
 	 
-     directory-files / directory-files-attributes
+     directory-files / directory-files-and-attributes
    * 得到某个文件在目录中的所有版本
 	 
      file-name-all-versions
