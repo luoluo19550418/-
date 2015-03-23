@@ -1479,6 +1479,14 @@
     ;; 现在 #?n 会被读取成一个含有整数 0 至 n 的列表。
   #+END_SRC
 * Packages
+  * 一个uninterned symbol是指一个未被包含于任意package的symbol.
+
+	uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被正常地转换成大写形式并被转化成符号,但这些符号并不进入任何package.
+
+	每次读取器读到一个带"#:"的名字时, *都会创建一个新的符号* 因此:
+	#+BEGIN_SRC lisp
+      (eql '#:foo '#:foo)                     ;nil
+	#+END_SRC
 
   * package-name 返回包的名字，
 
@@ -1501,8 +1509,14 @@
       ;; #<Package "COMMON-LISP-USER" 4CD15E>
 	#+END_SRC
 
-  * 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上两个冒号作为前缀：
+  * 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上一个或两个冒号作为前缀：
 	 
+	含有单冒号的名字,只能指向一个被package导出的symbol
+	#+BEGIN_SRC lisp
+      common-lisp-user:bar
+	#+END_SRC
+	
+	而含有双冒号的名字,能指向一个package内的任意symbol
 	#+BEGIN_SRC lisp
       common-lisp-user::sym
 	#+END_SRC
@@ -1535,7 +1549,7 @@
       ;; 5
 	#+END_SRC
 
-  * 使用use-package将其他package中所有exported的符号都引入到当前package中
+  * 使用use-package将其他package中 *所有exported的符号* 都引入到当前package中
 
 	#+BEGIN_SRC lisp
       (use-package 'common-lisp-user)
