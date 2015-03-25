@@ -1522,6 +1522,30 @@
 	#+END_SRC
     但是使用两个冒号作为包的前缀也是很差的风格。这么做你就违反了包本应提供的模块性。如果你不得不使用一个双冒号来参照到一个符号，这是因为某人根本不想让你用。
 
+  * 使用defpackage定义package
+	 
+	 #+BEGIN_SRC lisp
+       (defpackage "MY-APPLICATION"            ;定义新包名为my-application,
+         (:use "COMMON-LISP" "MY-UTILITIES")   ;继承了两个包: common-lisp 与 my-utilities ，这代表着可以不需要用包修饰符（package qualifiers）来存取这些包所导出的符号。
+         (:nicknames "APP")                    ;创建昵称app,别的包可以这样引用到这些符号，比如 app:win 。
+         (:export "WIN" "LOSE" "DRAW")         ; my-application 包本身只输出三个符号: WIN 、LOSE以及DRAW
+         (:import-from :other-package :symbols...) ;从:other-package包中引入symbol1...symbolN
+         (:shadow :no-import-symbols...)                    ;放在:shadow后的符号,会在定义的包中创建一个自己的符号,这意味着,不会从其他任何包中导入这些符号
+         (:shadow-import-from :other-package :symbols...))  ;放在:shadow-import-from后面的符号指明当出现多个被use的包中包含了同名symbol时,应该使用哪个包的symbol
+	 #+END_SRC
+
+	包名字可以是一个全大写的字符串,或者一个符号. 而使用关键字符号作为包名,则是一种允许把名字书写成小写字母的常用风格
+	#+BEGIN_SRC lisp
+      (defpackage :com.gigamonkeys.email-db
+        (:use :common-lisp))
+	#+END_SRC
+	
+
+  * 使用in-package切换当前默认包
+	 #+BEGIN_SRC lisp
+       (in-package my-application)
+	 #+END_SRC
+
   * 使用export使得package中的符号在其他package中可见
 
 	这时可以用单冒号来引用package中的符号
