@@ -373,7 +373,7 @@
      ,   After the drawer.
    #+END_SRC
 
-   无论如何在标题上切换可见性(参见[[#Visibility cycling][切换可见性]]),drawer都是收缩为一行显示的. 要看drawer内的信息,你需要移动鼠标到drawer这一行,然后按<TAB>键. Org-mode使用名为'PROPERTIES'的drawer来存放属性(参见[[#Properties and columns][属性与列]]), 你也可以把状态改变记录(参见[[Tracking TODO state changes][跟踪TODO状态变化]])和计时时间(参见[[#Clocking work time][记录工作时间]])存放在名为'LOGBOOK'的drawer中. 如果你想像状态变化信息一样把自己的一段记录也存放到名为'LOGBOOK'的这个drawer中,使用
+   无论在标题上如何切换可见性(参见[[#Visibility cycling][切换可见性]]),drawer都是收缩为一行显示的. 要看drawer内的信息,你需要移动鼠标到drawer这一行,然后按<TAB>键. Org-mode使用名为'PROPERTIES'的drawer来存放属性(参见[[#Properties and columns][属性与列]]), 你也可以把状态改变记录(参见[[Tracking TODO state changes][跟踪TODO状态变化]])和计时时间(参见[[#Clocking work time][记录工作时间]])存放在名为'LOGBOOK'的drawer中. 如果你想把除了状态变化信息之外的一段记录也存放到名为'LOGBOOK'的这个drawer中,使用
    * C-c C-z ::
         添加一个带有时间戳信息的记录到名为'LOGBOOK'的drawer中
 ** 区块                  :折叠的区块
