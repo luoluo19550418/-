@@ -277,6 +277,8 @@
    *需要注意的是*,我们在定义了team resource的sub-resource后添加了`flags team'. 这种情况下,这些flag并不会对sub-resource所生效.
    
    但若在定义sub-resource之前就定义了flag,则该flag会对sub-resource也生效.
+
+   可以为人力资源分配`email' attribute,当Taskjuggler需要发送email联系相关人员时,会通过该attribute中抽取出email地址
 ** 时间段说明
    TaskJuggler的时间段表示格式为
    #+BEGIN_SRC taskjuggler
@@ -748,6 +750,24 @@
    #+END_SRC
    若想在项目文件中指定其他文件路径,最好使用`/'作为目录分隔符. 这样该项目文件在所有的操作系统下都能够兼容.
 
+   想项目已经发生的过程是不能被更改的,若要保证这些已发生的部分不被修改,则可以使用`freeze'参数:
+   #+BEGIN_SRC sh
+     tj3 --freeze yourproject.tjp --freezedate YYYY-MM-DD
+   #+END_SRC
+   This will generate two files, yourproject-header.tji and yourproject-bookings.tji. 
+   The header files contains the date of the freeze as a now attribute. You must include this file at the end of your project header section.
+   The bookings file contains the resource assignment data. It usually contains many booking entries that look similar to this:
+   #+BEGIN_EXAMPLE
+     supplement task t {
+       booking r 2010-02-19-09:00-+0000 + 3.0h,
+               2010-02-19-13:00-+0000 + 5.0h,
+               2010-02-22-09:00-+0000 + 3.0h,
+               2010-02-22-13:00-+0000 + 5.0h,
+     }
+   #+END_EXAMPLE
+   The booking file must be included at the end of your main project file.
+
+
    tj3还有许多运行时选项,可以使用--help选项获取明细说明:
    #+BEGIN_SRC sh
      tj3 --help
@@ -794,13 +814,49 @@
 
    该配置文件格式为`YAML'. 所有的设置以章节的方式组织,每个章节的名称必须以`_'开头:
    #+BEGIN_EXAMPLE
-     _global:
+     global:
+       emailDeliveryMethod: smtp
+       smtpServer: smtp.your_company.com
        authKey: topsecret
+       scmCommand: "svn add %f ; svn commit -m '%m' %f"
+       projectId: prj
+     _timesheets:
+       senderEmail: 'TaskJuggler <timesheets@taskjuggler.your_company.com>'
+       _sender:
+         hideResource: '~isleaf()'
+       _summary:
+         sheetRecipients:
+           - team@your_company.com
+         digestRecipients:
+           - managers@your_company.com
+     _statussheets:
+       projectId: prj
+       _sender:
+         senderEmail: 'TaskJuggler <statussheets@taskjuggler.amd.com>'
+         hideResource: '~(isleaf()  & manager)'
        _log:
          logLevel: 3
          outputLevel: 3
    #+END_EXAMPLE
-   上面这段配置,为所有的TaskJuggler组件设置了一个认证key:`topsecret'. 当然,可以把`topsecret'设置为任意的字符序列
+   上面这段配置中:
+   
+   * "authKey: topsecret"为所有的TaskJuggler组件设置了一个认证key:`topsecret'. 当然,可以把`topsecret'设置为任意的字符序列
+
+   * "emailDeliveryMethod"定义了email的投送方法为stmp
+
+   * "smtpServer"定义了SMTP服务器的地址
+
+   * "scmCommand"定义了新增/提交项目文件到版本控制系统的命令
+
+   * "projectId"指定了是哪个项目(TaskJuggler可以同时为多了项目提供支持)
+
+   * 章节"_timesheets"中的senderEmail为派发timesheet模板时所使用的邮件地址.
+     项目相关人员填好timesheet后,也需要将timesheet发回到该地址. 这种通过timesheet来了解项目的实际进度的方案,是TaskJuggler所推荐的.
+
+   * "hideResource"配置项类似定义报表时的`hideresource' attribute. 它指定了哪些资源不要列入timesheet模板中跟踪.
+
+   * "sheetReceipients"配置了一堆email地址. 这些email地址会收到提交timesheet的副本. 
+	 每个email地址必须以"- "开头
 
    配置文件中的`_log'节决定了输出哪些日志. tj3d的日志信息存在一个名为`tj3d.log'的日志文件中. 
 
@@ -862,3 +918,34 @@
    #+END_EXAMPLE
 
    使用web浏览器查看`http://localhost:8080/taskjuggler' 就能看到一个所有加载入`tj3d'的项目列表,点击项目名称就能看到该项目中的所有报表列表.
+
+** tj3ts_sender
+
+   该命令用于发送timesheet模板給个项目干系人,让他们填写实际进度. 
+
+   使用`-e'参数,`tj3_sender'会发送本周的timesheet模板,默认情况下一周是从周一开始算得.
+
+   调用`tj3_sender'时,会在当前目录下搜索tj3d的配置文件,当然也可以使用`-c'选项指定配置文件的具体路径,在后一种情况下,常常需要使用`-d'参数来更改输出目录到真正的项目目录中
+
+   参数`--dryrun'会只是测试tj3_sender命令的执行情况,而不会真正的发送email
+
+   若你多次运行该命令,若之前运行的命令已经生成过timesheet模板了,则后面再运行该命令也不会再重新产生一次模板,这时可以使用参数`-f'强制命令重新生成timesheet模板
+
+   tj3ts_sender needs to generate a number of files and directories. A copy of the generated templates will be stored in TimeSheetTemplates/<date>/ under <resource_id> -date.tji. <date> is replaced with the end date of the reporting interval and <resoruce_id> is the ID of the resource.
+	
+   The tj3ts_sender command will also add the reporting interval to a file called TimeSheetTemplates/ acceptable_invervals.
+
+** tj3ts_recvier
+
+   项目干系人填完timesheet模板后,发回的timesheet会被转发給tj3ts_recvier处理.
+
+   tj3ts_receiver will only accept time sheets for the time periods listed in TimeSheetTemplates/acceptable_intervals.
+
+  
+** tj3ts_summary
+   
+   tj3ts_summary用来发送timesheet的汇总情况报告.
+
+** tj3ss_sender
+
+   用于发送state sheet模板
