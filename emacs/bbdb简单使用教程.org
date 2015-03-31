@@ -126,8 +126,121 @@ This may also be applied to multiple records at once by *.
 
 交换光标所在的field与上一行field的位置
 
-交换的field必须在同一条记录中,且具有相同的类型
+若带参数0执行该命令,则光标所在的域与mark标记的域进行交换
 
 With non-zero numeric argument ARG, the previous field is moved past ARG fields. 
 
-With argument 0, the field indicated by point is interchanged with the one indicated by mark.
+交换的field必须在同一条记录中,且具有相同的类型
+
+*** n (bbdb-next-record)/ p (bbdb-prev-record)
+
+移动到下一个/上一个记录,若带前缀参数N,则下移/上移N条记录
+
+*** t (bbdb-toggle-records-layout)
+
+
+切换是否显示记录中具体域的说明. 
+
+若带参数0调用该函数,则强制光标所在记录不显示记录域说明,此时,所有的域信息都压缩到一行内显示.
+
+当待其他参数调用该函数时,则强制光标所在记录显示记录中的域说明时,此时,当前记录使用多行样式显示.
+
+若使用`*t'而不是`t',则buffer内所有的记录都同时切换显示样式
+
+*** T (bbdb-display-record-completely)
+
+谢换是否展示当前记录的所有域,这时平时隐藏不显示的`creation-date'和`timestamp'都会显示出来.
+
+*** o (bbdb-omit-record)
+
+隐藏当前记录,但并不会将当前记录从BBDB数据库中删除掉.
+
+若带参数N执行该命令,则会隐藏下面N条记录,N可以为负数
+
+*** m (bbdb-mail)
+
+发送电子邮件給当前的联系人. 默认邮件地址为记录中的第一个email地址.
+
+若带参数N调用该函数,则表示邮件地址使用记录周公的第N个email地址
+
+若使用`*m'而不是`m',则表示給该buffer中的所有联系人发送电子邮件
+
+*** s /C-x C-s (bbdb-save)
+
+保存BBDB数据库到文件中
+
+*** M-d (bbdb-dial)
+
+该命令会尝试着去拨打光标所在的数字. 若光标处于一条记录的开头,则会拨打第一个phone域.
+
+具体原理不明...
+
+*** q (quit-window)
+
+退出bbdb窗口,但不会kill bbdb buffer
+
+*** ? (bbdb-help)
+
+在minibuffer中显示简易帮助信息
+
+*** h (bbdb-info)
+
+显示bbdb的info文档
+
+若bbdb的info文档没有安装在标准的info目录下,可以通过设置`bbdb-info-file'变量来明确指明bbdb info文件的路径
+
+*** (bbdb-print)
+
+将BBDB记录导出到Tex文件中.
+
+*** c (bbdb-create)
+
+创建新记录保存新的联系人信息
+
+*** C (bbdb-copy-records-as-kill)
+
+将当前记录拷贝到kill ring中
+
+若使用`* C'则拷贝buffer中的所有记录到kill ring中
+
+*** b (bbdb)
+
+重新查询bbdb数据库
+
+*** / m (bbdb-search-mail)
+
+搜索mail域
+
+*** / a (bbdb-search-address)
+
+搜索address域
+
+*** / c (bbdb-search-changed)
+
+搜索至上次保存后,改变过的bbdb记录
+
+*** / d (bbdb-search-duplicates)
+
+搜索具有相同域的记录
+
+*** / n (bbdb-search-name)
+
+搜索name域
+
+*** / o (bbdb-search-organization)
+
+搜索organization域
+
+*** / p (bbdb-search-phone)
+
+搜索phone域
+
+*** / x (bbdb-search-xfields)
+
+搜索xfield域(该域存什么?我也不知道...)
+
+*** * (bbdb-do-all-records)
+
+该命令用于修改紧接之后的命令的作用域,让其作用于buffer中的所有记录.(Command prefix for operating on all records currently displayed.)
+
+但只对某些特定的命令有效
