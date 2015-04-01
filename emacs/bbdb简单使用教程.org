@@ -380,6 +380,32 @@ With non-zero numeric argument ARG, the previous field is moved past ARG fields.
 
   若值为t,则BBDB会检查它的auto-save file,若auto-save file比`bbdb-file'要新,则BBDB会恢复auto-save file
 
++ bbdb-ignore-message-alist
+
+  描述哪些message不允许触发自动新建BBDB联系人记录.
+
++ bbdb-accept-message-alist
+
+  描述哪些message允许触发自动新建BBDB联系人记录.
+
++ bbdb-mua-auto-update-p
+
+  决定了`bbdb-mua-auto-update'如何自动更新BBDB记录. 可选值:
+  
+  - nil :: 什么也不做
+
+  - search :: 搜索匹配ADDRESS的记录
+
+  - update :: 搜索匹配ADDRESS的记录,如有必要,会更新name和mail域
+
+  - query :: 搜索匹配ADDRESS的记录,若记录不存在,提示用户是否创建新记录
+
+  - create :: 搜索匹配ADDRESS的记录,若记录不存在,则创建新记录
+
+  - t :: 搜索匹配ADDRESS的记录,若记录不存在,则创建新记录
+
+  - 函数fn :: bbdb调用该函数,该函数需要返回nil,search,update,query,create或t
+
 ** hooks
 
 | hook                             | 调用hook的时机                                     | 调用hook时的参数                       | 其他说明                                                          |
@@ -398,12 +424,13 @@ With non-zero numeric argument ARG, the previous field is moved past ARG fields.
 ** 函数
 *** (bbdb-display-records records )
 
-在bbdb buffer中显示records中的记录表
+在bbdb buffer中显示records中的记录
 
 ** 变量
 *** bbdb-records
 
 该变量的值为当前bbdb buffer中的record列表
+
 *** 
 * FAQ
 
