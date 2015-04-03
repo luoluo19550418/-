@@ -595,12 +595,17 @@ NUMBER is the number of RECORD among the displayed records.
 
 下面是一个例子,它让`bbdb-create'新建联系人时,还会提示你输入生日信息:
 #+BEGIN_SRC emacs-lisp
-  ;; 该例子抄至sachachua的博客
-  ;; 该例子为bbdb v2的例子,有待改成bbdb v3
-  (defadvice bbdb-read-new-record (after wicked activate)
-    "Prompt for the birthdate as well."
-    (bbdb-record-putprop ad-return-value 'birthdate
-                         (bbdb-read-string "Birthdate (YYYY.MM.DD): ")))
+  (defun bbdb-read-record-advise-function(record)
+    "提示存储生日,QQ,微信号"
+    (bbdb-record-set-field record 'birthdate
+                           (bbdb-read-string "Birthdate (YYYY.MM.DD): "))
+    (bbdb-record-set-field record 'QQ
+                           (bbdb-read-string "QQ:"))
+    (bbdb-record-set-field record 'WeChat
+                           (bbdb-read-string "WeChat:"))
+    record)
+
+  (advice-add 'bbdb-read-record :filter-return #'bbdb-read-record-advise-function)
 
 #+END_SRC
 
