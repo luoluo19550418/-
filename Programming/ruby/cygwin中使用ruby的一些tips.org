@@ -1,0 +1,20 @@
+#+TITLE: cygwin中使用ruby的一些tips
+#+AUTHOR: Administrator
+#+OPTIONS: ^:{}
+
+* 使用gem install报`invalid byte sequence in UTF-8'
+
+这是因为在win下的gem脚本使用的时GB2312格式,而cygwin中默认环境变量LANG为UTF-8. 这使得ruby解析器在解析gem脚本时使用UTF-8的格式来解析GB2312的字符编码.
+
+解决方法是设置LANG为GB2312
+#+BEGIN_SRC sh
+  export LANG=GB2312
+#+END_SRC
+
+* gem install nokogiri失败,报`程序中有游离的"\"'
+vi ~/.gem/ruby/gems/nokogiri-1.6.6.2/ext/nokogiri/Makefile,将其中的所有\=替换为=
+
+然后再make
+
+* 使用rails new的先决条件
+在rails new前,请确保安装了make,gcc,patch命令
