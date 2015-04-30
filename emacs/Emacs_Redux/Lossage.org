@@ -1,0 +1,7 @@
+#+TITLE: Lossage
+#+AUTHOR: Administrator
+#+CATEGORY: emacs, Emacs_Redux, 
+#+DATE: [2015-04-30 星期四 17:53]
+#+OPTIONS: ^:{}
+
+使用`view-lossage'(C-h l)可以显示最后的300个键.
