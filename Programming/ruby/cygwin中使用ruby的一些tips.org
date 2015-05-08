@@ -1,5 +1,9 @@
+#+BLOG: DarkSun.1kapp.com
+#+POSTID: 12
+#+CATEGORY: Program
+#+DATE: [2015-04-24 星期五 13:53]
 #+TITLE: cygwin中使用ruby的一些tips
-#+AUTHOR: Administrator
+#+AUTHOR: Darksun
 #+OPTIONS: ^:{}
 
 * 使用gem install报`invalid byte sequence in UTF-8'
