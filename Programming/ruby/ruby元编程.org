@@ -1,0 +1,104 @@
+#+TITLE: ruby元编程
+#+AUTHOR: Administrator
+#+CATEGORY: ruby Program
+#+DATE: [2015-04-28 星期二 13:28]
+#+OPTIONS: ^:{}
+
+* 惯用表示法 
++ MyClass.my_method是一个类方法
++ MyClass::MY_CONSTANT是一个类中定义的常量
++ 会用哈希记法表示一个实例方法（如MyClass#my_method）
++ 会使用一个哈希前缀来标识eigenclass（如#MyEigenclass）
+
+* 打开类 
+在Ruby中，定义类的语句和其他语句没有本质区别，你可以在类定义中放置任何语句. 例如：
+#+BEGIN_SRC ruby
+  3.times do
+    class C
+      puts "Hello"
+    end
+  end
+  # Hello
+  # Hello
+  # Hello
+#+END_SRC
+
+从某种意义上说，Ruby的class关键字更像是一个作用域操作符而不是类型声明语句。 
+
+对于class关键字，其核心任务是把你带到类的上下文中，让你可以在其中定义方法：你总是可以重新打开已经存在的类并对它进行动态修改，即使是像String或Array这样标准库中的类也不例外。这种技术，可以简单称之为打开类（Open Class）技术。 
+
+* 类的真相 
+与Java这样的静态语言不一样，Ruby中对象的类和它的实例变量没有关系，当给实例变量赋值时，它们就生成了. 当然在执行给变量赋值的函数之前,该实例变量时不存在的.
+
+在其内部，一个对象仅仅包含它的实例变量以及一个对自身类的引用. 
+
+一个对象的实例变量存在于对象本身，而一个对象的方法存在于对象自身的类。这就是为什么同一个类的对象共享同样的方法，但不共享实例变量的原因。 
+
+* 关于常量
+任何以大写字母开头的引用（包括类名和模块名），都是常量(注: Ruby中的常量时可以修改的)
+
+代码中的所有常量像文件系统一样组织成树形结构。其中模块（还有类）像目录，而常量则像文件。跟文件系统一样，只要不在同一个目录下，不同文件的文件名可以相同，甚至可以像文件系统一样通过路径方式来引用一个常量。
+
+常量也可以通过路径方式来唯一标识。常量路径使用双冒号进行分隔（这与C++的范围标识符类似）
+
+例如，可以这样引用一个常量：
+#+BEGIN_SRC ruby
+  MyModule::MyClass::MyConstant
+#+END_SRC
+
+如果深入探究常量的树形结构，则还可以在常量前加上一组双冒号表示根路径，从而得到一个绝对路径
+
+** load方法与常量
+不过，使用load()方法有一个副作用。被load的文件很可能定义了变量和类。尽管变量在加载完成后会落在当前作用域之外，但常量不会。这样，被load的文件可能会通过它的常量（尤其是类名）污染当前程序的命名空间。 
+
+可以通过使用第二个可选参数来强制其常量仅在自身范围内有效：
+#+BEGIN_SRC ruby
+  load('motd.rb', true) 
+#+END_SRC
+
+* 调用一个方法时发生了什么 
+** 如何找到include的Module中的方法?
+你在一个类（甚至可以是另外一个模块）中包含（include）一个模块时，Ruby耍了些小花招。Ruby创建了一个封装该模块的匿名类，并把这个匿名类插入到祖先链中，其在链中的位置正好包含在它的类上方。 我们称这个匿名类为包含类
+
+由于include module时生成的匿名类插在已继承的类/module与当前类之间，离当前类最近. 因此最后include的Module中的方法会覆盖之前include的Module中的同名方法.
+
+包含类是Ruby的一个秘密，superclass()方法会假装它们根本不存在，而且你也一般不能通过正常的Ruby代码访问它们
+
+在类和模块定义中（并且在任何方法定义之外），self的角色由这个类或模块担任：
+#+BEGIN_SRC ruby
+  class MyClass
+    self # MyClass
+  end
+#+END_SRC
+** 关于private method
+
+如果对象x和对象y都是同一个类的对象，则x能调用y的私有方法么？答案是“不能”，因为不管属于哪个类，始终需要明确指明接收者来调用另一个对象的方法。
+
+能调用你超类中的私有方法么？答案是“可以”，因为你无需明确指明接收者调用继承来的方法。(注: 与c++不同)
+
+** 动态方法 
+*** 动态调用方法
+可以通过使用Object#send()取代点标记符来调用MyClass#my_method()方法： 
+
+通过send()方法，你想调用的方法名可以成为一个参数，这样就可以在代码运行期间，直到最后一刻才决定调用哪个方法。这种技术称为动态派发（Dynamic Dispatch）
+
+*需要注意的是:* 可以用send()调用任何方法，甚至调用私有方法.
+
+不过，Ruby1.9新增了一个public_send()方法，这个方法会尊重接收者的隐私权。只能调用public method.
+
+*** 动态定义方法
+
+可以利用Module#define_method()方法定义一个方法，只需要为其提供一个方法名和一个充当方法主体的块即可 
+
+若define_method()方法在MyClass内部执行，则my_method()定义为MyClass的实例方法 
+
+** 定义类方法
+2015-04-20 def self.define_component(name) 注: 类是常量，而def obj.fn的格式正是定义单例方法的格式 2015-04-20 请注意，define_method()方法执行于Computer的类定义中，此时Computer类是当前隐式的self。这意味着你是在Computer类上调用define_component()方法，因此这必然是一个类方法 2.3 method_missing()方法 2015-04-20 nick对象（最初的接收者）上调用一个名为method_missing()的方法。 2015-04-20 每一个来到method_missing()办公桌上的消息都带着被调用方法的名字，以及所有调用时传递的参数和块。 2015-04-20 def method_missing(method, *args) 注: method_missing的标准签名 2015-04-20 它会抛出一个NoMethodError错误。（这就是super关键字所做的事情。） 2015-04-20 它们会通过method_missing()方法来收集方法调用，并把这些调用转发到被封装的对象上 2015-04-20 如果喜欢Object#method_missing()方法，则推荐你关注Module#const_missing()方法。当引用一个不存在的常量时，Ruby将把这个常量名作为一个符号传递给const_missing()方法。 2.4 小测验：狩猎Bug 2015-04-20 变量number定义于块（传给times()方法的那个块）中，在method_missing()方法的最后一行，已经超出了它的作用域范围 2015-04-20 ，当碰到不知道如何处理的方法时，记得回到Kernel#method_missing()方法 注: 即super 2.5 关于method_missing()方法的更多内容 2015-04-20 这个问题是动态代理技术的通病，当一个幽灵方法和一个真实方法发生名字冲突时，后者会胜出。如果不需要那个继承来的方法（真实方法），则可以通过删除它来解决这个问题。为了安全起见，你应该在代理类中删除绝大多数继承来的方法。这就是所谓的白板（Blank Slate）类，它所拥有的方法比Object类还要少。 2015-04-20 你可以通过两种简单的途径来删除一个方法。可以使用Module#undef_method()方法，它会删除所有的（包括继承来的）方法；也可以使用Module#remove_method()方法，它只会删除接收者自己的方法，而保留继承来的方法 2015-04-20 你可以在第一次调用幽灵方法时，为它创建一个动态方法，这样以后的调用就可以直接调用这个动态方法。 2015-04-20 从BasicObject继承来的类会自动成为白板类。 3.1 怎样度过驼峰日 2015-04-20 你可以把一个块定义在大括号中，也可以放在do…end关键字中。大多数程序员会对只有一行的块使用大括号，而对多行的块使用do…end关键字 2015-04-20 ，只有在调用一个方法时才可以定义一个块。块会被直接传递给这个方法，然后该方法可以用yield关键字回调这个块。 2015-04-20 在一个方法中，可以向Ruby询问当前的方法调用是否包含块。这可以通过Kernel#block_given?()方法来做到： 3.3 闭包 2015-04-21 块是从哪里获得它的绑定的呢？当定义一个块时，它会获取当时环境中的绑定，并且把它传给一个方法时，它会带着这些绑定一起进入该方法： 2015-04-21 虽然在方法中定义了一个变量x，块看到的x也是在块定义时绑定的x 2015-04-21 一些语言中，比如Java和C#，有“内部作用域（inner scope）”的概念。在内部作用域中可以看到“外部作用域（outer scope）”中的变量。但Ruby中没有这种嵌套式的作用域，它的作用域之间是截然分开的：一旦进入一个新的作用域，原先的绑定就会被替换为一组新的绑定。这意味着在程序进入MyClass后，v1便“超出作用域范围”，从而就不可见了。 注: 内部作用域的值看不到外部作用域的值！ 2015-04-21 准确地说，程序会在三个地方关闭前一个作用域，同时打开一个新的作用域： 类定义。 模块定义。 方法。 只要程序进入类或模块及方法的定义，就会发生作用域切换。这三个边界分别用class、module和def关键字作为标志。每一个关键字都充当了一个作用域门（Scope Gate）。 2015-04-21 你有时可以用顶级实例变量来代替全局变量。它们是顶级对象main（见顶级上下文的注释框）的实例变量 2015-04-21 在类和模块定义中的代码会被立即执行。相反，方法定义中的代码只有在方法被调用时被执 2015-04-21 怎样让绑定穿越一个作用域门 2015-04-21 首先让我们看看class这个作用域门。虽然不能让my_var穿越它，但是可以把class关键字替换为某个非作用域门的东西：方法。如果能用方法替换class，就能在一个闭包中获得my_var的值，并把这个闭包传递给该方法。你能想到用哪个方法可以完成class所做的工作么？ 查看Ruby的文档，你就会找到答案。Class.new()是class的完美替身 2015-04-21 如果把块传给Class.new()，则还可以在其中定义实例方法 2015-04-21 现在的问题是怎样让my_var穿越def这个作用域门？同样，需要用一个方法来替换这个关键字。可以用Module#define_method()方法来替代def： 2015-04-21 Bill不得不使用动态派发技术来访问Kernel的define_method()方法 2015-04-21 如果在一个扁平作用域中定义了多个方法，则这些方法可以用一个作用域门进行保护，并共享绑定，这种技术称为共享作用域。 3.4 instance_eval() 2015-04-21 Ruby 1.9中引入了一个名为instance_exec()的方法，它跟instance_eval()的功能相似，但它允许对块传入参数： 3.5 可调用对象 2015-04-22 。要将块附加到一个绑定上，可以给这个方法添加一个特殊的参数，这个参数必须是参数列表中的最后一个，且以&符号开头 2015-04-22 &操作符的真正含义：这是一个Proc对象，我想把它当成一个块来使用。简单地去掉&操作符，就能再次得到一个Proc对象： 2015-04-22 在lambda中，return仅仅表示从这个lambda中返回： 2015-04-22 在proc中，return的行为则有所不同。它不是从proc中返回，而是从定义proc的作用域中返回： 注: 注意是从定义proc的作用域而不是调用proc的作用域返回 2015-04-22 def double(callable_object) callable_object.call * 2 end p = Proc.new { return 10 } # 这会失败，并产生一个LocalJumpError错误: # double(p) 上面的程序试图从定义p的作用域返回。由于不能从顶级作用域返回，所以程序失败了。 2015-04-22 如果调用lambda时的参数数量不对，则它会失败，同时会抛出一个ArgumentError错误；而proc则会把传递进来的参数调整为自己期望的参数形式： 2015-04-22 简洁lambda只是Ruby中一种实验性的功能，它不一定会出现在Ruby 2.0中。 2015-04-22 通过调用object#method()方法可以获得一个用Method对象表示的方法，以后可以用Method#call()对它进行调用。Method对象类似于lambda，但有一个重要的区别：lambda在定义它的作用域中执行（它是一个闭包，还记得么？），而Method对象会在它自身所在对象的作用域中执行。 注: method处于动态作用域中？？ 2015-04-22 你可以用Method#unbind()方法把一个方法跟它所绑定的对象相分离，该方法再返回一个UnboundMethod对象。你不能执行UnboundMethod对象，但能把它绑定到一个对象上，使之再次成为一个Method对象。 2015-04-22 最后，可以调用Method#to_proc()方法把Method对象转换为Proc对象，也可以使用define_method()方法把块转换为方法。 2015-04-22 块（虽然它们不是真正的“对象”，但是它们是“可调用的”）：在定义它们的作用域中执行。 proc：Proc类的对象，跟块一样，它们也在定义自身的作用域中执行。 lambda：也是Proc类的对象，但是它跟普通的proc有细微的区别。它跟块和proc一样都是闭包，因此也在定义自身的作用域中执行。 方法：绑定于对象，在所绑定对象的作用域中执行。它们也可以与这个作用域解除绑定，再重新绑定到另一个对象的作用域上。 3.7 小测验：更好的领域专属语言 2015-04-22 ，然后它们在Object对象的上下文中执行，这个对象实际充当了一个洁净室。在setup和事件中的实例变量实际上是这个Object对象的实例变量 2015-04-22 。lambda中的代码定义的RedFlag方法是核心方法，它们都共享两个局部变量：setups和events 第4章 星期四：类定义 2015-04-22 类宏（Class Macro）（修改类的方法）和环绕别名（Around Alias）（在其他方法前后封装额外代码的方法） 4.1 类定义揭秘 2015-04-22 需要一种新的方式，它不需要使用class关键字就能修改当前类。答案就是使用class_eval()。 2015-04-22 Module#class_eval()实际上比class关键字更灵活。它可以对任何代表类的变量使用class_eval()方法，而class关键字只能使用常量。另外，class关键字会打开一个新的作用域，这样将丧失当前绑定的可见性，而class_eval()方法则使用扁平作用域。 2015-04-22 Ruby解释器假定所有的实例变量都属于当前对象self。在类定义时也是如此： 2015-04-22 class MyClass @my_var = 1 end 注: 这里@my_var是类成员变量 2015-04-22 obj.write 注: 这时self为obj,且方法write会产生一个实例变量，则该实例变量为对象的实例实例变量 2015-04-22 其中一个@my_var变量定义于obj充当self的时刻，因此它是obj对象的实例变量。另外一个@my_var变量定义于MyClass充当self的时刻，因此它是MyClass的实例变量——也就是类实例变量。 2015-04-22 实例变量类似于Java的“静态成员”。但其实类实例变量只不过是属于Class类对象的普通实例变量而已。正因为如此，类实例变量仅仅可以被类本身所访问——而不能被类的实例或子类所访问。 注: 注意区分类实例变量与类变量的区别，类变量以@@打头，类似c++个类成员变量 2015-04-22 类变量与类实例变量不同，它们可以被子类或类的实例所使用（在这个意义上，它们更像是Java的静态成员。）。 2015-04-22 @@v = 1 class MyClass @@v = 2 end @@v # 2 注: @@v实际为类Object的类成员！ 4.2 小测验：Taboo类 2015-04-22 由于类是Class类的一个实例，所以可以通过调用Class#new()方法来创建它。Class#new()方法还可以接受一个参数（所建新类的超类）以及一个块，这个块可以在如下新建类的上下文中执行： 2015-04-22 当你把一个匿名类赋值给常量时，Ruby知道你是想给这个类命名，而且会做些特殊的工作：它转身对这个类说，“这是你的新名字。” 4.3 单件方法 2015-04-22 方法的实质就是：它们是一个类的单件方法。 2015-04-22 如果在类定义中写入代码，那么，由于self这时就是类本身，所以还可以利用这一点。你可以使用self替换类名来定义类方法 2015-04-23 attr_accessor()这样的方法称为类宏（Class Macro）。虽然类宏看起来很像关键字，但是它们其实只是普通的方法，只是可以用在类定义中而已。 4.4 Eigenclass 2015-04-24 当向一个对象索要它的类时，”Bill开始了他的演讲。“Ruby并没有告诉你全部的真相。你得到的类并非你看到的类，而是一个对象特有的隐藏类。这个类称为该对象的eigenclass 2015-04-24 。Ruby有一种特殊的基于class关键字的语法，它可以让你进入该eigenclass的作用域： class << an_object # 这里是你自己的代码 end 如果想获得这个eigenclass的引用，则可以在离开该作用域时返回self： obj = Object.new eigenclass = class << obj self end 2015-04-24 每个eigenclass只有一个实例（这就是它们也称为单件类的原因），并且不能被继承。更重要的是，eigenclass是一个对象的单件方法的存活之所： def obj.my_singleton_method; end eigenclass.instance_methods.grep(/my_/) # ["my_singleton_method"] 2015-04-24 ，其实instance_eval()方法也会修改当前类：它会修改接收者的eigenclass。 2015-04-24 你已经知道了两种定义类方法的方式：要么进入该类的作用域并使用self对象，要么使用该类的名字： class MyClass def self.my_method; end end def MyClass.my_other_method; end 现在你有了定义类方法的第三种方式。由于类方法是该类存储在eigenclass中的单件方法，所以可以打开这个eigenclass并在那里定义方法： class MyClass class << self def my_method; end end end 2015-04-24 如果对象有eigenclass，那么Ruby不是从它所在的类开始，而是先从这个eigenclass类中开始查找方法， 2015-04-24 “eigenclass的超类就是超类的eigenclass，很简单。 2015-04-24 “由于有了这种组织方式，你可以在子类中调用父类的类方法：” D 2015-04-24 一个对象的eigenclass的超类是这个对象的类；一个类的eigenclass的超类是这个类的超类的eigenclass 2015-04-24 class MyClass class << self attr_accessor :c end end MyClass.c = 'It works!' MyClass.c # "It works!" 4.5 小测验：模块的麻烦 2015-04-24 ，可以通过把模块混合到类的eigenclass中来定义类方法。类方法其实是单件方法的特例 2015-04-24 类扩展和对象扩展的应用非常普遍，因此Ruby为它们专门提供了一个叫做Object#extend()的方法： 2015-04-24 obj.extend MyModule 2015-04-24 class MyClass extend MyModule end 2015-04-25 Object#extend()只是在接收者eigenclass中包含模块的快捷方式，如果你愿意，那么可以选择总是自己做。 4.6 别名 2015-04-24 通过使用alias关键字，可以给Ruby方法取一个别名： 2015-04-24 注意alias是一个关键字，而非一个方法。这就是为什么两个方法名之间没有逗号的原因 2015-04-24 Ruby还提供了Module#alias_method()方法，它的功能与alias关键字相同。 2015-04-24 虽然上面的代码重定义了String#length()方法，但是别名方法引用的还是原始方法。这样你能洞察方法重定义的工作方式。当重定义一个方法时，你并不真正修改这个方法。相反，你会把当前存在的这个方法名字跟定义的新方法绑定起来。只要老的方法还存在绑定的名字，仍旧可以调用它。 2015-04-24 你可以通过如下三个步骤来写一个环绕别名。 1. 给方法定义一个别名。 2. 重定义这个方法。 3. 在新的方法中调用老的方法 注: lisp中的advise貌似更简单点 2015-04-24 alias original_succ! succ! private :original_succ! 2015-04-24 注意，针对不同的别名可以有不同的可见性。别名是方法名，而非方法本身。它可以是public或private。 5.2 Kernel#eval 2015-04-24 Ruby还提供了一个名为TOPLEVEL_BINDING的预定义常量，它表示顶级作用域的Binding对象。你可以在程序的任何地方访问这个顶级作用域： 2015-04-24 当使用irb时，可以打开一个嵌套会话，并指定一个对象作为它的上下文，这样就可以在这个上下文中执行代码，就像instance_eval()方法所做的那样。可以这样来使用irb命令： irb(main):001:0> s = "abc" "abc" irb(main):002:0> irb s 2015-04-24 而instance_eval()方法和class_eval()方法除了块，也可以接受代码字符串作为参数。 2015-04-24 。Ruby会自动把不安全的对象——尤其是从外部传入的对象——标记为被污染的。污染对象包括程序从Web表单、文件和命令行读入的字符串，甚至包括系统变量。每次从污染字符串运算而来的新字符串，也是被污染的 2015-04-24 通过调用tainted?()方法来判断类是不是被污染了： 2015-04-24 Ruby还提供了一种叫做安全级别的概念，它能很好地弥补污染对象的不足。当设置一个安全级别（可以通过给$SAFE全局变量赋值来实现）时，就禁止了某些特定的潜在危险操作。 2015-04-24 值得注意的是，在任何大于0的安全级别上，Ruby都会拒绝执行污染的字符串： 2015-04-24 为了调节安全性，可以在执行代码字符串之前显式去除它的污染性（通过调用Object#untaint()方法），然后可以依赖安全级别来禁止诸如文件操作这样的危险动作。 5.4 小测验：校验过的属性（第二步） 2015-04-24 通过翻阅Ruby的文档，你会发现有两个方法可以操作实例变量：Object#instance_variable_get()方法和Object#instance_variable_set()方法 5.7 钩子方法 2015-04-24 不用覆写，也可以把一个普通的方法使用环绕别名变成一个钩子方法 2015-04-25 可以把这种技术称为类扩展混入（Class Extension Mixin）。 现在应该回顾使用这种法术的步骤： 1. 定义一个模块，姑且叫做MyMixin。 2. 在MyMixin中定义一个内部模块（通常把它叫做ClassMethods），并给它定义一些方法。这些方法最终会成为类方法。3. 覆写MyMixin#included()方法来用ClassMethods扩展包含者（使用extend()方法）。 下面的例子演示了怎样把这些步骤结合在一起： module MyMixin def self.included(base) base.extend(ClassMethods) end module ClassMethods def x "x()" end end 2015-04-25 另一方面，如果不需要为包含者定义实例方法，则根本不用定义内部模块，只要把所有方法都定义在混入本身即可： module MyMixin def self.included(base) base.extend(self) end def x "x()" end end 7.2 ActiveRecord的设计 2015-04-25 Kernel#autoload()方法需要一个模块名和一个文件名，这可以确保在第一次引用该模块时，该文件会被加载 2015-04-25 这种环绕别名在Rails中使用十分普遍。你提供原始的方法（比如operation()）和增强的方法（比如operation_with_feature()），最后将会得到三个方法：operation()、operation_with_feature()和operation_without_feature()。前两个方法会有增强的特性，最后一个则没有。 为了避免处处重复这样的环绕别名机制，Rails提供了一种通用的元编程方法来帮你快速实现它。其名字叫Module#alias_method_chain()方法，由ActiveSupport库提供 7.3 经验教训 2015-04-25 等等——还有。例如，可以让模块修改包含它的类（或者模块和对象），就像Rails所使用的类扩展混入和alias_method_chain()方法一样。模块是一个多面手，越精通Ruby，就越会正确地使用它们。 9.2 化解猴子补丁 2015-04-25 猴子补丁危险的原因之一是难以被发现。如果能让它们更明显一些，就可以更容易地追踪它们。例如，不要直接在打开类中定义方法，可以在模块中定义这个方法，然后在打开类中包含这个模块。这种方式至少可以在打开类的祖先类中看到这个模块。 2015-04-26 if method_defined?(method) $stderr.puts "WARNING: Possible conflict with Rake extension:\ #{self}##{method} already exists" else yield end A.4 Self Yield 2015-04-27 当给方法传入一个块时，你会期望这个方法通过yield对块进行回调。这种回调有一种有用的变形，就是对象可以把自身传给这个块。 2015-04-27 如果追踪RubyGems的源代码，则会发现Specification.new()把一个块传给initialize()方法，在这里这个新创建的Specification对象会把自身yield传给这个块： module Gem class Specification def initialize yield self if block_given? # ... 这种简单的惯用法称为Self Yield。 2015-04-27 class Object def tap yield self self end end A.5 Symbol#to_proc()方法 2015-04-27 class Symbol def to_proc Proc.new {|x| x.send(self) } end end 看到这个方法是怎么工作的了么？如果调用它（比如:capitalize符号），则它会返回一个带有参数的proc，并且对这个参数调用capitalize()方法。现在可以使用to_proc()方法和&操作符，首先把符号转换为Proc，然后再转换为块： names = ['bob', 'bill', 'heather'] names.map(&:capitalize.to_proc) # ["Bob", "Bill", "Heather"] 2015-04-27 由于&可以作用于任何对象，所以它会调用该对象的to_proc方法来把这个对象转换为Proc。（你不会认为是随机选择to_proc()作为方法名了吧？）因此，可以简单使用下面的方式： names = ['bob', 'bill', 'heather'] names.map(&:capitalize) 2015-04-27 Ruby 1.9中实现的to_proc()方法甚至支持多于一个参数的块，
+
+* 符号和字符串的区别
++ 符号是不可变的，你可以修改字符串中的字符，但是不能对符号这样做。
++ 另外，一些操作（比如比较操作）针对符号运行得更快些。
++ 在绝大多数情况下，符号用于表示事物的名字，尤其是跟元编程相关的名字，比如方法名
++ 可以很容易地把一个字符串转换为一个符号（通过调用String#to_sym()方法或String#intern()方法），也可以反向转换（通过调用Symbol#to_s()方法或Symbol#id2name()方法）。 
+
+* 
