@@ -1700,10 +1700,10 @@
   2. 每个窗口都能记住自己的光标位置
   3. 只有在特殊键所产生的字符代码是以一个特殊字符开头，并且至少有3个字符长时，才能在Emacs里对它们进行定制
   4. 如何打开外部的info文件?
-
+     
 	 C-u C-h i 用emacs info打开外部info文件
   5. 如何让emacs显示超长行时在单词边界换行?
-
+     
 	 启用visual-line-mode / global-visual-line-mode,具体来说有几个
 	 
 	 * Makes (long) lines wrap, at word boundaries, near the window edge. (controlled by var “truncate-lines” and “word-wrap”.)
@@ -1711,7 +1711,7 @@
      * Makes the kill-line command delete by a visual line, as opposed to a logical line.
      * Turns off the display of little return arrow at the edge of window. (controlled by the var “fringe-indicator-alist”.)
   6. 代码对齐
-
+     
 	 假设有下面一些代码:
 	 #+BEGIN_SRC js
        a = 1;
@@ -1724,55 +1724,55 @@
        bc  = 2;
        cde = 3;
 	 #+END_SRC
-
+     
   7. 如何在text terminal下调用text-based menu?
-
+     
 	 调用tmm-menubar(M-`)
-
+     
   8. 如何编辑需要root权限的文件
-
+     
 	 在编辑文件路径前加上`/sudo::`. 例如
 	 #+BEGIN_EXAMPLE
 	 /sudo::/etc/bashrc
 	 #+END_EXAMPLE
-
+     
   9. 如何执行最后一个command
-
+     
 	 M-x repeat-complex-command. 该命令执行最后一个命令的elisp code. 它会显示执行最后一个命令时实际上执行的elisp code.
-
+     
   10. 如何为文件分配Major Mode
-
+      
 	  打开一个文件时,Emacs依据如下顺序来决定应该进入的Major Mode
 	  1. 查看buffer local的mode变量:
-
+         
 		 第一行包含类似_*_ mode: xyz_*_,则emacs自动进入xyz-mode
-
+         
 	  2. 查看第一行的#!标记后的解释器,根据变量interpreter-mode-alist寻找匹配mode
-
+         
 	  3. 根据第一行的内容,在变量magic-mode-alist中寻找匹配的mode
-
+         
 		 #+BEGIN_SRC elisp
            (add-to-list 'magic-mode-alist '("<!DOCTYPE html .+DTD XHTML .+>" . nxml-mode) )
 		 #+END_SRC
-
+         
 	  4. 根据文件名后缀,在量auto-mode-alist中寻找匹配的mode
 		 
 		 #+BEGIN_SRC elisp
            ;; setup files ending in “.js” to open in js2-mode
            (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 		 #+END_SRC
-
+         
   11. 如何让光标无法进入minibuffer的prompt部分
-
+      
 	  minibuffer的prompt部分是不能被修改的,这样允许光标进入是没有意义的,可用加入如下配置信息达到阻止光标进入minibuffer的prompt部分.
 	  #+BEGIN_SRC elisp
         ;; don't let the cursor go into minibuffer prompt
         (setq minibuffer-prompt-properties (quote (read-only t point-entered minibuffer-avoid-prompt face minibuffer-prompt)))
         
 	  #+END_SRC
-
+      
   12. 如何跨session保存光标位置
-
+      
 	  你可以为每个打开的文件记录下光标所在的位置,这样下次你打开这个文件,光标会处于上次关闭时的位置.
 	  #+BEGIN_SRC elisp
         ;; turn on save place so that when opening a file, the cursor will be at the last position.
@@ -1781,9 +1781,9 @@
         (setq-default save-place t)
         
 	  #+END_SRC
-
+      
   13. 配置frame的属性
-
+      
 	  查看关于变量`default-frame-alist`的描述.
 	  #+BEGIN_SRC elisp
         ;; 配置大小
@@ -1794,13 +1794,13 @@
         ;; 配置字体
         (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-10"))
 	  #+END_SRC
-
+      
 	  也可以通过函数`set-frame-parameter`来配置
-
+      
   14. 切换等宽字体/变宽字体
 	  
 	  M-x variable-pitch-mode
-
+      
   15. 如何生成自己的Menu
 	  #+BEGIN_SRC elisp
         ;; Creating a new menu pane in the menu bar to the right of “Tools” menu
@@ -1826,15 +1826,15 @@
         ;; (global-unset-key [menu-bar mymenu])
         
 	  #+END_SRC
-
+      
   16. 如何插入Unicode
 	  
 	  C-x 8 RET然后输入Unicode名称或者16进制代码,可用用C-x 8 C-h来查看其他的特殊字符
-
+      
   17. 如何让Emacs在启动时自动最大化
-
+      
 	  在linux下可用带--maximized或--mm参数
-
+      
 	  在windows下,把下列代码放入初始化文件中
 	  #+BEGIN_SRC elisp
         (defun maximize-frame ()                                        
@@ -1846,24 +1846,29 @@
             (w32-send-sys-command 61488)))                              
         (add-hook 'window-setup-hook 'maximize-frame t)                 
 	  #+END_SRC
-
+      
   18. 如何在空格和tab之间相互转换
-
+      
 	  使用tabify和untabify命令可用使文件的空格和tab相互转换,但是要注意的是,tabify和untabify在转换时 *也会转换字符串中的空格和tab*,这在编程时需要注意
-
+      
   19. 如何让emacs自动給script加上可执行权限
-
+      
 	  Emacs若在文件的第一行找到#!声明,则认为该文件为script文件. 通过下面设置可用让Emacs自动給script文件加上可执行文件
 	  #+BEGIN_SRC elisp
         (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
 	  #+END_SRC
-
+      
   20. 如何强制标记某buffer为未编辑状态
-
+      
 	  M-~(M-x not-modified)
-
+      
   21. 如何在替换操作中使用elisp代码处理被替换内容
-
+      
 	  在替换的地方输入格式\,(Lisp代码),则会执行Lisp代码并将结果作为替换的内容
-
+      
 	  Lisp代码中可用用\1...\N的方法替换分组内容. 默认分组内容是作为字符串看待的,若要作为数字看待,则用\#1...\#N
+      
+  22. 如何关闭emacs中对按键的提示呢? 比如使用M-x helm-occur. 会提示you can run command `helm-occur' with XXXX
+      #+BEGIN_SRC emacs-lisp
+        (setq suggest-key-bindings nil)
+      #+END_SRC
