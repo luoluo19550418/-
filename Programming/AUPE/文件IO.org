@@ -91,3 +91,12 @@ UNIX系统提供了sync,fsync和fdatasync三个函数用于通知内核将数据
   /* sync只是将所有修改过的块缓冲区排入写队列,然后就返回,而并等待实际写磁盘操作结束 */
   void sync(void)
 #+END_SRC
+
+* fcntl函数
+fcntl函数可以改变已打开的文件属性
+#+BEGIN_SRC c
+  #include <fcntl.h>
+
+  int fcntl(int filedes,int cmd,...);
+#+END_SRC
+
