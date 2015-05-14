@@ -1,0 +1,41 @@
+#+TITLE: 文件和目录
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, AUPE
+#+DATE: [2015-05-14 周四 09:48]
+#+OPTIONS: ^:{}
+
+* stat,fstat和lstat函数
+stat系列函数返回与文件相关的信息结构
+#+BEGIN_SRC c
+  #include <sys/stat.h>
+
+  int stat(const char* path,struct stat* buf);
+  int fstat(int filedes,struct stat* buf);
+  int lstat(const char* path,struct stat* buf);
+#+END_SRC
+
+其中fstat通过文件描述符来获取文件信息.
+
+lstat在读取符号连接文件时,获取符号连接文件本身的属性.
+
+* UNIX中的文件类型
++ 普通文件 :: S_ISREG(st_mode)判断
++ 目录文件 :: S_ISDIR(st_mode)判断
++ 块特殊文件 :: S_ISCHR(st_mode)判断
++ 字符特殊文件 :: S_ISBLK(st_mode)判断
++ FIFO命名管道文件 :: S_ISFIFO(st_mode)判断
++ socket套接字文件 :: S_ISLNK(st_mode)判断
++ 符号链接文件 :: S_ISSOCK(st_mode)判断
++ 消息队列 :: S_TYPEISMQ(stat*)判断
++ 信号量 :: S_TYPEISSEM(stat*)判断
++ 共享存储对象 :: S_TYPEISSHM(stat*)判断
+
+* 用户ID与组ID
+** 与一个进程相关联的ID有:
+| 实际用户ID       | 我们实际上是谁?      |
+| 实际组ID         |                      |
+| 有效用户ID       | 用于文件访问权限检查 |
+| 有效组ID         |                      |
+| 附加组ID         |                      |
+| 保存的设置用户ID | 由exec函数保存的有效用户ID |
+| 保存的设置组ID   |  由exec函数保存的有效用户组ID                  |

@@ -1,0 +1,6 @@
+#+TITLE: eieio
+#+AUTHOR: DarkSun
+#+OPTIONS: ^:{}
+
+* Quick Start
+  
