@@ -29,9 +29,9 @@ lstat在读取符号连接文件时,获取符号连接文件本身的属性.
 + 消息队列 :: S_TYPEISMQ(stat*)判断
 + 信号量 :: S_TYPEISSEM(stat*)判断
 + 共享存储对象 :: S_TYPEISSHM(stat*)判断
-
-* 用户ID与组ID
-** 与一个进程相关联的ID有:
+* 关于文件的访问权限
+** 用户ID与组ID
+*** 与一个进程相关联的ID有:
 | 实际用户ID       | 我们实际上是谁?      |
 | 实际组ID         |                      |
 | 有效用户ID       | 用于文件访问权限检查 |
@@ -39,3 +39,96 @@ lstat在读取符号连接文件时,获取符号连接文件本身的属性.
 | 附加组ID         |                      |
 | 保存的设置用户ID | 由exec函数保存的有效用户ID |
 | 保存的设置组ID   |  由exec函数保存的有效用户组ID                  |
+** 访问权限与测试宏
+| 意义      | st_mode宏 |
+|-----------+-----------|
+| 用户-读   | S_IRUSR   |
+| 用户-写   | S_IWUSR   |
+| 用户-执行 | S_IXUSR   |
+| 组-读     | S_IRGRP   |
+| 组-写     | S_IWGRP   |
+| 组-执行   | S_IXGRP   |
+| 其他-读   | S_IROTH   |
+| 其他-写   | S_IWOTH   |
+| 其他-执行 | S_IXOTH   |
+** 关于访问权限的一些说明
++ 目录的读权限允许我们获得在该目录中所有文件名的列表,但要访问其中的文件时,则需要有该目录的 *执行* 权限.
++ 必须对目录具有 *写和执行* 权限,才能增加/删除目录下的文件
++ 删除一个文件,不需要对文件本身具有读写权限
++ 若某进程时文件的所有者,则只会根据用户权限判断对文件的操作是否合法, *而不会查看组访问权限和其他访问权限*. 类似的若进程属于文件的某个组,则根据组权限判断对文件的操作是否合法, *而不去判断*
++ 当用进程取创建新文件/目录时,文件/目录的用户ID为进程的 *有效用户ID*
++ 当用进程取创建新文件/目录时,文件/目录的组ID为 *进程的有效组ID* 或 *所在目录的组ID*
+** access函数:使用实际权限执行权限测试
+默认情况下,进程使用有效用户ID/有效组ID来执行对文件的权限测试. 但也可以使用access函数来让进程根据 *实际用户/组权限* 进行测试:
+#+BEGIN_SRC c
+  #include <unistd.h>
+  int access (const char* path,int mode)
+#+END_SRC
+
+其中mode的可选值为:
+| mode | 说明       |
+|------+------------|
+| R_OK | 测试读权限 |
+| W_OK | 测试写权限 |
+| X_OK | 测试执行权限 |
+| F_OK | 测试文件是否存在     |
+** umask函数:为进程设置创建文件权限的屏蔽字
+umask函数为进程设置文件模式创建屏蔽字,并返回以前的值
+#+BEGIN_SRC c
+  #include <sys/stat.h>
+
+  mode_t umask(mode_t cmask);
+#+END_SRC
+其中cmask为访问权限那9个st_mode常量中的一个或多个的"或"构成
+
+当使用create/open函数创建新文件时,即使mode参数中有设置某个参数,但若使用umask设置了屏蔽该权限,则创建的新文件也不会有该参数.
+** chmod/fchmod函数:更改现有文件的访问权限
+#+BEGIN_SRC c
+  #include <sys/stat.h>
+
+  int chmod(const char* path,mode_t mode);
+
+  int fchmod(int filedes,mode_t mode);
+#+END_SRC
+
+chmod函数在指定文件上进程操作,而fchmod函数则对已打开的文件进行操作
+
+为了改变文件权限,进程的 *有效ID* 必须等于文件的所有者ID,或进程具有超级用户权限
+
+| 意义             | st_mode宏 |
+|------------------+-----------|
+| 用户-读          | S_IRUSR   |
+| 用户-写          | S_IWUSR   |
+| 用户-执行        | S_IXUSR   |
+| 组-读            | S_IRGRP   |
+| 组-写            | S_IWGRP   |
+| 组-执行          | S_IXGRP   |
+| 其他-读          | S_IROTH   |
+| 其他-写          | S_IWOTH   |
+| 其他-执行        | S_IXOTH   |
+| 执行时设置用户ID | S_ISUID   |
+| 执行时设置组ID   | S_ISGID   |
+| 设置粘住位       | S_ISVTX   |
+
+注意:由于新建文件的组ID可能时父目录的组ID,因此新创建的组ID可能并不是调用进程所示的组. 因此,为了安全,当新文件的组ID不属于进程的有效组ID或进程附加组ID中的一个,或进程没有超级用户权限时,那么设置组ID位会自动被关闭. 这就防止了用户创建一个设置组ID文件,而该文件是由并非该用户所属的组所拥有的.
+** 关于粘住位的说明
+若对一个可执行文件设置了粘住位,则该程序第一次执行并结束后,其程序的指令部分仍然会保存在交换区中,由于交换区占用连续的磁盘空间,因此下次载入该程序会更快一些.
+
+若对一个目录设置了粘住位,则只有对该目录具有写权限的用户满足以下之一的条件时才允许或更名该目录下的文件
++ 拥有此文件
++ 拥有此目录
++ 是超级用户
+
+对目录设置粘住位的一个典型目录是/tmp目录,任何人都能够在其目录下创建文件,但用户不能删除/更名其他用户的文件.
+** chown/fchown/lchown函数更改文件的用户ID和组DI
+#+BEGIN_SRC c
+  #include <unistd.h>
+
+  int chown(const char* path,uid_t owner,gid_t group)
+  int fchown(int filedes,uid_t owner,gid_t group)
+  int lchown(const char* path,uid_t owner,gid_t group)
+#+END_SRC
+
+三者的区别类似stat,fstgat和lstat
+
+若参数owner/group为-1,则表示对应ID不变.
