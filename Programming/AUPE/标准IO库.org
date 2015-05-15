@@ -1,0 +1,10 @@
+#+TITLE: 标准IO库
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, AUPE
+#+DATE: [2015-05-15 周五 19:03]
+#+OPTIONS: ^:{}
+
+* 流与FILE对象
+标准IO文件流可用于单字符或多字符字符集. 流的定向(orientation)决定了所读,写的字符是单字符还是多字符的.
+
+但一个流被最初创建时,
