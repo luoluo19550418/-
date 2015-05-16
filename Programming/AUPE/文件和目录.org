@@ -82,6 +82,8 @@ umask函数为进程设置文件模式创建屏蔽字,并返回以前的值
 其中cmask为访问权限那9个st_mode常量中的一个或多个的"或"构成
 
 当使用create/open函数创建新文件时,即使mode参数中有设置某个参数,但若使用umask设置了屏蔽该权限,则创建的新文件也不会有该参数.
+
+*但umask可能会也可能不会修改由内核直接产生的core文件*
 ** chmod/fchmod函数:更改现有文件的访问权限
 #+BEGIN_SRC c
   #include <sys/stat.h>
