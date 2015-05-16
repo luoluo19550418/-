@@ -1,0 +1,11 @@
+#+TITLE: 系统文件
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, AUPE
+#+DATE: [2015-05-16 周六 14:09]
+#+OPTIONS: ^:{}
+
+* passwd文件
+<pwd.h>中定义了passwd结构体
+#+BEGIN_SRC C
+
+#+END_SRC
