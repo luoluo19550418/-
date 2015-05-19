@@ -193,7 +193,7 @@ C中的goto是不能跨越函数的,要跨越函数的跳转只能通过`setjmp'
 
 + 有些系统的设计原则是:存放在内存中的变量不会回滚longjmp前的值,而存放在CPU和浮点寄存器中的变量则恢复为调用setjmp时的值.
 
-* COMMENT 资源限制
+* 资源限制
 每个进程都有一组资源限制,其中一些可以使用getrlimit和setrlimit函数来查询或更改
 #+BEGIN_SRC C
   #include <sys/resource.h>
