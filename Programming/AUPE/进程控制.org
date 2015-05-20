@@ -1,5 +1,5 @@
 #+TITLE: 进程控制
-#+AUTHOR: Administrator
+#+AUTHOR: DarkSun
 #+CATEGORY: Programming, AUPE
 #+DATE: [2015-05-18 周一 21:29]
 #+OPTIONS: ^:{}
@@ -134,3 +134,45 @@ waitid可以指定要监控的子进程的哪些状态变化
   - 若没设置该标准,则保持描述符打开
   - 除非特地用fcntl设置了该标志,否则系统的默认为关闭该标志
 + exec时 *明确会关闭打开的目录流(opendir)*
+** 当exec调用一个带`#! 解析器程序 可选参数项'的脚本文件时:
+1. exec实际执行的并不是该脚本文件,而是脚本文件第一行`#! 解析器程序 可选参数项'中的 *解析器程序*
+2. exec传递给该解析器程序的参数顺序为,解析器地址,可选参数,脚本文件地址,除argv0外的由exec函数传入的其他参数.
+   #+BEGIN_SRC C
+     /*
+       /tmp/testinterp的内容为:
+       #! /usr/bin/echo.exe args:
+     ,*/
+
+     #include <unistd.h>
+
+     int main()
+     {
+       execl("/tmp/testinterp","testinterp","myarg1","MY ARG2",(char*) 0);
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : args: /tmp/testinterp myarg1 MY ARG2
+* 进程会计
+大多数UNIX系统都提供了一个选项以进行进程会计(process accounting)处理. 启用该选项后,每当进程结束时,内核就写一个会计记录.
+
+*会计记录是在fork时产生而不是exec时产生* 但exec会改变响应记录中的命令名,而且AFORK标志也会被清除.
+
+会计记录一般为二进制格式的,且结构各个系统实现的都不一样. 一般可以在<sys/acct.h>中查到struct acct
+
+root用户可以使用`accton 命令行'来对`命令行'开启进程会计选项.
+* 进程时间
+任何进程都可以通过调用times函数获得自己的运行时间,用户态CPU时间和内核态CPU时间.
+#+BEGIN_SRC C
+  #include <sys/times.h>
+
+  /* 若成功返回进程相对上一次运行times函数的运行时间,单位为时钟滴答数,若出错返回-1 */
+  clock_t times(struct tms* buf); 
+
+  struct tms{
+    clock_t tms_utime;            /* user CPU time */
+    clock_t tms_stime;            /* system CPU time */
+    clock_t tms_cutime;           /* user CPU tim, terminated children */
+    clock_t tms_cstime;           /* system CPU time, terminated children */
+  }
+#+END_SRC
