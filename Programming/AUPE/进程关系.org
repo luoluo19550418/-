@@ -118,6 +118,11 @@
   #include <unistd.h>
 
   pid_t getsid(pid_t pid);        /* 若成功返回会话ID,否则返回-1 */
+
+  #include <termios.h>
+
+  /* 返回tty_filedes相关终端对应的会话ID,出错返回-1 */
+  pid_t tcgetsid(int tty_filedes);
 #+END_SRC
 + 处于安全考虑,若参数pid并不属于调用者所在的会话ID,则会出错.
   #+BEGIN_SRC C :exports both drawer
@@ -136,4 +141,15 @@
   #+RESULTS:
   | 本进程所属会话ID为5992 |
   | 进程1所属会话ID为-1    |
+** 设置/获取前台进程组
+需要有一种方法来通知内核哪一个进程组是前台进程组,这样终端设备驱动程序就能了解将终端输入和终端产生的信号送到何处
+#+BEGIN_SRC C
+  #include <unistd.h>
+
+  /* 返回与tty_filedes相关联的终端的前台进程组ID,失败则返回-1 */
+  pid_t tcgetpgrp(int tty_filedes);
+
+  /* 设置与tty_filedes相关联的终端的前台进程组,成功返回0,失败返回-1 */
+  int tcsetpgrp(int tty_filedes,pid_t pgrpid);
+#+END_SRC
 
