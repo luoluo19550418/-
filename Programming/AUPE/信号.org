@@ -1,0 +1,5 @@
+#+TITLE: 信号
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, AUPE
+#+DATE: [2015-05-22 周五 09:44]
+#+OPTIONS: ^:{}
