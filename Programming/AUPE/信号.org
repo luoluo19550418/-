@@ -292,4 +292,50 @@ sigaction函数检查或修改与指定信号相关联的处理动作, 其被取
 数据类型sig_atomic_t是ISO C标准定义的变量类型,这种类型的变量不会被中断.
 *这种类型的变量总是包括ISO类型修饰符volatile*,原因是该变量将由main函数和信号处理函数两个不同的控制线程访问.
 
-* 
+* sigsuspend
+若希望对一个信号接触阻塞,然后通过pause函数休眠以等待被阻塞的信号发生,该如何实现呢?
+
+若通过先修改进程信号屏蔽字,再调用pause函数的方法来进行,则由于可能在调用pause函数之前就已经收到信号,从而造成该信号丢失,使得进程永远阻塞下去.
+
+解决的方法是提供一个 *原子操作,先修改信号屏蔽字,并信号被捕获之前就挂起该进程*
+#+BEGIN_SRC C
+  #include <signal.h>
+
+  /* 返回-1,并将errno设为EINTR */
+  int sigsuspend(const sigset_t *sigmask);
+#+END_SRC
+sigsuspend函数临时将进程的信号屏蔽字设置为由sigmask指向的值. 并在捕捉到一个信号或发生了一个会终止该进程的信号之前挂起该进程.
+
+该函数仅在进程捕获到信号后返回,并会 *恢复原信号屏蔽字*
+
+*但该函数仅当进程等待信号区间休眠时才有用,若想在等待信号期间还能调用其他系统函数,则无法实现完美的解决方案*
+* abort函数
+abort函数发送SIGABRT信号到调用进程,并且 *不管信号处理函数如何处理,abort都使进程异常终止.*
+#+BEGIN_SRC C
+  #include <stdlib.h>
+
+  void abort();
+#+END_SRC
+一般捕获SIGABRT的目的是执行进程终止之前的清理操作.
+* 其他特性
+这些特性依赖于具体的实现
++ sys_siglist数组变量
+  #+BEGIN_SRC C
+    extern char* sys_siglist[];
+  #+END_SRC
+  数组下表是信号编号,指向一个信号字符串名称
++ psignal函数
+  #+BEGIN_SRC C
+    #include <signal.h>
+
+    void psignal(int signo,const char* msg);
+  #+END_SRC
+  类似perror,将字符串msg输出到stderr,后接`: ',再接对信号的说明,最后一个回车
++ strsignal函数
+  #+BEGIN_SRC C
+    #include <string.h>
+
+    char* strsignal(int signo);
+  #+END_SRC
+  类似strerrno,根据信号编号返回说明信号的字符串
+** 
