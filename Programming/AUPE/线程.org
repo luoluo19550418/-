@@ -224,3 +224,207 @@ running thread
 cleanup:thread second cleanup handler
 :END:
 
+** pthread_detach(pthread_t tid)
+pthread_detach可以让指定线程处于分离状态,若线程已经处于分离状态,则线程的低层存储资源会在线程终止时自动立即回收.
+因此,并不能对分离的线程调用pthread_join函数
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_detach(pthread_t tid);
+#+END_SRC
+* 线程同步
+** 互斥量
+*** 互斥量的初始化与销毁
+互斥量用于保证同一时间是由一个线程访问数据. 互斥变量的数据类型为pthread_mutex_t
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_mutex_init(pthread_mutex_t* mutex,const pthread_mutexattr_t* attr);
+
+  int pthread_mutex_destroy(pthread_mutex_t* mutex);
+#+END_SRC
++ 使用互斥量之前需要调用pthread_mutex_init对它进行初始化.
++ pthread_mutex_init的参数attr指明了初始化互斥量时的属性,NULL表示默认属性
++ 但对于静态分配的互斥量可以直接赋值为常量`PTHREAD_MUTEX_INITIALIZER',而无需pthread_mutex_init初始化
++ 如果是在堆上分配的互斥量(malloc或new产生的),那么释放内存前 *需要调用pthread_mutex_destroy*
+*** 互斥量的加锁与解锁
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 以阻塞的方式对mutex加锁 */
+  int pthread_mutex_lock(pthread_mutex_t* mutex);
+
+  /* 以非阻塞的方式对mutex加锁,若加锁成功返回0,失败返回EBUSY */
+  int pthread_mutex_trylock(pthread_mutex_t* mutex);
+
+  /* 对mutex解锁 */
+  int pthread_mutex_unlock(pthread_mutex_t* mutex);
+#+END_SRC
+*** 避免死锁
++ 线程内不要对一个互斥量加锁两次
++ 小心地空值多个线程间使用一致的顺序来避免死锁的发生
++ 使用pthread_mutex_trylock接口避免死锁,并且在超出一段时间未能获取到互斥量后,考虑先释放已占用锁,过段事件后再重试
+*** 对互斥量的一个简单C++封装
+#+BEGIN_SRC C++
+  // .h文件
+  class CMutex
+  {
+  public:
+          CMutex();
+          ~CMutex();
+
+          int tryLock();
+          int lock();
+          int unLock();
+
+          pthread_mutex_t m_Mutex;
+  };
+
+  class CScopeLock
+  {
+  public:
+          CScopeLock(CMutex& cMutex, bool IsTry = false);
+          virtual ~CScopeLock(void);
+
+  private:
+          CMutex& m_Mutex;
+  };
+
+  // .cpp文件
+  CMutex::CMutex()
+  {
+          pthread_mutex_init(&m_Mutex, NULL);
+  }
+
+  CMutex::~CMutex()
+  {
+          pthread_mutex_destroy(&m_Mutex);
+  }
+
+  int CMutex::lock()
+  {
+          return pthread_mutex_lock(&m_Mutex);
+  }
+
+  int CMutex::tryLock()
+  {
+          return pthread_mutex_trylock(&m_Mutex);
+  }
+
+  int CMutex::unLock()
+  {
+          return pthread_mutex_unlock(&m_Mutex);
+  }
+
+  CScopeLock::CScopeLock(CMutex& cMutex, bool IsTry): m_Mutex(cMutex)
+  {
+          if(IsTry)
+          {
+                  m_Mutex.tryLock();
+          }
+          else
+          {
+                  m_Mutex.lock();
+          }
+  }
+
+  CScopeLock::~CScopeLock()
+  {
+          m_Mutex.unLock();
+  }
+
+#+END_SRC
+** 读写锁(共享/独占锁)
+读写锁有三个状态:加读锁,加写锁和不加锁.
+
+一次只能有一个线程可以加写锁,但可以有多个线程同时加读锁
+
+对一个有写锁的资源上不能加任何锁. 对一个有读锁的资源上可以加读锁,但不能加写锁.
+在实际的实现中,当 *有加写锁请求被阻塞后,随后的加读锁请求也会被阻塞*,这样是为了避免读锁长期占用,而等待的加写锁请求一直得不到满足
+
+由于读写锁对读锁和写锁的这种处理,读写锁非常适合于对数据结构的读次数远大于写的情况.
+*** 读写锁的初始化与销毁
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_rwlock_init(pthread_rwlock_t* rwlock,const pthread_rwlockattr_t* attr);
+
+  int pthread_rwlock_destroy(pthread_rwlock_t* rwlock);
+#+END_SRC
++ 参数attr为NULL表示使用默认的属性
+*** 读写锁的加锁与解锁
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 以阻塞方式加读锁 */
+  int pthread_rwlock_rdlock(pthread_rwlock_t* rwlock);
+  /* 以非阻塞方式加读锁 */
+  int pthread_rwlock_tryrdlock(pthread_rwlock_t* rwlock);
+
+  /* 以阻塞方式加写锁 */
+  int pthread_rwlock_wrlock(pthread_rwlock_t* rwlock);
+  /* 以非阻塞方式加写锁 */
+  int pthread_rwlock_trywrlock(pthread_rwlock_t* rwlock);
+
+  /* 解锁 */
+  int pthread_rwlock_unlock(pthread_rwlock_t* rwlock);
+#+END_SRC
++ 某些实现对加读锁的时候,可能会对锁的数量进行限制,因此需要检查加锁的返回值是否正确.
++ 加写锁和解锁的函数,只有在不正确地使用读写锁时才回有错误返回,因此如果 *锁设计合理的话,可以不需要检查返回值*
+** 条件变量
+条件变量是利用线程间共享的全局变量进行同步的一种机制,主要包括两个动作:
++ 多个线程在某个条件不为真时调用`pthread_cond_wait'函数而被阻塞
++ 另一个线程处理完后,改变条件状态,并通过`pthread_cond_signal'唤醒等待该条件变量的其他线程. 其他线程重新计算条件是否满足并决定是继续阻塞还是运行
+
+条件变量与互斥量一起使用时,运行线程以无竞争的方式等待特定的条件发生
+
+条件变量本身需要互斥量的保护,即 *线程在改变条件变量时必须先锁住互斥量*
+
+条件变量的数据类型为pthread_cond_t
+*** 条件变量的初始化与销毁
+静态分配的条件变量可以直接赋值为常量PTHREAD_COND_INITIALIZER.
+
+动态分配的条件变量必须使用pthread_mutex_destroy函数进行初始化
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_cond_init(pthread_cond_t* cond,pthread_condattr_t* attr);
+
+  int pthread_cond_destroy(pthread_cond_t* cond);
+#+END_SRC
+参数attr为NULL,表示创建一个默认属性的条件变量
+*** 等待条件变量变为真
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_cond_wait(pthread_cond_t* cond,pthread_mutex_t* mutex);
+
+  /* 若超过时间未等到条件变量为真,则返回ETIMEOUT */
+  int pthread_cond_timedwait(pthread_cond_t* cond,pthread_mutex_t* mutex,const struct timespec* timeout);
+
+  struct timespec{
+    time_t tv_sec;                /* 秒 */
+    long tv_nsec;                 /* 纳秒 */
+  };
+#+END_SRC
+传递給等待函数的mutex变量应该由 *多个等待同一条件变量的线程所共享*,且必须 *由本线程加锁后再传递給等待函数*. 
+
+函数内部将调用线程记入等待条件变量的线程列表中,然后对互斥量解锁.即线程在阻塞期间,mutex变量是被解锁的,可以被其他线程再加锁.
+
+函数内部将件检查和线程进入休眠状态等待条件变化这两个操作实现为原子操作,即两个操作间无等待时间,这样线程就不会错过条件的任何变化.
+
+pthread_cond_wait返回时,互斥量再次被锁定.
+
+*需要注意的是,从等待函数返回后,线程需要重新计算条件是否满足要求,因为其他的线程可能在运行期间改变了条件,因此等待函数一般在while循环中*
+*** 唤醒线程函数
+某线程改变条件状态后,需要再唤醒其他阻塞的线程,让它们重新计算一次条件是否变得满足要求.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_cond_signal(pthread_cond_t* cond);
+
+  int pthread_cond_broadcast(pthread_cond_t* cond);
+#+END_SRC
++ pthread_cond_signal函数唤醒具体等待条件变量的某个线程
+
++ pthread_cond_broadcast函数唤醒等待条件变量的所有线程,一般采用这种方式.
