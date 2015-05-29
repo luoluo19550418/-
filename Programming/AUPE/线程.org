@@ -49,3 +49,178 @@
 + start_rtn函数指针指明了新线程调用哪个函数,该函数只有一个void*参数arg,因此若需要向start_rtn函数传递的参数不止一个,则需要 *把参数放到一个结构中*.
 + 新创建的线程继承调用线程的浮点环境和信号屏蔽字, *但该线程的未决信号集被清除*
 + 由于可能在主线程的pthread_create函数返回前就运行新线程了,因此在新线程中不能安全的使用tidp的值.
+* 线程终止
+线程终止有4种方法:
++ 调用exit,_Exit或_exit,但会使 *整个进程终结*
++ 线程从启动函数中返回, *返回值即为线程退出码*
++ 线程被同一进程的其他线程取消
++ 线程调用pthread_exit函数.
+** pthread_exit函数说明
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  void pthread_exit(void* rtn_val);
+#+END_SRC
+其中参数rtn_val为线程退出的返回值. 其他进程可以使用`pthread_join'函数访问 *这个指针*.
+
+实际使用时,rtn_val不一定就是指针类型,也可能被强制转换为整型. 
+但若rtn_val为指针类型,则需要保证 *指针所指的内容在调用者完成调用后仍然有效(全局变量或在堆上分配空间)*
+#+BEGIN_SRC C :exports both :results raw
+  #include <pthread.h>
+  #include <stdio.h>
+
+  void* thread_func1(void* arg)
+  {
+    printf("thread running. ");
+    return ((void*) 1);           /* 这里将整型强制转换为指针 */
+  }
+
+  void* thread_func2(void* arg)
+  {
+    printf("thread running. ");
+    char* rtn = malloc(sizeof("I am thread 2") + 1);
+    strcpy(rtn,"I am thread 2");
+    return ((void*) rtn);           /* 这里返回一个指向字符数组的指针 */
+  }
+  int main()
+  {
+    pthread_t tid;
+    void* thread_rtn;
+
+    pthread_create(&tid,NULL,thread_func1,NULL);
+    pthread_join(tid,&thread_rtn);
+    printf("thread returns %d\n",(int)thread_rtn);
+
+    pthread_create(&tid,NULL,thread_func2,NULL);
+    pthread_join(tid,&thread_rtn);
+    printf("thread returns %s\n",(char*)thread_rtn);
+    free((char*)thread_rtn);
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+thread running. thread returns 1
+thread running. thread returns I am thread 2
+
+** pthread_join函数说明
+默认情况下(非DETACH的情况下),线程终止后并不会自动释放线程所占用的资源,需要其他线程调用pthread_join函数来同步终止并释放资源(使指定线程变为DETACH状态).
+
+pthread_join类似进程间的wait函数.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_join(pthread_t thread,void** rtn_val_p);
+#+END_SRC
++ 调用的线程会一直阻塞,直到指定的线程退出.
++ 若参数rtn_val_p为非NULL,则会获得pthread_exit的返回指针. 即*rtn_val_p = rtn_val
++ 但若指定的线程被取消运行,则*rtn_val_p == PTHREAD_CANCELD
++ 若指定的线程已经处于分离状态,则pthread_join会调用失败,返回EINVAL.
+
+** pthread_cancel
+pthread_cancel函数用来 *请求(并不能强制)* 取消同一进程中的其他线程
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 成功返回0,否则返回错误编号 */
+  int pthread_cancel(pthread_t tid);
+#+END_SRC
+默认情况下,pthread_cancel函数会使得指定线程的行为表现如同调用了`pthread_exit(PTHREAD_CANCELED)'. 但,线程可以选择 *忽略取消,或采用其他的取消方式*
+#+BEGIN_SRC C
+  #include <pthread.h>
+  #include <stdio.h>
+
+  void* thread_func(void* arg)
+  {
+    printf("thread running");
+    sleep(10);
+    return (void*) 100;
+  }
+
+  int main()
+  {
+    pthread_t tid;
+    void* thread_rtn;
+
+    pthread_create(&tid,NULL,thread_func,NULL);
+    pthread_cancel(tid);
+    pthread_join(tid,&thread_rtn);
+    if(thread_rtn == PTHREAD_CANCELED)
+      {
+        printf("thread returned PTHREAD_CANCELED");
+      }
+    else
+      {
+        printf("thread returned %d",(int)thread_rtn);
+      }
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: thread runningthread returned PTHREAD_CANCELED
+
+** 线程清理函数
+类似进程,线程也可以安排它退出时要调用的函数. 这些类似atexit的函数被称为线程清理处理函数.
+
+线程也可以建立多个清理处理函数,它们的指向顺序与注册顺序相反.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 注册清理函数,及参数 */
+  void pthread_cleanup_push(void (*clean_func)(void*),void* arg);
+
+  /* 删除上次注册的清理函数,参数execute表示删除前知否执行这些清理函数 */
+  void pthread_cleanup_pop(int execute);
+#+END_SRC
+在 *pthread_cleanup_push和pthread_cleanup_pop间的代码段* 中若有终止动作(包括被取消),都将执行pthread_cleanup_push()所注册的清理函数.
+
+*pthread_cleanup_push和pthread_cleanup_pop必须成对出现!*
+#+BEGIN_SRC C :exports both :results drawer
+  #include <pthread.h>
+  #include <stdio.h>
+
+  void cleanup(void* arg)
+  {
+    printf("cleanup:%s\n",(char*)arg);
+  }
+
+  void* thread_func(void* arg)
+  {
+    pthread_cleanup_push(cleanup,(void*)"thread first cleanup handler");
+    pthread_cleanup_push(cleanup,(void*)"thread second cleanup handler");
+    printf("running thread\n");
+    pthread_cleanup_pop(1);      /* 没有退出,但execute为1表示弹出第2个处理函数时也要执行该函数 */
+    if(arg == NULL)
+      {
+        pthread_exit(arg);
+        /* return arg; */
+      }
+    pthread_cleanup_pop(0);
+    return arg;
+  }
+
+  int main()
+  {
+    pthread_t tid;
+    void* rtn_value;
+
+    pthread_create(&tid,NULL,thread_func,(void*)NULL);
+    pthread_join(tid,&rtn_value);
+
+    pthread_create(&tid,NULL,thread_func,(void*)1);
+    pthread_join(tid,&rtn_value);
+
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+running thread
+cleanup:thread second cleanup handler
+cleanup:thread first cleanup handler
+running thread
+cleanup:thread second cleanup handler
+:END:
+
