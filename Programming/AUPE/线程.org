@@ -428,3 +428,178 @@ pthread_cond_wait返回时,互斥量再次被锁定.
 + pthread_cond_signal函数唤醒具体等待条件变量的某个线程
 
 + pthread_cond_broadcast函数唤醒等待条件变量的所有线程,一般采用这种方式.
+* 线程限制
+可以使用`sysconf'获取系统实现中线程相关的限制
+#+BEGIN_SRC C
+  #include <unistd.h>
+
+  long int sysconf(int Name);
+#+END_SRC
+其中参数Name可以是:
++ _SC_THREAD_DESTRUCTOR_ITERATIONS :: 线程退出时,操作系统试图销毁线程私有数据的最大次数
++ _SC_THREAD_KEYS_MAX :: 进程创建key的最大数目
++ _SC_THREAD_STACK_MIN :: 一个线程栈可用的最小字节数
++ _SC_THREAD_THREADS_MAX :: 进程可以创建的最大线程数
+* 线程属性
+可以使用pthread_attr_t结构修改线程默认属性,并把这些属性与创建的线程联系起来.
+** 初始化/销毁线程属性
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_attr_init(pthread_attr_t* attr);
+
+  int pthread_attr_destory(pthread_attr_t* attr);
+#+END_SRC
+调用pthread_attr_init以后,pthread_attr_t结构所包含的内容就是操作系统实现支持的线程所有属性的默认值.
+** 线程属性的获取与修改
+*** detachstate(线程的分离状态属性)
+如果在创建线程时就知道不需要了解线程的终止状态,则可以修改pthread_attr_t结构中的detachstate线程属性,让线程以分离状态启动.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 获取线程属性分离状态 */
+  int pthread_attr_getdetachstate(const pthread_attr_t* attr,int* detachstate);
+
+  int pthread_attr_setdetachstate(pthread_attr* attr,int detachstate);
+#+END_SRC
+其中detachstate的可选值为:
++ PTHREAD_CREATE_DETACHED :: 以分离状态启动线程
++ PTHREAD_CREATE_JOINABLE :: 正常启动线程
+*** statcsize(线程栈的大小)
+可以在编译期间查看是否定义_POSIX_THREAD_ATTR_STACKSIZE来判断系统是否支持该线程属性.
+
+对于多线程的进程来说,由于有多个线程栈共享一个进程的虚拟地址空间.
++ 若应用程序使用了太多的线程,会导致线程栈的累计大小超过了可用的虚拟地址空间,这时就需要减少线程默认的栈大小.
++ 若线程调用的函数分配了大量的自动变量,或调用的函数涉及很深的栈帧,则可能需要增加线程栈的大小.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_attr_getstacksize(const pthread_attr_t* attr,size_t* stacksize);
+
+  int pthread_attr_setstacksize(pthread_attr_t* attr,size_t stacksize);
+#+END_SRC
+若希望改变线程栈的默认大小,但又不想自己处理线程栈的分配问题,这时使用pthread_attr_setstacksize函数就非常有用.
+*** stackaddr(线程栈的最低地址)
+可以在编译阶段使用是否定义了_POSIX_THREAD_ATTR_STACKADDR来判断系统是否支持该线程栈属性
+
+若进程的虚拟地址空间被用尽,可以使用malloc来在堆空间上为新线程栈分配空间,并用`pthread_attr_setstack'函数来改变新建线程的栈位置.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_attr_getstack(const pthread_attr_t* attr,void** statckaddr,size_t* stacksize);
+
+  int pthread_attr_setstack(const pthread_attr_t* attr,void* stackaddr,size_t* stacksize);
+#+END_SRC
+这两个函数实际上即用于管理stackaddr线程属性,也用于管理stacksize线程属性.
+
+*参数stackaddr线程属性被定义为栈的内存单位的最低地址,但不必然是栈的开始位置*. 对某些处理器结构来说,栈是从高地址向低地址防线伸展的,那么stackaddr线程属性就是栈的结尾地址而不是开始地址.
+*** guardsize(线程栈末尾的警戒缓冲区大小)
+线程属性guardsize控制着线程栈末尾之后用以避免栈溢出的扩展内存的大小. 这个属性默认值为PAGESIZE.
+
+若将guardsize线程属性设为0,则表示不提供警戒缓冲区.
+
+*若对线程属性stackaddr做了修改,系统假设由我们自己管理栈,不管guardsize线程属性是什么,都会使警戒栈缓冲区机制无效*
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_attr_getguardsize(const pthread_attr_t* attr,size_t* guardsize);
+
+  int pthread_attr_setguardsize(pthread_attr_t* attr,size_t guardsize);
+#+END_SRC
++ 操作系统实际设置警戒缓冲区大小时,可能不一定就是参数guardsize的大小,有可能会修改为页大小的整数倍.
++ 如果线程的栈指针溢出到警戒区域,应用程序就可能通过信号接收到出错信息.
+*** 可取消状态
+*** 可取消类型
+*** 并发度
+并发度控制着用户级线程可以映射到内核线程或进程的数量. 因为有些操作系统让多个用户级线程映射为一个内核级线程/进程,这时增加给定时间内可运行的用户级线程数,可能会改善性能.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_getconcurrency();
+
+  int pthread_setconcurrency(int level);
+#+END_SRC
++ 若没改过并发度,则pthread_getconcurrency函数返回0
++ pthread_setconcurrency函数设定的并发度只是一个对系统的提示,不一定会被采用
++ 給pthread_setconcurrency函数中的参数level设为0,表示采用系统默认的值.
+* 同步属性
+** 互斥量属性
+*** 互斥量属性的初始化/销毁
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 使用默认的互斥量属性初始化pthread_mutexattr_t结构 */
+  int pthread_mutexattr_init(pthread_mutexattr_t* attr);
+
+  int pthread_mutexattr_destroy(pthread_mutexattr_t* attr);
+#+END_SRC
+*** 互斥量的共享属性
+默认情况下,mutex变量只能是同一进程的不同线程之间才能访问,这时互斥量的共享属性为默认的PTHREAD_PROCESS_PRIVATE
+
+但存在某些机制,允许相互独立的多个进程共享同一内存区域,即有时需要多个进程之间同步共享数据,这时需要把互斥量的共享属性设置为PTHREAD_PROCESS_SHARED.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_mutexattr_getpshared(const pthread_mutexattr_t* attr,int* pshared);
+
+  int pthread_mutexattr_setshared(pthread_mutexattr_t* attr,int pshared);
+#+END_SRC
+*** 互斥量的类型属性
+互斥量的类型属性控制着互斥量的特性. POSIX.1定义了四种类型的互斥量
++ PTHREAD_MUTEX_NORMAL :: 标准的互斥量类型,不做任何特殊的错误检查或死锁检测
++ PTHREAD_MUTEX_ERRORCHECK :: 互斥量进行错误检查
++ PTHREAD_MUTEX_RECURSIVE :: 允许同一线程对互斥量进行重复加锁,但 *只有在解锁和加锁次数相同的情况下才会释放锁*
++ PTHREAD_MUTEX_DEFUALT :: 用于请求的默认语义,操作系统可以把他实现为上面三种类型的任意一种.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_mutexattr_gettype(const pthread_mutexattr_t* attr, int* type);
+
+  int pthread_mutexattr_settype(pthread_mutexattr_t* attr,int type);
+#+END_SRC
+由于`pthread_cond_wait'函数中只会对mutex变量解一次锁,因此当传递递归互斥量到`pthread_cond_wait'时要注意它应该只被加锁一次.
+
+#+TABLE: 互斥量类型行为说明
+| 互斥量类型               | 没有解锁时重复加锁 | 解锁其他线程加锁的互斥量 | 对已解锁的互斥量进行解锁 |
+|--------------------------+--------------------+--------------------------+--------------------------|
+| PTHREAD_MUTEX_NORMAL     | 死锁               | 未定义                   | 未定义                   |
+| PTHREAD_MUTEX_ERRORCHECK | 返回错误           | 返回错误                 | 返回错误                 |
+| PTHREAD_MUTEX_RECURSIVE  | 允许               | 返回错误                 | 返回错误                 |
+| PTHREAD_MUTEX_DEFAULT    | 未定义             | 未定义                   | 未定义                      |
+
+** 读写锁属性
+*** 读写锁初始化/销毁
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_rwlockattr_init(pthread_rwlockattr_t* attr);
+
+  int pthread_rwlockattr_destroy(pthread_rwlockattr* attr);
+#+END_SRC
+*** 进程共享属性
+类似互斥量的进程共享属性
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t* attr,int* pshared);
+
+  int pthread_rwlockattr_setshared(pthread_rwlockattr_t* attr,int pshared);
+#+END_SRC
+** 条件变量属性
+*** 条件变量初始化/销毁
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_condattr_init(pthread_condattr_t* attr);
+
+  int pthread_condattr_destroy(pthread_condattr* attr);
+#+END_SRC
+*** 进程共享属性
+类似互斥量的进程共享属性
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_condattr_getpshared(const pthread_condattr_t* attr,int* pshared);
+
+  int pthread_condattr_setshared(pthread_condattr_t* attr,int pshared);
+#+END_SRC
