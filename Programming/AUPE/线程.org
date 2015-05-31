@@ -603,3 +603,4 @@ pthread_cond_wait返回时,互斥量再次被锁定.
 
   int pthread_condattr_setshared(pthread_condattr_t* attr,int pshared);
 #+END_SRC
+* 
