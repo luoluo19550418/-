@@ -219,3 +219,30 @@ putc和fputc的区别类似于getc和fgetc的区别.
 
 + mkstemp产生的 *临时文件不会自动被删除*
 
+* 线程安全的方式管理FILE对象
+PSOXI.1提供了以线程安全的方式管理FILE文件的方法. 可以使用`flockfile'和`ftrylockfile'获取与FILE对象关联的锁,且这个锁为递归锁.
+
+所有操作FILE对象的标准IO函数,都需要表现的好像内部调用了flockfile和funlockfile一样,即不能出现多个线程同时写入同一FILE对象时出现乱序的情况.
+#+BEGIN_SRC C
+  #include <stdio.h>
+
+  int ftrylockfile(FILE* fp);
+
+  void flockfile(FILE* fp);
+
+  void funlockfile(FILE* fp);
+#+END_SRC
+通过这些函数,我们可以把多个标准IO函数的调用组合成一个原子序列.
+
+若标准IO函数每次操作都获取自己的锁再释放,那么在进行单字符的IO操作时,会消耗大量的性能到加解锁中,因此就有了 *不加锁的基于字符的标准IO函数*
+#+BEGIN_SRC C
+  #include <stdio.h>
+
+  int getchar_unlocked();
+  int getc_unlocked(FILE* fp);
+
+  int putchar_unlocked(int c);
+  int putc_unlocked(int c,FILE* fp);
+#+END_SRC
+*请保证这四个函数调用时包含在flockfile/ftrylockfile和funlockfile中*
+
