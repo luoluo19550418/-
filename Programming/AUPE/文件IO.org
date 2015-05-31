@@ -100,5 +100,3 @@ fcntl函数可以改变已打开的文件属性
   int fcntl(int filedes,int cmd,...);
 #+END_SRC
 
-* 线程安全的方式管理FILE对象
-PSOXI.1提供了以线程安全的方式管理FILE文件的方法. 可以使用`flockfile'和`ftrylockfile'获取与FILE对象关联的锁,且这个锁为递归锁.
