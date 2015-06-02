@@ -126,7 +126,7 @@ pthread_cancel函数用来 *请求(并不能强制)* 取消同一进程中的其
   int pthread_cancel(pthread_t tid);
 #+END_SRC
 默认情况下,pthread_cancel函数会使得指定线程的行为表现如同调用了`pthread_exit(PTHREAD_CANCELED)'. 但,线程可以选择 *忽略取消,或采用其他的取消方式*
-#+BEGIN_SRC C
+#+BEGIN_SRC C :exports both :results drawer
   #include <pthread.h>
   #include <stdio.h>
 
@@ -158,8 +158,18 @@ pthread_cancel函数用来 *请求(并不能强制)* 取消同一进程中的其
 #+END_SRC
 
 #+RESULTS:
-: thread runningthread returned PTHREAD_CANCELED
+:RESULTS:
+thread runningthread returned PTHREAD_CANCELED
+:END:
 
+另外需要注意的是, *默认情况下, 线程在取消请求发出后并不会立即退出,而是会继续运行,直到线程到达某个取消点*. 取消点常在线程调用某些函数时出现.
+
+若应用程序在很长时间内都不会调用到产生取消点的函数,则可以调用`pthread_testcancel'函数在程序中自己添加取消点.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  void pthread_testcancel();
+#+END_SRC
 ** 线程清理函数
 类似进程,线程也可以安排它退出时要调用的函数. 这些类似atexit的函数被称为线程清理处理函数.
 
@@ -428,6 +438,21 @@ pthread_cond_wait返回时,互斥量再次被锁定.
 + pthread_cond_signal函数唤醒具体等待条件变量的某个线程
 
 + pthread_cond_broadcast函数唤醒等待条件变量的所有线程,一般采用这种方式.
+** 使用pthread_once函数保证函数只执行一次
+若某个函数(多为初始化函数)在多个线程中都出现,但只需要在某个线程中执行一次即可,则可以使用`pthread_once'函数来保证.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* initflag必须为非本地变量,即全局变量或静态变量 */
+  pthread_once_t initflag = PTHREAD_ONCE_INIT;
+
+  /* 成功返回0,失败返回错误编号 */
+  int pthread_once(pthread_once_t* initflag,void(init_func)(void));
+#+END_SRC
++ 由于initflag必须給多个线程共用,因此它必须为非本地变量,即全局变量或静态变量
++ initflag的初始化值必须是PTHREAD_ONCE_INIT
++ 每个线程都调用pthread_once,就能保证init_func只被执行一次.
+
 * 线程限制
 可以使用`sysconf'获取系统实现中线程相关的限制
 #+BEGIN_SRC C
@@ -509,7 +534,27 @@ pthread_cond_wait返回时,互斥量再次被锁定.
 + 操作系统实际设置警戒缓冲区大小时,可能不一定就是参数guardsize的大小,有可能会修改为页大小的整数倍.
 + 如果线程的栈指针溢出到警戒区域,应用程序就可能通过信号接收到出错信息.
 *** 可取消状态
+可取消状态决定了线程在接收到`pthread_cancel'请求后是否退出.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread_setcancelstate(int new_state,int* old_state);
+#+END_SRC
+其中参数state的可选值为:
++ PTHREAD_CANCEL_ENABLE :: 响应pthread_cancel请求,退出
++ PTHREAD_CANCEL_DISABLE :: 挂起pthread_cancel请求,不退出. *等下次取消状态改为ENABLE状态时再响应该请求*.
 *** 可取消类型
+可取消类型决定了对`pthread_cancel'请求做出响应后,什么时候退出. 
+
+默认情况下是延迟取消,即等到下一个取消点出现时才退出. 但也可以通过`pthread_setcanceltype'设置为异步取消,即不用等退出点,立即退出.
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  int pthread setcanceltype(int new_type,int* old_type);
+#+END_SRC
+type参数可以为:
++ PTHREAD_CANCEL_DEFERRED :: 延迟取消
++ PTHREAD_CANCEL_ASYNCHRONOUS :: 异步取消
 *** 并发度
 并发度控制着用户级线程可以映射到内核线程或进程的数量. 因为有些操作系统让多个用户级线程映射为一个内核级线程/进程,这时增加给定时间内可运行的用户级线程数,可能会改善性能.
 #+BEGIN_SRC C
@@ -603,4 +648,196 @@ pthread_cond_wait返回时,互斥量再次被锁定.
 
   int pthread_condattr_setshared(pthread_condattr_t* attr,int pshared);
 #+END_SRC
-* 
+* 多线程环境下的信号处理
+每个线程都有自己的信号屏蔽字,但 *必须共享同一个信号处理函数*. 
+
+*当主线程创建新线程时,新线程会继承现有的信号屏蔽字*
+
+进程中产生的信号只能传递給某一个线程中,而无法一次性发送給多个线程. 如果信号与硬件或计时器超时有关,该信号就被发送到引起该事件的线程中去, *其他信号则发送到任意一个线程*.
+** 多线程与进程中使用信号机制的区别.
+在进程环境中,使用信号的机制为先调用sigaction注册信号处理函数,当信号异步发生时,调用信号处理函数来处理信号,它是完全异步的.
+
+而多线程环境中,信号处理的机制是将信号灯的异步处理转换为同步处理. 即使用一个线程专门来同步等待信号的到来(sigwait函数),然后检测到来的信号执行响应的处理. 而其他线程不受信号的影响.
+** 设置线程的信号屏蔽字
+进程用于设置信号屏蔽字的函数`sigprocmask'的行为在多线程环境中并未定义,多线程环境中必须使用`pthread_sigmask'代替
+#+BEGIN_SRC C
+  #include <signal.h>
+
+  /* 成功返回0,失败直接返回错误编号 */
+  int pthread_sigmask(int how,const sigset_t* set,sigset_t* old_set);
+#+END_SRC
+`pthread_sigmask'函数与`sigprocmask'函数基本相同,除了pthread_sigmask工作在线程中,并且失败时直接返回错误码,而不是像`sigprocmask'那样返回-1,再设置errno
+** 线程等待信号发生
+线程通过调用`sigwait'等待一个或多个信号发生
+#+BEGIN_SRC C
+  #include <signal.h>
+
+  /* 成功返回0,否则返回错误编号 */
+  int sigwait(const sigset_t* set,int* sig)
+#+END_SRC
+参数set为线程等待的信息集合. 
+参数sig为等到的信号编号
+
+为了避免信号在线程调用sigwait之前发生从而照成信号丢失,在线程调用sigwait之前,必须阻塞哪些它正在等待的信号. 
+*sigwait函数会自动取消信号集的阻塞状态,并在等待信号返回前,恢复线程的信号屏蔽字*
+
+*若多个线程调用sigwait等待同一个信号时,只有一个线程能收到信号,从而从sigwait中返回*
+
+*如果即用sigaction注册了信号处理函数,线程又正在sigwait调用中等待同一信号,那么谁捕获到信号由操作系统决定*.
+** 发送信号給线程
+#+BEGIN_SRC C
+  #include <signal.h>
+
+  /* 若成功返回0,否则返回错误编号 */
+  int pthread_kill(pthread_t thread,int signo);
+#+END_SRC
++ 可以通过将signo设为0来检测线程是否存在
++ 若信号默认处理动作为终止进程,那么即使是发送信号給某个线程, *也会杀掉整个进程*
++ *闹铃定时器是进程资源,由多个线程共享*
+* 多线程环境下的fork
+父进程fork出的子进程会继承父进程的所有互斥量,读写锁和条件变量的状态,但是却只有线程,即父进程中调用fork的那个线程.
+
+因此若父进程中的那些同步变量被其他线程占用,则子进程同样占有这些锁,但同时子进程并没有占有锁的其他线程存在,所以子进程需要在fork的同时清理掉那些被其他线程占用的锁(若子进程立即exec则无此必要)
+
+要清除锁状态,需要在父进程中调用`pthread_atfork'函数创建fork处理程序.
+#+BEGIN_SRC C 
+  #include <pthread.h>
+
+  /* 成功返回0,否则返回错误编号 */
+  int pthread_atfork(void (*prepare)(void),
+                     void (*parent)(void),
+                     void (*child)(void));
+#+END_SRC
+
++ 参数prepare会在父进程fork子进程前被调用,它的任务是获取父进程中 *所有线程中* 定义的 *所有锁*
++ 参数parent会在fork创建子进程后,但在fork返回前在 *父进程环境* 中调用的,它的任务是对prepare中获得的锁进行解锁
++ 参数child会在fork创建子进程后,但在fork返回前在 *子进程环境* 中调用,它的任务也是对prepare中获得的锁进行解锁
++ 若参数为NULL,则表示不设置该函数
+#+BEGIN_SRC C :exports both :results drawer
+  #include <stdio.h>
+  #include <pthread.h>
+  #include <unistd.h>
+
+  pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_t lock2 = PTHREAD_MUTEX_INITIALIZER;
+
+  void prepare()
+  {
+    printf("preparing locks...\n");
+    pthread_mutex_lock(&lock1);   /* 获取锁1 */
+    pthread_mutex_lock(&lock2);   /* 获取锁2 */
+  }
+
+  void parent()
+  {
+    printf("parent unlocking locks...\n");
+    pthread_mutex_unlock(&lock1); /* 释放锁1 */
+    pthread_mutex_unlock(&lock2); /* 释放锁2 */
+  }
+
+  void child()
+  {
+    printf("child unlocking locks...\n");
+    pthread_mutex_unlock(&lock1); /* 释放锁1 */
+    pthread_mutex_unlock(&lock2); /* 释放锁2 */
+  }
+
+  void* thread_func(void* arg)
+  {
+    printf("thread started...\n");
+    pause();
+    return 0;
+  }
+
+  int main()
+  {
+    pthread_atfork(prepare,parent,child);
+    pthread_t tid;
+    pthread_create(&tid,NULL,thread_func,0);
+    sleep(2);
+    printf("parent about to fork...\n");
+    pid_t pid;
+    if((pid = fork())< 0)
+      printf("fork failed\n");
+    else if(pid == 0)
+      printf("child returned from fork\n");
+    else
+      printf("parent returned from fork\n");
+
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+thread started...
+parent about to fork...
+preparing locks...
+child unlocking locks...
+child returned from fork
+thread started...
+parent about to fork...
+preparing locks...
+parent unlocking locks...
+parent returned from fork
+:END:
+
+可以多次调用pthread_at函数从而设置多套fork处理函数,但是每个参数被调用的顺序是不同的:
++ parent和child函数以它们注册的顺序进程调用
++ prepare处理函数的调用顺序与注册时的顺序相反
+** 多线程环境下fork的问题
++ 虽然`pthread_atfork'函数可以用来注册清理锁状态,但是条件变量的清理动作却是未定义的,有的操作系统实现不需要清理条件变量,有的操作系统实现fork之后无法再使用条件变量.
++ 许多库函数的内部实现都用到了锁机制(例如malloc),对于这些库函数而言,`pthread_atfork'函数基本没用
+* 线程的私有数据(Thread-specific Data)
+线程私有数据常用于模拟线程私有的全局变量,即这个变量的值在不同线程中是不同,但可以被同一个线程中的多个函数所共享.
+
+关于线程私有数据(TSD)的一个明显例子就是errno,每个线程都有自己的errno的值,但线程内部的函数共享一个errno的值
+** pthread_key_create
+在分配线程私有数据之前,需要创建与该数据相关联的键. 这个键将用于获取对线程私有函数的访问权. 使用`pthread_key_create'创建一个键
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 若成功返回0,否则返回错误编号 */
+  int pthread_key_create(pthread_key_t* key,void (*destructor)(void*))
+#+END_SRC
++ 参数key为新创建的键,这个key可以被进程中的所有线程使用,但每个线程都会为这个key与不同的线程私有数据地址相关联. 即不同进程对同一个键对应的数据是不同的.
++ 刚新创建的key,每个线程中与之相关联的数据地址为NULL
++ 析构函数参数destructor若为非NULL,则在线程正常退出时(*调用pthread_exit或线程执行返回为正常退出. 调用exit,_exit,_Exit,abort为非正常退出*)会用 *与该键关联的数据地址为参数来被调用*
++ 线程通常使用malloc为线程私有数据分配内存空间,并与键相关联. 析构函数通常用于释放已分配的内存
++ 操作系统实现中能创建的最大键数为PTHREAD_KEYS_MAX
++ 由于`pthread_key_create'在多个线程中只需要执行一次就行,因此一般会使用`pthread_once'函数来确保.
+  #+BEGIN_SRC C
+    void destructor(void*);
+
+    pthread_key_t key;
+    pthread_once_t init_done = PTHREAD_ONCE_INIT;
+
+    void thread_init()
+    {
+      pthread_key_create(&key,destructor);
+    }
+
+    int thread_func(void* arg)
+    {
+      pthread_once(&init_done,thread_init);
+    }
+  #+END_SRC
+** pthread_key_delete
+对所有的线程,都可以通过调用`pthread_key_delete'来取消key与线程私有数据的关联. 但需要注意的是: *调用`pthread_key_delete'并不会触发与之关联的析构函数*
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  /* 成功返回0,否则返回错误编号 */
+  int pthread_key_delete(pthread_key_t* key);
+#+END_SRC
+** pthread_setspecific/pthread_getspecific
+键一旦创建,就可以
++ 通过调用pthread_setspecific函数把key和线程私有数据关联起来.
++ 通过调用pthread_getspecific函数获得与key关联的线程私有数据地址
+#+BEGIN_SRC C
+  #include <pthread.h>
+
+  void* pthread_getspecific(pthread_key_t key);
+
+  int pthread_setspecific(pthread_key_t key,const void* value);
+#+END_SRC
