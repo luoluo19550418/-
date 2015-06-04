@@ -1,0 +1,18 @@
+#+TITLE: wget使用
+#+AUTHOR: lujun9972
+#+OPTIONS: ^:{}
+
+* 使用wget下载网站
+inux下可以用wget下载整个网站，而且网站链接中包含utf-8编码的中文也能正确处理。
+简要方法记录如下：
+wget --restrict-file-name=ascii -m -c -nv -np -k -E -p -R=exe,zip http://www.xxx.com
+参数释义如下：
+--restrict-file-name=ascii ，将文件名保存为ASCII格式。这样能避免utf-8文件名带来的麻烦（注：1.12版才支持ascii参数值）
+-m 整站下载，mirror的缩写，是-N -r -l inf --no-remove-listing 这几个参数的快捷方式，具体详阅各自的说明
+-c 续传
+-nv 不显示详细的下载详情
+-np don’t ascend to the parent directory.即下载的Web页面不越过后面指定的 http://www.xxx.com的范围。当然，如果你指定的是 http://www.xxx.com/aaa，则所有的web页面都要在 http://www.xxx.com/aaa下
+-k 下载完成后，将页面文件中的链接转换为本地链接，便于离线浏览和制作chm等
+-E 保存html/css文件时，使用合适的文件后缀。例如，在某些网站有些文件是服务器端动态生成的，虽然是css文件，但后缀并不是css，-E选项可以调整之
+-p -np对页面文件做了限制，如果不加-p，则html所需的媒体文件也会受限于-np，-p则会下载html/css文件所需的所有媒体文件（图片、音频、视频等）
+-R 拒绝下载的文件后缀列表，逗号分隔

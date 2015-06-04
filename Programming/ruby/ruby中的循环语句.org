@@ -1,0 +1,207 @@
+#+TITLE: ruby中的循环语句
+#+AUTHOR: lujun9972
+#+OPTIONS: ^:{}
+
+* 内建循环语句
+
+** while与until
+while与until的一般语法为:
+#+BEGIN_SRC ruby :export nil
+  # while语句先测试执行循环的条件是否位true,为true才执行循环语句,然后再次测试执行的循环条件
+  while 执行循环的条件 do
+    循环语句
+  end
+  # 也可以简写成
+  循环语句 while 执行循环的条件
+
+  # until语句先测试跳出循环的语句是否为false,为false才执行循环语句,然后再次测试跳出循环的条件
+  until 跳出循环的条件 do
+    循环语句
+  end
+  # 也可以简写成
+  循环语句 until 跳出循环的条件
+#+END_SRC
+
+例如:
+#+BEGIN_SRC ruby
+  a = 0
+  while a < 10 do
+    puts a
+    a = a + 1
+  end
+
+  b = 0
+  until b >= 10 do
+    puts b
+    b = b + 1
+  end
+
+  a = 0
+  puts a = a + 1 while a < 10
+
+  b = 0
+  puts b = b + 1 until b >= 10
+#+END_SRC
+
+** for...in...循环
+for...in...循环,类似迭代器,它对一个拥有each方法的容器中的元素进行循环操作,它的基本语法为:
+#+BEGIN_SRC ruby :export nil
+  for 变量/逗号分隔的变量列表 in 带each方法的容器 do
+    循环语句
+  end
+#+END_SRC
+
+例如
+#+BEGIN_SRC ruby
+  for e in (1..10) do
+    puts e
+  end
+
+  for k,v in {:a=>1,:b=>2,:c=>3} do
+    puts "#{k} is #{v}"
+  end
+#+END_SRC
+
+* 迭代器
+
+** Kernal.loop方法
+loop不断的执行循环语句,直到循环有剧中使用了return,break. 它的基本语法为:
+#+BEGIN_SRC ruby :export nil
+  loop {
+    带return或break的循环语句
+  }
+#+END_SRC
+
+例如:
+#+BEGIN_SRC ruby
+  a = 1
+  loop {
+    puts a
+    a = a + 1
+    if a > 3 then
+      break
+    end
+  }
+#+END_SRC
+
+** 数值迭代器
+
+*** Integer.upto / Integer.downto方法
+upto / downto方法的基本语法为:
+#+BEGIN_SRC ruby
+  小整数.upto(大整数) {
+    循环执行的代码快
+  }
+  # 等价于
+  a = 小整数
+  while a <= 大整数 do
+    循环执行的代码快
+    a = a + 1
+  end
+
+  大整数.upto(小整数) {
+    循环执行的代码块
+  }
+  # equals
+  a = 大整数
+  while a >= 小整数 do
+    循环执行的代码快
+    a = a - 1
+  end
+#+END_SRC
+
+例如
+#+BEGIN_SRC ruby
+  0.upto(3) {
+    |x| puts x
+  }
+
+  3.downto(0){
+    |x| puts x
+  }
+#+END_SRC
+
+*** Integer.times方法
+times方法一般用于循环确定次数,它的基本语法为:
+#+BEGIN_SRC ruby :export nil
+  整数.times{
+    循环代码
+  }
+  # equals
+  0.upto(整数){
+    循环代码
+  }
+#+END_SRC
+
+例如
+#+BEGIN_SRC ruby
+  3.times{
+    |x| puts x
+  }
+#+END_SRC
+
+*** Numeric.step方法
+step方法的基本语法为:
+#+BEGIN_SRC ruby
+  数字.step(极限数,步进数){
+    循环语句
+  }
+  # equals
+  a = 数字
+  while a < 极限数 do
+    循环语句
+    a = a + 步进数
+  end
+#+END_SRC
+
+例如:
+#+BEGIN_SRC ruby
+  1.1.step(1.5,0.1){
+    |x| puts x
+  }
+#+END_SRC
+
+** 迭代器
+*** 容器.each / 容器.map
+each/map迭代器遍历容器中的各个元素,它的基本语法为:
+#+BEGIN_SRC ruby
+  容器.each{
+    循环语句
+  }
+
+  容器.map{
+    循环语句
+  }
+
+#+END_SRC
+each与map的不同点在于返回值不同
+
+例如:
+#+BEGIN_SRC ruby
+  (0..3).each {
+    |x| puts x                    # 该表达式的计算结果位nil
+  }
+  # 返回(0..3)
+
+  (0..3).map{
+    |x| puts x;x                  # 该表达式的计算结果为参数x的值
+  }
+  #返回[0,1,2,3]
+#+END_SRC
+
+*** 自定义迭代器
+使用yield语句实现自定义迭代器.
+
+#+BEGIN_SRC ruby
+  def times(n)
+    a = 0
+    while a < n do
+      yield a
+      a = a + 1
+    end
+  end
+
+  times(10) {
+    |x| puts x
+  }
+#+END_SRC

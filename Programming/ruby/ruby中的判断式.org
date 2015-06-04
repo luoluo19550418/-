@@ -1,0 +1,188 @@
+#+TITLE: ruby中的判断式
+#+AUTHOR: lujun9972
+#+OPTIONS: ^:{}
+
+ruby中的判断式跟C++中的差不太多,所以就详细写了
+
+* if
+if的语法有:
+#+BEGIN_SRC ruby export: nil
+  if expression
+    code
+  end
+  # equals
+  code if expression
+
+  if expression
+    code
+  else
+    code
+  end
+
+  if expressiion1
+    code1
+  elsif expression2
+    code2
+    # ......
+  elsif expressionN
+    codeN
+  else
+    code
+  end
+#+END_SRC
+
+例如
+#+BEGIN_SRC ruby
+  a = 1
+  if a == 0
+    "a 为零"
+  elsif a.odd?
+    "a 为奇数"
+  else
+    "a为偶数"
+  end
+#+END_SRC
+
+#+RESULTS:
+: a 为奇数
+
+
+* unless
+unless就是不带elsif的if的变种,它的执行条件刚好和if相反,它的语法有
+#+BEGIN_SRC ruby :export nil
+  unless condition
+    code
+  end
+
+  unless condition
+    code
+  else
+    code
+  end
+#+END_SRC
+
+例如
+#+BEGIN_SRC ruby
+  unless 1 > 2
+    "1 is not greater than 2"
+  else
+    "1 is greater than 2"
+  end
+#+END_SRC
+
+#+RESULTS:
+: 1 is not greater than 2
+
+* case
+
+** case when
+case when类似if..elsif..end的作用,它的语法为:
+#+BEGIN_SRC ruby
+  a = 1
+  case
+  when a == 0
+    "zero"
+  when a.odd?
+    "odd"
+  else
+    "even"
+  end
+
+#+END_SRC
+
+#+RESULTS:
+: odd
+
+case语句中的when从句可以包含多个表达式,表达式之间用逗号分隔.只要这些表达式中一个成立,则执行对应的代码块. 例如
+#+BEGIN_SRC ruby
+  a = 1
+  case
+  when a == 0,a.odd?
+    "zero or odd"
+  else
+    "even"
+  end
+#+END_SRC
+
+#+RESULTS:
+: zero or odd
+
+** case 表达式 when
+这种形式的case语句中,case后的表达式被求值一次,然后一次用`==='操作符与when后的值做对比
+
+case 表达式 when的语法为:
+#+BEGIN_SRC ruby
+  a = 1
+  case a
+  when 0
+    "zero"
+  when 1
+    "one"
+  else
+    "other"
+  end
+
+  # equals
+  a = 1
+  tmp = a
+  case
+  when tmp === 0
+    "zero"
+  when tmp === 1
+    "one"
+  else
+    "other"
+  end
+#+END_SRC
+
+#+RESULTS:
+: one
+
+** ?:操作符
+语法为:
+#+BEGIN_SRC ruby export:nil
+  condition ? true-code : false-code
+  # equals
+  if condition
+    true-code
+  else
+    false-code
+  end
+#+END_SRC
+例如:
+#+BEGIN_SRC ruby
+  1>2? "1大于2" : "1小于等于2"
+#+END_SRC
+
+#+RESULTS:
+: 1小于等于2
+
+** and/or
+#+BEGIN_SRC ruby
+  expression and code
+  # equals
+  if expression
+    code
+  end
+
+
+  expression or code
+  # equals
+  unless expression
+    code
+  end
+#+END_SRC
+
+#+BEGIN_SRC ruby
+  1 > 2 and "1 > 2"
+  # 返回false
+  1 < 2 and "a < 2"
+  # 返回"a < 2"
+
+  1 > 2 or "1不大于2"
+  # 返回1不大于2"
+  1 < 2 or "1不小于2"
+  # 返回true
+#+END_SRC
+
+ 
