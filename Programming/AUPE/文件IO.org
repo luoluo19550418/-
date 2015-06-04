@@ -4,6 +4,13 @@
 #+DATE: [2015-05-13 周三 16:36]
 #+OPTIONS: ^:{}
 
+* 基本文件IO操作函数
+** open函数
+** create函数
+** close函数
+** lseek函数
+** read函数
+** write函数
 * 文件共享
 ** 内核是如何表示打开的文件的?
 内核使用三种数据结构表示打开的文件,它们之间的关系决定了在文件共享方面一个进程对另一个进程可能产生的影响.
@@ -93,10 +100,36 @@ UNIX系统提供了sync,fsync和fdatasync三个函数用于通知内核将数据
 #+END_SRC
 
 * fcntl函数
-fcntl函数可以改变已打开的文件属性
+fcntl函数可以改变已打开的文件属性,该函数常用于修改由shell代为打开的文件描述符的属性.
 #+BEGIN_SRC c
   #include <fcntl.h>
 
   int fcntl(int filedes,int cmd,...);
 #+END_SRC
 
+其中fcntl支持的cmd操作有:
++ 复制一个现有的文件描述符(F_DUPFD)
++ 获得/设置文件描述符标记(F_GETFD/F_SETFD)
++ 获得/设置文件状态标记(F_GETFL/F_SETFL)
++ 获得/设置异步IO所有权(F_GETOWN/F_SETOWN)
++ 获得/设置记录锁(F_GETLK/F_SETLK/F_SETLKW)
+
+* ioctl函数
+每个驱动程序都定义了它自己的专门的一组ioctl命令,而系统提供一个统一的ioctl函数来调用这些专门的命令.
+#+BEGIN_SRC c
+  #include <unistd.h>             /* System V */
+  #include <sys/ioctl.h>          /* BSD and Linux */
+  #include <stropts.h>            /* XSI STREAMS */
+
+  int ioctl(int filedes,int request,...);
+#+END_SRC
+
+* /dev/fd
+新UNIX系统一般都提供了名为/dev/fd的目录,其中包含0,1,2等文件. 打开文件/dev/fd/n等效于复制描述符n.
+#+BEGIN_SRC c
+  fd = open("/dev/fd/n",mode);
+  /* 等效于 */
+  fd = dup(n);
+#+END_SRC
+
+/dev/fd的主要作用其实时提供给shell使用,它允许使用文件路径名为参数的程序也能处理标准输入输出
