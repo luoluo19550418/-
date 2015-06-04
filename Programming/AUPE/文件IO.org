@@ -104,7 +104,18 @@ fcntl函数可以改变已打开的文件属性,该函数常用于修改由shell
 #+BEGIN_SRC c
   #include <fcntl.h>
 
-  int fcntl(int filedes,int cmd,...);
+  int fcntl(int filedes,int cmd);
+  int fcntl(int filedes,int cmd,long arg);
+  int fcntl(int filedes,int cmd,struct flock* lock);
+
+  struct flock
+  {
+    short int l_type;             /* 锁类型:F_RDLCK,F_WRLCK,F_UNLCK */
+    short int l_whence;           /* 决定l_start的位置:SEEK_SET,SEEK_CUR,SEEK_END */
+    off_t l_start;                /* 锁定区域的开头位置 */
+    off_t l_len;                  /* 锁定区域的大小 */
+    pid_t l_pid;                  /* 锁定操作的进程 */
+  }
 #+END_SRC
 
 其中fcntl支持的cmd操作有:
@@ -133,3 +144,130 @@ fcntl函数可以改变已打开的文件属性,该函数常用于修改由shell
 #+END_SRC
 
 /dev/fd的主要作用其实时提供给shell使用,它允许使用文件路径名为参数的程序也能处理标准输入输出
+=======
+** 参数filedes
+filedes参数为待设置的文件描述符
+
+** 参数cmd
+cmd参数表示欲操作的指令
+| F_DUPFD  | 寻找大于或等于参数arg的最小未使用文件描述符,并复制参数filedes的文件描述符,类似dup2的功能                         |
+| F_GETFD  | 获取close-on-exec标志. 若标志为0,表示调用exec相关函数时文件不关闭                                                |
+| F_SETFD  | 设置close-on-exec标志                                                                                            |
+| F_GETFL  | 取得文件描述符状态标志,这个标志为open的flag参数                                                                  |
+| F_SETFL  | 设置文件描述符的新状态标志. 但只运行修改 *O_APPEND,O_NONBLOCK,O_ASYNC*                                           |
+| F_GETLK  | 取得文件锁状态                                                                                                   |
+| F_SETLK  | 设置文件锁状态,其中flock.l_type必须是 *F_RDLCK,F_WRLCK或F_UNLCK*, 若无法锁定,则立即返回-1,errno为EACCESS或EAGAIN |
+| F_SETLKW | 与F_SETLK类似,但若无法建立锁定,则该调用会一直阻塞至成功为止.                                                                            |
+* 非阻塞IO
+非阻塞IO使得我们在调用open,read和write这样的IO操作时,若操作不能完成,则直接返回错误提示,而不是阻塞.
+
+** 指定非阻塞IO的方法
++ 调用open获得描述符时,指定`O_NONBLOCK'标志
++ 使用fcntl对 *已打开描述符* 修改O_NONBLOCK文件状态标志.
+
+* 记录锁
+所谓记录锁,更合适的术语应该叫`字节范围锁'. 它的功能是,当进程读取或修改文件的 *某个部分时*,阻止其他进程修改 *同一文件区域*.
+
+** fcntl记录锁
+#+BEGIN_SRC C
+  #include <fcntl.h>
+
+  int fcntl(int fieldes,int cmd,struct flock* lock);
+
+  struct flock
+  {
+    short int l_type;             /* 锁类型:F_RDLCK(读锁),F_WRLCK(写锁),F_UNLCK(解锁) */
+    short int l_whence;           /* 决定l_start的位置:SEEK_SET,SEEK_CUR,SEEK_END */
+    off_t l_start;                /* 锁定区域的开头位置 */
+    off_t l_len;                  /* 锁定区域的大小 */
+    pid_t l_pid;                  /* 锁定操作的进程 */
+  };
+#+END_SRC
+fcntl的锁分读锁和写所,其规则类似线程的rwlock,但它只能影响不同进程提出的锁请求.
+
+如果一个进程对一个文件区间加了一把锁,后来该进程又在 *同一个文件区间* 再加锁,则 *新锁替代旧锁*
+
+加读锁时,该文件描述符必须是读打开的. 加写锁时,该文件描述符是写打开的.
+
+*在设置/释放文件上的锁时,系统会按要求组合或风儿锁区块*. 
+例如:一开始对第100--199字节加了锁
+若又对第150位字节解锁,则内核需要维持两个锁:100-149和151-199. 
+若又对150位字节加锁,则系统又合并相邻的三个加锁区为一个区
+*** cmd操作说明
+fcntl中与记录锁相关的cmd操作是`F_GETLK',`F_SETLK',`F_SETLKW'. 且第三个参数为flock类型的指针
++ F_GETLK
+  
+  判断原lock参数描述的区域,是否有一把锁. (*但不能用于测试自己进程所加的锁*)
+
+  锁信息会修改原lock参数. 
+
+  若不存在锁则会将原lock参数中的l_type设为F_UNLCK,lock参数中的其他信息保存不变.
+
++ F_SETLK
+
+  尝试加由参数lock所描述的锁,若无法加锁,则立即出错返回,且errno设置为EACCES或EAGAIN.
+
+  若参数lock的l_type为F_UNLCK,则表示解锁
+
++ F_SETLKW
+
+  这时F_SETLK的阻塞版本.
+
+
+需要注意的是, *F_GETLK和F_SETLK/F_SETLKW两个调用之间完全有可能有另一个进程创建了相关锁*.
+*** flock结构说明
++ flock结构中的l_type标明了锁的类型
+
++ 要加锁或解锁区域的起始字节偏移量由l_start和l_whence共同决定,类似于lseek函数
+
++ 起始字节偏移量 *可以为文件尾端或越过文件尾端,但不能在文件起始位置之前开始*
+
++ 加锁/解锁的字节长度由l_len表示,但0表示锁的区域 *无穷大*
+
++ 持有锁的进程由l_pid表示
+** 关于锁的释放与继承
+*** 锁的释放
++ 当进程终止时,该进程所建立的锁全部释放
+
++ 当关闭一个文件描述符时,所有与该文件描述符 *指向同一个文件* 的相关锁全部被释放. 即
+  #+BEGIN_SRC C
+    fd1 = open(pathname,...);
+    fd2 = dup(fd1);                 /* fd1和fd2指向同一个文件 */
+    close(fd2);                     /* 此时,fd1上设置的锁也会被释放 */
+
+
+    fd1 = open(pathname,...);
+    fd2 = open(pathname,...);       /* fd1和fd2也是指向同一个文件 */
+    close(fd2);                     /* 此时,fd1上设置的锁也会被释放 */
+  #+END_SRC
+*** 锁的继承
++ fork产生的子进程不继承父进程所设置的锁.
+
+  因为子进程已经是另一个进程了.
+
++ *执行exec后,进程继承原程序的锁*
+
+  因此exec后,进程id没变.
+
+  但若文件描述符设置了close-on-exec标志,则由于exec时会关闭文件标识符,因此对应文件的锁都会被释放
+** 建议性锁和强制性锁
+一个文件加锁时是使用建议性锁还是强制性锁,是由文件本身的权限决定的. 若文件打开了其设置组ID位并关闭了组的执行位,则表示文件开启的是强制性锁机制(之所以这样设计是因为当组执行位关闭时,设置组ID位不再有意义).
+
+当使用建设性锁时,它无法阻止其他进程直接对文件进行读写. 它的实现有赖于其他进程在读写前自我的对锁进行检测.
+
+而强制锁使内核对任何open,read和write系统调用进行检查. *但强制锁对unlink函数无影响!*
+** flock文件锁
+flock只能对锁定整个文件而无法锁定某个区域
+#+BEGIN_SRC C
+  #include <sys/file.h>
+
+  int flock(int fd,int operatioon);
+#+END_SRC
+参数operatiion可以为:
++ LOCK_SH :: 共享锁
++ LOCK_EX :: 排它锁
++ LOCK_UN :: 解锁
++ LOCK_NB :: 无法加锁时,立即返回不阻塞.
+
+*当使用dup()或fork()时,文件描述符不会继承这种锁定*
+* 异步IO

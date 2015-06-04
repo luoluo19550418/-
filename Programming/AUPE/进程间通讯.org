@@ -1,0 +1,116 @@
+#+TITLE: 进程间通讯
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, AUPE
+#+DATE: [2015-06-04 周四 10:52]
+#+OPTIONS: ^:{}
+
+
+* 管道
+
+** 管道的局限性
++ 管道只能保证是半双工的(即数据只能在一个方向流动),虽然有些系统提供了全双工管道
++ 管道只能在具有公共祖先的进程之间使用. 通常管道由父进程创建,以实现父子进程之间的通讯
+
+** pipe函数创建管道
+#+BEGIN_SRC C
+  #include <unistd.h>
+
+  /*  成功返回0,出错返回-1 */
+  int pipe(int* fd);
+#+END_SRC
+该函数通过参数fd返回两个文件描述符,其中fd[ 0 ]为读而打开,fd[ 1 ]为写而打开, *且fd[ 1 ]的输出为fd[ 0 ]的输入*
+
+单进程中的管道几乎没有任何用处,因为进程内部的数据交换根本不需要通过管道来进行. 通常调用pipe的进程会接着fork一个子进程,并在父进程和子进程两端分别关闭读或写的文件描述符,通过这种方式就能实现父子进程间的通讯了.
+#+BEGIN_SRC C :exports both :results drawer
+  #include <unistd.h>
+  #include <fcntl.h>
+  #include <stdio.h>
+  #include <sys/wait.h>
+
+  int main()
+  {
+    int fd[2];
+    pipe(fd);
+
+    pid_t pid = fork();
+    if(pid >0)                    /* 父进程 */
+      {
+        printf("parent running\n");
+        close(fd[0]);             /* 关闭读fd,父进程负责发送消息 */
+        write(fd[1],"this is a messae from parent\n",255);
+        close(fd[1]);
+        waitpid(pid,NULL,0);
+      }
+    else
+      {
+        printf("child running\n");
+        close(fd[1]);
+        if(dup2(fd[0],STDIN_FILENO) != STDIN_FILENO)
+          {
+            printf("dup2 error\n");
+            return -1;
+          }
+        close(fd[0]);
+        if(execl("/bin/echo_from_stdin.sh","/bin/echo_from_stdin.sh",(char*)0) < 0)
+          {
+            printf("exec echo failed\n");
+          }
+        /* char s[255+1]=""; */
+        /* printf("%s\n",gets(s)); */
+      }
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+this is a messae from parent
+parent running
+:END:
+
+*** 对管道的读写说明
++ 读取一个写端已关闭的管道时,在所有剩余数据被读取后,read返回0,
++ 若写一个读端已关闭的管道时,则产生信号SIGPIPE. 若忽略该信号或捕捉该信号并从其处理函数返回,则write返回-1,errno设为EPIEP
++ 写管道(或FIFO)时,常量PIPE_BUF规定了内核中管道缓冲区的大小. 若对管道调用write的字节<=PIPE_BUF,则可以保证 *该操作不会与其他进程对同一管道或FIFO的write操作穿插到一起*. 否则写的数据可能穿插.
+
+** popen/pclose函数
+这两个函数用于进程用system运行外部命令,并创建管道与该外部命令子进程进行交流
+#+BEGIN_SRC C
+  #include <stdio.h>
+
+  /* 若type为"r",则返回连接到cmd标准输出的FILE* */
+  /* 若type为"w",则返回连接到cmd标准输入的FILE* */
+  FILE* popen(const char* cmd,const char* type);
+
+  /* 关闭标准IO留,等待popen中cmd运行结束,再返回其终止状态,出错则返回-1 */
+  int pclose(FILE* fp);
+#+END_SRC
+上面pipe的例子可以改写为:
+#+BEGIN_SRC C
+  #include <unistd.h>
+  #include <fcntl.h>
+  #include <stdio.h>
+  #include <sys/wait.h>
+
+  int main()
+  {
+    FILE* fp = popen("/bin/echo_from_stdin.sh","w");
+    fputs("message from parent\n",fp);
+    pclose(fp);
+    return 0;
+  }
+
+#+END_SRC
+
+#+RESULTS:
+: message from parent
+
+  
+* FIFO
+** FIFO的局限性
+FIFO只能保证是半双工的.
+* 消息队列
+
+* 信号量
+
+* 共享存储器
