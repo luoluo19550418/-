@@ -1,5 +1,5 @@
 #+BLOG: DarkSun.1kapp.com
-#+POSTID: 17
+#+POSTID: 20
 #+DATE: [2015-04-24 星期五 23:27]
 #+TITLE: org2blog--将org发布到wordpress
 #+AUTHOR: DarkSun
@@ -7,6 +7,7 @@
 #+OPTIONS: ^:{}
 * 加载必要的库
 #+BEGIN_SRC emacs-lisp
+  (require-and-install 'org2blog)
   (require 'org2blog-autoloads)
 #+END_SRC
 * 配置
@@ -14,16 +15,23 @@
 `org2blog/wp-blog-alist'定义了多个blog的信息.其中每个元素的car为一个表示blog的名称的字符串,每个元素的cdr为一个plist,为每个blog提供属性说明.
 
 #+BEGIN_SRC emacs-lisp
-    (setq org2blog/wp-blog-alist
-          `(("DarkSun.1kapp.com"
-             :url "http://darksun.1kapp.com/xmlrpc.php"
-             :username "lujun9972"
-             :default-categories ("Emacs")
-             :keep-new-lines t
-             :confirm t
-             :wp-code nil
-             :tags-as-categories nil)
-            ))
+  (setq org2blog/wp-blog-alist
+        `(("DarkSun.1kapp.com"
+           :url "http://darksun.1kapp.com/xmlrpc.php"
+           :username "lujun9972"
+           :default-categories ("Emacs")
+           :keep-new-lines t
+           :confirm t
+           :wp-code nil
+           :tags-as-categories nil)
+          ("DarkSun.blog.51cto.com"
+           :url "http://darksun.blog.51cto.com/xmlrpc.php"
+           :username "lujun9972"
+           :default-categories ("Emacs")
+           :keep-new-lines t
+           :confirm t
+           :wp-code nil
+           :tags-as-categories nil)))
 
 #+END_SRC
 
@@ -146,7 +154,7 @@ at the location where you wish to split the post.
 #+END_EXAMPLE
 
 然后使用类似下面的代码
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC elisp
   (require 'auth-source) ;; or nothing if already in the load-path
 
   (let (credentials)
