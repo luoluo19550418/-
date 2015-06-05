@@ -36,6 +36,7 @@
     if(pid >0)                    /* 父进程 */
       {
         printf("parent running\n");
+        fflush(stdout);
         close(fd[0]);             /* 关闭读fd,父进程负责发送消息 */
         write(fd[1],"this is a messae from parent\n",255);
         close(fd[1]);
@@ -44,6 +45,7 @@
     else
       {
         printf("child running\n");
+        fflush(stdout);
         close(fd[1]);
         if(dup2(fd[0],STDIN_FILENO) != STDIN_FILENO)
           {
@@ -64,11 +66,13 @@
 
 #+RESULTS:
 :RESULTS:
-this is a messae from parent
+child running
 parent running
+
+this is a messae from parent
 :END:
 
-*** 对管道的读写说明
+** 对管道的读写说明
 + 读取一个写端已关闭的管道时,在所有剩余数据被读取后,read返回0,
 + 若写一个读端已关闭的管道时,则产生信号SIGPIPE. 若忽略该信号或捕捉该信号并从其处理函数返回,则write返回-1,errno设为EPIEP
 + 写管道(或FIFO)时,常量PIPE_BUF规定了内核中管道缓冲区的大小. 若对管道调用write的字节<=PIPE_BUF,则可以保证 *该操作不会与其他进程对同一管道或FIFO的write操作穿插到一起*. 否则写的数据可能穿插.
@@ -85,6 +89,7 @@ parent running
   /* 关闭标准IO留,等待popen中cmd运行结束,再返回其终止状态,出错则返回-1 */
   int pclose(FILE* fp);
 #+END_SRC
++ *popen只能连接到子进程的标准输入或标准输出,而无法通过type="rw"实现同时连接输入和输出*
 上面pipe的例子可以改写为:
 #+BEGIN_SRC C
   #include <unistd.h>
@@ -105,12 +110,213 @@ parent running
 #+RESULTS:
 : message from parent
 
+** 使用管道时的注意事项
+当用标准IO读写管道时,一定要注意 *标准IO的缓冲机制*. 缓冲很容易造成读写管道时的阻塞,甚至引起死锁.为此经常要用`setvbuf'函数更改缓冲类型.
   
+当有多个进程同时对一个管道进行写操作时, *若一次写入的字节数大于PIPE_BUF,则可能会乱序写入*.
 * FIFO
+FIFO又叫命名管道,它与pipe的不同在于:pipe只能由共同祖先进程创建,然后通过fork函数在多个子进程之间使用. 而通过FIFO,无共同祖先进程的进程也能交换数据.
+
+FIFO也是一种文件类型,stat结构中的st_mode可以标明文件是否为FIFO类型. 可以用S_ISFIFO宏对此进行测试.
 ** FIFO的局限性
 FIFO只能保证是半双工的.
-* 消息队列
 
-* 信号量
+** 创建FIFO
+创建FIFO的类似于创建文件.
+#+BEGIN_SRC C
+  #include <sys/stat.h>
 
-* 共享存储器
+  /* mode参数说明与open函数相同 */
+  int mkfifo(const char* fifo_path,mode_t mode);
+#+END_SRC
+
+** 使用FIFO
+一旦用mkfifo创建了fifo,就可以使用open,close,read,write,unlink对其像处理文件一样使用FIFO.
+
+但使用open打开FIFO时,非阻塞标志(O_NONBLOCK)的意义有点不同:
++ 若打开FIFO时未指定非阻塞标志,则只读open会阻塞到其他进程为写而打开次FIFO. 类似的,只写open会阻塞到其他进程为读而打开它.
++ 若打开FIFO时指定了非阻塞表示,则 *只读open立即返回*,但若 *没有进程已经为读而打开FIFO,只写open会立即返回-1,errno为ENXIO*.
+
+** 对FIFO的读写说明
++ 若用write写一个尚无进程为读而打开的FIFO,则产生信号SIGPIPE
++ 若某个FIFO的最后一个写进程关闭了该FIFO,则读取该FIFO会生产一个eof
++ 类似pipe,常量PIPE_BUF说明了可被原子地写到FIFO的最大数据量.
+
+* XSI IPC
+XSI IPC包括三种IPC:信息队列,信号量,共享存储器. 它们之间有许多相似之处.
+** 共同特征
+*** 标识符和键
+每种XSI IPC结构中都有一个非负整数作为标识符. 但该标识符仅为IPC对象内部使用,其对外与一个键(key)相连.
+
+创建IPC结构时都需要指定一个键(key_t),该键由内核变换为IPC结构的标识符.
+
+多个进程共享同一个IPC结构一般有如下几种方法:
++ 某进程指定键为IPC_PRIVATE以创建一个新IPC结构,并将返回的标识符存放在数据库或文件中,以便其他进程取用.
++ 定义一个多个进程间都认可的键,然后进程使用该键来生成或获取IPC结构.
++ 通过函数`ftok'可以指定一个路径和一个id,并根据这个路径及id生成一个键值,多个进程间约定同一个路径和id以产生一个一致的IPC键,共享IPC结构.
+  #+BEGIN_SRC C
+    #include <sys/ipc.h>
+
+    key_t fork(const char* path,int id);
+  #+END_SRC
+  - 参数path必须是一个已存在的文件.
+
+  - 产生键时,只使用 *id参数的低8位*
+
+  - *如果参数id一致,即使不同的path参数也可能产生相同的键*
+*** 权限结构
+XSI IPC为每个IPC结构都设置了一个ipc_perm结构, 该结构规定了权限和所有者. 它至少包括下列成员:
+#+BEGIN_SRC C
+  #include <sys/ipc.h>
+
+  struct ipc_perm{
+    uid_t uid;                    /* 所有者的有效用户id */
+    gid_t gid;                    /* 所有者的有效组id */
+    uid_t cuid;                   /* 创建者的有效用户id */
+    git_t cgid;                   /* 创建者的有效组id */
+    mode_t mode;                  /* access mode */
+    /* 其他成员 */
+  };
+#+END_SRC
++ mode成员类似文件的mode,但不存在执行权限.
+*** XSI IPC的优缺点:
+IPC的缺点有:
++ IPC结构是系统范围内都可访问,且即使读写的进程终止,消息与队列依然存在
++ IPC没有被抽象为一个文件,因此无法用IO函数操作它,也因此新增了十几条系统调用(msgget,semop,shmat等)
++ 由于IPC不使用文件描述符,因此无法对他们使用多路转接IO函数(select和poll). 这就难于一次使用多个IPC结构,以及在文件或设备IO中使用IPC结构.
+
+IPC的优点有:
++ 可靠,因为这些IPC被限制在只能单机使用
++ 流是受控的,即当系统资源短缺(缓冲区满了),或接收进程能再接收更多消息,则发送进程会休眠. 当流控制条件消失,发送进程自动被唤醒
++ 面向记录
++ 可以用非先进先出方式处理.
+** 消息队列(*不推荐使用*)
+消息队列是消息的链接表,该链接表存放在内核中并由消息队列标识符标识.
+*** 打开/创建新消息队列
+msgget用于创建一个新队列或打开一个现存的队列.
+#+BEGIN_SRC C
+  #include <sys/msg.h>
+
+  /* 成功则返回消息队列的ID,出错则返回-1 */
+  int msgget(key_t key,int flag);
+#+END_SRC
+
+每个消息队列都有一个msgid_ds结构体与之关联,用于说明队列的当前状态
+#+BEGIN_SRC C
+  struct msqid_ds{
+    struct ipc_perm msg_perm;     /* ipc的权限说明 */
+    msgqnum_t msg_qnum;           /* 队列中的消息个数 */
+    msglen_t msg_qbytes;          /* 队列中能存储的消息最大容量 */
+    pid_t msg_lspid;              /* 最后一次在该队列上调用msgsnd()的进程id */
+    pid_t msg_lrpid;              /* 最后一次在该队列上调用msgrcv()的进程id */
+    time_t msg_stime;             /* 最后一次在该队列上调用msgsnd()的时间 */
+    time_t msg_rtime;             /* 最后一次在该队列上调用msgrcv()的时间 */
+    time_t msg_ctime;             /* 最后一次在该队列发生变化的事件 */
+    /* 其他结构成员 */
+  }
+#+END_SRC
+
+*** 操作消息队列
+msgctl函数对消息队列执行队中操作
+#+BEGIN_SRC C
+  #include <sys/msg.h>
+
+  int msgctl(int queueid,int cmd,struct msgid_ds* buf);
+#+END_SRC
+其中cmd参数说明了对queueid指定的队列要执行的命令:
++ IPC_SET
+
+  按buf结构中的值,设置与消息队列msqid_ds结构中的下列四个字段:
+
+  - msg_perm.uid
+
+  - msg_perm.gid
+
+  - msg_perm.mode
+
+  - msg_qbytes
+
+  执行该命令的进程,其有效用户ID必须等于msg_perm.cuid或msg_perm.uid或超级用户.
+
+  只有超级用户才能增加msg_qbyes的值
+
++ IPC_RMID
+
+  删除消息队列中的所有消息.
+
+  执行该命令的进程,其有效用户ID必须等于msg_perm.cuid或msg_perm.uid或超级用户.
+
++ IPC_STAT 
+
+  取此消息队列的msgid_ds结构,并放在buf所指向的结构中
+  #+BEGIN_SRC C :exports both :results drawer
+    #include <sys/msg.h>
+    #include <sys/ipc.h>
+
+    void show_queue_ds(const struct msqid_ds* queue_ds)
+    {
+      printf("msg_qnum=%d\n",queue_ds->msg_qnum);
+      printf("msg_qbytes=%d\n",queue_ds->msg_qbytes);
+      printf("msg_lspid=%d\n",queue_ds->msg_lspid);
+      printf("msg_lrpid=%d\n",queue_ds->msg_lrpid);
+
+    }
+    int main(int argc, char *argv[])
+    {
+      int queueid = msgget(IPC_PRIVATE,IPC_CREAT);
+      struct msqid_ds queue_ds;
+      msgctl(queueid,IPC_STAT,&queue_ds);
+      show_queue_ds(&queue_ds);
+      return 0;
+    }
+
+  #+END_SRC
+
+  #+RESULTS:
+  :RESULTS:
+  msg_qnum=1630404681
+  msg_qbytes=1627419888
+  msg_lspid=1628099819
+  msg_lrpid=192
+  :END:
+
+*** 收发消息
+msgsnd将新消息添加到队列尾端.
+#+BEGIN_SRC C
+  #include <sys/msg.h>
+
+  /* 参数flag可以为0或IPC_NOWAIT. */
+  int msgsnd(int msqid,const msgbuf* ptr,size_t nbytes,int flag);
+
+  struct msgbuf
+  {
+    long mtype;                   /* 消息类型 */
+    char mtext[TEXTSIZE];                /* 信息数据,TEXTSIZE需要比msgsnd中的参数nbytes大 */
+  }
+#+END_SRC
+默认情况下,若消息队列已满,msgsnd函数会阻塞直到有空间要发送,或该队列被删除(返回EIDRM),或捕捉到一个信号,从信号捕捉函数返回(返回EINTR)
+但若参数flag设置为IPC_NOWAIT,则msgsnd会立即出错返回EAGAIN.
+
+msgrcv用于从队列中取消息.
+#+BEGIN_SRC C
+  #include <sys/msg.h>
+
+  /* 成功返回消息的数据部分的长度,出错返回-1 */
+  ssize_t msgrcv(int msqid,msgbuf* ptr,size_t nbytes,log type,int flag);
+#+END_SRC
+参数type指明了我们想获得哪种类型的消息
+| type == 0 | 返回队列中的第一个消息               |
+| type > 0  | 返回队列中消息类型为type的第一个消息 |
+| type < 0  | 返回队列中消息类型<=type绝对值的消息,类型值最小的消息优先(可作为优先级来用) |
+
+参数flag控制了msgrcv的行为
+| flag的值    | 说明                                                                |
+|-------------+---------------------------------------------------------------------|
+| MSG_NOERROR | 若消息大于nbytes,则消息被截断,否则会出错返回E2BIG(消息仍留在队列中) |
+| IPC_NOWAIT  | 操作不阻塞,若找不到指定类型的消息,则返回-1,errno设置为ENOMSG        |
+|             |                                                                     |
+** 信号量
+
+** 共享存储器
+
+* 
