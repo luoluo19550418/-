@@ -270,4 +270,123 @@ flock只能对锁定整个文件而无法锁定某个区域
 + LOCK_NB :: 无法加锁时,立即返回不阻塞.
 
 *当使用dup()或fork()时,文件描述符不会继承这种锁定*
+* IO多路转换
+IO多路转换需要先构造一张描述符的列表,然后调用一个函数,该函数直到这些描述符中的一个已经准备好IO时,才返回.
+
+poll,pselect和select这三个函数使得我们能够执行IO多路转换,并返回哪些描述符已经准备好进行IO了.
+** select
+传给select的参数告诉内核:
++ 我们关心哪些描述符
++ 对于每个描述符,我们所关心的条件是什么(想读?想写?发生异常条件?)
++ 原意等待多久(一直等待,等待某个时间段,不等待)
+
+select返回时的到的消息包括:
++ 已准备好的描述符的总数量
++ 对于读,写或异常这3个条件中的每一个,分别有哪些描述符准备好了.
+
+#+BEGIN_SRC C
+  #include <sys/select.h>
+
+  /* 返回准备就绪的描述符数目,若超时则返回0,若出错返回-1 */
+  /* 若不同fd_set中包含同一个就绪的fd,则返回值会重复累加 */
+  int select(int maxfdp,fd_set* readfds,fd_set* writefds,fd_set* exceptfds,struct timeval* tvptr);
+#+END_SRC
+*** 时间参数tvptr意义说明:
+select函数等待tvptr时间,若时间内有描述符准备好则返回准备好描述符的数量. 若超时则返回0.
+
+若捕捉到一个信号,则select返回-1,errno设置为EINTR.
+
+tvptr == NULL表示无限等待.
+
+*select返回后,有可能会修改tvptr表示超时时间未到期的剩余时间值*
+*** fd_set数据类型说明
+使用fd_set数据类型,唯一可进行的处理就是同类型之间的变量进行赋值,或者使用一下四个函数修改数据值
+#+BEGIN_SRC C
+  #include <sys/select.h>
+
+  /* 判断fd是否在fd_set中 */
+  int FD_ISSET(int fd,fd_set* fdset);
+
+  /* 从fd_set中删除调fd */
+  void FD_CLR(int fd,fd_set* fdset);
+
+  /* 添加fd到fd_set中 */
+  void FD_SET(int fd,fd_set* fdset);
+
+  /* 清空fset */
+  void FD_ZERO(fd_set* fdset);
+#+END_SRC
+*** fd_set*三个参数说明
+select函数会修改各fd_set值,使得他们只保留准备好的fd.
+
+*即使莫描述符上的文件指针已经到达尾部,但select依然认为该描述符是可读的,只不过read会返回0而已* (很多人错误第认为,当到达文件尾端时,select会指示一个异常条件)
+
+fd_set*的参数值可以为NULL,表表示不关心响应条件
+
+*三个指针可以都是NULL,则select提供了比sleep更精确的定时器(sleep精确到秒,select精确到微秒)*
+*** 参数maxfdp说明
+该参数一般为三个fd_set中最大fd的值+1(加1的原因在于描述符编号从0开始). 它的意义在于提供給select函数一个搜索fd的范围. 使得内核不用搜索fd_Set中数百个无用的fd.
+
+一般<sys/select.h>中定义了一个常量FD_SETSIZE,该常量的值表示允许的最大描述符.
+** pselect
+#+BEGIN_SRC C
+  #include <sys/select.h>
+
+  /* 返回就绪的描述符总数,超时则返回0,出错则返回-1 */
+  int pselect(int maxfdp,
+              fd_set* readfds,
+              fd_set* writefds,
+              fd_set* exceptfds,
+              const struct timespec*tsptr,
+              const sigset_t* sigmask);
+
+#+END_SRC
+
+*** pselect与select的不同之处
++ select用timeval结构指定超时,而pselect用timespec结构指定超时. timespec能提供更精确的超时时间
+
++ pselect的超时值为const,这保证了pselect不会改变次值
+
++ 若参数sigmask为非NULL,则pselect可以原子操作的方式安装该信号屏蔽字,返回时恢复以前的信号屏蔽字.
+
+** 函数poll
+#+BEGIN_SRC C
+  #include <poll.h>
+
+  /* 返回准备就绪的描述符数目,若超时返回0,出错则返回-1 */
+  int poll(struct pollfd fdarray[],nfds_t nfds,int timeout);
+#+END_SRC
+poll函数的作用类似select,但poll并不是为每个条件(读,写,异常)构造一个描述符集合. 
+
+poll是构造一个pollfd结构的数组. 每个pollfd结构体指定了一个描述符编号以及我们对描述符感兴趣的条件
+#+BEGIN_SRC C
+  struct pollfd
+  {
+    int fd;                       /* 要检测的文件描述符 */
+    short events;                 /* 关注文件描述符上的哪些事件 */
+    short revents;                /* 函数返回时,被修改为该描述符发生了哪些事件 */
+  }
+#+END_SRC
+
+*** poll中的事件说明
+| 标志名     | 是否可设置为events | 是否可设置为revents | 说明                                 |
+|------------+--------------------+---------------------+--------------------------------------|
+| POLLIN     | 是                 | 是                  | 可以不阻塞地读高优先级数据以外的数据 |
+| POLLRDNORM | 是                 | 是                  | 可以不阻塞地读普通数据               |
+| POLLRDBAND | 是                 | 是                  | 可以不阻塞地读优先级数据             |
+| POLLPRI    | 是                 | 是                  | 可以不阻塞地读高优先级数据           |
+|------------+--------------------+---------------------+--------------------------------------|
+| POLLOUT    | 是                 | 是                  | 可以不阻塞第写普通数据               |
+| POLLWRNORM | 是                 | 是                  | 与POLLOUT相同                        |
+| POLLWRBAND | 是                 | 是                  | 可以不阻塞第写优先级数据             |
+|------------+--------------------+---------------------+--------------------------------------|
+| POLLERR    | 否                 | 是                  | 已出错                               |
+| POLLHUP    | 否                 | 是                  | 已挂断(制解调器被挂断)                    |
+| POLLNVAL   | 否                 | 是                  | 描述符没有引用一个打开文件.                     |
+
+*** timeout说明
++ timeout == -1表示一直等待
++ timeout == 0表示不等待
++ timeout > 0表示等待timeout *毫秒*
+
 * 异步IO
