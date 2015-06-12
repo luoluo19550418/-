@@ -389,4 +389,267 @@ poll是构造一个pollfd结构的数组. 每个pollfd结构体指定了一个�
 + timeout == 0表示不等待
 + timeout > 0表示等待timeout *毫秒*
 
-* 异步IO
+* POSIX异步IO
+执行IO操作时,如果还有其他事务需要处理而不想被IO操作阻塞,就可以使用异步IO.
+
+异步IO接口使用AIO控制块来描述IO操作. aiocb定义了AIO控制块
+#+BEGIN_SRC C
+  struct aiocb
+  {
+    int aio_fildes;               /* 文件描述符 */
+    off_t aio_offset;             /* IO操作时的文件偏移量 */
+    volatile void* aio_buffer;    /* IO操作用的缓冲区 */
+    size_t aio_nbytes;            /* IO操作传输的字节数 */
+    int aio_reqprio;              /* 优先级 */
+    struct sigevent aio_sigevent; /* IO完成后通知进程的方式 */
+    int aio_lio_opcode;           /* 调用lio_listio函数时使用 */
+  };
+
+#+END_SRC
++ aio_fields字段表示被打开用来读或写的文件描述符
++ 读或写的操作从aio_offset指定的偏移量开始.
++ *异步I/O操作必须显式地指定偏移量,异步I/O接口并不影响由操作系统维护的文件偏移量,但若使用异步IO接口向一个O_APPEND模式打开的文件写入数据,则aio_offset字段会被系统忽略*
++ 读写时的缓冲区由aio_buf指定,aio_nbytes字段表明了要读/写的字节数
++ aio_sigevent字段控制IO事件完成后,如何通知应用程序.
+  #+BEGIN_SRC C
+    struct sigevent
+    {
+      int sigev_notify;             /* 通知的类型 */
+      int sigev_signo;              /* 信号编码 */
+      union sigval sigev_value;     /* 传递给通知函数的参数 */
+      void (*sigev_notify_function)(union sigval); /* 通知函数 */
+      pthread_attr_t* sigev_notify_attributes;     /* 调用通知函数的线程属性,默认会在分离状态下的线程中调用通知函数 */
+    };
+  #+END_SRC
+  
+  其中sigev_notify字段控制通知的类型,取值可能是一下3个中的一个:
+  - SIGEV_NONE
+
+    异步IO请求后不通知进程
+
+  - SIGEV_SIGNAL
+
+    异步IO完成后产生 *sigev_signo* 字段指定的信号.
+
+  - SIGEV_THREAD
+
+    异步IO完成后,在单独的线程中执行sigev_notify_function字段指定的函数.
+
+    sigev_value字段为该函数的唯一参数.
+
+    sigev_notify_attribute字段表示调用通知函数线程的属性,为NULL,则通知函数在 *分离状态* 下的一个i额单独的线程中执行.
+
+** 异步读写操作
+在进行异步IO之前需要先初始化AIO控制块,然后调用aio_read函数进行异步读操作,或调用aio_write函数来进行异步写操作
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  /* 成功返回0,出错返回-1 */
+  int aio_read(struct aiocb* aiocb);
+
+  /* 成功返回0,出错返回-1 */
+  int aio_write(struct aiocb* aiocb);
+#+END_SRC
+*这些函数的返回仅表示IO请求已经被操作系统放入等待处理的队列中了,而与实际IO操作结果没有任何关系*
+
+*在IO操作等待期间,需保证AIO控制块与其定义的缓冲区的内容不会被更改!!*,除非IO操作完成,否则不能被复用.
+
+lio_listio函数既能以同步的方式来使用,也能以异步的方式来使用. 该函数会提交一系列由一个AIO控制块列表描述的IO请求.
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  int lio_listio(int mode,struct aiocb* const list[],int n,struct sigevent* sigev);
+#+END_SRC
++ mode参数决定了IO是否为异步的.
+  - LIO_WAIT :: 函数将在所有由列表指定的IO操作完成后返回,这是sigev参数将被忽略
+  - LIO_NOWAIT :: 函数将在IO请求入队后立即返回.
++ sigev参数指定了异步IO操作完成后如何被异步地通知. 若不想被通知可以设为NULL
+  每个AIO控制块本身也有操作完后的异步通知模式, *被sigev参数之i都能过的异步通知是在此之外另加的,且只会在所有的IO操作都完成后才发送*
++ list参数指向一个AIO控制块指针的数组,该列表指定了要运行的IO操作. list中可以包含NULL指针,这些条目将被忽略
++ 每个AIO操作块中的aio_lio_opcode字段指明了要进行的操作
+  - LIO_READ :: 读操作
+  - LIO_WRITE :: 写操作
+  - LIO_NOP :: 空操作
+
+
+** 强制同步
+要强制等待中的异步操作立即同步到存储中,可以设立一个AIO控制块,并调用aio_fsync函数
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  int aio_fsync(int op,struct aiocb* aiocb);
+#+END_SRC
+AIO控制块中的aio_fildes字段指明了其异步写操作被同步的文件.
+
+若op参数为D_SYNC,那么类似于fdatasync. 若op参数为O_SYNC,那么类似于fsync
+
+类似aio_read和aio_write,aio_fsync *仅仅表示同步请求已经被操作系统放入等待处理的队列中了*. 在异步同步操作完成前,数据不会真正的写入存储中. AIO控制块也控制了我们被通知的方式.
+
+** 获取异步读,写,同步操作的完成状态
+为了获取一个异步读,写或同步操作的完成状态,需要调用aio_error函数
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  int aio_error(const struct aiocb* aiocb);
+#+END_SRC
+关于返回值的说明为:
++ 0 :: 异步操作成功完成,需要调用aio_return函数获取操作返回值
++ -1 :: 对aio_error的调用失败,可以通过errno了解失败原因
++ EINPROGRESS :: 异步读,写或同步操作仍在等待.
++ 其他情况 :: 相关异步操作失败返回的错误码
+
+如果异步操作成功,可以调用aio_return函数来获取异步操作的返回值
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  /* aio_return函数本身失败返回-1,并设置errno.
+     否则返回异步操作的结果*/
+  ssize_t aio_return(const struct aiocb* aiocb);
+#+END_SRC
++ 异步操作完成之前,都要小心不要调用aio_return函数. 此时的结果是未定义的.
++ 对每个异步操作 *仅调用一次aio_return*. 一旦调用该函数,操作系统就可能释放掉包含IO操作返回值的记录.
+
+** 异步操作管理
+若完成要操作的事务后,还有异步操作未完成,可以调用aio_suspend函数来 *阻塞进程*.直到操作完成
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  /* 若该函数被信号终端,则返回-1,且errno为EINTR */
+  /* 若timeout时间内没有任何IO操作完成,则返回-1,且errno为EAGAIN */
+  /* 若timeout时间内,list数组中有任何一个异步操作完成,则返回0 */
+  /* 若调用aio_suspend操作时,所有的异步IO操作都已完成,那么aio_suspend将在不阻塞的情况下直接返回 */
+  int aio_suspend(const struct aiocb* const list[],int nent,const struct timespec* timeout);
+#+END_SRC
++ list参数是一个指向AIO控制块数组的指针,nent参数指明了检查数组中的几个AIO控制块.
++ *若list数组中有NULL元素,则检查时会被跳过*
+  
+若我们不想再完成等待中的异步IO,可以使用aio_cancel函数取消之
+#+BEGIN_SRC C
+  #include <aio.h>
+
+  /* AIO_ALLDONE:所有操作在尝试取消他们前就已经完成 */
+  /* AIO_CANCELED:所有要求的操作已经被取消 */
+  /* AIO_NOTCANCELED:至少有一个要求的操作没有被取消 */
+  /* -1 : 对aio_cancel调用失败,错误码存储在errno中 */
+  int aio_cancel(int fd,struct aioch* aiocb);
+#+END_SRC
++ 参数fd指定了那个未完成的异步IO操作的文件描述符
++ 若参数aiocb参数为NULL,系统会尝试取消所有该文件上未完成的异步IO操作
++ 其他情况下,系统将尝试取消由AIO控制块描述的单个异步IO操作.
+
+* 散布读(scatter read)和聚集写(gather write)
+#+BEGIN_SRC C
+  #include <sys/uio.h>
+
+  /* 返回所有已读的字节数 */
+  ssize_t readv(int fd,const struct iovec* iov,int iovcnt);
+
+  /* 返回所有已写的字节数 */
+  sszie_t writev(int fd,const struct iovec* iov,int iovcnt);
+
+  struct iovec
+  {
+    void* iov_base;               /* 缓冲区的地址 */
+    size_t iov_len;               /* 缓冲区的大小 */
+  };
+#+END_SRC
++ readv允许一次从一个文件中读取内容存放到多个缓冲区中. 此为散布读
+
++ writev允许一次将多个缓冲区中的内容写入到一个文件中. 此为聚集写
+
++ iov数组内的元素数由iovcnt指定,其最大值为IOV_MAX
+
+* 存储映射IO
+存储映射IO能将一个磁盘文件映射到内存的一个缓冲区中,这样从缓冲区中读取数据就相当于读文件中的相应字节. 将数据存入缓冲区时,相应字节就自动写入文件. 这样就可以在不使用read和write的情况下执行IO
+
+** 将文件映射到缓冲区
+#+BEGIN_SRC C
+  #include <sys/mman.h>
+
+  /* 若成功,返回映射区的起始地址;若出错返回MAP_FAILED */
+  void* mmap(void* addr,size_t len,int prot,int flag,int fd,off_t off);
+#+END_SRC
++ addr参数用于指定映射缓冲区的地址,NULL表示由系统选择
++ fd参数指定了要被映射文件的描述符, *在文件映射前必须先打开该文件*
++ len参数指定了要映射的字节数
++ off参数为要映射字节在文件中的起始偏移量
++ prot参数指定了映射缓冲区的保护要求
+  | prot       | 说明           |
+  |------------+----------------|
+  | PROT_READ  | 映射区可读     |
+  | PROT_WRITE | 映射区可写     |
+  | PROT_EXEC  | 映射区可执行?? |
+  | PROT_NONE  | 映射区不可访问 |
+
+  可见prot参数指定为PROT_NONE,也可指定为PROT_READ,PROT_WRITE,PROT_EXEC的任意组合,但 *并不能超过文件open时的模式访问权限*
++ flag参数影响映射缓冲区时的多种属性
+  - MAP_FIXED
+
+    映射的缓冲区地址必须为参数addr表示的地址,不利于可移植性,所以不鼓励使用该标志.
+
+    如果未指定此标志,且addr非NULL,则内核实际只是把addr视为在何处设置映射区的一种 *建议*
+
+  - MAP_SHARED
+
+    该标志说明对缓冲区作的修改也会映射回原文件. 但这种修改并不会立即写回文件中,具体的时间由系统决定. 且写回时是 *整个页* 被写回.
+
+    mmap函数必须指定MAP_SHARED或MAP_PRIVATE标志,但不能同时指定两者
+
+  - MAP_PRIVATE
+
+    该标志说明,对映射区的存储操作只是创建原映射文件的一个副本,所有后来对该映射区的引用都是引用该副本.(即任何修改只影响副本,而不影响原文件,常用于调试)
+
+** 更改映射权限
+调用mprotect函数可以更改一个现有映射的权限
+#+BEGIN_SRC C
+  #include <sys/mman.h>
+
+  /* 成功返回0,出错返回-1 */
+  int mprotect(void* addr,size_t len,int prot);
+#+END_SRC
+其中prot参数的说明与mmap函数中的说明一样
+
+** 写回修改到源文件
+
+如果缓冲区是通过MAP_SHARED标志打开的,则对缓冲区的修改并不会立即写回文件中,具体的时间由系统决定. 
+
+那么可以调用msync将修改强制写回原文件.
+#+BEGIN_SRC C
+  #include <sys/mman.h>
+
+  /* 若成功,返回0;若出错,返回-1 */
+  int msync(void* addr ,size_t len,int flags);
+#+END_SRC
+
+*** flags参数说明
++ MS_ASYNC 
+
+  采用异步的方式写入原文件,即不用等待写操作完成就返回,必须要指定MS_ASYNC和MS_SYNC中的其中一个.
+
++ MS_SYNC
+
+  采用同步的方式写入原文件,只有写操作完成后函数才返回,必须要指定MS_ASYNC和MS_SYNC中的其中一个.
+
++ MS_INVALIDATE
+
+  MS_INVALIDATE asks to invalidate other mappings of the same file (so that they can be updated with the fresh values just written).
+
+** 解除映射
+当进程终止时,会自动解除存储映射区的映射,或者直接调用munmap函数也可以解除映射区. 
+但 *关闭映射存储区使用的文件描述符并不解除映射区*
+#+BEGIN_SRC C
+  #include <sys/mman.h>
+
+  int munmap(void* addr,size_t len);
+#+END_SRC
+*调用munmap并不会使映射区的内容写到磁盘文件上*
+
+** 相关信号
+与映射区相关的信号有SIGSEGV和SIGBUS.
+
+SIGSEGV信用通常用于表明进程试图访问不可用的存储区,或尝试对只读存储区进行写操作.
+
+当映射区的某个部分在访问时(原文件被其他进程截断)已不存在,则产生SIGBUS信号.
+
+** 关于子进程的共享问题
+子进程能通过fork继承存储映射区,但exec后则存储映射区被重置
