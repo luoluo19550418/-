@@ -1,0 +1,75 @@
+#+TITLE: ruby系统管理实战
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, ruby
+#+DATE: [2015-06-12 周五 10:35]
+#+OPTIONS: ^:{}
+
+
+* ri:Ruby语法参考检索工具
++ ri 类名 :: 查看类有那些功能
++ ri 方法名 :: 列出所有可能包含该方法名称的模块/类
++ ri Class:method :: 查看类方法
++ ri Class#method :: 查看对象方法
+
+* 关于类中的super方法
+super是对父类同名方法的调用
+
+若不带参数调用super则表示原封不动地把自己的参数传递給父类同名方法.
+#+BEGIN_SRC ruby
+  class P
+    def say(name)
+      puts name
+    end
+  end
+
+  class C < P
+    def say(name)
+      puts "hello "
+      super
+      puts "from child"
+    end
+  end
+
+  C.new.say("world")
+#+END_SRC
+
+#+RESULTS:
+
+若子类中有不同的方法签名,也可以像其他方法一样调用super
+#+BEGIN_SRC ruby
+  class P
+    def say(name,other)
+      puts name other
+    end
+  end
+
+  class C < P
+    def say(name)
+      puts "hello "
+      super("my" "dear")
+      puts "from child"
+    end
+  end
+
+  C.new.say("world")
+#+END_SRC
+
+#+RESULTS:
+
+* 全局变量说明
+| $_ | Kernel.gets读取的文本内容                         |
+| $< | Kernel.gets正在读取的的当前文件                   |
+| $. | Kernel.gets当前正在处理文件的行号,与$<.lineno同义 |
+|    |                                                   |
+
+* ruby命令参数项说明
+| -e 代码            | 读取后面的字符串作为待执行的脚本                                                 |
+| -n                 | 在-e所指代的代码外围,隐式地包上一层while gets...end块                            |
+| -a                 | 自动分割标志,会把$_的内容分割生成到名为$F的数组                                  |
+| -p                 | 在-n的基础上,额外提供在每次循环结算时,将$_打印输出                               |
+| -i备份后缀         | 把标准输出写回文件中,在原位修改其内容. 原文件会以"原文件.备份后缀"的名称备份起来 |
+| -F分隔符           | 常与-a联用,指定字段间的分隔符                                                    |
+| -0八进制字符串编码 | 指定记录分隔符                                                                   |
+| -00                | Ruby进入段落模式,每个记录由两个默认记录分隔符分隔                                |
+| -0777              | 整个输入文件当成一个记录                                                         |
+|                    |                                                                                  |
