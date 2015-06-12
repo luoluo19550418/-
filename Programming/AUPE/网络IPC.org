@@ -1,0 +1,112 @@
+#+TITLE: 网络IPC
+#+AUTHOR: DarkSun
+#+CATEGORY: Programming, AUPE
+#+DATE: [2015-06-08 周一 11:37]
+#+OPTIONS: ^:{}
+
+* 套接字描述符
+** 创建套接字
+#+BEGIN_SRC C
+  #include <sys/socket.h>
+
+  /* 成功返回套接字描述符,出错返回-1 */
+  int socket(int domain,int type,int protocol);
+#+END_SRC
++ 参数domain确定通讯的特征,包括地址格式
+  | domain    | 描述         |
+  |-----------+--------------|
+  | AF_INET   | IPv4因特网域 |
+  | AF_INET6  | IPv6因特网域 |
+  | AF_UNIX   | UNIX域       |
+  | AF_UNSPEC | 未指定       |
+
++ 参数type确定套接字的类型,进一步确定通讯特征
+  | type           | 描述                                            |
+  |----------------+-------------------------------------------------|
+  | SOCK_DGRAM     | 长度固定的,无连接的不可靠报文传递               |
+  | SOCK_STREAM    | 有序,可靠,双向的面向连接的字节流,数据传送前需使用connect()来建立连接状态   |
+  | SOCK_RAW       | 原始的IP协议访问                                |
+  | SOCK_SEQPACKET | 连续可依赖的数据报连接                          |
+
+  - 对于SOCK_STREAM套接字是基于字节流服务的,应用程序无法直到对方发来了多少数据量,因此可能需要通过 *多次read调用* 才能获取完所有的发来的数据.
+
+  - SOCK_SEQPACKET与SOCK_STREAM类似,但它是基于报文服务的,因此SOCK_SEQPACKET套接字 *一次读入的数据量与对方所发送的一致*.
+
+  - SOCK_RAW套接字提供接口直接访问IP层,应用程序需要负责构造自己的协议首部.
+
++ 参数protocol用来指定socket所使用的具体传输协议编号
+
+  参数protocol通常为0,表示按给给定的域(domain)和套接字类型(type)选择默认协议.
+
+  AF_INET域+SOCK_STREAM套接字类型的默认协议是TCP
+
+  AF_INET域+SOCK_DGRAM套接字类型的默认协议是UDP
+** 使用文件描述符函数操作套接字描述符
+虽然套接字描述符本质上是一个文件描述符,但不是所有参数为文件描述符的函数都可以接受套接字描述符.
+| 函数            | 处理套接字时的行为                                                         |
+|-----------------+----------------------------------------------------------------------------|
+| close           | 释放套接字                                                                 |
+| dup,dup2        | 和一般文件描述符一样复制                                                   |
+| fchdir          | 失败,errno为ENOTDIR                                                        |
+| fchmod          | 未定义                                                                     |
+| fchown          | 由实现定义                                                                 |
+| fcntl           | 支持某些命令,例如F_DUPFD,F_GETFD,F_GETFL,F_GETOWN,F_SETFD,F_SETFL,F_SETOWN |
+| fdatasync,fsync | 由实现定义                                                                 |
+| fstat           | 支持某些stat结构成员,但如何支持由实现定义                                  |
+| ftruncate       | 未定义                                                                     |
+| getmsg,getpmsg  | 若套接字由STREAMS实现则支持                                                |
+| ioctl           | 支持部分命令,依赖低层设备驱动                                              |
+| lseek           | 由实现定义(一般失败,errno为ESPIPE)                                         |
+| nmap            | 未定义                                                                     |
+| poll            | 正常工作                                                                   |
+| putmsg,putpmsg  | 若套接字由STREAMS实现则支持                                                |
+| read,readv      | 与没有任何标志位的recv等价                                                 |
+| select          | 正常工作                                                                   |
+| write,writev    | 与没有任何标志位的send等价                                                            |
+** shutdown函数
+可以使用函数shutdown来禁止套接字上的输入/输出
+#+BEGIN_SRC C
+  #include <sys/socket.h>
+
+  int shutdown(int sockfd,int how);
+#+END_SRC
+参数how可以是:
++ SHUT_RD :: 关闭读
++ SHUT_WR :: 关闭写
++ SHUT_RDWR :: 关闭读写
+
+shutdown与close的区别在于:
++ 若通过dup等操作复制过套接字,则只有在最后一个套接字被关闭后才回释放网络通路.
++ shutdown不管有多少个套接字连接,都使得连接立即关闭
+* 寻址
+TCP/IP协议栈规定了采用大端字节序,而处理器字节序分大端和小端两种,因此应用程序需要在处理器的字节序与网络字节序之间进行转换.
+
+** 处理器字节序与网络字节序的转换函数
+#+BEGIN_SRC C
+  #include <arpa/inet.h>
+
+  /* 返回以网络字节序表示的32位整型数 */
+  uint32_t htonl(uint32_t hostint32);
+
+  /* 返回以网络字节序表示的16位整型数 */
+  uint16_t htons(uint16_t hostint16);
+
+  /* 返回以主机字节序表示的32位整型数 */
+  uint32_t ntohl(uint32_t netint32);
+
+  /* 返回以主机字节序表示的16位整型数 */
+  uint16_t ntohs(uint16_t netint16);
+
+#+END_SRC
+
+** 地址格式
+一个地址用于标识一个特定通讯域的套接字端点,因此地址格式与特定的通讯域相关.
+
+为了使不同格式地址能够传入到套接字函数,地址会被强制转换为一个通用的地址结构sockaddr:
+#+BEGIN_SRC C
+  struct sockaddr{
+    sa_family_t sa_family;        /* address的协议种类 */
+    char sa_data[];               /* 变成的地址 */
+    /* 其他成员 */
+  }
+#+END_SRC
