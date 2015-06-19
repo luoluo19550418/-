@@ -123,6 +123,7 @@ fcntl函数可以改变已打开的文件属性,该函数常用于修改由shell
 + 获得/设置文件描述符标记(F_GETFD/F_SETFD)
 + 获得/设置文件状态标记(F_GETFL/F_SETFL)
 + 获得/设置异步IO所有权(F_GETOWN/F_SETOWN)
+  拥有IO所有权的进程,会收到在该描述符上产生的信号.
 + 获得/设置记录锁(F_GETLK/F_SETLK/F_SETLKW)
 
 * ioctl函数
