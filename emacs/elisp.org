@@ -5376,6 +5376,143 @@
 	 若参数prefix为非nil,则只列出以prefix为prefix key的key sequence
 
 	 默认绑定为`C-h b'
+
+* Major Mode and Minor Mode
+** Hooks
+Emacs中大多数的hook为"normal hooks",这表示该hook中的函数会被不带参数调用,且他们的返回值会被忽略. 以`-hook'结尾的hook都是"normal hook". 
+
+非`-hook'结尾的hook可能为"abnormal hook",这表示该hook中的函数会被带参数调用,或者他们的返回值会被使用. 一般这种`abormal hook'的名称是以`-functions'结尾的.
+
+以`-function'结尾的hook表示它的值为单个的函数,而不是函数列表,此时 *不能用`add-hook'来添加hook函数,而需要使用`add-function'代替*
+
+hook触发式,排在前面的hook函数优先被调用
+
+*** 调用Hook中的函数
++ (run-hooks &rest hookvars)
+  该函数依次调用hookvars中的hook函数. 每个hookvar都是一个 *符号*. 且每个hook都需为一个"normal hook"
+
+  若hookvar为buffer-local变量,则调用的hook函数以hookvar的buffer-local的值为准,但 *若此时hook值中有元素t,则表示全局的hook值中定义的函数也会被调用*
+
++ (run-hook-with-args hook &rest args)
+  该函数以参数args调用hook中的函数,此时hook为"abnormal hook"
+
++ (run-hook-with-args-until-failure hook &rest args)
+  以参数args依次调用abnormal hook中的函数,直到某个函数返回nil为止
+
+  该函数返回最后那次调用函数的返回值. 即若由于hook中某个函数返回nil而退出时也返回nil,否则返回非nil值
+
++ (run-hook-with-args-until-success hook &rest args)
+  以参数args依次调用abnormal hook中的函数,直到某个函数返回非nil为止
+  
+  该函数返回最后那次调用函数的返回值. 即若由于hook中某个函数返回非nil而退出时则返回该值,否则返回nil值
+
+*** 设置Hook变量
++ (add-hook hook function &optional append local)
+  为hook添加function为hook函数
+
+  若function已经存在(使用equal进行比较),则不再重复添加
+
+  若function的`permanent-local-hook'属性非nil,则 *`kill-all-local-variables'或更改major mode都不会将该函数从hook的当前值中被删除*
+
+  默认情况下,function会被放在hook的最前方优先调用,但`append'参数可以让function添加到hook的最后方,最后被调用
+
+  参数`local'表示将function加入buffer-local hook中,该标志会使hook变为buffer-local变量,并在buffer-local变量值中添加元素`t'(表示同时也执行该hook的global value)
+
++ (remove-hook hook function &optional local)
+  该函数从hook中移除function
+
+  若参数`local'为非nil,则表示将该hook变为buffer-local hook,然后移除function
+  
+** Major Modes
+每个Major Mode都需要有一个"mode hook". Major Mode在完成初始化过程的最后一个步骤都应该是调用"mode hook"
+
+每个Major Mode都需要一个以`-mode'结尾的命令用来进入该Major Mode
+
++ 命令(fundamental-mode)
+  fundamental-mode不包含任意的与该mode相关的函数定义和变量设置. 它 *甚至没有mode hook*
+
++ 配置项major-mode
+  该变量为buffer-local变量,其值为一个symbol,标识了当前处于哪个major mode. 其标准的默认值为`fundamental-mode'
+
+  若默认值为nil,则当Emacs使用命令(例如`switch-to-buffer')创建新buffer(??是创建吗??)时, *新buffer的major mode与之前buffer保持不变* 
+  但是作为一个特例,若前一个buffer的major-mode的`mode-class'属性为`special',则 *新buffer的Major Mode为Fundamental mode* (具体参见Major Mode Conventions)
+
+*** Major Mode Conventions
+定义Major Mode时,有很多惯例需要遵守,因此推荐使用`define-derived-mode'从一个现成的Major Mode中继承新Major Mode. 该宏会自动维护这些惯例.
+
+下面是一些常见的惯例
++ 进入Major Mode的命令以`-mode'结尾
+
+  且当不带参数调用时,该命令通过设置 *keymap,syntax table和buffer-local变量* 将当前buffer切换到新的Major Mode.
+
+  该命令不能修改buffer的内容
+
++ 为进入Major Mode的命令添写doc-string,简要描述一下该mode有哪些特殊命令
+
+  doc-string中可以使用`\[COMMAND]',`\[KEYMAP]'和`\<KEYMAP>'来自动显示用户自定义的键绑定.
+
++ 进入Major Mode的命令的第一个动作应该是调用`kill-all-local-variables'
+  
+  `kill-all-local-variables'会先触发`change-major-mode-hook',然后清理之前的Major Mode设置的buffer-local变量
+
++ Major Mode Command需要设置buffer-local变量`major-mode'的值为major mode command的symbol.
+
+  命令`describe-mode'会根据该变量输出帮助文档
+
++ Major Mode Command需要设置buffer-local变量`major-name'的值为该major mode的"pretty" name.
+
+  `major-name'通常为一个字符串,且它的值用来会显示在mode line上
+
++ 由于Emacs只有一个命名空间,因此所有与Major Mode相关的变量,常量和函数,应该以该major mode名称为前缀
+
++ 当Major Mode是用来编辑特定结构的文本或编程语言时,具备根据结构自动缩进文本是很有用的一项功能,因此这类major mode一般都会有缩进函数,并将其设置为变量`indent-line-function'的值. 同时也可能设置其他一些关于缩进的变量的值
+
++ Major Mode通常有其自己的keymap,该keymap的名字一般为`mode名称-mode-map'
+
+  Major Mode Command应该调用`use-local-map'函数来安装自己的keymap
+
++ Major Mode Keymap中的键绑定,一般以`C-c'+控制字符或数字或`{}<>:;'为前缀. 
+
+  `C-c'+标点符号是留给minor mode使用的.
+
+  `C-c'+普通字母留给用户使用的
+
+  major mode也可以重新绑定`M-n',`M-p'但应该表示某种向前向后移动的命令
+
++ 编辑文本的major mode不应该重定义<RET>为任何非换行的命令.
+
+  非编辑文本的major mode无此显示
+
++ Major mode不应该修改哪些会严重影响用户性能的配置项(例如是否开启Auto-Fill mode)
+
++ 若major mode有自己的syntax table,则该syntax table变量的名称规范为`mode名称-mode-syntax-table'
+
++ 若major mode希望支持某种编程语言的注释语法,则需要设置与注释语法相关的变量.
+
+  具体参见`comment-column',`comment-start-skip',`comment-start',`comment-end'
+
+
+*** Auto Major Mode
+
+*** Mode Help
+
+*** Derived Modes
+
+*** Basic Major Modes
+
+*** Mode Hooks
+
+*** Tabulated List Mode
+
+*** Generic Modes
+
+** Minor Modes
+** Mode Line Format
+** Imenu
+** Font Lock Mode
+** Auto-Indentation
+* Desktop Save Mode
+
 * Number相关函数
   * 判断是否为自然数(0+正整数)
 
