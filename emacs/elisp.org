@@ -5491,8 +5491,75 @@ hook触发式,排在前面的hook函数优先被调用
 
   具体参见`comment-column',`comment-start-skip',`comment-start',`comment-end'
 
++ 若major mode有自己的缩写表,则需要存放到名为`MODENAME-mode-abbrev-table'的变量中.
 
-*** Auto Major Mode
+  If the major mode command defines any abbrevs itself, it should pass ‘t’for the SYSTEM-FLAG argument to ‘define-abbrev’. 详情参见[[info:elisp#Defining%20Abbrevs][Defining Abbrevs]]
+
++ major mode通过设置buffer-local变量`font-lock-defaults'来设置高亮
+
++ major mode中用到的每个face都应该尽可能的从已有的Emacs face中继承
+
++ major mode应该告诉Imenu如何找出buffer中的各个定义和章节的位置.
+
+  方法是通过设置`imeu-generic-expression',`imenu-prev-index-position-function',`imenu-extract-index-name-function',`imenu-create-index-function'. 具体参见[[info:elisp#Imenu][Imenu]]
+
++ major mode可以定义buffer local变量`eldoc-documentation-function'以便eldoc能支持该mode
+
++ major mode可以通过设置`completion-at-point-functions'来指定如何实现补全. 具体参见[[info:elisp#Completion%20in%20Buffers][Completion in Buffers]]
+
++ 在major mode command中使用`make-local-variable'来创建buffer-local变量.
+
+  *不要使用`make-variable-buffer-local'来创建buffer local变量* ,因为该函数会是的即使不是该mode的buffer中的变量也变成buffer-local变量.
+
++ 每个major mode都应该有一个名为`MODENAME-mode-hook'的normal hook.
+
+  major mode command的最后步骤应该是 *使用`run-mode-hooks'依次调用`change-major-mode-after-body-hook',`MODENAME-mode-hook'和`after-change-major-mode-hook'这三个hook*
+
++ 若major mode为子mode,则在major mode command开始时还需要调用父mode的major mode command
+
+  通过宏`define-derived-mode'定义的mode会自动完成这种设计,但若没有使用`define-derived-mode'宏,则需要手工调用`delay-mode-hooks'中的父mode command
+
++ 若从major mode切换成其他major mode,则会触发`change-major-mode-hook',可以进行一些特殊处理
+
++ 若该major mode仅用来管理由major mode自己产生的文本(而不是用户输入的内容),则该major command symbol的`mode-class'属性应该为`special',像下面所示:
+  #+BEGIN_SRC emacs-lisp
+   (put 'funny-mode 'mode-class 'special)
+  #+END_SRC
+
+  默认情况下,若`major-mode'的默认值为`nil',则新创建的buffer会继承当前buffer的major mode. 但对于属性`mode-class'为`special'的major mode来说, *新创建的buffer使用Fundamental Mode代替*,像Dired,Rmail,Buffer List这些Major Mode都开启了该特性
+
+  同时,在这些special major mode中调用`view-buffer'函数并不能启用`view-mode' minor mode,因为这类的mode通常都提供了他们自己的类似view-mode的键绑定
+
+  这类major mode,推荐使用`define-derived-mode'直接从`special-mode'中继承
+
++ 通过配置`auto-mode-alist'变量,可以让Emacs打开特定规则的文件名时自动选中Major Mode.
+
+  If you define the mode command to autoload, you should add this element in the same file that calls ‘autoload’.  
+
+  If you use an autoload cookie for the mode command, you can also use an autoload cookie for the form that adds the element (参见[[info:elisp#autoload%20cookie][autoload cookie]])
+
++ 定义mode的代码可能会被重复执行
+
+  因此在定义与mode相关的变量时,推荐使用`defvar'和`defcustom'
+
+
+*** How Emacs Chooses a Major Mode
+当Emacs打开文件时,会自动根据文件名称和文件内容选择合适的major mode
+
++ 命令(normal-mode &optional find-file)
+  
+  让Emacs为当前buffer选择合适的major-mode
+  
+  该函数先调用`set-auto-mode'函数,然后运行`hack-local-variables'来使file local变量生效. 参见[[info:emacs#Local%20Variables%20in%20Files][Local Variables in Files]] 和[[info:elisp#File Local Variables][File Local Variables]]
+
+  若参数`find-file'为非nil,则normal-mode假设是被`find-file'函数调用的,这种情况下,它会根据`enable-local-variables'的值来决定是否应用file local变量的值.
+  
+  若参数`find-file'为nil,则无条件应用file local变量值
+
+  该函数内部调用`set-auto-mode'来选择major mode,若选择失败,则根据`major-mode'的默认值来决定应用major mode
+
++ 函数(set-auto-mode &optional keep-mode-if-same)
+  
 
 *** Mode Help
 
