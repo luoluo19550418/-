@@ -5675,6 +5675,30 @@ hook触发式,排在前面的hook函数优先被调用
 
 *** Basic Major Modes
 
+除了Fundamental mode外,还有三个普遍被继承的mode:Text mode,Prog mode和Special mode
+
++ 命令(text-mode)
+
+  Text-mode用于编辑自然语言.
+
+  It defines the ‘"’ and ‘\’ characters as having punctuation syntax (参见 [[info:elisp#Syntax%20Class%20Table][Syntax Class Table]])
+
+  该mode下绑定`M-<TAB>'为`ispell-complete-word'
+
++ Prog-mode
+
+  Prog-mode用于编辑编程语言. 大u偶数的编程语言major mode都继承自该mode
+
+  Prog-mode设置`parse-sexp-ignore-comments'为`t',设置`bidi-paragraph-direction'为`left-to-right'
+
++ Special-mode
+
+  Special-mode常用于那些内容由Emacs自动产生(而不是人工输入或从文件读取)的buffer中.
+
+  从Special mode继承的mode会设置`mode-class'属性为`special'
+
+  Special mode设置mode为只读的.且会重新绑定很多通用绑定,例如`q'绑定为`quit-window',`g'绑定为`revert-buffer'
+  
 *** Mode Hooks
 
 *** Tabulated List Mode
