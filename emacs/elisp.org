@@ -5559,11 +5559,119 @@ hook触发式,排在前面的hook函数优先被调用
   该函数内部调用`set-auto-mode'来选择major mode,若选择失败,则根据`major-mode'的默认值来决定应用major mode
 
 + 函数(set-auto-mode &optional keep-mode-if-same)
-  
+
+  该函数为当前buffer选择合适的major-mode,其选择的依据依次为
+
+  1. 根据`_*_'行或文件结尾处的`mode:' file local变量值.
+     
+     注意: *若`enable-local-variables'为nil,或文件名称匹配`inhibit-local-variables-regexps'中的元素,则Emacs不使用file local变量* 
+
+  2. 根据`interpreter-mode-alist'变量值和`#!'行推测
+
+  3. 根据`magic-mode-alist'变量值和buffer开头的内容推测
+
+  4. 根据`auto-mode-alist'变量值和文件名称推测
+
+  若参数keep-mode-if-same为非nil,则若该buffer已经处于合适的mode状态时,并不再此调用major mode coomand. *这样是为了防止用户自定义的buffer loal 变量值被重设*
+
++ (set-buffer-major-mode buffer)
+  设置指定buffer的major mode为`major-mode'的默认值.
+
+  若默认值为nil,则表示使用当前buffer的major mode.
+
+  作为特例,`*scratch' buffer的值会被设置为`initial-major-mode'
+
+  低层的原始创建buffer的函数不会调用该函数,但中层的创建buffer的函数(例如`switch-to-buffer'和`find-file-noselect')在创建buffer时会使用该函数
+
++ 配置项initial-major-mode
+
+  该值决定了初始的`*scratch*' buffer的major mode. 该变量的值应该为major mode command的symbol
+
++ 变量interpreter-mode-alist
+
+  该变量告诉Emacs如何根据`#!'行的内容判断major mode
+
+  它一个alist,其元素格式为`(REGEXP . MODE)' 表示`#!'行内容匹配REGEXP的其Major Mode为MODE
+
++ 变量majic-mode-alist
+
+  该变量告诉Emacs如何根据buffer内容判断major mode
+
+  该值为一个alist,其元素格式为`(REGEXP . FUNCTION)', 若buffer开头部分的内容匹配REGEXP,且FUNCTION为非nil,则Emacs会通过调用该FUNCTION切换Major Mode
+
+  若FUNCTION为nil,则通过变量`auto-mode-alist'判断Major Mode
+
++ 变量`majic-fallback-mode-alist'
+  该变量类似`magic-mode-alist',但 *只有在`auto-mode-alist'中没有相应配置时才生效*
+
++ 变量`auto-mode-alist'
+  该变量告诉Emacs如何根据文件名称判断major mode
+
+  该值为一个alist,其元素格式 *一般* 为`(REGEXP . MODE-FUNCTOIN)'表示文件名称匹配REGEXP的话,调用MODE-FUNCTION来选择Major Mode(若访问的文件是[[info:elisp#File%20Name%20Expansion][扩展过的文件名]] ,则文件名会先经过`file-name-sans-versions'过滤掉版本号或备份标志)
+
+  元素还可能为格式`(REGEXP FUNCTION t)',表示调用FUNCTION后,Emacs继续搜索`auto_mode-alist'并选择合适的Major Mode. 该功能在处理压缩的文件时特别有用.
 
 *** Mode Help
++ 命令(describe-mode &optional buffer)
+  
+  该命令显示指定buffer(默认为当前buffer)的major mode和minior mode的相关文档.
 
+  该函数使用`documentation'函数从major mode command和minior mode command中获取doc-string
 *** Derived Modes
+创建一个新的major mode的推荐方法是使用`define-derived-mode'从一个现有的major mode中继承出来. 
+
+即使没有接近的major mode,那也应该从`text-mode',`special-mode'或`prog-mode'这三大基本major mode中选一个来继承.
+
+实在不行,那就从`fundamental-mode'中继承
+
++ 宏(define-derived-mode VARIANT PARENT NAME DOCSTRING KEYWORD-ARGS... BODY...)
+
+  该宏定义VARIANT为新Major Mode Command,该Major Mode,继承自PARENT,且以NAME为Mode Name
+
+  参数VARIANT和PARENT为不被引用的symbol
+
+  新的Major Mode覆盖了PARENT Mode的以下几个方面:
+  
+  - 新Major Mode拥有自己的keymap,名为`VARIANT-map'.
+    除非`VARIANT-map'在调用`define-derived-mode'前已经被设置并且定义了父keymap,否则PARENT mode的keymap为`VARIANT-map'的父keymap
+
+  - 新Major Mode拥有自己的syntax table,名为`VARIANT-syntax-table',但该名字可以通过`:syntax-table' keyword关键字修改
+    除非`VARIANT-syntax-table在调用`define-derived-mode'前已经被设置并且定义了父syntax-table,否则PARENT mode的syntax-table为`VARIANT-syntax-table的父syntax-table
+
+  - 新Major Mode拥有自己的abbrev table,存在名为`VARIANT-abbrev-table'的变量中,但该变量名可以通过`:abbrev-table' keyword关键字修改
+
+  - 新Major Mode有自己的mode hook,名为`VARIANT-hook'. 
+    该hook会在运行完其祖先的mode hook后,通过`run-mode-hooks'调用
+
+  可以在参数BODY指定了如何覆盖PARENT mode的其他设置. *注意不要加`interactive'语句,`define-derived-mode'会自动添加该语句*
+
+  若PARENT有一个非nil的`mode-class'属性,则`define-derived-mode'会设置VARIANT的`mode-class'属性为相同的值.
+
+  参数PARENT也可以为nil,表示新Major Mode没有父mode
+
+  参数DOCSTRING为对新Major Mode的说明,`define-derived-mode'会在此基础上增添一些关于mode hook,mode keymap的信息,该参数可以省略
+
+  `define-drived-mode'支持以下几种KEYWORD-ARG
+
+  - `:syntax-table'
+
+    为新Major Mode指定syntax table变量. 
+
+    若参数为nil,则表示使用PARENT mode的syntax table变量,若参数PARENT为nil,则使用标准syntax-table
+
+  - `:abbrev-table'
+
+    为新Major Mode指定abbrev-table变量.
+
+    若参数为nil,表示使用PARENT mode的abbrev-table变量,若参数PARENT为nil,则使用`fundamental-mode-abbrev-table'
+
+  - `:group'
+
+    指定了该mode所属的customization group.
+
++ 函数(derived-mode-p &rest modes)
+
+  当前Major Mode是否继承自modes中的任意一个mode, modes为symbol列表
 
 *** Basic Major Modes
 
