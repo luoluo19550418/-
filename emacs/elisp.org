@@ -5700,6 +5700,28 @@ hook触发式,排在前面的hook函数优先被调用
   Special mode设置mode为只读的.且会重新绑定很多通用绑定,例如`q'绑定为`quit-window',`g'绑定为`revert-buffer'
   
 *** Mode Hooks
+每个Major Mode Command最后三条指令应该是调用`change-major-mode-after-body-hook',自己的`MODE-hook',和`after-change-major-mode-hook'. *通常是通过调用函数`run-mode-hooks'来自动完成上面的三个步骤.*
+
+当major mode为某个父mode的子mode,则在body中调用父mode command时,应该放入`delay-mode-hooks'结构内,这样才能保证父mode的hook不会立即被触发,而统一等到子mode调用`run-mode-hooks'时再触发.
+
+若不使用`define-derived-mode'宏,而选择手工定义Major Mode,则可能会需要用到下列函数
+
++ 函数(run-mode-hooks &rest hookvars)
+
+  Major Mode应该使用该函数来运行自己的mode hook. 
+
+  该函数类似`run-hooks',但它还会调用`change-major-mode-after-body-hook'和`after-change-major-mode-hook'.
+
+  *若在`delay-mode-hooks'宏的body中调用该函数,它不会立即执行这些hook,而是推迟到下一次调用`run-mode-hooks'时再执行*
+
++ 宏(delay-mode-hooks &rest body)
+  该宏执行BODY中的语句,但BODY中的所有`run-mode-hooks'调用都会延迟运行他们的hook,直到下次不在`delay-mode-hooks'结构中的调用`run-mode-hooks'才运行.
+
++ 变量`change-major-mode-after-body-hook'
+  触发的时机在major mode hook之前
+
++ 变量`after-change-major-mode-hook'
+  触发时机正常应该为major mode command的最后一步!
 
 *** Tabulated List Mode
 
