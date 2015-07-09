@@ -5723,15 +5723,269 @@ hook触发式,排在前面的hook函数优先被调用
 + 变量`after-change-major-mode-hook'
   触发时机正常应该为major mode command的最后一步!
 
-*** Tabulated List Mode
-
 *** Generic Modes
+"Generic Modes"是指的那些只支持基本的注释语法和Font Lock Mode的简单Major Mode.
+
+使用宏`define-generic-mode'来定义generic mode,更多例子参见`generic-x.el'中的内容
+
++ (define-generic-mode mode comment-list keyword-list font-lock-list auto-mode-list function-list &optional docstring)
+  
+  若参数docstring为nil,则`define-generic-mode'会自动生成一个
 
 ** Minor Modes
+"minor mode"提供了一系列的与major mode无关的特性.
+
++ 变量minor-mode-list
+  该变量存储了所有的minor mode commands
+
+*** Minor Mode Conventions
+定义minor mode也有一些惯例要遵循,这些惯例有:
++ 每个minor mode都应该有一个以`-mode'结尾的指示变量,用于判断该minor mode是否启用.
+
+  若minor mode是buffer-local的,则该指示变量也应该是buffer-local的
+
+  该指示变量常与变量`minor-mode-alist'结合来在mode line上显示minor mode name. 
+
+  该指示变量还与变量`minor-mode-map-alist'结合来判断是否激活minor mode keymap.
+
++ 定义一个与上面的指示变量同名的命令,该命令用于开启/关闭minor mde
+
+  该命令需要能够接收一个可选参数.
+  1. 当以interactive方式调用该命令时,若不带参数调用该命令,则切换minor-mode的状态,若参数为正数,则开启minor-mode,若为负数则关闭minor-mode
+
+  2. 当在lisp中调用该命令时,若参数为nil或正数,则开启minor mode,参数若为'toggle,则切换minor-mode,参数为负数则关闭minor-mode
+
+  下面是一个实现模板
+  #+BEGIN_SRC emacs-lisp
+  (interactive (list (or current-prefix-arg 'toggle)))
+  (let ((enable (if (eq arg 'toggle)
+  (not foo-mode) ; this mode’s mode variable
+  (> (prefix-numeric-value arg) 0))))
+  (if enable
+  DO-ENABLE
+  DO-DISABLE))
+  #+END_SRC
+
++ 若想在mode line显示该minor mode,则需要往变量中`minor-mode-alist'中添加相应的元素.
+
+  `minor-mode-alist'中的元素格式应该为`(MODE-VARIABLE STRING)'. 其中
+  
+  - `MODE-VARIABLE'为指示minor-mode是否开启的哪个变量名称
+
+  - `STRING'为在mode line上的显示文本.
+
+  - *要注意 minor-mode-alist中不要出现重复的MODE-VARIABLE*
+
++ 还有一些类似Major Mode的惯例
+  
+  - those regarding the names of global symbols
+
+  - the use of a hook at the end of the initialization function
+
+  - the use of keymaps
+
+  - other
+
++ 另外,尽可能允许用户通过`customization'来开闭minor mode.
+  
+  因此应该尽量使用`defcustom'来定义minor mode的标识变量. 并且要记得 *給该标识变量加上autoload cookie并指定`:require'定义minor mode的库*:
+  #+BEGIN_SRC emacs-lisp
+       ;;;###autoload
+    (defcustom msb-mode nil
+      "Toggle msb-mode.
+         Setting this variable directly does not take effect;
+         use either \\[customize] or the function `msb-mode'."
+      :set 'custom-set-minor-mode
+      :initialize 'custom-initialize-default
+      :version "20.4"
+      :type    'boolean
+      :group   'msb
+      :require 'msb)
+  #+END_SRC
+
+*** Keymaps and Minor Modes
+每个minor mode都可以有自己的keymap. 要为minor mode设置自己的keymap,需要往变量`minor-mode-map-alist'中添加元素. 具体参见[[info:elisp#Definition%20of%20minor-mode-map-alist][Definition of minor-mode-map-alist]]
+
+*** Defining Minor Modes
++ (define-minor-mode MODE DOC [INIT-VALUE [LIGHTER [KEYMAP]]] KEYWORD-ARGS... &rest BODY)
+
+  该宏定义一个新的名为MODE的minor mode,并生成一个名为MODE的minor mode command. 参数DOC为该minor mode的说明文档
+
+  该宏还定义了一个名为MODE的指示变量,通过设置该变量为t或nil可以开启/关闭该minor mode. 该变量的默认值为INIT-VALUE.
+
+  参数LIGHTER为一个字符串或nil,当开启了该minor mode后就会在mode-line中显示该字符串, 若为nil则表示不显示在mode-line上
+
+  参数KEYMAP为nil,值为keymap的变量名,keymap,或元素为`(KEY-SEQUENCE . DEFINITION)'的alist. 它指定了该minor mode所使用的keymap,并生成名为`MODE-map'的变量用于存放keymap
+  这里的KEY-SEQUENCE和DEFINITION参数格式要匹配`define-key'函数的参数格式.
+
+  目前参数KEYWORD-ARGS支持如何keyword参数:
+  + `:group GROUP'
+
+    指定BODY中的`defcustom'语句定义配置项时所属的默认组为GROUP, 若不指定该参数,则所属的默认组为参数MODE
+
+    *使用该参数前,请确保已经预先用`defgroup'定义了分组*
+
+  + `:global GLOBAL-P'
+
+    指明该minor-mode作用于为global还是buffer-local, 默认为nil即为buffer-local的.
+
+    将一个minor-mode变为global的,意味着它的指示变量`MODE'被定义为用户配置项, 通过配置项界面改变该变量的值会同时关闭/开启该minor mode.
+
+    这种情况下,需要 *保证在配置该配置项时有运行相应的minor mode代码*,最简单的方法是使用`:require'关键字
+
+  + `:init-value INIT-VALUE'
+
+    设置指示变量`MODE'的初始值
+
+  + `:lighter LIGHTER'
+
+    设置显示在mode-line上的内容
+
+  + `:keymap KEYMAP'
+
+    设置minor mode的KEYMAP
+
+  + `:variable PLACE'
+
+    使用PLACE作为minor mode的指示变量(默认为参数MODE). 
+
+    这里PLACE可以是一个变量名称,或者可以被`setf'赋值的泛型变量(参见[[info:elisp#Generalized%20Variables][Generalized Variables]]). 
+
+    PLACE还可以是格式为`(GET . SET)'的cons cell. 其中GET为获取minor mode状态的表达式, SET为接收一个参数并设置minor mode的函数
+
+  + `:after-hook AFTER-HOOK-FORM'
+
+    AFTER-HOOK-FORM为一个S表达式(不需要被引用), 它会在minor mode hook触发后运行.
+
+  + 其他任意的keyword参数
+
+    *这些keyword参数直接被传递給`defcustom'用来作为生成minor mode指示变量时的参数*. 比较常见的有`:require'参数.
+
+  下面是一个使用`define-minor-mode'的例子
+  #+BEGIN_SRC emacs-lisp
+  (define-minor-mode hungry-mode
+  "Toggle Hungry mode.
+  Interactively with no argument, this command toggles the mode.
+  A positive prefix argument enables the mode, any other prefix
+  argument disables it.  From Lisp, argument omitted or nil enables
+  the mode, `toggle' toggles the state.
+
+  When Hungry mode is enabled, the control delete key
+  gobbles all preceding whitespace except the last.
+  See the command \\[hungry-electric-delete]."
+  ;; The initial value.
+  nil
+  ;; The indicator for the mode line.
+  " Hungry"
+  ;; The minor mode bindings.
+  '(([C-backspace] . hungry-electric-delete))
+  :group 'hunger)
+  #+END_SRC
+
++ 宏(define-globalized-minor-mode GLOBAL-MODE MODE TURN-ON KEYWORD-ARGS)
+  创建一个与MODE对应的名为GLOBAL-MODE的minor mode.
+
+  `GLOBAL-MODE'的意义在于同时启用/关闭所有buffer中的名为`MODE'的minor mode
+
+  它会使用函数`TURN-ON'来开启buffer中的minor mode,使用`(MODE -1)'来关闭buffer中的minor mode
+
+  该宏会定义一个名为`GLOBAL-MODE'的配置项,用户可以通过customize通过更改该配置项的值来开启/关闭该minor mode. *当更改该配置项时,请保证已经执行了该`define-globalized-minor-mode'代码,最简单的方法是使用`:require'关键字参数*
+
+  使用`:group GROUP' keyword 参数指定了`GLOBAL-MODE'所属的组别.
+
+  *一般情况下,定义了一个global minor mode的同时,需要定义一个buffer local minor buffer,这样才能允许某些buffer不开启该minor mode*
 ** Mode Line Format
 ** Imenu
 ** Font Lock Mode
 ** Auto-Indentation
+
+* Tabulated List Mode
+Tabulated List Mode是一种用列表来显示数据的Major Mode,这种数据往往由一条条的记录组成,每条记录的内容又可以划分到多个列中.
+
+Tabulated List Mode继承至Special mode,且同时被多个子mode继承,例如Process Menu mode和Package Menu Mode
+
+要想继承Tabulated List Mode,需要在`define-derived-mode'中的BODY中通过设置一些变量(下面会讲到)来定义数据的结构,然后调用函数`tabulated-list-init-header'来初始化header line
+同时,继承的子mode还需要定义一个"listing command",该命令不是major mode command,它是給用户使用的命令封装,该命令通常完成以下几个动作
+1. 创建或切换到某个特定buffer
+2. 开启新的Major mode
+3. 指定要以列表方式显示的数据.
+4. 调用`tabulated-list-print'函数,以弹出该buffer
+
+** 指定tabulated data的格式
+通过定义以下变量来指定tabulated data的格式
+
++ tabulated-list-format
+  该变量为buffer-local变量,它定义了数据的格式.
+
+  该变量为一个vector,且vector中的每个元素都表示一个数据列,其格式为`(NAME WIDHT SORT)'. 其中:
+  - NAME为列的名称
+
+  - WIDHT为每列的保留宽度,该参数对最后一列来说无意义
+
+  - SORT指定了根据该列排序记录的方式.
+    | 值           | 意义                                                                                 |
+    |--------------+--------------------------------------------------------------------------------------|
+    | nil          | 表示不排序                                                                           |
+    | t            | 表示根据字符串排序                                                                   |
+    | 其他判断函数 | 使用该判断函数传入`sort'进行排序. 该判断函数的参数为`tabulated-list-entries'中的元素 |
+
++ tabulated-list-entries
+
+  该变量为buffer-local变量,它指定了要显示的记录数据. 它的值 *可以为一个list,或一个函数*
+
+  若该值为list,则list中的每个元素格式应该为`(ID CONTENTS)',其中
+  - ID可以为nil,或一个标识某条记录的lisp object
+
+  - CONTENT为一个表示记录内容的vector,其中vector中的每个元素表示记录的一列内容. 
+
+    vector中的元素可能为字符串或者格式为`(LABEL . PROPERTIES)'的list, 
+    
+    若元素为字符串则表示直接显示该字符串
+
+    若元素为`(LABEL . PROPERTIES)'格式的list,则表示用`LABEL'和`PROPERTIES'作为参数调用`insert-text-button'的方式来插入一个text button(参见[[info:elisp#Making%20Buttons][Making Buttons]])
+
+  若`tabulated-list-entries'的值为为一个函数,则不带参数调用该函数应该返回上面格式的list
+
++ tabulated-list-revert-hook
+
+  该hook在重载入Tabulated List Buffer前会被触发, *常用于对`tabulated-list-entries'的值作预处理.*
+
++ tabulated-list-printer
+
+  该变量的值应该为一个函数, 该函数接收`tabulated-list-entries'中的ID和CONTENTS两个参数, *其返回值才作为真正的列内容显示*
+
+  默认该变量的函数,直接插入CONTENTS
+
++ tabulated-list-sort-key
+
+  该变量指定了根据那几列对记录进行排序.以及是从大到小还是从小到大排序
+
+  - nil表示不排序
+
+  - (NAME . FLIP)格式的cons表示根据名为NAME的列排序,FLIP表示是否反转排序顺序
+
++ 函数(tabulated-list-init-header)
+  该函数为Tabulated List buffer生成并设置`header-line-format'(参见[[info:elisp#Header%20Lines][Header Lines]]),并为header line分配keymap以便允许通过点击header列来排序
+
+  该函数依赖上面所述的变量
+
++ 函数(tabulated-list-print &optional remember-pos)
+  该函数刷新tabulated list buffer. *该函数通常被list command所调用*
+
+  该函数会作以下动作:
+  1. 清空buffer
+
+  2. 根据`tabulated-list-sort-key'对`tabulated-list-entries'中的数据进行排序
+
+  3. 调用`tabulated-list-printer'所表示的函数输出记录
+
+  若参数REMEMBER-POS为非nil,则该函数在刷新buffer前会记住当前行的ID,并在刷新后自动定位到该ID行
+
+
+
+  
+
+
 * Desktop Save Mode
 
 * Number相关函数
