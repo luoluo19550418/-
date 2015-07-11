@@ -529,9 +529,46 @@
   * -map 一个按键映射（keymap）
   * 命名以空格开头的缓冲区是临时的,用户不需要关系的缓冲区
 * 获取参数的几种方法
-** 变量`argv`获取command-line 参数
+** 获取command-line 参数
 
-   当使用emacs --script xxx.el args时,为了获取command-line参数,可以在xxx.el中使用变量`argv`获取参数列表
+当使用emacs --script xxx.el args时,为了获取command-line参数,可以在xxx.el中使用变量`argv`获取参数列表
++ (command-line)
+
+  该函数解析调用Emacs时的command line,处理该command line,加载用户初始化文件,然后显示启动信息
+
++ command-line-processed
+  
+  该变量标识了,comand line是否已经被处理过了, 若处理过了则该值为t
+
+  当通过`dump-emacs'函数来redump Emacs时,常常会先将该变量设为nil,这样可以让新dumped Emacs会去再一次处理它的command-line arguments
+
++ command-switch-alist
+  该变量是素为`(option . handler-function)'的alist. 这里
+
+  - option为command-line argument中的`-option'参数(*带-*),为字符串格式
+
+  - handler-function为相应的处理函数名,它接收option为参数
+
+  若command line option后还带了其他参数,则在handler-function中可以通过变量`command-line-args-left'来获取剩余的命令行参数
+
++ command-line-args
+  传递给Emacs的完整command-line argument列表
+
++ command-line-args-left
+  尚未处理的command-line argument列表. *自定义函数有时需要修改该变量*
+
++ command-line-functions
+  该变量是一系列函数的列表,这些函数用来处理无法识别的command-line参数.
+
+  每次处理一个没有特殊意义的command line argument时,该变量中的函数都会被依次调用, *直到有一个函数返回非nil的值*
+
+  *这些函数被调用时并不传递参数,但在这些函数内可以通过变量`argi'获取当前待处理的command-line argument. 可以通过变量`command-line-args-left'获取尚未被处理的command line arguments*. 
+
+  *若某函数除了当前待处理的函数,同时也把后面的参数給处理过了,则需要把后面那些被处理过的参数从`command-line-args-left'中删除*
+
+  *若某函数已经处理了当前代处理的参数,则一定记得返回非nil值*. *若所有的函数都返回nil,该参数会被认为是Emacs要打开的文件名称*
+
+  
 ** 变量`current-prefix-arg`获取universal-argument
    
    emacs命令可以使用C-u传递universal-argument.
@@ -2668,48 +2705,6 @@
 	使用&rest表示之后的参数为不定参数. 它是实际参数的一个列表.
 
 	若在实际调用函数时,没有为可选参数和剩余参数提供实际参数值,则这些参数值为nil.
-*** 函数描述字符串(docstring)
-	* 一般来说,函数描述字符串的第一行为对该函数作用的总结.
-   	* docstring的第一行最好独立的,因为apropos命令只显示第一行的文档
-   	* docstring中参数最好用大些字母
-   	* docstring以*开头的defvar变量被认为是用户选项（user option）
-	  * 用户选项可以通过命令set-variable交互设置
-	  * 可以使用edit-options命令编辑*scratch*
-   	* `符号名'生成一个链接
-   	* \\{major-mode-map}可以显示扩展成按键的说明
-   	* docstring最后那个的\[ command ]会被command的绑定键所代替
-   	* 如果不想要这种代替，需要用\=转义，当然，在Emacs的docstring中，真正的写法应该是
-      #+begin_src elisp
-       	"\\=\\{major-mode-map}"
-       	"\\=\\[command]"
-      #+end_src
-	* 将`\n(fn ARGLIST)`放在最后一行,会自动扩展为该函数的实际参数列表.
-	
-*** 交互模式声明
-	若一个函数带了交互模式声明,则它也就是一个命令了,即可以通过M-x(execute-command)来调用了.
-
-	交互模式声明的格式为(interactive code-string),其中:
-   	* 若interactive的参数以*开头，则意义是，如果当前buffer是只读的，则不执行该函数
-
-   	* interactive可以后接字符串,表示获得参数的方式
-	  * p 接收C-u的数字参数
-
-	   	也可以不用P参数,直接在代码中判断current-prefix-arg的值
-	  * r region的开始/结束位置
-	  * n 提示用户输入数字参数,n后面可用接着提示符
-	  * s 提示用户输入字符串参数
-	  * 若函数接收多个input,需要用\n来分隔
-
-   	* interactive可以后接一个form,form的求值结果应该是一个list,这个list的值作为参数的实参
-
-	  在form中一般会用到如下几个函数用于获取用户输入
-	  * read-string
-	  * read-file-name
-	  * read-directory-name
-	  * read-regexp
-	  * y-or-n-p
-	  * read-from-minibuffer
-	  * 使用变量`current-prefix-arg`来判断是否有universal-argument
 
 ** 命名函数
    使用fset/defalias将匿名函数与一个symbol想结合,就为这个匿名函数分配了一个名称.
@@ -2945,6 +2940,100 @@
 	 编译器会检查文件file中是否包含了function函数,且参数签名是否为arglist,若想让编译器不检查函数的参数签名,需要将arglist设置为t
 
 	 若参数fileony为非nil,表示只检查file存在,而不检查文件中是否定义了function.
+** 函数描述字符串(docstring)
+	* 一般来说,函数描述字符串的第一行为对该函数作用的总结.
+   	* docstring的第一行最好独立的,因为apropos命令只显示第一行的文档
+   	* docstring中参数最好用大些字母
+   	* docstring以*开头的defvar变量被认为是用户选项（user option）
+	  * 用户选项可以通过命令set-variable交互设置
+	  * 可以使用edit-options命令编辑*scratch*
+   	* `符号名'生成一个链接
+   	* \\{major-mode-map}可以显示扩展成按键的说明
+   	* docstring最后那个的\[ command ]会被command的绑定键所代替
+   	* 如果不想要这种代替，需要用\=转义，当然，在Emacs的docstring中，真正的写法应该是
+      #+begin_src elisp
+       	"\\=\\{major-mode-map}"
+       	"\\=\\[command]"
+      #+end_src
+	* 将`\n(fn ARGLIST)`放在最后一行,会自动扩展为该函数的实际参数列表.
+	
+** 交互模式声明
+	若一个函数带了交互模式声明,则它也就是一个命令了,即可以通过M-x(execute-command)来调用了.
+
+	交互模式声明的格式为(interactive code-string),其中:
+   	* 若interactive的参数以*开头，则意义是，如果当前buffer是只读的，则不执行该函数
+
+   	* interactive可以后接字符串,表示获得参数的方式
+	  * p 接收C-u的数字参数
+
+	   	也可以不用P参数,直接在代码中判断current-prefix-arg的值
+	  * r region的开始/结束位置
+	  * n 提示用户输入数字参数,n后面可用接着提示符
+	  * s 提示用户输入字符串参数
+	  * 若函数接收多个input,需要用\n来分隔
+
+   	* interactive可以后接一个form,form的求值结果应该是一个list,这个list的值作为参数的实参
+
+	  在form中一般会用到如下几个函数用于获取用户输入
+	  * read-string
+	  * read-file-name
+	  * read-directory-name
+	  * read-regexp
+	  * y-or-n-p
+	  * read-from-minibuffer
+	  * 使用变量`current-prefix-arg`来判断是否有universal-argument
+** declare-form
+使用`declare'宏能够为函数或宏增加元属性. 它的语法为:
+#+BEGIN_SRC emacs-lisp
+  (declare specs...)
+#+END_SRC
+
+其中spec的格式为`(property args...)'. 目前支持以下几种spec
++ (advertised-calling-convention SIGNATURE WHEN)
+
+  该spec的功能类似调用`set-advertised-calling-convention'函数
+  
+  其中,SIGNATURE为参数列表,指定了调用函数或宏的正确用法. WHEN为一个字符串指明了什么时候开始废除原函数用法.
+
++ (debug edebug-form-spec)
+  该spec只对宏有效. 当使用edebug调试宏时,使用edebug-form-spec. 参见[[info:elisp#Instrumenting%20Macro%20Calls][Instrumenting Macro Calls]]
+
++ (doc-string n)
+  指明第n个参数为documentation string
+
++ (indent indent-spec)
+  对当前函数或宏缩进时,根据indent-spec来缩进. 该功能通常用在宏中,但也对函数生效. 参见[[info:elisp#Indenting%20Macros][Indenting Macros]]
+
+  indent-spec可以是:
+  - nil 
+    使用标准缩进模式
+
+  - defun
+    将该宏看成是一个`def'结构: 这种结构中会将第二行看成是body的起始行
+
+  - an integer,number
+    The firstnumberarguments of the function aredistinguishedarguments; the rest are considered the body of the expression. 
+    A line in the expression is indented according to whether the first argument on it is distinguished or not.
+    If the argument is part of the body, the line is indented lisp-body-indent more columns than the open-parenthesis starting the containing expression. 
+    If the argument is distinguished and is either the first or second argument, it is indented twice that many extra columns. 
+    If the argument is distinguished and not the first or second argument, the line uses the standard pattern.
+
+  - 表示函数名称的symbol
+    该函数接收两个参数`pos'和`state',并且应该返回一个表示应该缩进到多少列的数字,或一个car表示缩进列的list. 其中
+
+    - pos :: 光标当前行缩进的起始位置(The position at which the line being indented begins.)
+
+    - state :: 函数`parse-partial-sexp'解析从光标当前位置到当前行行首之间内容的返回结果
+    
+               The difference between returning a number and returning a list is that a number says that all following lines at the same nesting level should be indented just like this one; a list says that following lines might call for different indentations. This makes a difference when the indentation is being computed byC-M-q; if the value is a number, C-M-qneed not recalculate indentation for the following lines until the end of the list
+    
+    
++ (obsolete current-name when)
+  该spec功能类似调用`make-obolete'函数
+
+  current-name为一个symbol,或string,或nil
+
+  when为一个字符串用来指定什么时候开始废弃该函数/宏
 ** 判断function是否安全
    使用unsafep来判断一个form是否是安全的
 
@@ -5895,6 +5984,103 @@ hook触发式,排在前面的hook函数优先被调用
 
   *一般情况下,定义了一个global minor mode的同时,需要定义一个buffer local minor buffer,这样才能允许某些buffer不开启该minor mode*
 ** Mode Line Format
+每个Emacs window的底部一般都会有一个mode line,用来显示buffer的信息.
+
+每个Emacs Window的顶部也可以有一个header line,其作用与mode line类似.
+*** Mode Line基础说明
+mode line显示什么内容由buffer local变量`mode-line-format'决定.
+
+header line显示什么内容则由buffer local变量`header-line-format'决定
+
+当前选中的window的mode line使用名为`mode-line'的face显示, 其他为选中的mode line使用名为`mode-line-inactive'的face显示
+
+出于效率考虑,Emacs不会不停地更新mode line和header line. 只有当你进行如下操作时才回去更新mode-line和header-line
+1. 更改window configuration
+2. 切换buffer
+3. narrow或widen buffer
+4. scroll buffer
+5. 修改了buffer内容
+6. 调用了函数`force-mode-line-update'
+
++ (force-mode-line-update &optional all)
+  该函数强制更新当前buffer的mode-line和header-line
+
+  但若参数all为非nil,则表示强制更新所有buffer的mode-line和header-line
+*** mode-line-format,header-line-format和frame-title-format的格式
+
+mode-line-format,header-line-format和frame-title-format的格式可能是以下几种类型:
+
++ 字符串
+  类似`format'函数中的格式说明符. 
+
+  除了字符串中的"%-Constructs"会被替换为其他数据外,其他的内容原样显示
+
+  若部分子串包含`face'属性,则该部分字串显示时使用`face'属性指定的face来显示, 其他没有`face'属性的字串,使用`mode-line'或`mode-line-inactive'来显示.
+
+  *字串中的`help-echo'和`keymap'属性具有特殊的意义*,具体参见[[info:elisp#Properties%20in%20Mode][Properties in Mode]]
+
++ SYMBOL类型的变量
+
+  显示为symbol的值. 
+
+  但 *即使symbol的值为带"%-constructs"的字符串,其中的"%-constructs"也不会被转义!!*
+
+  此外,若symbol的值为t或nil,或者该symbol被标记为"risky"(该symbol的`risky-local-variable'属性非nil),则这些symbol的值会被忽略
+
++ (字符串 其他数据...) / (列表 其他数据...)
+
+  若数据为一个list,且该list的第一个元素为字符串类型或list类型,则表示递归处理所有的列表元素,并将结果合并显示.
+
++ (:eval FORM)
+
+  若数据为一个list,且第一个元素为`:eval',则表示运行`FORM',并将结果作为显示内容
+
+  *注意 FORM中不要load任何文件,因为这样可能导致无穷循环*
+
++ (:propertize ELT PROPS...)
+  
+  若数据为一个list,且第一个元素为`:propertize',则表示递归处理ELT,并为结果加上PROPS提供的字符串属性.
+
+  参数PROPS应该由0到多个"TEXT-PROPERTY" "VALUE"组成
+
++ (SYMBOL THEN ELSE)
+
+  若数据为一个list,且第一个元素为非条件语句的关键字,则表示若SYMBOL的值为非nil则显示递归处理THEN的处理结果,否则显示ELSE的处理记过.
+
+  ELSE可以省略,则表示若symbol值为nil,什么也不显示
+
++ (WIDTH REST...)
+
+  若数据为一个list,且第一个元素为整数,则表示限定REST的结果显示宽度为WIDTH.
+
+  若WIDTH为正数,表示向左对齐,WIDTH为负数,表示向右对齐.
+*** Mode-line-format中常用到的变量
+
+*** %-constructs说明
+类似format函数中的格式字符串,%-constructs的格式为`%[整数]标识',这里的整数指定了最小的长度,标识指定了替换为何值
+| %% | %字符                                                                                                                                                                                                                                                |
+| %b | 当前buffer名称                                                                                                                                                                                                                                       |
+| %c | 当前光标所在的列数                                                                                                                                                                                                                                   |
+| %e | 当Emacs接近内存耗尽时,显示警告信息,否则为空                                                                                                                                                                                                          |
+| %f | 当前buffer访问的文件名称                                                                                                                                                                                                                             |
+| %F | 当前frame的title或name                                                                                                                                                                                                                               |
+| %i | 当前buffer可访问部分的size,单位为字节                                                                                                                                                                                                                |
+| %I | 类似%i,但以更人性化的方式显示,例如会转换为多少k,M,G                                                                                                                                                                                                  |
+| %l | 当前光标所在的行数                                                                                                                                                                                                                                   |
+| %n | 若当前buffer出于narrow状态,则显示"Narrow",否则显示空                                                                                                                                                                                                 |
+| %P | The percentage of the buffer text above the *top* of window, or ‘Top’, ‘Bottom’ or ‘All’.  Note that the default mode line construct truncates this to three characters.                                                                       |
+| %p | The percentage of the buffer text that is above the *bottom* of the window (which includes the text visible in the window, as well as the text above the top), plus ‘Top’ if the top of the buffer is visible on screen; or ‘Bottom’ or ‘All’. |
+| %s | 与当前buffer相关的process的状态                                                                                                                                                                                                                      |
+| %z | 键盘,中断,buffer编码格式的信息                                                                                                                                                                                                                       |
+| %Z | 类似%z,但还包括换行符的信息                                                                                                                                                                                                                          |
+| %* | 若buffer只读,显示"%",若buffer被修改过,显示"*",否则显示"-"                                                                                                                                                                                            |
+| %+ | 类似%*,但若一个read-only buffer被修改了,它显示"*",而%*会显示"%"                                                                                                                                                                                      |
+| %& | 若buffer被修改则显示"*",否则显示"-"                                                                                                                                                                                                                  |
+| %[ | 显示递归编辑的层次,多少层就有多少个"["                                                                                                                                                                                                               |
+| %] | 显示递归编辑的层次,多少层就有多少个"]"                                                                                                                                                                                                               |
+| %- | 使用"-"填充剩余的mode line                                                                                                                                                                                                                            |
+
+
 ** Imenu
 ** Font Lock Mode
 ** Auto-Indentation
