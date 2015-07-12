@@ -6055,7 +6055,86 @@ mode-line-format,header-line-format和frame-title-format的格式可能是以下
 
   若WIDTH为正数,表示向左对齐,WIDTH为负数,表示向右对齐.
 *** Mode-line-format中常用到的变量
+下面所列举的变量,都是mode-line-format的组成部分
++ mode-line-mule-info
 
+  该变量在mode-line-format中可以显示语言环境,buffer的字节编码,当前的输入法
+
++ mode-line-modified
+
+  该变量会显示当前buffer是否被修改. 默认情况下:
+
+  1. 若buffer被修改显示'**'
+
+  2. 若buffer未被修改显示为'--'
+
+  3. 若buffer只读显示为'%%'
+
+  4. 若buffer只读单被修改,显示为'%*'
+
++ mode-line-frame-identification
+
+  该变量可以用来标识当前frame
+
+  在图形界面下,该变量默认为" ". 在字符界面下,该变量默认为"-%F "
+
++ mode-line-buffer-identification
+
+  该变量可以用来标识当前buffer. 
+
+  它的默认值为"%12b",附带一些text properties
+
++ mode-line-position
+
+  该变量标识光标所在当前buffer的位置.
+
+  它默认为"%p",显示当前所在位置是整个buffer的百分之多少处.
+
+  但也可以给它添加注入buffer大小,行号,列号等信息
+
++ vc-mode
+
+  该变量指示buffer所关联的文件纳入的版本控制信息.
+
+  若文件未纳入版本控制系统中,则该变量值为nil
+
++ mode-line-modes
+
+  该变量显示buffer所开启的major mode,minor mode,递归编辑层次,buffer所关联进程的状态,是否出于narrow状态
+
+  该变量值中又包含了三个变量:
+  - mode-name
+
+    Major Mode的名称
+
+  - mode-line-process
+
+    与当前buffer相关的process的状态. 
+
+    该变量紧挨着major-name显示. 默为nil
+
+  - minor-mode-alist
+
+    该变量是一个buffer local变量,它指示了如何显示minor-mode. 
+
+    该变量的元素组成格式为`(MINOR-MODE-VARIABLE MODE-LINE-STRING)'
+
+    当MINOR-MODE-VARIABLE的值为非nil时,则显示MODE-LINE-STRING,否则什么也不显示
+
+    
++ mode-line-remote
+
+  该变量用来显示当前buffer的`default-directory'是否是远程目录
+
++ mode-line-client
+
+  该变量用来标识哪些frame为`emacsclient'的frame
+
++ global-mode-string
+
+  若开启了该minor mode的话,该变量的内容会显示在`which-func-mode' minor mode后,否则会显示在`mode-line-modes'后
+
+  
 *** %-constructs说明
 类似format函数中的格式字符串,%-constructs的格式为`%[整数]标识',这里的整数指定了最小的长度,标识指定了替换为何值
 | %% | %字符                                                                                                                                                                                                                                                |
@@ -6080,10 +6159,100 @@ mode-line-format,header-line-format和frame-title-format的格式可能是以下
 | %] | 显示递归编辑的层次,多少层就有多少个"]"                                                                                                                                                                                                               |
 | %- | 使用"-"填充剩余的mode line                                                                                                                                                                                                                            |
 
+*** Mode Line中的text properties
+某些text properties在mode line中有其特殊的意义:
++ `face'属性影响text的显示
++ `help-echo'属性提供了光标指向他text后弹出的帮助内容
++ `keymap'属性是的text能处理鼠标点击事件
+
+*** 模拟mode line的显示结果
++ (format-mode-line format &optional face window buffer)
+  该函数,将format当成是`mode-line-format'的值,模拟当指定的WINDOW显示指定BUFFER时会显示怎样的mode-line.
+
+  参数face指定了那些没有指定`face'属性的text应该如何显示
+*** Window Header Line
+head-line与mode-line极其类似,它的显示是由变量`header-line-format'指定的. 且`header-line-format'的格式与`mode-line-format'的格式一样
+
+当一个Window只能显示一行内容时,则它不会显示header line.
+
+若一个window只能显示两行内容时,它无法同时显示mode-line和header-line. 这时若mode-line不为nil,则会显示mode-line而不是header-line
+
++ (window-header-line-height &optional window)
+  该函数返回指定WINDOW的header line的高度,单位为像素
 
 ** Imenu
-** Font Lock Mode
-** Auto-Indentation
+Imenu会在imenu菜单(参见[[info:emacs#Imenu][Imenu]])中列出buffer中的语法定义名称或章节名称,然后通过点击菜单中的定义名称或章节名称就能直接跳转到相应位置上了.
++ 命令(imenu-add-to-enubar NAME)
+
+  该命令会产生一个名为NAME的imenu菜单
+
+当然,使用Imenu的前提是,能够产生一个定义/章节名称与buffer位置之间关系的索引. 
+*** 通过设置`imenu-generic-expression'定义Imenu
+
+通过设置`imenu-generic-expression'定义Imenu,是最常用的方式
+
++ imenu-generic-expression
+
+  该变量为一个list,它指定了使用那种正则表达式来定位定义/章节的位置. 它的元素可以是以下两种格式
+
+  - (SUB-MENU-TITLE REGEXP INDEX)
+
+    这里SUB-MENU-TITLE表示通过REGXP找到的项目应该放到名为`SUB-MENU-TITLE'的子菜单中. 
+    若其值为nil,则表示找到的项目直接放到Imenu菜单中.
+
+    参数REGEXP则表示buffer中任何匹配REGEXP的内容都被认为是定义/章节.
+
+    参数INDEX则说明了,REGEXP中哪个匹配的子组为定义/章节的名称
+
+  - (SUB-MENU-TITLE REGEXP INDEX FUNCTION ARGUMENTS...)
+
+    这种格式的`SUB-MENU-TITLE',`REGEXP'和`INDEX'与上面格式的意义相同.
+
+    不同之处在于,当点击Imenu中的相关项是,会调用`FUNCTION'函数,且传入参数为:菜单项的名称,定义的位置和参数ARGUMENTS
+
++ imenu-case-fold-search
+
+  该变量决定了使用`imenu-generic-expression'中的正则表达式匹配buffer内容时,是否大小写敏感. 
+
+  默认为t,表示大小写敏感.
+
++ imenu-syntax-alist
+
+  该变量是一个元素为'(CHARACTER-OR-STRING . SYNTAX-DESCRIPTION)的alist.
+
+  当Imenu处理`imenu-generic-expression'时,会使用该变量来修改当前buffer的syntax table(通过调用`modfy-syntax-entry'来实现,具体参见[[info:elisp#Syntax%20Table%20Functions][Syntax Table Functions]]).
+*** 通过设置`imenu-prev-index-position-function'和`imenu-extract-index-name-function'来定义Imenu
++ imenu-prev-index-position-function
+
+  该变量的函数,需要从光标开始处向前扫描,并将光标定位到发现定义/章节的位置,然后返回非nil值.
+
+  若向前再找不到任何定义/章节了,则该函数需要返回nil
+
++ imenu-extract-index-name-function
+
+  该变量的函数,需要从光标所在位置出抽取出定义/章节的名字
+
+*** 通过设置`imenu-create-index-function'来定义Imenu
+
+该变量的函数不接受参数,并且返回当前buffer的index alist.
+
+该变量的默认值为`imenu-default-create-index-function',该函数通过调用`imenu-prev-index-position-function'和`imenu-extract-index-name-function'的值来产生index alist. 但若这两个参数有一个为nil,则根据`imenu-generic-expression'来产生index alist
+
+这里index alist的元素有三种格式
++ '(INDEX-NAME . INDEX-POSITION)
+  
+  表示选择INDEX-NAME项,则跳转到INDEX-POSITION位置
+
++ '(INDEX-NAME INDEX-POSITION FUNCTION ARGUMENTS...)
+
+  表示选择INDEX-NAME项,则执行`(funcall FUNCTION INDEX-NAME INDEX-POSITION ARGUMENTS...)'
+
++ '(SUB-MENU-TITLE . SUB-INDEX-ALIST)
+
+  表示根据SUB-INDEX-ALIST创建子菜单SUB-MENU-TITLE
+* Font Lock Mode
+
+* Auto-Indentation
 
 * Tabulated List Mode
 Tabulated List Mode是一种用列表来显示数据的Major Mode,这种数据往往由一条条的记录组成,每条记录的内容又可以划分到多个列中.
