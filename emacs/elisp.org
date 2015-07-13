@@ -9357,8 +9357,29 @@ buffer-string to get the whole buffer content.
 
   在加载所有的初始化文件(`site-start.el',个人初始化文件,`default.el')前触发
 
-+ 
++ after-init-hook
+
+  加载完所有的初始化文件后,在加载与终端相关library前(若在文本终端下启动的Emacs)或处理命令行参数前触发
+
++ emacs-startup-hook
+
+  在处理完命令行参数后触发
+
+  若在batch模式下,Emacs不触发该hook
+
++ window-setup-hook
+
+  类似`emacs-startup-hook',但是它触发的时间要晚一点,在设置完frame参数之后触发
+
++ user-init-file
+
+  该参数的值为用户初始化文件的绝对路径名. 若实际加载的初始化文件为.elc文件,则该值为相应的源代码路径
+
++ user-emacs-directory
+
+  该参数的值为`.emacs.d'目录的路径. 除了MS-DOS平台,其他平台上该值都是`~/.emacs.d'
 *** 终端相关的library
+
 *** Emacs是如何处理命令行参数的
 
 当使用emacs --script xxx.el args时,为了获取command-line参数,可以在xxx.el中使用变量`argv`获取参数列表
