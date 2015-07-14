@@ -9379,6 +9379,47 @@ buffer-string to get the whole buffer content.
 
   该参数的值为`.emacs.d'目录的路径. 除了MS-DOS平台,其他平台上该值都是`~/.emacs.d'
 *** 终端相关的library
+Emacs在不同类型的终端下启动时,都会加载不同的终端相关的library. 该library的名字由`term-file-prefix'变量的值(默认为"term/")与终端类型(通常由环境变量`TERM'表示)组合而成.
+
+该terminal-specific librar的作用常用来使得Emacs能够识别special keys. 若操作系统的Termcap或Terminfo项无法完全识别所有的终端功能键,则可以需要修改变量`input-decode-map'的值
+
+若终端类型名中包含`-'或`_',且使用改名字查找library时未找到,则会尝试去除终端名中最后那个`_'或`-'部分后,作为终端名称在此查询library.
+
+可以在初始化文件中通过设置`term-file-prefix'为nil,以阻止Emacs加载terminal specific library
+
+在Emacs完成初始化文本终端后,会触发`tty-setup-hook',You could use this hook to define initializations for terminals that do not have their own libraries.
+
++ term-file-prefix
+
+  若变量为nil表示不加载终端初始化文件. 否则Emacs加载名为 =(load (concat term-file-prefix (getenv "TERM"))= 的文件作为初始化终端的脚本.
+
++ tty-setup-hook
+
+  该hook在Emacs初始化万一个新文本终端后触发.(This applies when Emacs starts up in non-windowed mode, and when making a tty ‘emacsclient’ connection.)
+
++ (suspend-tty &optional TTY)
+
+  参数TTY为Emacs使用的终端. 该函数挂起指定的终端,此时使用该终端的Frame依然存在,但是Emacs并不再从该终端读取任何输入,也不再更新使用该终端的frame.
+
+  参数TTY可以使一个终端对象,也可以是一个frame(表示该frame所在的终端),或nil(表示当前frame所在的终端)
+
+  若TTY已经出于挂起状态,该函数不做任何事情.
+
+  该函数还会触发`suspend-tty-functions',以终端对象作为参数来调用其中的每个函数.
+
++ (resume-tty &optional tty)
+
+  参数TTY为之前挂起的终端设备,该函数恢复该终端,并触发`resume-tty-functions',同样以终端对象作为参数来调用其中的每个函数.
+
+  若TTY不处于挂起状态,则该函数不做任何事
+
+  If the same device is already used by another Emacs terminal, this function signals an error.
+
++ (controlling-tty-p &optional tty)
+
+  判断TTY是否为控制终端.
+
+  参数TTY可能是终端对象,frame(表示该frame所在的终端),或nil(表示当前frame所在的终端)
 
 *** Emacs是如何处理命令行参数的
 
@@ -9419,7 +9460,61 @@ buffer-string to get the whole buffer content.
 
   *若某函数已经处理了当前代处理的参数,则一定记得返回非nil值*. *若所有的函数都返回nil,该参数会被认为是Emacs要打开的文件名称*
 
+** 退出Emacs
+*** 退出Emacs
++ 命令(kill-emacs &optional exit-data)
   
+  该命令触发`kill-emacs-hook',并退出Emacs进程
+
+  参数`EXIT-DATA'若为整数,则表示Emacs进程的退出码
+
+  参数`EXIT-DATA'若为字符串,则表示Emacs退出时输出的内容
+
++ kill-emacs-hook
+
+  该hook在`kill-emacs'真正退出Emacs进程前被触发
+
+  *由于`kill-emacs'被调用的时候可能已经与用户失去了交互,因此该hook的参数不能包含与用户交互的语句.* 
+
+  若需要在退出时与用户交互,使用下面的`kill-emacs-query-functions'
+
++ kill-emacs-query-functions
+
+  当`save-buffers-kill-terminal'(C-x C-c)尝试退出Emacs时,它会触发该hook.
+
+  在该hook的函数中可以继续询问用户确认是否退出. 若该hook中任何一个函数返回nil,则`save-buffer-kill-emacs'并不会真正退出Emacs,并且也不执行hook之后的函数.
+
+  *直接调用`kill-emacs'并不会触发该hook*
+*** 挂起Emacs
+在 *文本终端(图形终端下无效)* 中调用Emacs的情况下,可以对Emacs执行挂起操作(对于不支持挂起操作的shell来说,该功能只是临时再启动一个shell而已).
+
++ 命令(suspend-emacs &optional string)
+
+  该函数阻塞并挂起Emacs并将控制权交回给它的父进程. 当重新激活Emacs后,该函数返回nil
+
+  该函数仅当Emacs是在控制终端下启动时才有用.to relinquish control of other tty devices, use‘suspend-tty’
+
+  在挂起Emacs之前,你必须删除该Emacs在其他终端上的frame,否则该函数会抛出异常. 参见[[info:elisp#Multiple%20Terminals][Multiple Terminals]]
+
+  若参数string为非nil,则字符串中的每个字符都会发送到上层shell,作为 *终端输入(注意:不是作为进程输出)  该输入会被shell读取并执行*
+
+  在挂起Emacs前,`suspend-emacs'会触发`suspend-hook'.在恢复Emacs后,`suspend-emacs'会触发`suspend-resume-hook'
+
++ suspend-hook
+
+  Emacs挂起前触发
+
++ suspend-resume-hook
+
+  Emacs恢复后触发
+
++ 命令(suspend-frame)
+
+  挂起当前frame.
+
+  若出于图形界面下,则它调用函数`iconify-frame'最小化frame.
+
+  若出于文本界面下,则根据当前frame是否出于控制终端下,而调用`suspend-emacs'或`suspend-tty'
 ** 操作系统环境相关
    * system-configureation
 
