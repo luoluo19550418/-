@@ -6737,26 +6737,26 @@ buffer-string to get the whole buffer content.
 	 #+END_SRC
 ** 修改list变量
 *** 会破坏原参数中的值
-   	这里的函数都会直接修改参数中的list
+这里的函数都会直接修改参数中的list
 
-   * (push element list)
++ (push element list)
 
-	 把element放在list的第一位,作用类似cons
+  把element放在list的第一位,作用类似cons
 
-   * (add-to-list listname element &optional append compare-fn)
++ (add-to-list listname element &optional append compare-fn)
 
-	 类似push,但若list中已经有了element,则保持list不变
+  类似push,但若list中已经有了element,则保持list不变
 
-	 若append为非nil,则将element放在list的最后位置
+  若append为非nil,则将element放在list的最后位置
 
-	 compare-fn默认使用equal进行比较
+  compare-fn默认使用equal进行比较
 
-   * (add-to-ordered-list listname element &optional order)
++ (add-to-ordered-list listname element &optional order)
 
-	 这里的order需要是number类型,
+  这里的order需要是number类型,
 
-	 order的值决定了element的位置,若order为nil,则将element放在list中最后带order的元素后面
-	 #+BEGIN_SRC emacs-lisp
+  order的值决定了element的位置,若order为nil,则将element放在list中最后带order的元素后面
+	#+BEGIN_SRC emacs-lisp
        (setq foo nil)
        (add-to-ordered-list 'foo 'a 1)         ;=>(a)
        (add-to-ordered-list 'foo 'c 3)         ;=>(a c)
@@ -6766,110 +6766,110 @@ buffer-string to get the whole buffer content.
        (add-to-ordered-list 'foo 'e)           ;=>(a c b e d)
        (add-to-ordered-list 'foo 'f)           ;=>(a c b f e d)  若order为nil,则将element放在list中最后带order的元素后面
 
-	 #+END_SRC
+	#+END_SRC
 
-   * (setcar cons-ceil object) / (setcdr cons-ceil object)
++ (setcar cons-ceil object) / (setcdr cons-ceil object)
 
-	 修改cons-ceil的car/cdr部分,并返回参数object作为返回值
+  修改cons-ceil的car/cdr部分,并返回参数object作为返回值
 
-	 通过setcdr可以实现删除/添加list中element的目的
-	 #+BEGIN_SRC emacs-lisp
-
+  通过setcdr可以实现删除/添加list中element的目的
+	#+BEGIN_SRC emacs-lisp
        (setq x1 '(a b c d))
        (setcdr x1 (cddr x1));=>'(a c d)
        (setcdr x1 (append '(1 2) (cdr x1)))    ;=> (a 1 2 c d)
-	 #+END_SRC
+	#+END_SRC
 
-   * (nconc &rest lists)
++ (nconc &rest lists)
 
-	 类似append,所不同的是它直接修改所有参数的last element的cdr,而不会先做copy-sequence操作.
+  类似append,所不同的是它直接修改所有参数的last element的cdr,而不会先做copy-sequence操作.
 
-	 由于除了最后一个参数不用被修改之外,其他参数的结构都会被修改,因此除了最后一个参数可以是const list外,其他参数必须是个变量.
+  由于除了最后一个参数不用被修改之外,其他参数的结构都会被修改,因此除了最后一个参数可以是const list外,其他参数必须是个变量.
 
-	 跟append一样的,最后一个参数可以不是list
-	 #+BEGIN_SRC emacs-lisp
+  跟append一样的,最后一个参数可以不是list
+	#+BEGIN_SRC emacs-lisp
        (setq x '(1 2 3))                       ; => (1 2 3)
        (nconc x 'z)                            ; => (1 2 3 . z)
        x                                       ; => (1 2 3 . z)
-	 #+END_SRC
+	#+END_SRC
 
-   * (nreverse list)
++ (nreverse list)
 
-	 翻转参数list
+  翻转参数list
 
-   * (sort list predicate-less)
++ (sort list predicate-less)
 
-	 使用predicate-less进行从小到大的排序,若存在相等的值,则保持相等值的位置不变
-	 #+BEGIN_SRC emacs-lisp
-	 (setq x1 '(1 2 4 3 7 6 5));=>(1 2 4 3 7 6 5)
-	 (sort x1 '<)     ;=>(1 2 3 4 5 6 7)
-	 #+END_SRC
+  使用predicate-less进行从小到大的排序,若存在相等的值,则保持相等值的位置不变
+	#+BEGIN_SRC emacs-lisp
+	(setq x1 '(1 2 4 3 7 6 5));=>(1 2 4 3 7 6 5)
+	(sort x1 '<)     ;=>(1 2 3 4 5 6 7)
+	#+END_SRC
 
-	 这里的predicate-less为比较函数,它接收两个参数,并判断第一个参数是否小于第二个参数.
+  这里的predicate-less为比较函数,它接收两个参数,并判断第一个参数是否小于第二个参数.
 
-	 predicate-less函数必须有下面两个特性:
-	 1. A<B,则B!<A
+  predicate-less函数必须有下面两个特性:
+    1. A<B,则B!<A
 
-	 2. 若A>B,B>C,则A>C
+    2. 若A>B,B>C,则A>C
 
-	 *注意:*
+	*注意:*
 	 
-	 sort有一个很变态的特性:sort函数会让参数list依然指向原来的哪个cons-cell的位置,而不管这个cons-cell是否在sort后依然是处于第一个元素的位置. 例如
-	 #+BEGIN_SRC emacs-lisp
-     (setq x1 '(9 8 7 2 3))
-     (sort x1 '<)                            ;=>(2 3 7 8 9)
-     x1                                      ;=>(9),注意,x1实际上依然指向了9这个cons cell的位置
-	 #+END_SRC
+	sort有一个很变态的特性:sort函数会让参数list依然指向原来的哪个cons-cell的位置,而不管这个cons-cell是否在sort后依然是处于第一个元素的位置. 例如
+	#+BEGIN_SRC emacs-lisp
+    (setq x1 '(9 8 7 2 3))
+    (sort x1 '<)                            ;=>(2 3 7 8 9)
+    x1                                      ;=>(9),注意,x1实际上依然指向了9这个cons cell的位置
+	#+END_SRC
 
-	 *因此一般情况下,都需要把sort的返回结果赋值回参数list*
+	*因此一般情况下,都需要把sort的返回结果赋值回参数list*
 
-   * (delq object list)
++ (delq object list)
 
-	 移除list中所有与object相等的element,函数中的q表示使用eq作为比较函数.
+  移除list中所有与object相等的element,函数中的q表示使用eq作为比较函数.
 
-	 由于delq在删除list头部的element时,仅仅是返回跳过头部element的cdr位置,而不会改变list参数所指向的位置.
-	 #+BEGIN_SRC emacs-lisp
-       (setq x1 '(a b c))
-       (delq 'a x1)                            ;=>(b c)
-       x1                                      ;=>(a b c)
-	 #+END_SRC
+  由于delq在删除list头部的element时,仅仅是返回跳过头部element的cdr位置,而不会改变list参数所指向的位置.
+	#+BEGIN_SRC emacs-lisp
+      (setq x1 '(a b c))
+      (delq 'a x1)                            ;=>(b c)
+      x1                                      ;=>(a b c)
+	#+END_SRC
 
-	 *因此使用delq,一般我们也需要将返回值赋值回参数list*
+	*因此使用delq,一般我们也需要将返回值赋值回参数list*
 
-   * (delete object seq)
++ (delete object seq)
 
-	 delete函数比较特殊,它根据seq的类型不同而有不同的行为.
+  delete函数比较特殊,它根据seq的类型不同而有不同的行为.
 
-	 当seq为list类型时,它跟delq一样会修改seq的值,所不同的是它使用equal作为比较函数.
+  当seq为list类型时,它跟delq一样会修改seq的值,所不同的是它使用equal作为比较函数.
 
-	 当seq为vector或string,则delete不会修改原seq的值
-	 #+BEGIN_SRC emacs-lisp
-       (setq l '((2) (1) (2)))
-       (delete '(2) l)                         ; => ((1))
-       l                                       ; => ((2) (1))
-       ;; If you want to change `l' reliably,
-       ;; write `(setq l (delete '(2) l))'.
-       (setq l '((2) (1) (2)))
-       (delete '(1) l)                         ; => ((2) (2))
-       l                                       ; => ((2) (2))
-       ;; In this case, it makes no difference whether you set `l',
-       ;; but you should do so for the sake of the other case.
-       (setq v [(2) (1) (2)])
-       (delete '(2) v)             ; => [(1)]
-       v                           ; => [(2) (1) (2)]
-	 #+END_SRC
+  当seq为vector或string,则delete不会修改原seq的值
+	#+BEGIN_SRC emacs-lisp
+      (setq l '((2) (1) (2)))
+      (delete '(2) l)                         ; => ((1))
+      l                                       ; => ((2) (1))
+      ;; If you want to change `l' reliably,
+      ;; write `(setq l (delete '(2) l))'.
+      (setq l '((2) (1) (2)))
+      (delete '(1) l)                         ; => ((2) (2))
+      l                                       ; => ((2) (2))
+      ;; In this case, it makes no difference whether you set `l',
+      ;; but you should do so for the sake of the other case.
+      (setq v [(2) (1) (2)])
+      (delete '(2) v)             ; => [(1)]
+      v                           ; => [(2) (1) (2)]
+	#+END_SRC
 
-   * (delete-dups list)
++ (delete-dups list)
 
-	 删除list中所有重复的元素,使用equal作为比较函数. 
+  删除list中所有重复的元素,使用equal作为比较函数. 
 
-	 当list中有多个重复元素时,delete-dups保留第一个元素.
+  当list中有多个重复元素时,delete-dups保留第一个元素.
 *** 不破坏原参数的值
-	* (remq object list)
-	  类似delq,但不改变原参数list的值. 这里的q也表示使用eq作为判断函数.
-	* (remove object seq)
-	  类似函数delete,但它保证不修改参数seq的值
-	* ()
++ (remq object list)
+  类似delq,但不改变原参数list的值. 这里的q也表示使用eq作为判断函数.
+
++ (remove object seq)
+  类似函数delete,但它保证不修改参数seq的值
+
 ** alist相关函数
 *** 获取alist
     * (copy-alist alist)
