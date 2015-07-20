@@ -237,3 +237,57 @@
      git rebase master server client # 找出client分支从它与server分支的祖先相分离之后的改变在master分支上重新做一遍.
      # 注意!!永远不要衍合那些已经推送到公共仓库的更新!!
    #+END_SRC
+* FAQ
+** 如何把GIT仓库的子目录独立成仓库
+我有一个名为MyLisp的仓库,里面存放的是一些我自己写的elisp脚本,仓库地址是~/MyLisp. 
+
+其中我使用elisp模仿rake写了一个新的构建工具名为elake,存放在~/MyLisp/elake目录中. 某一天我想把elake独立出来作为一个仓库来使用,则有两种方法可以实现:
+*** 使用git filter-branch
+1. clone一个新的MyLisp仓库到~/elake
+   #+BEGIN_SRC sh
+     git clone ~/MyLisp ~/elake
+   #+END_SRC
+2. 通常刚clone出来的~/elake仓库本地只会有一个master分支，如果我们希望保存其他的分支，那就首先把它们创建出来：
+   #+BEGIN_SRC sh
+     cd ~/elake
+     git branch -r br1 origin/br1
+     git branch -r br2 origin/br2
+   #+END_SRC
+3. 删掉无用的origin
+   #+BEGIN_SRC emacs-lisp
+     git remote rm origin
+   #+END_SRC
+4. 过滤所有历史提交，只保留对elake子目录有影响的提交，并且把子目录设为该仓库的根目录
+   #+BEGIN_SRC emacs-lisp
+     git filter-branch --tag-name-filter cat --prune-empty --subdirectory-filter elake -- --all
+   #+END_SRC
+
+   其中各参数的意义如下:
+   + --tag-name-filter cat  :: 该参数控制我们要如何保存旧的tag，参数值为bash命令，cat表示原样输出。所以，如果你不关心tag，就不需要这个参数了；
+   + --prune-empty :: 删除空的（对子目录没有影响的）的提交
+   + --subdirectory-filter elake :: 指定子模块路径
+   + --all :: 该参数必须跟在--后面，表示对所有分支做操作，即对上一步创建的所有本地分支做操作。所以，如果你只想保存当前分支，就不需要这个参数了
+              
+   该命令执行完毕后，查看当前目录结构就会发现里面已经是子目录的内容了。git log查看提交历史已经正常保存了
+5. 至此，主要工作已经完成。但是当前的仓库中还保存这一下不需要的object，如果想清理这些来减小当前仓库的体积
+   #+BEGIN_SRC sh
+     git reset --hard
+     git for-each-ref --format="%(refname)" refs/original/ | xargs -n 1 git update-ref -d
+     git reflog expire --expire=now --all
+     git gc --aggressive --prune=now
+   #+END_SRC
+*** 使用git tree
+git 1.7.11之后使用 git subtree 指令可以很簡單地把單一資料夾相關的 commit 都抽出來
+
+1. 将MyLisp仓库中关于elake的提交信息抽出为新的branch
+   #+BEGIN_SRC sh
+     cd ~/MyLisp
+     git subtree split -P elake -b elake
+   #+END_SRC
+2. 新建elake仓库,并从MyLisp的elake branch中拉内容
+   #+BEGIN_SRC sh
+     cd ~/
+     mkdir elake
+     git init
+     git pull ~/MyLisp elake
+   #+END_SRC

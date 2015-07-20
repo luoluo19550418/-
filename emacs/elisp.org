@@ -10488,6 +10488,17 @@ HTTP协议允许客户端向服务端表达对请求文档的语言和编码的�
 
 处理HTTP头部信息时,需要用到MIME库. 参见[[info:Emacs-MIME][Emacs mime]]
 *** file与ftp协议
+URL库将ftp和file协议看成是一样的. 若URL指定的是本地文件,则拉取URL资源时,URL直接读取该文件内容. 若URL指定的是远程文件时,URL通过`Ange-FTP'库来读取文件内容. 参见[[info:emacs#Remote%20Files][Remote Files]]
 
+当拉取的文件为‘.z’, ‘.gz’, ‘.Z’, ‘.bz2’, or ‘.xz’这几类文件时,会自动解压该文件. *且这些后缀名是硬编码在代码中的,无法通过配置`jka-compr-compression-info-list'来更改*
+
++ 用户项url-directory-index-file
+
+  该配置项指定了当URL指向的是一个目录时,访问该目录下的哪个文件. 默认值为'index.html'. 若该文件存在且可读则拉取该文件,否则Emacs使用`Dired Mode'显示目录
+*** info
+info协议是非标准的协议.这种URL的格式为"info:FILE#NODE",这里#NODE可以省略,表示"Top" node
+
+当拉取info协议资源时,其实是以参数 =(FILE)NODE= 来调用`info-goto-node'函数
+*** 
 ** 其他函数说明
 ** 客户化配置
