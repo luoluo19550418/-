@@ -10345,7 +10345,7 @@ URI对象是一个CL结构体,该结构体由如下slot组成:
 
   若参数ALLOW-NEWLINE为非nil,则表示允许转换的字符中包含回车符,而回车符一般是不允许出现在URI中的.
 ** 从URI处拉取资源
-有三个函数可以用来拉取URI资源. 且这三个函数的URL参数 *既可以为URI字符串,也可以URI对象. 且函数内部会调用`url-encode-url'对URI字符串进行标准化*
+有几个函数可以用来拉取URI资源. 且这三个函数的URL参数 *既可以为URI字符串,也可以URI对象. 且函数内部会调用`url-encode-url'对URI字符串进行标准化*
 
 + (url-rerieve-synchronously URL)
   
@@ -10388,6 +10388,12 @@ URI对象是一个CL结构体,该结构体由如下slot组成:
 + 配置项url-queue-timeout
 
   该变量的值设定了`url-queue-retrieve'的超时时间
+
++ (url-copy-file URL NEWNAME &optional OK-IF-ALREADY-EXISTS KEEP-TIME PRESERVE-UID-GID)
+
+  该函数基于url-retrieve实现了将URL下载成NEWNAME文件保存. 
+
+  *该函数是定义在url-handlers.el中的*
 ** 与各特定类型URI有关的函数
 *** http和https协议
 当url处理https协议时,会调用`ssl'库中的网关方法,详见[[info:elisp#Gateways%20in%20general][Gateways in general]]
@@ -10499,6 +10505,353 @@ URL库将ftp和file协议看成是一样的. 若URL指定的是本地文件,则�
 info协议是非标准的协议.这种URL的格式为"info:FILE#NODE",这里#NODE可以省略,表示"Top" node
 
 当拉取info协议资源时,其实是以参数 =(FILE)NODE= 来调用`info-goto-node'函数
-*** 
+*** mailto协议
+mailto协议的格式为`mailto:MAILBOX[?HEADER=CONTENTS[&HEADER=CONTENTS]'
+
+即MAILBOX后面可以添加任意数量的头信息. 若HEADER的值为`body',则CONTENTS会作为email的内容. 其他的HEADER则会创建相应的域,例如CC,X-Url-From之类的
+
+*url库本身不会对HEADER和CONTENT进行校验,需要人工校验*
+
++ 配置项 url-mail-command
+
+  当url库需要发送email时,调用该变量所指的程序.
+
+  If the document containing the ‘mailto’ URL itself possessed a known URL, Emacs automatically inserts an ‘X-Url-From’ header field into the mail buffer, specifying that URL
+*** news,nntp与snews协议
+news,nntp与snews协议被定义来读取Usenet上的新闻组. URL通过Gnus库来拉取这些协议的内容
+
+*为了兼容非标准的新闻阅读客户端,url库允许news协议的URL中带上主机和端口域*
+
+news和nntp URL有如下格式:
+
++ news:NEWSGROUP
+
+  获取NEWSGROUP中的消息列表
+
++ news:MESSAGE-ID
+
+  获取指定MESSAGE-ID的消息内容
+
++ news:*
+
+  获取所有的可用新闻组
+
++ nntp://HOST:PORT/NEWSGROUP / nntp://HOST:PORT/MESSAGE-ID / nntp://HOST:PORT/*
+  
+  类似news协议说明
+
+snews协议与nntp协议类似,只是它通过SSL传输内容,且默认端口为563,而nntp与news协议的端口为119
+
++ 配置项url-news-server
+
+  该变量指定了当URL中未指定news server的情况下,默认从哪个news server上获取新闻.
+  
+  默认值为nil,表示使用环境变量`NNTPSERVER'或`news'的值
+*** rlogin,telnet和tn3270协议
+这些协议用来通过终端模拟器登录远程服务器. 他们的格式为`telnet://USER:PASSWORD@HOST:PORT'. *但其实PASSWORD域会被忽略,PORT域也可以忽略表示使用协议标准端口* 
+
+URL在处理这些协议时,会在`terminal-emulator' buffer中调用`rlogin',`telnet'和`tn3270'外部程序
+*** irc
+irc协议的格式为`irc://HOST:PORT/TARGET,NEEDPASS'
+
+url库获取irc协议资源的方式是通过调用`url-irc-function'所指定的函数来打开IRC session
+
++ url-irc-function
+
+  该变量指定了使用哪个函数来打开IRC链接. 
+  
+  该函数接收5个参数,分别是HOST,PORT,CHANNEL,USER和PASSWORD. 其中参数CHANNEL可能为nil
+
+  该变量默认值为`url-irc-rcirc',其他可选项包括`url-irc-erc'或`url-irc-zenirc'
+*** data协议
+data协议,用于描述URL中的MIME data,其格式为`data:[MEDIA-TYPE][;BASE64],DATA'
+
+其中MEDIA-TYPE为MIME的`Content-Type'字符串. 默认值为`text/plain;charset=US-ASCII'
+
+若有`;base64',则表示后面的DATA域是经过base64编码过的.
+*** nfs协议
+nfs协议类似ftp,但是它会通过NFS automounter将远程路径安装到本地来使用.
+
+nfs协议的格式为`nfs://USER:PASSWORD@HOST:PORT/FILE'
+
++ url-nfs-automounter-directory-spec
+
+  该变量为字符串类型,指明了如何调用NFS automounter. 
+
+  字符串中有很多以`%'开头的转义字符,说明如下:
+  - %h :: NFS server的主机名
+
+  - %n :: NFS server的端口号
+
+  - %u :: 认证的用户名
+
+  - %p :: 认证的密码
+
+  - %f :: 远程服务器上的文件路径
+
+  - %% :: 字符`%'
+    
+*** man协议
+man协议为非标准协议,它的格式为`man:PAGE-SPEC'
+
+url在获取man协议的资源时,会将PAGE-SPEC传递给函数`man'
 ** 其他函数说明
+*** 缓存
+缓存机制会将拉取的资源缓存到本地,当下次再拉取该资源时,url库会检查资源是否更过,若未更新过则直接使用本地缓存.
+
+目前缓存不会自动被清理.
+
++ 配置项url-automatic-caching
+
+  是否开启自动缓存
+
++ 配置项url-cache-directory
+
+  指定存放cache文件的目录,默认为`url-configuration-diectory'变量值下的`cache'子目录
+
++ 配置项url-cache-creation-function
+
+  该变量指定一个转换函数,将URL转换成对应的缓存文件的 *绝对路径*
+
+  url提供两个可选函数:`url-cache-create-filename-using-md5'和`url-cache-create-filename-human-readable'
+
++ (url-cache-expired URL &optional EXPIRE-TIME)
+
+  判断URL的缓存是否比EXPIRE-TIME要旧. 该函数一般用来判断缓存是否过期.
+
+  EXPIRE-TIME的默认值为`url-cache-expire-time'
+
+  *若`url-standalone-mode'为非nil,则缓存永远不过期,该函数永远返回nil*
+
++ 配置项url-cache-expire-time
+
+  缓存过期时限,单位为秒
+
++ (url-fetch-from-cache url)
+
+  从缓存中获取URL的资源. 该函数返回一个buffer,gaibuffer的内容为缓存的数据.
+
+*** 代理
+按照惯例,程序会检查环境变量`PROTOCOL_proxy'来获取`PROTOCOL'协议的代理地址. 这里`PROTOCOL'可以使`http',`ftp'等任何一个网络协议.
+
+`PROTOCOL_proxy'环境变量的值可以是如下几种形式:
++ 主机地址
++ 主机地址:端口
++ 完整proxy的URL
+
+环境变量`NO_PROXY'指定了那些URL不通过代理服务器访问. 各URL之间使用逗号分隔. URL内可以使用*号作为通配符. 以.开头的URL表示的是该域名下的所有网址. 
+
+下面是一个`NO_PROXY'的例子:
+#+BEGIN_EXAMPLE
+  NO_PROXY="*.aventail.com,home.com,.seanet.com"
+#+END_EXAMPLE
+
+URL库也遵循上面的惯例,且URL库在寻找环境变量时会忽略其大小写. 
+
++ 配置项url-proxy-services
+  该变量的值是一个alist,其中的元素格式为'(URL-TYPE . HOST:PORT)或'(no_proxy . URL-REGEXP) .例如
+  #+BEGIN_SRC emacs-lisp
+    (setq url-proxy-services
+          '(("http"     . "proxy.aventail.com:80")
+            ("no_proxy" . "^.*\\(aventail\\|seanet\\)\\.com")))
+  #+END_SRC
+*** 网关
++ (url-open-stream name buffer host service)
+  
+  创建连接到HOST的流链接,该链接可能途径某个网关.
+
+  其他参数与`open-network-steam'中的参数意义一致.
+
+  *若`url-gateway-unplugged'为非nil,则不会创建链接*
+
++ url-gateway-local-host-regexp
+
+  该变量值为正则表达式,创建连接到匹配该正则表达式的HOST时,采取直连方式,不经过网关转发.
+
+  nil表示所有的连接都通过网关转发
+
++ url-gateway-method
+
+  该变量值为symbol类型,它决定了使用那种方式连接gateway. 可选值有以下几种:
+
+  - telnet
+
+    在telnet远程服务器之前,先telnet到网关服务器
+
+  - rlogin
+
+    类似telnet,不同之处在于使用rlogin登录不需要用户名和密码
+
+  - socks
+
+    通过socks服务连接到网关
+
+  - tls
+
+    通过TLS连接到网关
+
+  - native
+    
+    直接连接到网关(默认值)
+
++ 配置项url-gateway-telnet-host
+  
+  该变量的值指定了telnet到哪个网关主机.
+
+  使用telnet网关方法的时候,先要telnet到这个网关主机,然后才能telnet到其他远程服务器上
+
++ 配置项url-gateway-telnet-parameters
+
+  telnet网关主机时传递給telnet程序的参数
+
++ 配置项url-gateway-telnet-password-prompt
+
+  telnet到网关主机后,主机输入密码提示的正则表达式
+
++ 配置项url-gateway-telnet-user-name
+
+  telnet到网关主机的用户名
+
++ 配置项url-gateway-telnet-password
+
+  telnet到网关主机的密码
+
++ 配置项url-gateway-prompt-pattern
+
+  网关主机的shell prompt正则表达式
+
++ 配置项url-gateway-rlogin-host
+
+  telnet到远程服务器前先用rlogin登录到哪个网关服务器
+
++ 配置项url-gateway-rlogin-parameters
+
+  rlogin到网关服务器时,传递给rsh的参数
+
++ 配置项url-gateway-rlogin-user-name
+
+  rlogin到网关服务器时的用户名
+
++ url-gateway-unplugged
+
+  若该变量值为非nil,则URL不会再创建新的网络连接.
+
+  A typical case is when rendering HTML in a mail user agent, when external URLs should not be activated, particularly to avoid “bugs” which “call home” by fetch single-pixel images and the like
+  
+*** 历史
+
+url库会记住访问过的URL,这种记住历史的机制使得URL补全成为可能. 
+
+当调用函数`url-do-setup'设置URL库时,会自动开启历史机制.
+
+url库使用一个名为`url-history-hash-table'变量来存储历史,其中URL作为key,访问该URL的时间戳作为value
+
+*注意:目前记住历史的机制没有设置限制*
+
++ (url-history-update-url url time)
+  
+  该函数更新历史表中URL的访问时间为TIME
+
++ 配置项url-history-track
+
+  是否开启历史机制. 若值为非nil则URL库会保存所有访问URL的历史记录
+  
+  若值为t,则Emacs session退出时,会保存历史记录到磁盘中
+
+  默认为nil
+
++ 配置项url-history-file
+
+  保存历史记录的文件路径,默认为`url-configuration-directory'变量值目录下的`history'文件
+
++ 配置项url-history-save-interval
+
+  自动保存历史记录的时间间隔,单位为秒. 默认是1小时.
+
+  *注意,若你直接修改该变量,而不是通过Custom更改,且更改之前已经执行过了`url-do-setup',则需要调用函数`url-history-setup-save-timer'才能生效*
+
++ (url-history-parse-history &optional history-file)
+
+  解析history-file,并根据文件内容重设历史纪录
+  
+  history-file默认为`url-history-file'的值
+
++ (url-history-save-history &optional history-file)
+  
+  保存当前的历史记录到history-file中
+
+  history-file默认为`url-history-file'的值
+
++ (url-completion-function string predicate functiion)
+  
+  该函数可以用来从历史记录中补全URL
+
 ** 客户化配置
++ 配置项temporary-file-directory 
+
+  指定临时文件的存放目录
+
++ 配置项url-configuration-directory
+  
+  指定URL库将它的各种配置文件,缓存文件等其他文件存放在哪个目录中.
+
+  默认该目录为`user-emacs-directory'变量值目录下的"url/"子目录
+
++ url-debug
+ 
+  指定URL库显示那种类型的调试信息. 这些调试信息会记录在名为`*URL-DEBUG*' buffer中
+
+  该变量的值可能为:
+
+  - t :: 记录所有的信息
+
+  - 数字 :: 记录所有的信息,同时这些信息会通过`message'函数输出
+
+  - 列表 :: 列表中指定了那种类型的信息会被记录
+ 
++ 配置项:url-personal-mail-address
+
++ 配置项:url-privacy-level
+
++ 配置项:url-uncompressor-alist
+
++ 配置项:url-passwd-entry-func
+
++ 配置项:url-standalone-mode
+
++ 配置项:url-bad-port-list
+
++ 配置项:url-max-password-attempts
+
++ 配置项:url-temporary-directory
+
++ 配置项:url-show-status
+
++ 配置项:url-confirmation-func
+ 
+  URL库用来提示用户选择yes or no的函数.
+
++ 配置项:url-gateway-method
+ 
+  该变量值为symbol类型,它决定了使用那种方式连接gateway. 可选值有以下几种:
+
+  - telnet
+
+    在telnet远程服务器之前,先telnet到网关服务器
+
+  - rlogin
+
+    类似telnet,不同之处在于使用rlogin登录不需要用户名和密码
+
+  - socks
+
+    通过socks服务连接到网关
+
+  - tls
+
+    通过TLS连接到网关
+
+  - native
+    
+    直接连接到网关(默认值)
+  
