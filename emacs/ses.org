@@ -1,0 +1,139 @@
+#+TITLE: ses
+#+AUTHOR: DarkSun
+#+CATEGORY: emacs
+#+DATE: [2015-07-22 周三 11:30]
+#+OPTIONS: ^:{}
+* 简要使用说明
+1. 打开`.ses'后缀文件,Emacs进入ses-mode. 
+
+   若文件为空,则Emacs会显示一个空的电子表单,里面只有一个单元格
+
+2. 在单元格中输入内容时
+
+   - 按"键,输入字符串内容
+
+   - 若内容为数字,直接输入数字
+
+   - 按(键,输入S表达式,S表达式可以作为公式使用
+
+   - 按C-d删除该单元格数据,按退格键删除上一个单元格数据
+
+   - 按C-k删除整行数据
+
+3. 按TAB键将光标跳转到下一列的位置,若光标位于最后一列,则会再新增一列
+
+4. 按w键可以调整列的宽度
+
+5. 默认cell中的内容向右对齐,可以通过`M-p'为整列设置printer函数,或使用p为某个单元格设置printer函数.
+
+   例如`M-p ("%s")'使得某列向左对齐
+* 基础说明
++ cell identifier
+
+  SES中的cell identifier其实就是一个symbol,且它跟excel一样,由字母表示列,由数字表示行. 
+
+  例如AB7表示的是第28列,第7行的那个cell
+
++ 光标总是处于cell的左边框位置.
+
++ 使用region,可以选中一个cell range.
+
+  例如,在A1处Mark,然后光标放在A4上,会创建一个A1-A3的range
+
+** 跳转命令
+- j (ses-jump)
+
+  跳转到用户指定cell identifier处
+
+- <TAB> (ses-forward-or-insert)
+
+  跳转到右边的cell,若当前cell为最右边的cell了,则插入新cell
+
+** 选择
+SES使用region来创建range
+
+- C-<SPC> / C-@ (set-mark-command)
+
+  在光标处设置mark
+
+- C-g (keyboard-quit)
+
+  关闭mark
+
+- M-h (ses-mark-row)
+  
+  选中当前行
+
+- S-M-h (ses-mark-column)
+
+  选中当前列
+
+- C-x h (mark-whole-buffer)
+
+  选中所有cells
+
+** 编辑
+- 按"键(ses-read-cell),输入字符串内容
+
+- 若内容为数字,直接输入数字(ses-read-cell)
+
+- 按(键(ses-read-cell),输入lisp Form,该lisp Form类似excel中的公式的作用
+
+  在lisp代码中,若想引用其他cell的值,只需要直接使用cell identifier即可,且在输入Lisp代码的过程中,可以使用`M-<TAB>'来补全cell identifier.
+
+  每次cell中的值被改变后,引用到该cell identifier的lisp代码都会重新计算一次.
+
+- 按'键(ses-read-symbol),输入symbol
+
+  ses会记住所有以这种形式输入过的symbol,下次再以这种形式输入symbol时,可以使用补全机制
+
+- 要输入其他形式的数据(例如数组),直接调用函数`ses-read-cell',然后输入该数据即可
+
+- RET (ses-edit-cell)
+
+  编辑当前cell的已存在的数据. 该命令会在min-buffer上显示目前cell所存的数据,等待用户修改.
+
+- C-d (ses-clear-cell-forward)
+
+  删除当前单元格数据,并移动到下一个cell
+
+- <DEL> (ses-clear-cell-backward)
+
+   删除上一个单元格数据,并移动到上一个cell处
+
+- C-o (ses-insert-row)
+
+  在上面插入一行空行
+
+- M-o (ses-insert-column)
+
+  在左边插入一行空列
+
+- C-k (ses-delete-row)
+
+  删除整行数据
+
+- M-k (ses-delete-column)
+
+  删除整列数据
+
+- C-c C-c (ses-recalculate-cell)
+
+  强制重新计算当前cell或range的值
+
+- C-c C-l (ses-recalculate-all)
+
+  强制重新计算整个电子表格
+
+- C-j (ses-append-row-jump-first-column)
+
+  在下方插入一行,并跳转到新插入行的第一列位置
+
+- C-_ / C-x u (undo)
+
+  撤销上一次操作
+
+** 显示设置
++ w (ses-set-column-width)
+
+  设置当前列宽
