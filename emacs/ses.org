@@ -137,3 +137,53 @@ SES使用region来创建range
 + w (ses-set-column-width)
 
   设置当前列宽
+
+*** Printer function
+
+SES使用Printer Function来将cell中的值显示出来.
+
+SES中的printer可能是
+- 一个表示格式的字符串,如`$%.2f',此时输出的结果是向右对齐的.
+- 一个元素为单个格式字符串的list,如`("%.2f")',此时的输出结果左对齐.
+- 一个接收单参数的函数,其返回值为上面两种格式
+
+每个cell都有printer. 默认为nil,表示使用cell的那一列的printer.
+
+每个列也都有printer. 默认为nil,表示使用整个电子表单的printer.
+
+设置printer的命令有:
+
+- p (ses-read-cell-printer)
+  
+  设置当前cell或所选range的printer
+
+- M-p (ses-read-column-printer)
+
+  设置当前列的printer
+
+- C-c C-p (ses-read-default-printer)
+
+  设置整个电子表单的默认printer
+
+SES预设了一些printer:
+
+- ses-center
+
+  居中显示
+
+- ses-center-span
+
+  Centering with spill-over to following blank cells
+
+- ses-dashfill
+
+  居中显示,但是使用-代替空格填充空白域
+
+- ses-dashfill-span
+
+  类似ses-center-span,但是使用-代替空格填充空白域
+
+- ses-tildefill-span
+
+  类似ses-center-span,但是使用~代替空格填充空白域
+
