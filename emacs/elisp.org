@@ -10294,7 +10294,7 @@ Emacs在不同类型的终端下启动时,都会加载不同的终端相关的li
 	参数millisec表示在等待seconds秒后,再等待millisec毫秒
 * URL Package说明
 ** URL库简介
-URL库可以用来解析URI或者从指定的URI处拉取资源.
+URL库可以用来解析URI或者从指定的URI处访问资源.
 ** 解析URI
 一个URI由多个组件组成,使用函数`url-generic-parse-url'可以将一个URI字符串解析成URI对象(一个由各个URI组件组成的结构体). 使用`url-recreate-url'可以将解析的URI对象组合成URI字符串
 + (url-generic-parse-url uri-string)
@@ -10344,20 +10344,20 @@ URI对象是一个CL结构体,该结构体由如下slot组成:
   该函数是`url-hexify-string'的逆操作.
 
   若参数ALLOW-NEWLINE为非nil,则表示允许转换的字符中包含回车符,而回车符一般是不允许出现在URI中的.
-** 从URI处拉取资源
-有几个函数可以用来拉取URI资源. 且这三个函数的URL参数 *既可以为URI字符串,也可以URI对象. 且函数内部会调用`url-encode-url'对URI字符串进行标准化*
+** 访问URI资源
+下面三个函数可以用来访问URI资源. 且这三个函数的URL参数 *既可以为URI字符串,也可以URI对象. 且函数内部会调用`url-encode-url'对URI字符串进行标准化*
 
 + (url-rerieve-synchronously URL)
   
-  该函数同步拉取URL处的资源,并将资源内容写到一个buffer中,然后返回该buffer作为返回值.
+  该函数同步访问URL处的资源,并将资源内容写到一个buffer中,然后返回该buffer作为返回值.
 
   若URL指向无效地址,或者URL为`dired',`info',`mailto'类型,该函数返回nil
 
 + (url-retrieve URL CALLBACK &optional CBARGS SILENT NO-COOKIES)
 
-  该函数异步拉取URL处的资源,将拉取到的资源插入一个buffer中(buffer中既包括MIME头,也包括资源内容),然后将该buffer作为当前buffer,并调用 =(apply CALLBACK STATUS CBARGS)= . 其中
+  该函数异步访问URL处的资源,将访问到的资源插入一个buffer中(buffer中既包括MIME头,也包括资源内容),然后将该buffer作为当前buffer,并调用 =(apply CALLBACK STATUS CBARGS)= . 其中
 
-  - STATUS为一个plist,指明了拉取URI资源的过程中发生了什么事情,其中 *最近发生的事件放在最前*. 若没有事件发生,则STATUS为nil
+  - STATUS为一个plist,指明了访问URI资源的过程中发生了什么事情,其中 *最近发生的事件放在最前*. 若没有事件发生,则STATUS为nil
 
     plist中的每个pair可以是以下格式:
     
@@ -10394,6 +10394,19 @@ URI对象是一个CL结构体,该结构体由如下slot组成:
   该函数基于url-retrieve实现了将URL下载成NEWNAME文件保存. 
 
   *该函数是定义在url-handlers.el中的*
+
++ url-request-method
+
+  指定URL库请求URL资源时的方法,通常为POST或GET
+
++ url-request-extra-headers
+
+  请求URL时的头部信息列表,该变量应为元素为'(HEADERS . CONTENTS)的alist
+
++ url-request-data
+
+  请求URL时的数据.
+  
 ** 与各特定类型URI有关的函数
 *** http和https协议
 当url处理https协议时,会调用`ssl'库中的网关方法,详见[[info:elisp#Gateways%20in%20general][Gateways in general]]
@@ -10490,21 +10503,21 @@ HTTP协议允许客户端向服务端表达对请求文档的语言和编码的�
 
     Currently this is just the raw header contents.
 **** 如何处理HTTP document
-拉取HTTP资源时,会把HTTP头部信息和HTTP document的信息都插入buffer中.
+访问HTTP资源时,会把HTTP头部信息和HTTP document的信息都插入buffer中.
 
 处理HTTP头部信息时,需要用到MIME库. 参见[[info:Emacs-MIME][Emacs mime]]
 *** file与ftp协议
-URL库将ftp和file协议看成是一样的. 若URL指定的是本地文件,则拉取URL资源时,URL直接读取该文件内容. 若URL指定的是远程文件时,URL通过`Ange-FTP'库来读取文件内容. 参见[[info:emacs#Remote%20Files][Remote Files]]
+URL库将ftp和file协议看成是一样的. 若URL指定的是本地文件,则访问URL资源时,URL直接读取该文件内容. 若URL指定的是远程文件时,URL通过`Ange-FTP'库来读取文件内容. 参见[[info:emacs#Remote%20Files][Remote Files]]
 
-当拉取的文件为‘.z’, ‘.gz’, ‘.Z’, ‘.bz2’, or ‘.xz’这几类文件时,会自动解压该文件. *且这些后缀名是硬编码在代码中的,无法通过配置`jka-compr-compression-info-list'来更改*
+当访问的文件为‘.z’, ‘.gz’, ‘.Z’, ‘.bz2’, or ‘.xz’这几类文件时,会自动解压该文件. *且这些后缀名是硬编码在代码中的,无法通过配置`jka-compr-compression-info-list'来更改*
 
 + 用户项url-directory-index-file
 
-  该配置项指定了当URL指向的是一个目录时,访问该目录下的哪个文件. 默认值为'index.html'. 若该文件存在且可读则拉取该文件,否则Emacs使用`Dired Mode'显示目录
+  该配置项指定了当URL指向的是一个目录时,访问该目录下的哪个文件. 默认值为'index.html'. 若该文件存在且可读则访问该文件,否则Emacs使用`Dired Mode'显示目录
 *** info
 info协议是非标准的协议.这种URL的格式为"info:FILE#NODE",这里#NODE可以省略,表示"Top" node
 
-当拉取info协议资源时,其实是以参数 =(FILE)NODE= 来调用`info-goto-node'函数
+当访问info协议资源时,其实是以参数 =(FILE)NODE= 来调用`info-goto-node'函数
 *** mailto协议
 mailto协议的格式为`mailto:MAILBOX[?HEADER=CONTENTS[&HEADER=CONTENTS]'
 
@@ -10518,7 +10531,7 @@ mailto协议的格式为`mailto:MAILBOX[?HEADER=CONTENTS[&HEADER=CONTENTS]'
 
   If the document containing the ‘mailto’ URL itself possessed a known URL, Emacs automatically inserts an ‘X-Url-From’ header field into the mail buffer, specifying that URL
 *** news,nntp与snews协议
-news,nntp与snews协议被定义来读取Usenet上的新闻组. URL通过Gnus库来拉取这些协议的内容
+news,nntp与snews协议被定义来读取Usenet上的新闻组. URL通过Gnus库来访问这些协议的内容
 
 *为了兼容非标准的新闻阅读客户端,url库允许news协议的URL中带上主机和端口域*
 
@@ -10554,7 +10567,7 @@ URL在处理这些协议时,会在`terminal-emulator' buffer中调用`rlogin',`t
 *** irc
 irc协议的格式为`irc://HOST:PORT/TARGET,NEEDPASS'
 
-url库获取irc协议资源的方式是通过调用`url-irc-function'所指定的函数来打开IRC session
+url库访问irc协议资源的方式是通过调用`url-irc-function'所指定的函数来打开IRC session
 
 + url-irc-function
 
@@ -10594,10 +10607,10 @@ nfs协议的格式为`nfs://USER:PASSWORD@HOST:PORT/FILE'
 *** man协议
 man协议为非标准协议,它的格式为`man:PAGE-SPEC'
 
-url在获取man协议的资源时,会将PAGE-SPEC传递给函数`man'
+url在访问man协议的资源时,会将PAGE-SPEC传递给函数`man'
 ** 其他函数说明
 *** 缓存
-缓存机制会将拉取的资源缓存到本地,当下次再拉取该资源时,url库会检查资源是否更过,若未更新过则直接使用本地缓存.
+缓存机制会将访问的资源缓存到本地,当下次再访问该资源时,url库会检查资源是否更过,若未更新过则直接使用本地缓存.
 
 目前缓存不会自动被清理.
 
@@ -10629,7 +10642,7 @@ url在获取man协议的资源时,会将PAGE-SPEC传递给函数`man'
 
 + (url-fetch-from-cache url)
 
-  从缓存中获取URL的资源. 该函数返回一个buffer,gaibuffer的内容为缓存的数据.
+  从缓存中访问URL的资源. 该函数返回一个buffer,gaibuffer的内容为缓存的数据.
 
 *** 代理
 按照惯例,程序会检查环境变量`PROTOCOL_proxy'来获取`PROTOCOL'协议的代理地址. 这里`PROTOCOL'可以使`http',`ftp'等任何一个网络协议.
@@ -10854,4 +10867,4 @@ url库使用一个名为`url-history-hash-table'变量来存储历史,其中URL�
   - native
     
     直接连接到网关(默认值)
-  
+
