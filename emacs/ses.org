@@ -133,6 +133,52 @@ SES使用region来创建range
 
   撤销上一次操作
 
+** Copy,cut,paste
+
++ M-w (kill-ring-save)
+
+  复制选中的range cells到kill ring和primary clipboard
+
++ [drag-mouse-1] (mouse-set-region)
+
+  创建range cells,且若变量`mouse-drag-copy-region'为非nil,还会将选中的range cells存入kill ring中
+
++ [M－drag-mouse-1] (mouse-set-secondary)
+
+  创建range cells,且将range cells的内容存入secondary clipboard中
+
++ C-w (ses-kill-override)
+
+  剪切range cells中的内容,但不会更改电子表格的格式
+
++ C-y (yank,被ses--advice-yank包裹)
+
+  从kill ring中粘贴内容到SES表格中. 根据粘贴内容格式的不同,有不同的行为:
+
+  - When pasting cells that were cut from a SES buffer, the print text is ignored and only the attached formula and printer are inserted; cell references in the formula are relocated unless you use ‘C-u’.
+
+  - The pasted text overwrites a rectangle of cells whose top left corner is the current cell.  If part of the rectangle is beyond the edges of the spreadsheet, you must confirm the increase in spreadsheet size.
+  
+  - Non-SES text is usually inserted as a replacement formula for the current cell.  If the formula would be a symbol, it’s treated as a string unless you use ‘C-u’.  Pasted formulas with syntax errors are always treated as strings.
+
++ [paste] (clipboard-yank)
+
+  将粘贴版的内容粘贴到SES表格中
+
++ [mouse-2] (mouse-yank-at-click)
+
+  设置光标位置,并且粘贴primary clipboard中的内容
+
++ [M-mouse-2] (mouse-yank-secondary)
+
+  设置光标位置,并且粘贴secondary clipboard中的内容
+
++ M-y (ses-yank-pop)
+
+  在粘贴操作之后立即执行该操作,表示使用kill ring中的更早的内容代替粘贴内容.
+
+  与标准的yank-pop不同的是,ses-yank-pop使用`undo'来删除之前粘贴的内容.
+  
 ** 显示设置
 + w (ses-set-column-width)
 
@@ -165,6 +211,17 @@ SES中的printer可能是
 
   设置整个电子表单的默认printer
 
+- t (ses-truncate-cell)
+
+  暂时让cell的值只局限在自己的列范围内显示. 这样用户才能将光标移动到右边的被覆盖的cell处
+
+- c (ses-recalculate-cell)
+
+  该命令会重新计算当前cell value,并重新输出.
+
+  若当前cell在重新计算或重新输出的过程中出现错误,则会在min-buffer中显示
+
+
 SES预设了一些printer:
 
 - ses-center
@@ -187,3 +244,478 @@ SES预设了一些printer:
 
   类似ses-center-span,但是使用~代替空格填充空白域
 
+** 配置SES
+
+默认情况下,新创建的电子表单只有一行和一列. 列的长度为7,并且默认的printer为"%.7g". 
+所有这些都是可以配置的,参见`ses'组
+
+输入cell值后,默认光标会移动到右边的cell中. 
+可以通过配置`ses-after-entry-functions'来实现向左,向上,向下移动. 
+若想以对角线移动,则可以添加先向右,再向下两个函数
+
+* 高级特性
+- `C-c M-C-h' (ses-set-header-row)
+
+  设置当前行的内容为header line上展示的内容.
+
+  若带了前缀参数,则会提示用户选择那一行内容作为header line的内容. 
+
+  选择第0行,表示还原原始的header line内容
+
+  在header-line上右击鼠标,会弹出菜单,让你选择是把光标所在行的内容设置为header line的内容还是还原header line的内容为默认值
+
+- (ses-rename-cell)
+  
+  重新设置该cell的identifier
+
+- (ses-repair-cell-reference-all)
+
+  若用户通过`C-g'打断了一个cell公式更新的过程,则cell之间的引用关系可能会被破坏.
+
+  使用该函数修复cell间的引用关系. 并却当出现相互引用时,会发出警告
+
+** SES文件的组成
+
+SES文件由输出区域和数据区域两部分组成. 默认情况下,buffer被限制只显示输出区域.
+
+输出区域的内容是只读的,只能通过特定的SES命令来修改. 输出区域包含的是由printer格式化后的cell值.
+
+数据区域保存的是各个cell的值与printer function
+
++ C-x n w (widen)
+
+  同时显示输出区域与数据区域的内容
+
++ C-c C-n (ses-renarrow-buffer)
+
+  只显示输出区域的内容
+
++ S-C-l / M-C-l (ses-reprint-all)
+
+  对所有的cell重新调用printer function,以便重新生成输出区域的内容
+
+** 公式中的Range
++ 宏(ses-range FROM TO)
+
+  这里参数FROM与TO都为cell identifier.
+
+  该宏返回一个list,包含了从FROM到TO这个cell range中所有的cell identifier
+
++ 当在minibuffer中修改公式时,可以先选中一个cell range,然后用如下操作插入这一range.
+
+  假设选中的rang是从A1到C1,则有:
+
+  - [S-mouse-3] (ses-insert-range-click)
+
+    插入"A1 B1 C1"
+
+  - C-c C-r (ses-insert-range)
+
+    插入"A1 B1 C1"
+
+  - [C-S-mouse-3] (ses-range A1 C1)
+    
+    插入"(ses-range A1 C1)"
+
+  - C-c C-s
+
+    插入"(ses-range A1 C1)"
+
++ 若删除了一个range的FROM或TO cell,则公式中的FROM或TO cell 会被最近的依旧存在的cell代替.
+
+  若删除了整个range,则公式中的ses-range也会被删除掉
+
++ 若在单列range后添加一行,或在单行range后增加一列,则新增加的cell也会被包含在range中. *在range前增加的cell却不会被包含进range*
+
++ 使用ses-range表示range时,还可以在参数TO后添加其他的flag
+
+  - !
+
+    去除range中的空cell.
+
+    所谓空cell是指值为nil或*skip*的cell
+
+  - _
+
+    表示range中的空cell,由_参数后的那个参数代替. 
+
+    若_后没有参数,则使用0代替.
+
+  - >v
+
+    表示返回的list中cell的顺序为顺着行从左上方到右下方
+
+    *这里>表示先向右移动,v表示再向下移动*
+
+  - <v
+
+    表示返回的list中cell的顺序为顺着行从右上方到左下方
+    
+  - v>
+
+    表示返回的list中cell的顺序为顺着列从左上方到右下方
+
+  - v<
+
+    表示返回的list中cell的顺序为顺着列从右上方到左下方
+
+  - v
+
+    v>的简写
+
+  - ^
+
+    ^>的简写
+
+  - >
+
+    >V的简写
+
+  - <
+
+    >^的简写
+
+  - *
+
+    返回时不是返回cell列表,而是返回一个Calc vector(单行或单列时)或matrix (参见[[info:calc][calc]])
+
+  - *2
+
+    与*类似,只是即使range只包含单行/单列数据,也返回matrix
+
+  - *1
+    
+    类似*,只是即使rang包含多行/多列数据,也返回vecotr,即原matrix被展开了.
+
+** 列排序
+排序时,需要先选择一个range,再调用排序命令. 排序命令会根据所选择的列对range进行升序排序
+
+默认情况下,排序使用的是`string<'函数,使用该函数对右对齐的数字和左对齐的字符串进行排序才是有意义的.
+
+Rows are moved one at a time, with relocation of formulas.  This works well if formulas refer to other cells in their row, not so well for formulas that refer to other rows in the range or to cells outside the range.
+
+若调用下面的排序命令前带了前缀参数,则按降序排序
+
+- C-c M-C-s (ses-sort-column)
+
+  根据指定的输入列排序range
+
+- [head-line mouse-2] (ses-sort-column-click)
+  
+  根据点击的headline表示的列,排序range
+
+** SES用于公式中的函数
+
++ (ses-delete-blanks &rest ARGS)
+
+  删除ARGS中的空cell(值为nil或*skip*),并将剩余的ARG组成list返回
+
++ (ses＋&rest ARGS)
+
+  累加ARGS中非空cell的值
+
++ (ses-average LIST)
+
+  计算LIST中非空cell的平均值
+
+** 关于cell输出的说明
+
++ cell可以有如下三个特殊值:
+
+  - nil
+
+   输出为"",并且允许前面的cell spill over它
+
+  - 符号*skip*
+
+   当原值为nil的cell真的被之前的cell spill over的情况下,值变为*skip*. 且该cell不会被输出
+
+  - 符号*error*
+
+   表示cell中的公式有错误. 输出一系列的#
+
++ 若cell中printer的输出结果长于该cell的长度,则
+
+  - 若下面的cell值为nil,则输出结果会spill over下面的cell
+
+  - 否则,若cell的值为字符串,则截断显示
+
+  - 否则,显示一连串的"#"
+
++ SES使用问号代替cell value中的换行符和TAB
+
++ 注意,SES的默认printer为"%.7g",该printer只能用来显示数字. 但当printer function抛出错误时,SES会自动使用备用的printer代替:"%s".
+
+  在这中cell中按下c按键(ses-recalculate-cell),会显示"Format specifier doesn’t match argument type"的错误信息
+
+** 导出/导入数据
+- x t (ses-export-tsv)
+
+  导出cell range为以tab分隔的值. 
+
+  导出的内容存到kill-ring中. 列与列之间使用tab分隔,行与行之间使用回车分隔.
+
+- x T (ses-export-tsf)
+
+  导出cell range为以tab分隔的公式
+
+- 要导入数据,只要在ses中使用yank命令即可.
+
+  Imported formulas are not relocated.
+
+** Spreadsheets with details and summary
+
+电子表格的一个普遍格式是由明细和汇总两部分组成的. SES提供了`ses-select'函数用于从明细数据中抽取出指定数据.
+
+
++ (ses-select FROMRANGE TEST TORANGE)
+
+  该函数返回TORANGE的一个子集. 对于FROMRANGE中的每个元素都会与TEST进行比较,若相等,则对应的TORANGE中的元素包含在该子集中.
+
+  具体的使用例子,参见Emacs发布目录中的"etc/ses-example.ses"
+  #+BEGIN_SRC ses
+      Sales summary - Acme fundraising          
+                                              
+             ~~~~~~~~~~~~~Summary~~~~~~~~~~~~~
+                            --Totals-- Average
+             Eastern-area   $46.70   2  $23.35
+             West-district  $80.25  10   $8.03
+             North&South    $99.69   5  $19.94
+             TOTAL           ~$227  17  $13.33
+                                              
+    = = = = = =Details = = = = = =            
+    99/07/25 North&South    $40.00            
+    99/08/16 West-district   $5.25            
+    99/08/16 North&South    $12.99            
+    99/08/25 West-district   $8.61            
+    99/08/26 West-district   $9.97            
+    99/09/04 Eastern-area   $21.00            
+    00/01/15 West-district   $5.50            
+    00/07/15 West-district  $19.01            
+    00/07/26 North&South    $27.95            
+    00/08/04 West-district  $11.71            
+    00/08/16 Eastern-area   $25.70            
+    00/08/25 West-district   $4.95            
+    00/08/26 West-district   $7.21            
+    00/09/01 North&South     $1.25            
+    01/07/25 West-district   $5.75            
+    01/08/04 West-district   $2.29            
+    01/08/15 North&South    $17.50            
+
+    
+    (ses-cell A1 "Sales summary - Acme fundraising" "Sales summary - Acme fundraising" nil nil)
+    (ses-cell B1 *skip* nil nil nil)
+    (ses-cell C1 *skip* nil nil nil)
+    (ses-cell D1 *skip* nil nil nil)
+    (ses-cell E1 nil nil nil nil)
+
+    (ses-cell A2 nil nil nil nil)
+    (ses-cell B2 nil nil nil nil)
+    (ses-cell C2 nil nil nil nil)
+    (ses-cell D2 nil nil nil nil)
+    (ses-cell E2 nil nil nil nil)
+
+    (ses-cell A3 nil nil nil nil)
+    (ses-cell B3 "Summary" "Summary" ses-tildefill-span nil)
+    (ses-cell C3 *skip* nil nil nil)
+    (ses-cell D3 *skip* nil nil nil)
+    (ses-cell E3 *skip* nil nil nil)
+
+    (ses-cell A4 nil nil nil nil)
+    (ses-cell B4 nil nil nil nil)
+    (ses-cell C4 "Totals" "Totals" ses-dashfill-span nil)
+    (ses-cell D4 *skip* nil nil nil)
+    (ses-cell E4 "Average" "Average" nil nil)
+
+    (ses-cell A5 nil nil nil nil)
+    (ses-cell B5 Eastern-area (quote Eastern-area) nil nil)
+    (ses-cell C5 46.7 (apply (quote +) (ses-select (ses-range B11 B27) (quote Eastern-area) (ses-range C11 C27))) nil (C8 E5))
+    (ses-cell D5 2 (length (ses-select (ses-range B11 B27) (quote Eastern-area) (ses-range C11 C27))) nil (D8 E5))
+    (ses-cell E5 23.35 (/ C5 D5) nil nil)
+
+    (ses-cell A6 nil nil nil nil)
+    (ses-cell B6 West-district (quote West-district) nil nil)
+    (ses-cell C6 80.25 (apply (quote +) (ses-select (ses-range B11 B27) (quote West-district) (ses-range C11 C27))) nil (C8 E6))
+    (ses-cell D6 10 (length (ses-select (ses-range B11 B27) (quote West-district) (ses-range C11 C27))) nil (D8 E6))
+    (ses-cell E6 8.025 (/ C6 D6) nil nil)
+
+    (ses-cell A7 nil nil nil nil)
+    (ses-cell B7 North&South (quote North&South) nil nil)
+    (ses-cell C7 99.69 (apply (quote +) (ses-select (ses-range B11 B27) (quote North&South) (ses-range C11 C27))) nil (C8 E7))
+    (ses-cell D7 5 (length (ses-select (ses-range B11 B27) (quote North&South) (ses-range C11 C27))) nil (D8 E7))
+    (ses-cell E7 19.938 (/ C7 D7) nil nil)
+
+    (ses-cell A8 nil nil nil nil)
+    (ses-cell B8 "TOTAL" "TOTAL" nil nil)
+    (ses-cell C8 226.64 (ses+ C5 C6 C7) "~$%.0f" (E8))
+    (ses-cell D8 17 (ses+ D5 D6 D7) nil (E8))
+    (ses-cell E8 13.331764705882351 (/ C8 D8) nil nil)
+
+    (ses-cell A9 nil nil ses-center nil)
+    (ses-cell B9 useless (quote useless) (lambda (x) (if (eq x (quote useless)) "" (prin1-to-string x))) nil)
+    (ses-cell C9 nil nil nil nil)
+    (ses-cell D9 nil nil nil nil)
+    (ses-cell E9 nil nil nil nil)
+
+    (ses-cell A10 "Details " "Details " (lambda (x) (replace-regexp-in-string "==" "= " (ses-center-span x 61))) nil)
+    (ses-cell B10 *skip* nil nil nil)
+    (ses-cell C10 *skip* nil nil nil)
+    (ses-cell D10 "" "" nil nil)
+    (ses-cell E10 nil nil nil nil)
+
+    (ses-cell A11 990725 990725 nil nil)
+    (ses-cell B11 North&South (quote North&South) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C11 40 40 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D11 nil nil nil nil)
+    (ses-cell E11 nil nil nil nil)
+
+    (ses-cell A12 990816 990816 nil nil)
+    (ses-cell B12 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C12 5.25 5.25 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D12 nil nil nil nil)
+    (ses-cell E12 nil nil nil nil)
+
+    (ses-cell A13 990816 990816 nil nil)
+    (ses-cell B13 North&South (quote North&South) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C13 12.99 12.99 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D13 nil nil nil nil)
+    (ses-cell E13 nil nil nil nil)
+
+    (ses-cell A14 990825 990825 nil nil)
+    (ses-cell B14 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C14 8.61 8.61 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D14 nil nil nil nil)
+    (ses-cell E14 nil nil nil nil)
+
+    (ses-cell A15 990826 990826 nil nil)
+    (ses-cell B15 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C15 9.97 9.97 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D15 nil nil nil nil)
+    (ses-cell E15 nil nil nil nil)
+
+    (ses-cell A16 990904 990904 nil nil)
+    (ses-cell B16 Eastern-area (quote Eastern-area) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C16 21 (/ 42 2) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D16 nil nil nil nil)
+    (ses-cell E16 nil nil nil nil)
+
+    (ses-cell A17 115 115 nil nil)
+    (ses-cell B17 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C17 5.5 5.5 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D17 nil nil nil nil)
+    (ses-cell E17 nil nil nil nil)
+
+    (ses-cell A18 715 715 nil nil)
+    (ses-cell B18 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C18 19.01 19.01 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D18 nil nil nil nil)
+    (ses-cell E18 nil nil nil nil)
+
+    (ses-cell A19 726 726 nil nil)
+    (ses-cell B19 North&South (quote North&South) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C19 27.95 27.95 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D19 nil nil nil nil)
+    (ses-cell E19 nil nil nil nil)
+
+    (ses-cell A20 804 804 nil nil)
+    (ses-cell B20 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C20 11.71 11.71 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D20 nil nil nil nil)
+    (ses-cell E20 nil nil nil nil)
+
+    (ses-cell A21 816 816 nil nil)
+    (ses-cell B21 Eastern-area (quote Eastern-area) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C21 25.7 25.7 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D21 nil nil nil nil)
+    (ses-cell E21 nil nil nil nil)
+
+    (ses-cell A22 825 825 nil nil)
+    (ses-cell B22 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C22 4.95 4.95 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D22 nil nil nil nil)
+    (ses-cell E22 nil nil nil nil)
+
+    (ses-cell A23 826 826 nil nil)
+    (ses-cell B23 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C23 7.21 7.21 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D23 nil nil nil nil)
+    (ses-cell E23 nil nil nil nil)
+
+    (ses-cell A24 901 901 nil nil)
+    (ses-cell B24 North&South (quote North&South) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C24 1.25 1.25 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D24 nil nil nil nil)
+    (ses-cell E24 nil nil nil nil)
+
+    (ses-cell A25 10725 10725 nil nil)
+    (ses-cell B25 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C25 5.75 5.75 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D25 nil nil nil nil)
+    (ses-cell E25 nil nil nil nil)
+
+    (ses-cell A26 10804 10804 nil nil)
+    (ses-cell B26 West-district (quote West-district) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C26 2.29 2.29 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D26 nil nil nil nil)
+    (ses-cell E26 nil nil nil nil)
+
+    (ses-cell A27 10815 10815 nil nil)
+    (ses-cell B27 North&South (quote North&South) nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell C27 17.5 17.5 nil (D7 C7 D6 C6 D5 C5))
+    (ses-cell D27 nil nil nil nil)
+    (ses-cell E27 nil nil nil nil)
+
+    (ses-column-widths [8 14 6 3 7])
+    (ses-column-printers [(lambda (x) (format "%02d/%02d/%02d" (/ x 10000) (% (/ x 100) 100) (% x 100))) ("%s") "$%.2f" nil "$%.2f"])
+    (ses-default-printer "%.7g")
+    (ses-header-row 0)
+
+    ( ;Global parameters (these are read first)
+     2 ;SES file-format
+     27 ;numrows
+     5 ;numcols
+    )
+
+    ;;; Local Variables:
+    ;;; mode: ses
+    ;;; ses--symbolic-formulas: (("Eastern area") ("West-district") ("North&South") ("Other"))
+    ;;; End:
+
+    ;;; Copyright (C) 2002-2015 Free Software Foundation, Inc.
+
+    ;;; COPYING PERMISSIONS:
+    ;;; 
+    ;;;   This document is free software: you can redistribute it and/or modify
+    ;;;   it under the terms of the GNU General Public License as published by
+    ;;;   the Free Software Foundation, either version 3 of the License, or
+    ;;;   (at your option) any later version.
+    ;;;
+    ;;;   This program is distributed in the hope that it will be useful,
+    ;;;   but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ;;;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ;;;   GNU General Public License for more details.
+    ;;;
+    ;;;   You should have received a copy of the GNU General Public License
+    ;;;   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  #+END_SRC
+
+* 高级技术
+** 不变引用
+默认情况下,使用C-y粘贴公式时,公式中的cell identifier可能会被重新分配成另一个cell identifier
+
+而使用C-u C-y粘贴公式时,公式中的所有cell identifier都不会被重新分配.
+
+若想指定某些cell identifier不要被重新分配,则可以使用类似 =(symbol-value 'B3)= 这样的方法来创建一个不变引用.
+
+此外,变量`row'和`col'在cell公式计算时会动态地绑定. 因此可以使用 =(ses-cell-value row 0)= 取当前行的最左边的cell的值.
+** 电子表格中的buffer local变量
+用户可以在数据域的最后面添加buffer local变量.
+
+用户可以设置变量`ses--symbolic-forumulas'为一个由symbol组成的list,这里的值可以用来作为'命令的补全.
+
+若你希望公式或printer function保存数据到某个变量中,则需要先声明这些变量为buffer local变量,否则可能会被报警.
+
+可以通过buffer local部位的`eval'关键字自定义函数,这些函数可以用在SES的公式和printer function中.
+
+你也可以使用定义在初始化脚本中的函数,但这样一来其他人就只能查看电子表格的输出区域的值,而无法对其中的用到这些函数的数据进行重新计算或重新输出.
