@@ -1,0 +1,80 @@
+#+TITLE: elnode
+#+AUTHOR: DarkSun
+#+CATEGORY: emacs
+#+DATE: [2015-07-30 周四 10:12]
+#+OPTIONS: ^:{}
+
+* elnode介绍
+elnode是一个用elisp实现的,类node.js的webserver. 它可以让Emacs提供web服务.
+
+默认情况下,elnode为 ~/public_html目录下的文件提供服务. 且默认的端口为8000.
+
+可以通过配置变量`elode-webserver-docroot'来设置为哪个目录下的文件提供服务.
+
+* 安装Elnode
+可以从[[http://marmalade-repo.org/packages/elnode][Marmalade]] 处安装Elnode,方法为:
+
+1. 在~/.emacs或~/.emacs.d/init.el中添加下段代码
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 
+      'package-archives
+      '("marmalade" . "http://marmalade-repo.org/packages/"))
+   #+END_SRC
+
+2. 重启emacs
+
+3. 执行M-x list-packages
+
+4. 在弹出的列表中找到Elnode
+
+5. 将光标放到Elnode行,然后按下i键或RET键安装之
+
+* 简单的例子
+** Hellow world
+下面是一个简单的使用Elnode的例子.
+
+1. 新建一个文件my-elnode-hello-world.el
+
+2. 填入以下内容
+   #+BEGIN_SRC emacs-lisp
+     (defun my-elnode-hello-world-handler (httpcon)
+       (elnode-http-start httpcon 200 '("Content-Type" . "text/html"))
+       (elnode-http-return 
+        httpcon 
+        "<html><body><h1>Hello World</h1></body></html>"))
+
+     (elnode-start 'my-elnode-hello-world-handler :port 8028 :host "localhost")
+   #+END_SRC
+
+3. 执行这段代码: M-x eval-buffer
+
+4. 在浏览器中打开 [[http://localhost:8028]] 即可看到 Hello World的字样
+**  Add a binding to the builtin server 
+下面是另一个例子
+
+1. 将my-elnode-hello-world.el的内容修改为
+   #+BEGIN_SRC emacs-lisp
+     (defun my-elnode-hello-world-handler (httpcon)
+       (elnode-http-start httpcon 200 '("Content-Type" . "text/html"))
+       (elnode-http-return 
+        httpcon 
+        "<html><body><h1>Hello World</h1></body></html>"))
+
+     (add-to-list 'elnode-hostpath-default-table '("/helloworld/" . my-elnode-hello-world-handler))
+   #+END_SRC
+
+2. 用浏览器浏览[[http://localhost:8000/helloworld/]] 则也会现在Hello World
+* 如何起停elnode服务
+** 如何启动新的elnode服务
+使用 =elnode-start= 函数可以启动新的elnode服务. 例如
+#+BEGIN_SRC emacs-lisp
+  (defconst my-elnode-webserver-handler
+    (elnode-webserver-handler-maker "~/myspecialdocroot")) ;定义doc root
+
+  (elnode-start my-elnode-webserver-handler :port 8001 :host "localhost")
+#+END_SRC
+
+** 如何关闭elnode服务
+使用命令 =elnode-stop= 后输入服务端口,即可关闭elnode服务.
+
+例如 =M-x elnode-stop RET 8001 RET= 关闭上面启动的elnode服务.
