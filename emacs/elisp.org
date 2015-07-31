@@ -3189,6 +3189,29 @@
              [交互模式声明]
              函数体...)
 #+END_EXAMPLE
+
+destructuring-bind宏接受一个匹配模式,一个求值到列表的实参,以及一个表达式体，然后在求值表达式时将模式中的参数绑定到列表的对应元素上.例如
+#+BEGIN_SRC emacs-lisp :results drawer :exports both
+  (destructuring-bind (x (y) . z) '(a (b) c d)
+    (list x y z))
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+(a b (c d))
+:END:
+
+defmacro宏允许任意列表结构作为参数列表.当宏调用被展开时,宏调用中的各部分将会以类似destructuring-bind的方式被赋值到宏的参数上面
+例如,可以这样定义dolist宏
+#+BEGIN_SRC emacs-lisp
+  (defmacro our-dolist ((var list &optional result) &body body)
+    `(progn
+        (mapc #'(lambda (,var) ,@body)
+                 ,list)
+        (let ((,var nil))
+          ,result)))
+#+END_SRC
+
 ** 宏扩展
 调用宏会将传递給宏的参数扩展成一个S表达式,这个过程称为宏扩展过程.
 
@@ -3225,6 +3248,7 @@
   #+END_SRC
  
 当对程序进行编译时,编译器在遇到宏调用时,会对宏进行扩展,因此:
+
 + 要注意分清哪些操作应该放在宏扩展的过程中完成,哪些操作放在宏扩展后的结果中进行. 例如
   #+BEGIN_SRC emacs-lisp
        (defmacro my-set-buffer-multibyte (arg)
@@ -3243,6 +3267,34 @@
        ;; 但在编译执行时,会在编译器生成一个(nil),然后每次都使用它
   #+END_SRC
 
++ 如果我们在主调函数编译以后，重定义那个宏. 由于对最初的宏调用的无迹可寻，所以函数里的展开式无法更新。该函数的行为将继续反映出宏的原来的定义
+
+  此外,如果在定义宏之前，就已经编译了宏的调用代码，也会发生类似的问题.
+
+  为了避免这类问题,我们需要
+
+  1. 在调用宏之前，先定义它。
+
+  2. 一旦重定义一个宏，就重新编译所有直接(或通过宏间接)调用它的函数(或宏)。
+     
+** 宏的工作模式
+下面是一个宏的模拟实现
+#+BEGIN_SRC emacs-lisp
+  (defmacro our-expander (name) `(get ,name 'expander))
+  (defmacro our-defmacro (name parms &body body)
+    (let ((g (gensym)))
+      `(progn
+          (setf (our-expander ',name)
+                #'(lambda (,g)
+                     (block ,name
+                       (destructuring-bind ,parms (cdr ,g)
+                         ,@body))))
+          ',name)))
+  (defun our-macroexpand-1 (expr)
+    (if (and (consp expr) (our-expander (car expr)))
+        (funcall (our-expander (car expr)) expr)
+      expr))
+#+END_SRC
 * 调试ELisp程序
   有以下几种调试Elisp程序的方法
   * 若运行程序时抛出异常,可以使用Emacs内置的debugger或edebug
@@ -7651,6 +7703,8 @@ buffer-string to get the whole buffer content.
    表达式 =`(a ,@1)= 将被求值成 =(a . 1)=.
 
    但如果尝试将原子拼接到列表的中间位置,例如 =`(a ,@1 b)=,将导致一个错误.
+
+3. 反引用并不是只能使用在.你可以在任何需要构造序列的场合使用反引用.
 
 ** 函数
    * (eval form &optional lexical)
