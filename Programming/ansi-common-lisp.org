@@ -1094,6 +1094,21 @@
    #+END_SRC
 
    顺道一提，push 与 pop 都不能定义为 modify-macros，前者因为 place 不是其第一个参数，而后者因为其返回值不是更改后的对象。
+
+** symbol-macro(符号宏)
+普通的宏调用看起来好像函数调用,而符号宏“调用”看起来则像一个符号。
+
+符号宏只能在局部定义。symbol-macrolet的special form可以在其体内，让一个孤立符号的行为表现和表达式相似(类似C中的宏)： 例如
+
+#+BEGIN_SRC lisp
+  (symbol-macrolet ((hi (progn (print "Howdy")
+                               1)))
+    (+ hi 2))
+  ;; "Howdy"
+  ;; 3
+#+END_SRC
+
+symbol-macrolet主体中的表达式在求值的时候，效果就像每一个参数位置的hi都替换成了(progn (print "Howdy") 1)
 * CLOS
 ** 创建对象
 
