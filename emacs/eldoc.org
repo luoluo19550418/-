@@ -1,0 +1,39 @@
+#+TITLE: eldoc
+#+AUTHOR: DarkSun
+#+CATEGORY: emacs
+#+DATE: [2015-07-08 星期三 06:59]
+#+OPTIONS: ^:{}
+
+* eldoc简介
+eldoc是一个minor mode,它会在echo area显示你正在输入的函数参数列表信息.
+
+* 如何实现对Eldoc的支持
+你只要设置变量`eldoc-documentation-function'为自定义的参数说明函数即可. 例如:
+#+BEGIN_SRC emacs-lisp
+  (set (make-local-variable 'eldoc-documentation-function)
+       'tal-eldoc-function)
+#+END_SRC
+
+自定义的参数说明函数,接受空字符串,并需要根据当前内容返回doc-string或nil,例如
+#+BEGIN_SRC emacs-lisp
+  (defun tal-eldoc-function ()
+    "Returns a doc string appropriate for the current context, or nil."
+    (symbol-value (intern-soft (upcase (thing-at-point 'symbol))
+                               tal-eldoc-obarray)))
+
+  (setq tal-eldoc-obarray (make-vector 41 0))
+  ...
+  ;; Most of these set commands are actually stored in a file
+  ;; and loaded for quick access to library function help
+  (set (intern "STEPMOM" tal-eldoc-obarray)
+       "PROC STEPMOM (CRTPID)")
+  (set (intern "STOP" tal-eldoc-obarray)
+       "PROC STOP (CRTPID, STOPBACKUP, PERROR, COMPLCODE, TERMINFO, SSID, LENGTH, TEXT)")
+  (set (intern "STRING_UPSHIFT_" tal-eldoc-obarray)
+       "INT PROC STRING_UPSHIFT_ (IN_STRING:LENGTH^A, OUT_STRING:LENGTH^B)")
+  (set (intern "SUSPENDPROCESS" tal-eldoc-obarray)
+       "PROC SUSPENDPROCESS (CRTPID)")
+  ...
+  ;; help for current module functions are created dynamically
+  ;; by a fairly simple function.
+#+END_SRC
