@@ -289,13 +289,7 @@ root url, so let's alter that binding to {{{/text/}}} as well:
 
 这段javascript在页面加载时,通过Ajax从Elnode获取buffer内容,并将获取的内容填入textarea中
 
-You don't even have to restart the Elnode handler, because it already
-is pointing to the dispatcher handler. If you just:
+你甚至都不需要重启Elnode处理器,因为它已经指向了哪些分发处理器了. 
+只需要通过 =M-x eval-buffer= 重新执行一下URL映射即可.
 
-{{{
-M-x eval-buffer
-}}} 
-
-this will re-evaluate the URL mappings. Now if you visit
-[[http://localhost:8002/my-elnode-editor.html]] you should see the
-webpage with the {{{textarea}}} and the text of your buffer.
+现在你访问[[http://localhost:8002/my-elnode-editor.html]] 就能看到一个包含文本框的网页,文本框中的内容就是buffer中的内容
