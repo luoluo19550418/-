@@ -168,127 +168,101 @@ available on it's own server or under a URL on another one.
      localhost
    #+END_SRC
 
-6. 访问
+6. 访问[[http://localhost:8002]] 将会看到`*my-elnode-editor-buffer*'中的内容
+   
+   更新buffer内容后，刷新浏览器会看到浏览器中显示的内容也做出了相应的改变。
 
-Now try and hit [[http://localhost:8002]] - you should see whatever
-you typed in the ~*my-elnode-editor-buffer~*.
+至此，我们发布了一个buffer。 但若希望让访问者能够更新buffer内容，又该如何操作呢？
 
-Try updating the text in the buffer and refreshing the browser. We're
-displaying that buffer whatever it has in it.
+1. 创建另一个处理器来处理访问者的更新请求。
 
-Ok. So we've published a buffer. But what about someone else updating
-it?
+   添加下面这段代码到`my-elnode-editor.el'中
+   #+BEGIN_SRC emacs-lisp
+     (defun my-elnode-editor-update-handler (httpcon)
+       (let ((change-text (elnode-http-param httpcon "change")))
+         (with-current-buffer my-elnode-editor-buffer
+           (goto-char (point-max))
+           (if (stringp change-text)
+               (insert change-text))))
+       (elnode-http-start httpcon 302 '("Location" . "/"))
+       (elnode-http-return httpcon))
+   #+END_SRC
 
-Let's make another handler to handle updates, add this to your {{{my-elnode-editor.el}}}:
+2. 将两个处理器映射到一起。
 
-{{{
-(defun my-elnode-editor-update-handler (httpcon)
-  (let ((change-text (elnode-http-param httpcon "change")))
-    (with-current-buffer my-elnode-editor-buffer
-      (goto-char (point-max))
-      (if (stringp change-text)
-          (insert change-text))))
-  (elnode-http-start httpcon 302 '("Location" . "/"))
-  (elnode-http-return httpcon))
-}}}
+   假设我们将第一个处理器映射到/路径,第二个处理器映射到/update/则需要添加如下代码到`my-elnode-editor.el'中
+   #+BEGIN_SRC emacs-lisp
+     (defconst my-elnode-editor-urls
+       `(("^/$" . my-elnode-editor-handler)
+         ("^/update/.*$" . my-elnode-editor-update-handler)))
+   #+END_SRC
 
-Now we have two handlers we'll have to map them together
-somehow. Let's map one to the root ({{{/}}}) and one to
-{{{/update/}}}. Add the following code to {{{my-elnode-editor.el}}}:
+3. 添加处理器以分发URL
 
-{{{
-(defconst my-elnode-editor-urls
-  `(("^/$" . my-elnode-editor-handler)
-    ("^/update/.*$" . my-elnode-editor-update-handler)))
-}}}
+   将下面代码加入`my-elnode-editor.el'中
 
-And now we need to add a handler to do the dispatching for these URLs,
-add this to {{{my-elnode-editor.el}}} as well:
+   #+BEGIN_SRC emacs-lisp
+     (defun my-elnode-editor-dispatcher-handler (httpcon)
+       (elnode-dispatcher httpcon my-elnode-editor-urls))
+   #+END_SRC
 
-{{{
-(defun my-elnode-editor-dispatcher-handler (httpcon)
-  (elnode-dispatcher httpcon my-elnode-editor-urls))
-}}}
+   //What is a dispatcher?// - a dispatcher is a handler that take a list of URL pattern mappings and works out, by reading the data from the HTTP connection, what handler should be invoked for what request.
 
-//What is a dispatcher?// - a dispatcher is a handler that take a list
-of URL pattern mappings and works out, by reading the data from the
-HTTP connection, what handler should be invoked for what request.
+4. 重启服务
+   
+   #+BEGIN_SRC emacs-lisp
+     M-x elnode-stop
+     8002
 
-Now we have our new dispatcher based code we need to stop the old server:
+     M-x elnode-start 
+     my-elnode-editor-dispatcher-handler 
+     8002 
+     localhost
+   #+END_SRC
 
-{{{
-M-x elnode-stop 8002
-}}}
+5. 访问[[http://localhost:8002]] 可以看到buffer内容. 访问[[http://localhost:8002/update/?change=%0dlah+dee+dah%0d]] 可以看到buffer内容发生了改变
 
-And now start the new server with the dispatcher handler:
+* 高级案例 - 围绕服务创建一个web app
 
-{{{
-M-x elnode-start 
-my-elnode-editor-dispatcher-handler 
-8002 
-localhost
-}}}
-
-Now visit [[http://localhost:8002]] and see the buffer as it stands
-and then visit
-[[http://localhost:8002/update/?change=%0dlah+dee+dah%0d]] and see the
-updated buffer.
-
-* More advanced again - Make a webapp around the service ==
-
-Let's take our editor on another step. Let's add some static files and
-have the Elnode handlers be called by client side Javascript.
+现在让我们添加一些静态文件,并使得可以通过客户端的Javascript来调用Elnode处理器.
 
 If we're going to add some static files, we'll need a webserver. We
 already know how to do that. Once we've got some javascript though,
 we'll probably not want to retrieve the text by {{{HTTP GET}}}ing the
 root url, so let's alter that binding to {{{/text/}}} as well:
 
-{{{
-(defconst my-elnode-editor-webserver-handler
-   (elnode-webserver-handler-maker "~/my-directory")
-   "The webserver handler.")
+#+BEGIN_SRC emacs-lisp
+  (defconst my-elnode-editor-webserver-handler
+     (elnode-webserver-handler-maker "~/my-directory")
+     "The webserver handler.")
 
-(defconst my-elnode-editor-urls
-  '(("^/text/$" . my-elnode-editor-handler)
-    ("^/update/.*$" . my-elnode-editor-update-handler)
-    ("^/[^/]+/.*$" . my-elnode-editor-webserver-handler)))
-}}}
+  (defconst my-elnode-editor-urls
+    '(("^/text/$" . my-elnode-editor-handler)
+      ("^/update/.*$" . my-elnode-editor-update-handler)
+      ("^/[^/]+/.*$" . my-elnode-editor-webserver-handler)))
+#+END_SRC
 
-Obviously {{{~/my-directory}}} needs to be the place where you are
-going to save your HTML and Javascript files.
+很明显`~/my-directory'就是你存放HTML和Javascript文件的地方.
 
-Now we need those HTML and Javascript files. Let's make the HTML
-first:
+首先创建一个名为`my-elnode-editor.html'的HTML文件,内容为
+#+BEGIN_SRC html
+  <html>
+      <head>
+          <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" 
+                  language="Javascript">
+          </script>
+          <script src="my-elnode-editor.js" language="Javascript">
+          </script>
+      </head>
+      <body>
+          <textarea id="text" cols="60" rows="10">
+          </textarea>
+      </body>
+  </html>
+#+END_SRC
 
-{{{
-<html>
-    <head>
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" 
-                language="Javascript">
-        </script>
-        <script src="my-elnode-editor.js" language="Javascript">
-        </script>
-    </head>
-    <body>
-        <textarea id="text" cols="60" rows="10">
-        </textarea>
-    </body>
-</html>
-}}}
 
-We're going to pull jQuery from Google's Content Delivery
-Network. We've put in a placeholder for our own Javascript file and
-other than that the HTML is really just a {{{textarea}}}
-element. We'll use //that// for putting the buffer text in.
-
-Now, what should the Javascript do? 
-
-+ when the page loads
-+ make an AJAX call to Elnode for the buffer text
-+ stick the received text into the {{{textarea}}}
-
-Ok. So here is {{{my-elnode-editor.js}}}:
+然后创建一个名为`my-elnode-editor.js'的文件,文件内容为:
 #+BEGIN_SRC javascript
   var my_elnode_editor = (function () {
     var self = {
@@ -313,9 +287,7 @@ Ok. So here is {{{my-elnode-editor.js}}}:
   );
 #+END_SRC
 
-Save this as {{{my-elnode-editor.js}}} (in whatever directory the
-webserver is serving) and save the HTML in the same directory, call it
-{{{my-elnode-editor.html}}}, say?
+这段javascript在页面加载时,通过Ajax从Elnode获取buffer内容,并将获取的内容填入textarea中
 
 You don't even have to restart the Elnode handler, because it already
 is pointing to the dispatcher handler. If you just:
@@ -327,12 +299,3 @@ M-x eval-buffer
 this will re-evaluate the URL mappings. Now if you visit
 [[http://localhost:8002/my-elnode-editor.html]] you should see the
 webpage with the {{{textarea}}} and the text of your buffer.
-
-
-
-* That's all for now! ==
-
-This is as far as Nic has got writing the tutorial. More will come soon I hope:
-
-+ {{{defer}}} with an example based around the editor service
-+ debugging a running Elnode service
