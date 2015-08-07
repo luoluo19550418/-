@@ -101,7 +101,7 @@ in your own default server. Of course, it's always a judgement, the
 way URLs work mean that you can pretty much always make any service
 available on it's own server or under a URL on another one.
 
-下面让我们将上面的Hello World例子绑定到默认服务器上(这样我们可以通过8000端口访问到Hello World页面)
+下面让我们将上面的Hello World例子中的处理器绑定到默认服务器上(这样我们可以通过8000端口访问到Hello World页面)
 
 1. 使用 =C-x b my-elnode-hello-world.el= 回到Hello World例子中的源文件
 
@@ -110,7 +110,7 @@ available on it's own server or under a URL on another one.
      (add-to-list 'elnode-hostpath-default-table '("/helloworld/" . my-elnode-hello-world-handler))
    #+END_SRC
 
-   整个代码应该如下所示
+   整个代码变成如下所示
    #+BEGIN_SRC emacs-lisp
      (defun my-elnode-hello-world-handler (httpcon)
         (elnode-http-start httpcon 200 '("Content-Type" . "text/html"))
@@ -226,10 +226,7 @@ available on it's own server or under a URL on another one.
 
 现在让我们添加一些静态文件,并使得可以通过客户端的Javascript来调用Elnode处理器.
 
-If we're going to add some static files, we'll need a webserver. We
-already know how to do that. Once we've got some javascript though,
-we'll probably not want to retrieve the text by {{{HTTP GET}}}ing the
-root url, so let's alter that binding to {{{/text/}}} as well:
+首先我们来給`/text'路径绑定上处理器
 
 #+BEGIN_SRC emacs-lisp
   (defconst my-elnode-editor-webserver-handler
@@ -244,7 +241,7 @@ root url, so let's alter that binding to {{{/text/}}} as well:
 
 很明显`~/my-directory'就是你存放HTML和Javascript文件的地方.
 
-首先创建一个名为`my-elnode-editor.html'的HTML文件,内容为
+然后创建一个名为`my-elnode-editor.html'的HTML文件,内容为
 #+BEGIN_SRC html
   <html>
       <head>
@@ -262,9 +259,9 @@ root url, so let's alter that binding to {{{/text/}}} as well:
 #+END_SRC
 
 
-然后创建一个名为`my-elnode-editor.js'的文件,文件内容为:
+最后创建一个名为`my-elnode-editor.js'的文件,文件内容为:
 #+BEGIN_SRC javascript
-  var my_elnode_editor = (function () {
+  var my_elnode_editor = (function () 
     var self = {
       /** Get the text from Emacs.
        ,*/
