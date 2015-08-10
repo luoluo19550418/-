@@ -1,0 +1,15 @@
+#+TITLE: emacs-tips
+#+AUTHOR: DarkSun
+#+CATEGORY: emacs
+#+DATE: [2015-08-04 周二 14:28]
+#+OPTIONS: ^:{}
+
+* 保存文件时查看被修改的内容
+当使用`C-x s'保存多个文件时,若Emacs提示你是否保存某个文件,可以按`d'键查看buffer与磁盘文件内存之间的差别.
+
+* 如何使windows下的Emacs支持TLS
+去[[http://sourceforge.net/projects/ezwinports/files/][ezwinports]] 下载gnutls库,并释放到emacs安装目录下,重启Emacs即可.
+
+重启Emacs后执行 =M-: (gnutls-available-p)= ,结果应该为t,表示Emacs已经支持TLS了.
+
+* evil-normal-state下,可以通过`-'或`|'快速分割窗口
