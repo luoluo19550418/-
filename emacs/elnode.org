@@ -29,52 +29,68 @@ elnode是一个用elisp实现的,类node.js的webserver. 它可以让Emacs提供
 
 5. 将光标放到Elnode行,然后按下i键或RET键安装之
 
-* 简单的例子
-** Hellow world
-下面是一个简单的使用Elnode的例子.
-
-1. 新建一个文件my-elnode-hello-world.el
-
-2. 填入以下内容
-   #+BEGIN_SRC emacs-lisp
-     (defun my-elnode-hello-world-handler (httpcon)
-       (elnode-http-start httpcon 200 '("Content-Type" . "text/html"))
-       (elnode-http-return 
-        httpcon 
-        "<html><body><h1>Hello World</h1></body></html>"))
-
-     (elnode-start 'my-elnode-hello-world-handler :port 8028 :host "localhost")
-   #+END_SRC
-
-3. 执行这段代码: M-x eval-buffer
-
-4. 在浏览器中打开 [[http://localhost:8028]] 即可看到 Hello World的字样
-**  Add a binding to the builtin server 
-下面是另一个例子
-
-1. 将my-elnode-hello-world.el的内容修改为
-   #+BEGIN_SRC emacs-lisp
-     (defun my-elnode-hello-world-handler (httpcon)
-       (elnode-http-start httpcon 200 '("Content-Type" . "text/html"))
-       (elnode-http-return 
-        httpcon 
-        "<html><body><h1>Hello World</h1></body></html>"))
-
-     (add-to-list 'elnode-hostpath-default-table '("/helloworld/" . my-elnode-hello-world-handler))
-   #+END_SRC
-
-2. 用浏览器浏览[[http://localhost:8000/helloworld/]] 则也会现在Hello World
+* 配置
+elnode中的配置都可以通过 =M-x customize-group elnode= 来进行.
 * 如何起停elnode服务
-** 如何启动新的elnode服务
-使用 =elnode-start= 函数可以启动新的elnode服务. 例如
-#+BEGIN_SRC emacs-lisp
-  (defconst my-elnode-webserver-handler
-    (elnode-webserver-handler-maker "~/myspecialdocroot")) ;定义doc root
+** 如何启动新的elnode服务器
+*** 使用Elnode最简单的方式是将其作为普通webserver来用:
+#+BEGIN_EXAMPLE
+  M-x elnode-make-webserver [RET] 
+  Serve files from: [enter directory] [RET]
+  TCP Port (try something over 8000): 8009 [RET]
+#+END_EXAMPLE
+则会启动一个Elnode服务器,监听8009端口,并为指定的目录提供发布服务.
 
-  (elnode-start my-elnode-webserver-handler :port 8001 :host "localhost")
+默认情况下,Elnode使用`elode-init-host'变量所指定的host(默认为"localhost")作为提供服务的host address.
+
+使用 =C-u M-x elnode-make-webserver= 可以在创建webserver时指定host address
+#+BEGIN_EXAMPLE
+  C-u M-x elnode-make-webserver [RET] 
+  Docroot: [enter directory] [RET]
+  Port: 8009 [RET]
+  Host: 0.0.0.0
+#+END_EXAMPLE
+*** Basic Elnode For Programmers
+可以自定义一个处理器函数:
+#+BEGIN_SRC emacs-lisp
+  (defun my-test-handler (httpcon)
+    "Demonstration function"
+    (elnode-http-start httpcon 200 '("Content-type" . "text/html"))
+    (elnode-http-return httpcon "<html><b>HELLO!</b></html>"))
 #+END_SRC
 
-** 如何关闭elnode服务
-使用命令 =elnode-stop= 后输入服务端口,即可关闭elnode服务.
+然后使用该处理器函数作为新启动的elnode服务程序
+#+BEGIN_SRC emacs-lisp
+  (elnode-start 'my-test-handler :port 8010 :host "localhost")
+#+END_SRC
+
+当然也可以将`elnode-start'作命令来使用: =M-x elnode-start= ,然后输入处理器函数和监听端口即可.
+
+** 如何关闭elnode服务器
+
+使用 =(elnode-stop 8010)= 或命令 =elnode-stop= 后输入服务端口,即可关闭elnode服务.
 
 例如 =M-x elnode-stop RET 8001 RET= 关闭上面启动的elnode服务.
+** 列出Elnode起了哪些服务器
+使用命令 =M-x list-elnode-servers= 会弹出一个名为"*Elnode Servers*"的buffer.
+
+在buffer中列出了TCP端口和相应的处理器.
+
+按下RET变回跳转到对应处理器的源代码定义.
+
+按下`k'关闭相应的server
+* API
+** Mapping paths to handlers
+函数`elnode-hostpath-dispatcher'接收一个path/handler的映射alist,并根据该映射关系将指定的URL请求转到对应的处理器函数来处理.
+
+#+BEGIN_SRC emacs-lisp
+  (defvar my-app-routes 
+    '(("^my-host.example.com//wiki/\\(.*\\)" . elnode-wikiserver)
+      ("^admin.example.com//admintool/\\(.*\\)" . user-admin)
+      ("^.*//\\(.*\\)" . elnode-webserver)))
+
+  (defun root-handler (httpcon)
+    (elnode-hostpath-dispatcher httpcon my-app-routes))
+
+  (elnode-start 'root-handler :port 8009)
+#+END_SRC
