@@ -94,3 +94,205 @@ elnode中的配置都可以通过 =M-x customize-group elnode= 来进行.
 
   (elnode-start 'root-handler :port 8009)
 #+END_SRC
+上面这段代码使用函数`root-handler'创建一个新服务器监听端口8009. 而`root-handler'会将接收到的请求转发給对应的处理器函数来处理.
+
+elnode本身有一个默认的服务器,该服务器使用变量`elnode-hostpath-default-table'来作为path/handler的映射alist.
+
+在定义path/handler的映射alist时可以使用正则表达式, *且该正则表达式中的捕获子组内容可以在其他函数(例如elnode-docroot-for)中使用*. 
+且,当某处理器函数由函数`elnode-hostpath-dispatcher'调用时, *可以通过函数`elnode-http-mapping'来获取正则匹配到的值*
+
+因此,我们可以这样定义上面代码中的`user-admin'
+#+BEGIN_SRC emacs-lisp
+  (defun user-admin (httpcon)
+    (let ((username (elnode-http-mapping httpcon 1))) ;获取捕获到的第一个子组的内容
+      (user-admin-send-admin-page httpcon username)))
+#+END_SRC
+** Serving files
+elnode预定义了一个名为`elnode-webserver'的http处理器用于为指定目录提供发布服务.
+
+可以使用函数`elnode-webserver-handler-maker'来创建webserver.
+
+#+BEGIN_SRC emacs-lisp
+  (setq my-webserver
+        (elnode-webserver-handler-maker "~/my-webroot"))
+
+  (elnode-start my-webserver :port 8010)
+#+END_SRC
+
+elnode-webserver处理器甚至能够为目录自动生成索引(index)页面,其页面的内容由变量`elnode-webserver-index-page-template'与`elnode-webserver-index-file-template'决定.
++ elnode-webserver-index-page-template定义了索引页面的模板
++ elnode-webserver-index-file-template defines the template for each file in the index, normally it's just an A tag ponting to the file.
+** More controlled Serving
+可以使用函数`elnode-docroot-for'来创建自己的http处理器. 它允许你定义一套复杂的逻辑来将目录树映射到webserver的命名空间. 
+
+下面是个例子
+#+BEGIN_SRC emacs-lisp
+  (defun elnode-org-handler (httpcon)
+    (elnode-docroot-for "~/work/org"
+      with org-file
+      on httpcon
+      do (with-current-buffer (find-file-noselect org-file)
+           (let ((org-html
+                  ;; This might throw errors so you could condition-case it
+                  (org-export-as-html 3 nil nil 'string)))
+             (elnode-send-html httpcon org-html)))))
+#+END_SRC
+  
+=(elnode-docroot-for DOC-ROOT WITH TARGET-FILE-VAR ON HTTPCON DO &rest HANDLING-BODYS)=
++ 第一个参数`DOC-ROOT'指明了为哪个目录提供发布服务.
+
++ 第二个参数固定为with
+
++ 第三个参数`TARGET-FILE-VAR'指定了在`HANDING-BODYS'中通过哪个变量可以获取用户想访问的文件.
+
++ 第四个参数固定为on
+
++ 第五个参数`HTTPCON'指定了为哪个HTTP连接提供服务
+
++ 第六个参数固定为do
+
++ 第七个参数`HANDING-BODYS'指定了执行哪些代码.
+
+`elnode-docroot-for'函数会检查用户访问的URL是否指向了`DOC-ROOT'下的已存在文件,若未找到指定文件,返回404页面
+
+`elnode-docroot-for'函数还会缓存根据访问文件所生成的HTML内容. 若所访问的文件距离上次访问之间没有更新,则发送HTTP的304回应.
+
+当访问的文件存在,但并未被`elnode-docroot-for'函数缓存时,会重新执行`HANDING-BODYS'
+** Sending files
+Elnode提供了函数`elnode-send-file'来将指定文件的内容作为回应的内容. 该函数一般在`elnode-docroot-for'函数中的`HANDING-BODYS'中使用
+
+例如
+#+BEGIN_SRC emacs-lisp
+  (defun my-status-page (httpcon)
+    (elnode-http-start httpcon 200 '("Content-type" . "text/html"))
+    (elnode-send-file httpcon "~/static-status-file.html"))
+#+END_SRC
+
+`elode-send-file'不仅可以用指定文件内容作为回应内容,还能将指定文件内容作为 *模板*,与其他参数一起拼筹出回应内容. 例如
+#+BEGIN_SRC emacs-lisp
+  (defun my-templater(httpcon)
+    (let ((hash (make-hash-table 
+                   :test 'equal 
+                   :data "username" "nicferrier")))
+       (elnode-http-start httpcon 200 '("Content-type" . "text/html"))
+       (elnode-send-file 
+           httpcon "~/my-template.html" 
+           :replacements hash)))
+#+END_SRC
+其中~/my-template.html的内容为
+#+BEGIN_SRC html
+  <html>
+    <!##E username E##!>
+  </html
+#+END_SRC
+
+*关于模板格式,参见函数`elnode--buffer-template'的说明*:
+#+BEGIN_EXAMPLE
+  (elnode--buffer-template FILE-BUF REPLACEMENTS)
+
+  Template render a buffer and return a copy.
+
+  FILE-BUF is the source buffer to use, template sections marked up like:
+
+   <!##E \(.*?\) E##!>
+
+  will be replaced with a value looked up in REPLACEMENTS.
+
+  REPLACEMENTS is either a hashtable or an association list.
+
+  For example:
+
+   <title><!##E my-title E##!></title>
+   <p>By <!##E my-name E##!>.</p>
+
+  with the REPLACEMENTS being:
+
+    my-title => All things Elnode!
+    my-name => Nic Ferrier
+
+  would result in the string:
+
+    <title>All things Elnode!</title>
+    <p>By Nic Ferrier</p>
+
+  being returned.
+
+#+END_EXAMPLE
+** (elnode-make-send-file FILENAME &key PREAMBLE MIME-TYPES REPLACEMENTS REPLACEMENTS-PATTERN)
+
+该函数可以创建一个只为`FILENAME'这一个文件提供服务的处理器.
+例如:
+#+BEGIN_SRC emacs-lisp
+  `(("^my-host.example.com//wiki/\\(.*\\)" . elnode-wikiserver)
+    ("^.*//styles.css" . ,(elnode-make-send-file "~/mainstyles.css"))
+    ("^.*//\\(.*\\)" . elnode-webserver))
+#+END_SRC
+
+同样的`FILENAME'也可以当成模板来使用:
+#+BEGIN_SRC emacs-lisp
+  (defun my-templater ()
+    '(("username" . "william occam")))
+
+  `(("^my-host.example.com//wiki/\\(.*\\)" . elnode-wikiserver)
+    ("^.*//styles.css" . ,(elnode-make-send-file 
+                           "~/mainstyles.css"
+                           :replacements 'my-templater))
+    ("^.*//\\(.*\\)" . elnode-webserver)
+#+END_SRC
+** 获取HTTP request中的数据
+
+elnode提供了大量的函数来获取HTTP request中的数据
+#+BEGIN_SRC emacs-lisp
+  (elnode-http-method httpcon)            ; => "POST"
+
+  (elnode-http-pathinfo httpcon)          ; => "/wiki/blah.creole"
+
+  (elnode-http-query httpcon)             ; => "a=10&b=20&c=the+quick+brown+fox"
+
+  (elnode-http-params httpcon)            ; => (("a" . "10")("b" . "20")("c" . "the quick brown fox"))
+
+  (elnode-http-param httpcon "username")  ; => "nicferrier"
+
+  (elnode-http-cookie httpcon "session-id") ; => "1213313"
+
+  (elnode-http-header httpcon "Date")     ; => "Mon, Feb 27 2012 22:10:21 GMT"
+
+  (elnode-http-header httpcon 'date)      ; => "Mon, Feb 27 2012 22:10:21 GMT"
+
+  (elnode-http-header httpcon 'date :time) ;; with convert flag set to :time => (20299 65357)
+#+END_SRC
+
+注意: *elnode获取http request中参数时,参数可以是字符串类型,也可以是symbol类型*
+** Elode's raw data
+Elnode在connection对象中存储大多数的内部状态. 通过宏`elnode/con-get'可以获取这些内部状态. 例如
+#+BEGIN_SRC emacs-lisp
+  (elnode/con-get httpcon :elnode-http-status) ; => "GET / HTTP/1.1"
+
+  (elnode/con-get httpcon :elnode-http-resource) ; => "/"
+
+  (elnode/con-get httpcon :elnode-http-version) ; => "1.1"
+#+END_SRC
+** To Do?
+If you're playing with elnode but you can't think of anything to do with it...
+
++ make an elnode param handler that sanitzes input
+  - one way to do that was found by aidalgol:
+    #+BEGIN_SRC emacs-lisp
+      (require 'htmlize)
+      (htmlize-protect-string
+       "<a href='/blah?a=10&b=2'></a><script>call_func()</script>")
+    #+END_SRC
+
++ an emacsclient with elnode
+  - write a command line client that submits data to the server over HTTP
+  - it should interact with the emacs user in the same way that emacs server does
+  - /why?/ because then a single Emacs could have just 1 server socket open for all sorts of different roles
++ alter `elnode-webserver-handler-maker' to do indexing better
+  - take an optional index producing function?
+  - take keyword flags that set the behaviour? 
+    #+BEGIN_EXAMPLE
+    :doindexes 't 
+    #+END_EXAMPLE
++ browse-current-buffer
+  - start an elnode server on some random port exposing the current buffer
+  - automatically open a browser on the started server
