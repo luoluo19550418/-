@@ -12,7 +12,7 @@ D-Bus机制有两个基本的消息总线:"system bus"与"session bus".
 
 每个连接上总线的客户端程序,都必须在该总线上注册一个唯一的标示名称. 该名称总是以`:'开头的,类似`:1.42'这样
 
-此外,客户端程序还可以在总线上注册一个"known name",该名称不以`:'开头,且可以由多个`.'分隔成几段,类似`org.gnu.emacs'这样. 
+此外,客户端程序还可以在总线上注册"known name",该名称不以`:'开头,且可以由多个`.'分隔成几段,类似`org.gnu.emacs'这样. 
 若多个程序注册了同一个"known name",则这些程序排成一个队列,只有第一个注册该名字的application可以通过改名称引用到. 
 当第一个注册该名称的程序断开与总线的连接时,队列中第二个的程序成为该"known name"的所有者.
 
@@ -298,6 +298,41 @@ D-Bus机制有两个基本的消息总线:"system bus"与"session bus".
 ** 探测object path及其接口
 The first elements, to be introspected for a D-Bus object, are further object paths and interfaces.
 
++ (dbus-introspect-get-node-names bus service path)
+  
+  该函数返回`bus'总线上,"known name"为`service'的,且object path在`path'下的所有节点名称.
+
+  且该节点名称是相对于`path'的相对object path.
+
+  例如:
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-node-names
+     :session "org.gnome.seahorse" "/org/gnome/seahorse")
+
+    ;; ⇒ ("crypto" "keys")
+  #+END_SRC
+
+  在上面的例子中,"/org/gnome/seahorse/crypto"和"/org/gnome/seahorse/keys"都是"known name"为`org.gnome.seahorse'的object path.
+
++ (dbus-introspect-get-all-nodes bus service path)
+  
+  类似`dbus-introspect-get-node-name',但返回的是 *绝对object path*
+
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-all-nodes :session "org.gnome.seahorse" "/")
+    ;; 结果为
+    ("/" "/org" "/org/gnome" "/org/gnome/seahorse"
+     "/org/gnome/seahorse/crypto"
+     "/org/gnome/seahorse/keys"
+     "/org/gnome/seahorse/keys/openpgp"
+     "/org/gnome/seahorse/keys/openpgp/local"
+     "/org/gnome/seahorse/keys/openssh"
+     "/org/gnome/seahorse/keys/openssh/local")
+  #+END_SRC
+
++ (dbus-introspect-get-interface-names bus service path)
+  
+  
 
 ** 方法(methods)与信号(signal)
 ** 属性(properties)与注解(Annotatiions)
