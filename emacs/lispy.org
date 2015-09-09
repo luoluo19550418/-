@@ -1,0 +1,103 @@
+#+TITLE: lispy
+#+AUTHOR: Administrator
+#+CATEGORY: emacs
+#+DATE: [2015-09-08 周二 14:52]
+#+OPTIONS: ^:{}
+
+* 按键说明
+这些按键只有在以下情况下才生效:
+1. 光标处于`(',`[',`{'前
+2. 光标处于`)',`]',`}'后
+3. 选中一个区域
+** 如何修改按键
+下面是一个例子
+#+BEGIN_SRC emacs-lisp
+  (eval-after-load "lispy"
+    `(progn
+       ;; replace a global binding with own function
+       (define-key lispy-mode-map (kbd "C-e") 'my-custom-eol)
+       ;; replace a global binding with major-mode's default
+       (define-key lispy-mode-map (kbd "C-j") nil)
+       ;; replace a local binding
+       (lispy-define-key lispy-mode-map "s" 'lispy-down)))
+
+#+END_SRC
+** 移动命令说明
+| binding | command                  | comment                                                             |
+|---------+--------------------------+---------------------------------------------------------------------|
+| j       | lispy－down              | 跳到下一个同级list                                                  |
+| k       | lispy－up                | 跳到上一个同级list                                                  |
+| h       | lispy-left               |                                                                     |
+| l       | lispy－right             |                                                                     |
+| d       |                          | 跳到list的另一边                                                    |
+| ]       | lispy-forward            | 在list内跳到闭括号处,若已经处于闭括号处,则跳到下一个list的闭括号处  |
+| [       | lispy-backward           | 在list内跳到开括号处,若已经处于开括号处,则跳到上一个list的开括号处  |
+| C-3     | lispy-right              | exit current list forwards, analogous to `up-list`                  |
+| )       | lispy-right-nostring     | exit current list forwards, but self-insert in strings and comments |
+| q       | lispy-ace-paren          | 跳到当前list中的某个"("处                                           |
+| Q       | lispy-ace-char           | 跳到当前list中的某个字符处                                          |
+| a       | lispy-ace-symbol         | 跳到当前list中的某个symbol处                                        |
+| H       | lispy-ace-symbol-replace | 替换list中的某个symbol                                                    |
+| -       | lispy-ace-subword        |                                                                     |
+** 修改按键说明
+| binding     | command         | comment                      |
+|-------------+-----------------+------------------------------|
+| r           | lispy-raise     |                              |
+| C           | lispy-convolute |                              |
+| >           | lispy-slurp     | 纳入前一个/后一个元素        |
+| <           | lispy-barf      | 吐出第一个/最后一个元素      |
+| s           | lispy-move-down | 将当前list移到下一个list后面 |
+| w           | lispy-move-up   | 将当前list移到上一个list后面 |
+| c           | lispy-clone     | 拷贝当前list                 |
+| C-d /退格键 |                 | 删除整个list                 |
+|             |                 |                              |
+** 高级功能
+| binding | command           | comment                                            |
+|---------+-------------------+----------------------------------------------------|
+| e       |                   | 执行list                                           |
+| E       |                   | 执行list并在list后插入执行结果                     |
+| g       |                   | 跳转到当前目录中的源代码的任意tag,会用到semantic包 |
+| G       |                   | 跳转到当前文件中的源代码的任意tag,会用到semantic包 |
+| M-.     |                   | 跳到当前symbol的定义处                             |
+| M-,     |                   | 与M-.一起使用,跳转回原位置(实际使用好像有问题)     |
+| C-1     |                   | 显示当前list中函数的documentation                  |
+| C-2     |                   | 显示当前list中函数的参数说明                       |
+| Z       | lispy-edebug-stop | 跳出edebug过程,但保留当前函数的参数值              |
+| i       |                   | 重正list代码格式                                   |
+| xi      |                   | 将cond表达式转换为if表达式                         |
+| xc      |                   | 将if表达式转换为cond表达式                         |
+| xf      |                   | 展开函数或宏调用(抽出实现代码并替换其中的参数)     |
+| xr      |                   | 执行lisp,并用执行结果替代该list                    |
+| xl      |                   | 将当前的defun转换为lambda                          |
+| xd      |                   | 将当前的lambda转换为defun                          |
+| O       | lispy-oneline     | 将所有代码整合到一行                               |
+| M       | lispy-multiline   | 将所有代码分成多行                                 |
+| N       |                   | narrow当前list                                     |
+| W       |                   | widen                                              |
+| b/B     |                   | ediff                                              |
+| T       |                   | ert                                                |
+| xe      |                   | edebug                                             |
+| S       | lispy-stringify   | 将当前list变为字符串                               |
+| C-u "   | lispy-quotes      | S的反操作,或为一个region加上引号                   |
+| ;       | lispy-comment     | 将当前list注释掉                                   |
+| C-u ;   | lispy-comment     | ;的反操作                                          |
+** region操作
+| binding | command          | comment                                                            |
+|---------+------------------+--------------------------------------------------------------------|
+| m       | lispy-mark-list  | 选中/取消选中当前list                                              |
+| a       | lispy-ace-symbol | 选中当前list中的某个symbol                                         |
+| j       |                  | 选中下一个元素                                                     |
+| k       |                  | 选中上一个元素                                                     |
+| h       |                  | 选中父级list,光标在开括号处                                        |
+| l       |                  | 选中父级list,光标在闭括号处                                        |
+| d       |                  | 跳转到选中域的另一边                                               |
+| >       |                  | 扩展选中区域                                                       |
+| <       |                  | 缩小选中区域                                                       |
+| c       |                  | 拷贝当前选中区域的内容                                             |
+| s       |                  | 将选中区域移到下一个位置                                           |
+| w       |                  | 将选中区域移动到上一个位置                                         |
+| t       |                  | 将选中区域移到list中的指定位置                                     |
+| C       |                  | exchange the order of application of two sexps that contain region |
+| n       | lispy-new-copy   | 拷贝选择区域到kill-ring中                                          |
+| P       | lispy-paste      | 用kill-ring中的东西覆盖选中区域                                    |
+|         |                  |                                                                    |
