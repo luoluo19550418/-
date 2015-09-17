@@ -42,7 +42,7 @@
 ** 修改按键说明
 | binding     | command         | comment                      |
 |-------------+-----------------+------------------------------|
-| r           | lispy-raise     |                              |
+| r           | lispy-raise     | 用当前list替代上一级list             |
 | C           | lispy-convolute |                              |
 | >           | lispy-slurp     | 纳入前一个/后一个元素        |
 | <           | lispy-barf      | 吐出第一个/最后一个元素      |
