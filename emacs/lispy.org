@@ -42,7 +42,7 @@
 ** 修改按键说明
 | binding     | command         | comment                      |
 |-------------+-----------------+------------------------------|
-| r           | lispy-raise     |                              |
+| r           | lispy-raise     | 用当前list替代上一级list             |
 | C           | lispy-convolute |                              |
 | >           | lispy-slurp     | 纳入前一个/后一个元素        |
 | <           | lispy-barf      | 吐出第一个/最后一个元素      |
@@ -50,7 +50,8 @@
 | w           | lispy-move-up   | 将当前list移到上一个list后面 |
 | c           | lispy-clone     | 拷贝当前list                 |
 | C-d /退格键 |                 | 删除整个list                 |
-|             |                 |                              |
+| }           |                 | 插入[]                       |
+| {           |                 | 插入{}                          |
 ** 高级功能
 | binding | command           | comment                                            |
 |---------+-------------------+----------------------------------------------------|
@@ -100,4 +101,3 @@
 | C       |                  | exchange the order of application of two sexps that contain region |
 | n       | lispy-new-copy   | 拷贝选择区域到kill-ring中                                          |
 | P       | lispy-paste      | 用kill-ring中的东西覆盖选中区域                                    |
-|         |                  |                                                                    |
