@@ -989,111 +989,134 @@
 	#+END_SRC
 
 ** 宏的实现
+对一个宏的调用,实际上是被转换为一个函数的调用
+#+BEGIN_SRC lisp
+  (defmacro null! (x)
+    (list 'setf x nil))
 
-	对一个宏的调用,实际上是被转换为一个函数的调用
-	#+BEGIN_SRC lisp
-      (defmacro null! (x)
-        (list 'setf x nil))
+  (null! x)
 
-      (null! x)
+  ;; 其实就是
+  (setf expr '(null! x))
+  (lambda (expr)
+    (apply #'(lambda (x) (list 'setf x nil))
+           (cdr expr)))
+#+END_SRC
 
-      ;; 其实就是
-      (setf expr '(null! x))
-      (lambda (expr)
-        (apply #'(lambda (x) (list 'setf x nil))
-               (cdr expr)))
-	#+END_SRC
++ 定义宏时,要注意变量捕获的问题
 
-	* 定义宏时,要注意变量捕获的问题
-
-      使用gensym来生产内部变量名
-	  #+BEGIN_SRC lisp
+  使用gensym来生产内部变量名
+  #+BEGIN_SRC lisp
         (defmacro ntimes (n &rest body)
           (let ((g (gensym)))
             `(do ((,g 0 (+ ,g 1)))
                  ((>= ,g ,n))
                ,@body)))
-	  #+END_SRC
+  #+END_SRC
+  
++ 定义宏时,要注意多重求值的问题
+  
+  因此要使用一个内部变量,在任何迭代前都存储参数的值,这又需要另一个gensym
+  #+BEGIN_SRC lisp
+    (defmacro ntimes (n &rest body)
+      (let ((g (gensym))
+            (h (gensym)))
+        `(let ((,h ,n))
+           (do ((,g 0 (+ ,g 1)))
+               ((>= ,g ,h))
+             ,@body))))
+  #+END_SRC
+  
++ 若定义宏时,若参数中有表示待执行的代码时,可以考虑将该段代码包裹在一个闭包内,这样可以将闭包内的那些自由变量保护起来.例如:
+  #+BEGIN_SRC lisp
+    (defmacro for ((var start stop) &body body)
+      `(do ((b #'(lambda (,var) ,@body))
+             (count ,start (1+ count))
+             (limit ,stop))
+            ((> count limit))
+          (funcall b count)))
+  #+END_SRC
+  
+  由于闭包是for展开时生成的第一个东西，因此所有出现在宏体内的自由符号将全部指向宏调用环境中的变量。现在do通过闭包的参数跟宏体通信。闭包需要从do知道的全部就是当前迭代的数字，所以它只有一个参数，也就是宏调用中作为索引指定的那个符号。
+  
+  *但这种方法不如使用gensym方便*
 
-	* 定义宏时,要注意多重求值的问题
++ 定义宏时,需要注意将各个展开式中的任何子form个求值顺序要与宏调用时的子form相同.
 
-	  因此要使用一个内部变量,在任何迭代前都存储参数的值,这又需要另一个gensym
-	  #+BEGIN_SRC lisp
-        (defmacro ntimes (n &rest body)
-          (let ((g (gensym))
-                (h (gensym)))
-            `(let ((,h ,n))
-               (do ((,g 0 (+ ,g 1)))
-                   ((>= ,g ,h))
-                 ,@body))))
-	  #+END_SRC
++ Common Lisp并不保证绑定在&rest形参上的列表是新生成的。它们可能会和程序其他地方的列表共享数据结构。后果就是，你不能破坏性地修改&rest形参，因为你不知道你将会改掉其他什么东西。
 
-	* 定义宏时,需要注意将各个展开式中的任何子form个求值顺序要与宏调用时的子form相同.
+  任何宏参数只要是列表就应该单独对待。如果我们定义了一个会修改其参数的宏，以及一个调用该宏的函数 那么主调函数的源代码就有可能被修改，例如:
+  #+BEGIN_SRC lisp
+    (defmacro crazy (expr) (nconc expr (list t)))
+    (defun foo () (crazy (list)))
+    (foo)
+    ;; (T T)
+  #+END_SRC
 
-	* 使用macroexpand-1可以查看宏扩展后的表达式
-
-	  #+BEGIN_SRC lisp
-        (pprint (macroexpand-1 '(cond (a b)
-                                      (c d e)
-                                      (t f))))
-        ;; (IF A
-        ;;     B
-        ;;     (IF C
-        ;;         (PROGN D E)
-        ;;         F))
-	  #+END_SRC 
-
++ 使用macroexpand-1可以查看宏扩展后的表达式
+  
+  #+BEGIN_SRC lisp
+    (pprint (macroexpand-1 '(cond (a b)
+                                  (c d e)
+                                  (t f))))
+    ;; (IF A
+    ;;     B
+    ;;     (IF C
+    ;;         (PROGN D E)
+    ;;         F))
+  #+END_SRC 
+  
 ** 通用化引用
-   
-   由于一个宏调用可以直接在它出现的地方展开成代码，任何展开为 setf 表达式的宏调用都可以作为 setf 表达式的第一个参数。
-   举例来说，如果我们定义一个 car 的同义词，
-   #+BEGIN_SRC lisp
-     (defmacro cah (lst) `(car ,lst))
-   #+END_SRC
 
-   然后因为一个 car 调用可以是 setf 的第一个参数，而 cah 一样可以:
-   #+BEGIN_SRC lisp
-     (let ((x (list 'a 'b 'c)))
-       (setf (cah x) 44)
-       x)
-     ;; (44 B C)
-   #+END_SRC
+由于一个宏调用可以直接在它出现的地方展开成代码，任何展开为 setf 表达式的宏调用都可以作为 setf 表达式的第一个参数。
+举例来说，如果我们定义一个 car 的同义词，
+#+BEGIN_SRC lisp
+  (defmacro cah (lst) `(car ,lst))
+#+END_SRC
 
-   但是撰写一个展开成一个 setf 表达式的宏是另一个问题，是一个比原先看起来更为困难的问题。看起来也许你可以这样实现 incf:
-   #+BEGIN_SRC lisp
-     (defmacro incf (x &optional (y 1)) ; wrong
-       `(setf ,x (+ ,x ,y)))
-   #+END_SRC
+然后因为一个 car 调用可以是 setf 的第一个参数，而 cah 一样可以:
+#+BEGIN_SRC lisp
+  (let ((x (list 'a 'b 'c)))
+    (setf (cah x) 44)
+    x)
+  ;; (44 B C)
+#+END_SRC
 
-   但这是行不通的。这两个表达式不相等:
-   #+BEGIN_SRC lisp
-     (setf (car (push 1 lst)) (1+ (car (push 1 lst))))
+但是撰写一个展开成一个 setf 表达式的宏是另一个问题，是一个比原先看起来更为困难的问题。看起来也许你可以这样实现 incf:
+#+BEGIN_SRC lisp
+  (defmacro incf (x &optional (y 1)) ; wrong
+    `(setf ,x (+ ,x ,y)))
+#+END_SRC
 
-     (incf (car (push 1 lst)))
-   #+END_SRC
-   如果 lst 是 nil 的话，第二个表达式会设成 (2) ，但第一个表达式会设成 (1 2) 。
+但这是行不通的。这两个表达式不相等:
+#+BEGIN_SRC lisp
+  (setf (car (push 1 lst)) (1+ (car (push 1 lst))))
 
-   Common Lisp 提供了 define-modify-macro 作为写出对于 setf 限制类别的宏的一种方法它接受三个参数: 宏的名字，额外的参数 (隐含第一个参数 place)，以及产生出 place 新数值的函数名。
-   所以我们可以将 incf 定义为
-   #+BEGIN_SRC lisp
-     (define-modify-macro our-incf (&optional (y 1)) +)
-   #+END_SRC
+  (incf (car (push 1 lst)))
+#+END_SRC
+如果 lst 是 nil 的话，第二个表达式会设成 (2) ，但第一个表达式会设成 (1 2) 。
 
-   另一版将元素推至列表尾端的 push 可写成：
-   #+BEGIN_SRC lisp
-     (define-modify-macro append1f (val)
-       (lambda (lst val) (append lst (list val))))
-   #+END_SRC
+Common Lisp 提供了 define-modify-macro 作为写出对于 setf 限制类别的宏的一种方法它接受三个参数: 宏的名字，额外的参数 (隐含第一个参数 place)，以及产生出 place 新数值的函数名。
+所以我们可以将 incf 定义为
+#+BEGIN_SRC lisp
+  (define-modify-macro our-incf (&optional (y 1)) +)
+#+END_SRC
 
-   后者会如下工作:
-   #+BEGIN_SRC lisp
-     (let ((lst '(a b c)))
-       (append1f lst 'd)
-       lst)
-     ;; (A B C D)
-   #+END_SRC
+另一版将元素推至列表尾端的 push 可写成：
+#+BEGIN_SRC lisp
+  (define-modify-macro append1f (val)
+    (lambda (lst val) (append lst (list val))))
+#+END_SRC
 
-   顺道一提，push 与 pop 都不能定义为 modify-macros，前者因为 place 不是其第一个参数，而后者因为其返回值不是更改后的对象。
+后者会如下工作:
+#+BEGIN_SRC lisp
+  (let ((lst '(a b c)))
+    (append1f lst 'd)
+    lst)
+  ;; (A B C D)
+#+END_SRC
+
+顺道一提，push 与 pop 都不能定义为 modify-macros，前者因为 place 不是其第一个参数，而后者因为其返回值不是更改后的对象。
 
 ** symbol-macro(符号宏)
 普通的宏调用看起来好像函数调用,而符号宏“调用”看起来则像一个符号。
@@ -1112,32 +1135,32 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
 * CLOS
 ** 创建对象
 
-   1. 使用defclass定义一个类
-
-	  #+BEGIN_SRC lisp
+1. 使用defclass定义一个类
+   
+   #+BEGIN_SRC lisp
         (defclass class (parent-classes...)
           (slot1...slotN))                      ;CLOS中的slot就是C++中的成员变量
-	  #+END_SRC
-	  例如:
-	  #+BEGIN_SRC lisp
+   #+END_SRC
+   例如:
+   #+BEGIN_SRC lisp
         (defclass circle ()                     ;创建一个circle类,它没有继承任何基类
           (radius center))                      ;circle对象有两个成员变量radius和center
 
-	  #+END_SRC
-
-   2. 使用make-instance函数创建对象
-
-	  #+BEGIN_SRC lisp
+   #+END_SRC
+   
+2. 使用make-instance函数创建对象
+   
+   #+BEGIN_SRC lisp
         (make-instance class-symbol)
-	  #+END_SRC
-
-	  例如
-	  #+BEGIN_SRC lisp
+   #+END_SRC
+   
+   例如
+   #+BEGIN_SRC lisp
         (setf c (make-instance 'circle))
         ;; #<CIRCLE #XC27496>
 
-	  #+END_SRC
-
+   #+END_SRC
+   
 ** 对象操作
 
    1. 使用slot-value获取对象成员变量
