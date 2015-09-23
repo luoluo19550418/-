@@ -987,7 +987,16 @@
       (eval '(+ 1 2))
       ;; 3
 	#+END_SRC
+** 经典宏
+有三类经典的宏:
 
+1. 使用宏创建上下文环境,让代码块在上下文环境中执行. 例如那些with-宏
+
+2. 当宏中的参数要根据条件来决定是否执行时,必须使用宏. (因为函数中的参数肯定会被执行一次)
+
+3. 当宏中的参数需要被执行多次时,也必须使用宏. (因为函数中的参数只能执行一次)
+
+4. 当需要拆开参数form时,也只能使用宏
 ** 宏的实现
 对一个宏的调用,实际上是被转换为一个函数的调用
 #+BEGIN_SRC lisp
@@ -1088,6 +1097,7 @@
     `(setf ,x (+ ,x ,y)))
 #+END_SRC
 
+<<<<<<< HEAD
 但这是行不通的。这两个表达式不相等:
 #+BEGIN_SRC lisp
   (setf (car (push 1 lst)) (1+ (car (push 1 lst))))
@@ -1117,7 +1127,56 @@ Common Lisp 提供了 define-modify-macro 作为写出对于 setf 限制类别�
 #+END_SRC
 
 顺道一提，push 与 pop 都不能定义为 modify-macros，前者因为 place 不是其第一个参数，而后者因为其返回值不是更改后的对象。
+*** define-modify-macro
+Common Lisp 提供了 define-modify-macro 作为写出对于 setf 限制类别的宏的一种方法.
+它接受三个参数: 宏的名字，额外的参数 (隐含第一个参数 place)，以及产生出 place 新数值的函数名。 
+新函数接受第一个参数place及额外的参数,并作实际的修改操作.
 
+所以我们可以将 incf 定义为
+#+BEGIN_SRC lisp
+     (define-modify-macro our-incf (&optional (y 1)) +)
+#+END_SRC
+
+另一版将元素推至列表尾端的 push 可写成：
+#+BEGIN_SRC lisp
+     (define-modify-macro append1f (val)
+       (lambda (lst val) (append lst (list val))))
+#+END_SRC
+
+后者会如下工作:
+#+BEGIN_SRC lisp
+     (let ((lst '(a b c)))
+       (append1f lst 'd)
+       lst)
+     ;; (A B C D)
+#+END_SRC
+
+顺道一提，push 与 pop 都不能定义为 modify-macros，前者因为 place 不是其第一个参数，而后者因为其返回值不是更改后的对象。
+*** get-setf-expansion
+Common Lisp提供了函数get-setf-expansion,它接受一个产生广义变量的表达式并返回所有用于获取和设置其值的必要信息
+#+BEGIN_SRC lisp
+  (get-setf-expansion '(aref a (incf i)))
+  ;;扩展为
+  (#:G4 #:G5)                             ;临时变量列表
+  (A (INCF I))                            ;给上面临时变量赋予的初值
+  (#:G6)                                  ;存储新值的临时变量
+  (SYSTEM:SET-AREF #:G6 #:G4 #:G5)        ;更改操作
+  (AREF #:G4 #:G5)                        ;返回广义变量初值的form
+#+END_SRC
+
+一般来说要写复杂的广义变量操作宏时,会用到这些信息. 例如
+#+BEGIN_SRC lisp
+  (defmacro _f (op place &rest args)
+    (multiple-value-bind (vars forms var set access)
+        (get-setf-expansion place)
+      `(let* (,@(mapcar #'list vars forms)
+              (,(car var) (,op ,access ,@args)))
+         ,set)))
+#+END_SRC
+*** 定义setf使用的逆
+通过defsetf可以告诉lisp如何对任意的函数或宏调用求逆
+
+也可以通过(defun (setf xxx) ...)的方式,直接用defun定义setf的逆
 ** symbol-macro(符号宏)
 普通的宏调用看起来好像函数调用,而符号宏“调用”看起来则像一个符号。
 
@@ -1136,7 +1195,7 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
 ** 创建对象
 
 1. 使用defclass定义一个类
-   
+
    #+BEGIN_SRC lisp
         (defclass class (parent-classes...)
           (slot1...slotN))                      ;CLOS中的slot就是C++中的成员变量
@@ -1163,34 +1222,34 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
    
 ** 对象操作
 
-   1. 使用slot-value获取对象成员变量
+1. 使用slot-value获取对象成员变量
 
-	  #+BEGIN_SRC lisp
-        (slot-value obj slot)
-	  #+END_SRC
+   #+BEGIN_SRC lisp
+     (slot-value obj slot)
+   #+END_SRC
 
 ** 基类
 
-   defclass 接受的第二个参数是一个列出其基类的列表。一个类别继承了所有基类槽的联集
-   #+BEGIN_SRC lisp
+defclass 接受的第二个参数是一个列出其基类的列表。一个类别继承了所有基类槽的联集
+#+BEGIN_SRC lisp
      (defclass graphic ()
        ((color :accessor graphic-color :initarg :color)
         (visible :accessor graphic-visible :initarg :visible
                  :initform t)))
 
      (defclass screen-circle (circle graphic) ())
-   #+END_SRC
-   这里screen-circle的实例会有四个槽，分别从两个基类继承而来
+#+END_SRC
+这里screen-circle的实例会有四个槽，分别从两个基类继承而来
 
-   基类中的:accessor及:initargs参数可以用在子类中:
-   #+BEGIN_SRC lisp
+基类中的:accessor及:initargs参数可以用在子类中:
+#+BEGIN_SRC lisp
      (graphic-color (make-instance 'screen-circle
                                    :color 'red :radius 3))
      ;; RED
-   #+END_SRC
+#+END_SRC
 
-   我们也可以为子类定义自己的:initform
-   #+BEGIN_SRC lisp
+我们也可以为子类定义自己的:initform
+#+BEGIN_SRC lisp
      (defclass screen-circle (circle graphic)
        ((color :initform 'purple)))
 
@@ -1198,99 +1257,99 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
 
      (graphic-color (make-instance 'screen-circle))
      ;; PURPLE
-   #+END_SRC
+#+END_SRC
 
 *** 基类的优先级
-	由于CLOS支持多个基类,所有存在基类的优先级问题. 
+由于CLOS支持多个基类,所有存在基类的优先级问题. 
 
-	优先级以层级最小优先,相同层级的基类,第一个出现的优先.
+优先级以层级最小优先,相同层级的基类,第一个出现的优先.
 ** slot定义说明
 
-	 传给 defclass 的第三个参数必须是一个槽定义的列表。如上例所示，最简单的槽定义是一个表示其名称的符号。
-	 在一般情况下，一个槽定义可以是一个列表，第一个是槽的名称，伴随著一个或多个属性 (property)。
-	 属性像关键字参数那样指定。
+传给 defclass 的第三个参数必须是一个槽定义的列表。如上例所示，最简单的槽定义是一个表示其名称的符号。
+在一般情况下，一个槽定义可以是一个列表，第一个是槽的名称，伴随著一个或多个属性 (property)。
+属性像关键字参数那样指定。
 
-	 * :accessor
+* :accessor
 
-	   通过替一个槽定义一个访问器 (accessor)，我们隐式地定义了一个可以引用到槽的函数，使我们不需要再调用 slot-value 函数.
+通过替一个槽定义一个访问器 (accessor)，我们隐式地定义了一个可以引用到槽的函数，使我们不需要再调用 slot-value 函数.
 
-	   例如
-	   #+BEGIN_SRC lisp
-		 (defclass circle ()
-		   ((radius :accessor circle-radius)
-			(center :accessor circle-center)))
+例如
+#+BEGIN_SRC lisp
+    (defclass circle ()
+      ((radius :accessor circle-radius)
+       (center :accessor circle-center)))
 
-		 ;; 那我们能够分别通过 circle-radius 及 circle-center 来引用槽：
+    ;; 那我们能够分别通过 circle-radius 及 circle-center 来引用槽：
 
-		 (setf c (make-instance 'circle))
-		 ;; #<CIRCLE #XC5C726>
+    (setf c (make-instance 'circle))
+    ;; #<CIRCLE #XC5C726>
 
-		 (setf (circle-radius c) 1)
-		 ;; 1
+    (setf (circle-radius c) 1)
+    ;; 1
 
-		 (circle-radius c)
-		 ;; 1
+    (circle-radius c)
+    ;; 1
 
-	   #+END_SRC
+#+END_SRC
 
-	 * :writer / :reader
+* :writer / :reader
 
-	   通过指定一个 :writer 或是一个 :reader ，而不是 :accessor ，我们可以获得访问器的写入或读取行为
+通过指定一个 :writer 或是一个 :reader ，而不是 :accessor ，我们可以获得访问器的写入或读取行为
 
-	 * :initform / :initarg
+* :initform / :initarg
 
-	   要指定一个槽的缺省值，我们可以给入一个 :initform 参数。
+要指定一个槽的缺省值，我们可以给入一个 :initform 参数。
 
-	   若我们想要在 make-instance 调用期间就将槽初始化，我们可以用 :initarg 定义一个参数名。
-	   #+BEGIN_SRC lisp
-		 (defclass circle ()
-		   ((radius :accessor circle-radius
-					:initarg :radius
-					:initform 1)
-			(center :accessor circle-center
-					:initarg :center
-					:initform (cons 0 0))))
+若我们想要在 make-instance 调用期间就将槽初始化，我们可以用 :initarg 定义一个参数名。
+#+BEGIN_SRC lisp
+    (defclass circle ()
+      ((radius :accessor circle-radius
+               :initarg :radius
+               :initform 1)
+       (center :accessor circle-center
+               :initarg :center
+               :initform (cons 0 0))))
 
-		 ;; 现在当我们创建一个 circle 类的实例时，我们可以使用关键字参数 :initarg 给槽赋值，或是將槽的值设为 :initform 所指定的缺省值。
+    ;; 现在当我们创建一个 circle 类的实例时，我们可以使用关键字参数 :initarg 给槽赋值，或是將槽的值设为 :initform 所指定的缺省值。
 
-		 (setf c (make-instance 'circle :radius 3))
-		 ;; #<CIRCLE #XC2DE0E>
-		 (circle-radius c)
-		 ;; 3
-		 (circle-center c)
-		 ;; (0 . 0)
-	   #+END_SRC
+    (setf c (make-instance 'circle :radius 3))
+    ;; #<CIRCLE #XC2DE0E>
+    (circle-radius c)
+    ;; 3
+    (circle-center c)
+    ;; (0 . 0)
+#+END_SRC
 
-	 * :allocation
+* :allocation
 
-	   该参数说明了slot是对象成员变量(:allocation :instance,默认)还是类成员变量(:allocation :instance)
-	   #+BEGIN_SRC lisp
-		 (defclass tabloid ()
-		   ((top-story :accessor tabloid-story
-					   :allocation :class)))
+该参数说明了slot是对象成员变量(:allocation :instance,默认)还是类成员变量(:allocation :instance)
+#+BEGIN_SRC lisp
+    (defclass tabloid ()
+      ((top-story :accessor tabloid-story
+                  :allocation :class)))
 
-		 ;; 那么如果我们创立两家小报，无论一家的头条是什么，另一家的头条也会是一样的：
+    ;; 那么如果我们创立两家小报，无论一家的头条是什么，另一家的头条也会是一样的：
 
-		 (setf daily-blab (make-instance 'tabloid)
-				 unsolicited-mail (make-instance 'tabloid))
-		 ;; #<TABLOID #x302000EFE5BD>
-		 (setf (tabloid-story daily-blab) 'adultery-of-senator)
-		 ;; ADULTERY-OF-SENATOR
-		 (tabloid-story unsolicited-mail)
-		 ;; ADULTERY-OF-SENATOR
+    (setf daily-blab (make-instance 'tabloid)
+            unsolicited-mail (make-instance 'tabloid))
+    ;; #<TABLOID #x302000EFE5BD>
+    (setf (tabloid-story daily-blab) 'adultery-of-senator)
+    ;; ADULTERY-OF-SENATOR
+    (tabloid-story unsolicited-mail)
+    ;; ADULTERY-OF-SENATOR
 
-	   #+END_SRC
+#+END_SRC
 
-	 * :documentation
+* :documentation
 
-	   若有给入 :documentation 属性的话，用来作为 slot 的文档字符串。
+若有给入 :documentation 属性的话，用来作为 slot 的文档字符串。
 
-	 * :type
+* :type
 
-	   通过指定一个 :type ，你保证一个槽里只会有这种类型的元素
+通过指定一个 :type ，你保证一个槽里只会有这种类型的元素
 ** 通用函数
-   一个通用函数 (generic function) 是由一个或多个方法组成的一个函数。方法可用defmethod 来定义，与 defun 的定义形式类似：
-   #+BEGIN_SRC lisp
+一个通用函数 (generic function) 是由一个或多个方法组成的一个函数。方法可用defmethod 来定义，与 defun 的定义形式类似：
+#+BEGIN_SRC lisp
      ;; 参数未特化的版本
      (defmethod combine (x y)
        (list x y))
@@ -1300,24 +1359,24 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
        (format nil "~A ice-cream with ~A topping."
                (name ic)
                (name top)))
-   #+END_SRC
-   一个方法的特化指出它是应用至何种类别的参数。刚定义的方法仅能在传给combine的参数分别是class1与classs2的实例时有效
+#+END_SRC
+一个方法的特化指出它是应用至何种类别的参数。刚定义的方法仅能在传给combine的参数分别是class1与classs2的实例时有效
    
-   方法特化时,可以对任意个参数作特化,也可以使用lisp内建的类型. 例如
-   #+BEGIN_SRC lisp
+方法特化时,可以对任意个参数作特化,也可以使用lisp内建的类型. 例如
+#+BEGIN_SRC lisp
      (defmethod combine ((x number) (y number))
        (+ x y))
-   #+END_SRC
+#+END_SRC
 
-   类似C++的模板,还能对具体的对象作特化,用eql来作决定:
-   #+BEGIN_SRC lisp
+类似C++的模板,还能对具体的对象作特化,用eql来作决定:
+#+BEGIN_SRC lisp
      (defmethod combine ((x (eql 'powder)) (y (eql 'spark)))
        'boom)
-   #+END_SRC
+#+END_SRC
 
-   方法可以像一般 Common Lisp 函数一样有复杂的参数列表(*但只有必要参数可以被特化*),所有组成通用函数方法的参数列表必须是一致的
-   参数的数量必须一致，同样数量的选择性参数（如果有的话），要嘛一起使用&rest 或是 &key 参数，或者一起不要用。
-   #+BEGIN_SRC lisp
+方法可以像一般 Common Lisp 函数一样有复杂的参数列表(*但只有必要参数可以被特化*),所有组成通用函数方法的参数列表必须是一致的
+参数的数量必须一致，同样数量的选择性参数（如果有的话），要嘛一起使用&rest 或是 &key 参数，或者一起不要用。
+#+BEGIN_SRC lisp
      下面的参数列表对是全部一致的，
 
      (x)             (a)
@@ -1331,28 +1390,28 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
      (x &optional y) (a &optional b c)
      (x &optional y) (a &rest b)
      (x &key x y)    (a)  
-   #+END_SRC
+#+END_SRC
 ** 辅组方法
    
-   方法可以通过如 :before ， :after 以及 :around 等辅助方法来增强。
-   这称为标准方法组合机制 (standard method combination)。
-   在标准方法组合机制里，调用一个通用函数会调用
-   #+BEGIN_QUOTE
+方法可以通过如 :before ， :after 以及 :around 等辅助方法来增强。
+这称为标准方法组合机制 (standard method combination)。
+在标准方法组合机制里，调用一个通用函数会调用
+#+BEGIN_QUOTE
    
    1. 最具体的 :around 方法，如果有的话。
 	  
    2. 否则，依序，
 
-         1. 所有的 :before 方法，从最具体到最不具体。
-         2. 最具体的主方法
-         3. 所有的 :after 方法，从最不具体到最具体
-			
-	返回值为 :around 方法的返回值（情况 1）
-    或是最具体的主方法的返回值（情况 2）。
-   #+END_QUOTE
+      1. 所有的 :before 方法，从最具体到最不具体。
+      2. 最具体的主方法
+      3. 所有的 :after 方法，从最不具体到最具体
 
-   辅助方法通过在 defmethod 调用中，在方法名后加上一个修饰关键字 (qualifying keyword)来定义
-   #+BEGIN_SRC lisp
+	  返回值为 :around 方法的返回值（情况 1）
+      或是最具体的主方法的返回值（情况 2）。
+#+END_QUOTE
+
+辅助方法通过在 defmethod 调用中，在方法名后加上一个修饰关键字 (qualifying keyword)来定义
+#+BEGIN_SRC lisp
      (defclass speaker () ())
 
      (defmethod speak ((s speaker) string)
@@ -1373,12 +1432,12 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
             "I am hungry")
      ;; Perhaps I am hungry in some sense
      ;; NIL
-   #+END_SRC
+#+END_SRC
 
-   如果有一个替传入通用函数特别定义的 :around 方法，则优先调用 :around 方法，而其它的方法要看 :around 方法让不让它们被运行。
-   一个 :around 或主方法，可以通过调用 call-next-method 来调用下一个方法。
-   在调用下一个方法前，它使用 next-method-p 来检查是否有下个方法可调用。  
-   #+BEGIN_SRC lisp
+如果有一个替传入通用函数特别定义的 :around 方法，则优先调用 :around 方法，而其它的方法要看 :around 方法让不让它们被运行。
+一个 :around 或主方法，可以通过调用 call-next-method 来调用下一个方法。
+在调用下一个方法前，它使用 next-method-p 来检查是否有下个方法可调用。  
+#+BEGIN_SRC lisp
      (defclass courtier (speaker) ())
 
      (defmethod speak :around ((c courtier) string)
@@ -1399,114 +1458,114 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
 
      ;; 记得由 :around 方法所返回的值即通用函数的返回值，这与 
      ;; :before 与 :after 方法的返回值不一样。
-   #+END_SRC
+#+END_SRC
 
 ** defgeneric
 
 * 速度
 ** 瓶颈规则
-   不管是什么实现，关于优化都可以整理出三点规则：
+不管是什么实现，关于优化都可以整理出三点规则：
 
-   * 它应该关注瓶颈
-   * 它不应该开始的太早
-   * 它应该始于算法。
+* 它应该关注瓶颈
+* 它不应该开始的太早
+* 它应该始于算法。
 ** 编译
-   有五个参数可以控制代码的编译方式,权重从0(最不重要)到3(最重要)： 
+有五个参数可以控制代码的编译方式,权重从0(最不重要)到3(最重要)： 
 
-   * speed (速度)代表编译器产生代码的速度；
-   * compilation-speed (编译速度)代表程序被编译的速度；
-   * safety (安全) 代表要对目标代码进行错误检查的数量； 
-   * space (空间)代表目标代码的大小和内存需求量；
-   * debug (调试)代表为了调试而保留的信息量。
+* speed (速度)代表编译器产生代码的速度；
+* compilation-speed (编译速度)代表程序被编译的速度；
+* safety (安全) 代表要对目标代码进行错误检查的数量； 
+* space (空间)代表目标代码的大小和内存需求量；
+* debug (调试)代表为了调试而保留的信息量。
 
-   #+BEGIN_SRC lisp
+#+BEGIN_SRC lisp
      (declaim (optimize (speed 3)
                         (compilation-speed 0)
                         (safety 0)
                         (debug 0)))
-   #+END_SRC
+#+END_SRC
 ** 类型说明
-   在 Common Lisp 中，类型声明完全是可选的。它们可以让程序运行的更快，但(除非错误)不会改变程序的行为。
+在 Common Lisp 中，类型声明完全是可选的。它们可以让程序运行的更快，但(除非错误)不会改变程序的行为。
    
-   全局声明以 declaim 伴随一个或多个声明的形式来实现。一个类型声明是一个列表，包含了符号 type ，后跟一个类型名，以及一个或多个变量组成。
-   #+BEGIN_SRC lisp
+全局声明以 declaim 伴随一个或多个声明的形式来实现。一个类型声明是一个列表，包含了符号 type ，后跟一个类型名，以及一个或多个变量组成。
+#+BEGIN_SRC lisp
      (declaim (type fixnum *count*))
-   #+END_SRC
-   在 ANSI Common Lisp 中，可以省略 type 符号，将声明简写为：
-   #+BEGIN_SRC lisp
+#+END_SRC
+在 ANSI Common Lisp 中，可以省略 type 符号，将声明简写为：
+#+BEGIN_SRC lisp
      (declaim (fixnum *count*))
-   #+END_SRC
+#+END_SRC
    
-   局部声明通过 declare 完成，它接受的参数和 declaim 的一样。声明可以放在那些创建变量的 *代码体* 之前：如 defun 、lambda 、let 、do ，诸如此类。
-   #+BEGIN_SRC lisp
+局部声明通过 declare 完成，它接受的参数和 declaim 的一样。声明可以放在那些创建变量的 *代码体* 之前：如 defun 、lambda 、let 、do ，诸如此类。
+#+BEGIN_SRC lisp
      (defun poly (a b x)
        (declare (fixnum a b x))
        (+ (* a (expt x 2)) (* b x)))
-   #+END_SRC
+#+END_SRC
 
-   你也可以通过 the 为某个表达式的值声明类型。
-   如果我们提前就知道 a 、b 和 x 是足够小的定长数，并且它们的和也是定长数的话，那么可以进行以下声明：
-   #+BEGIN_SRC lisp
+你也可以通过 the 为某个表达式的值声明类型。
+如果我们提前就知道 a 、b 和 x 是足够小的定长数，并且它们的和也是定长数的话，那么可以进行以下声明：
+#+BEGIN_SRC lisp
      (defun poly (a b x)
        (declare (fixnum a b x))
        (the fixnum (+ (the fixnum (* a (the fixnum (expt x 2))))
                       (the fixnum (* b x)))))
-   #+END_SRC
+#+END_SRC
 
-   可以通过 make-array 的 :element-type 参数指定数组包含值的种类。这样的数组被称为特化数组(specialized array)。
+可以通过 make-array 的 :element-type 参数指定数组包含值的种类。这样的数组被称为特化数组(specialized array)。
    
-   除了在创建数组时指定元素的类型，你还应该在使用数组的代码中声明数组的维度以及它的元素类型。
-   #+BEGIN_SRC lisp
+除了在创建数组时指定元素的类型，你还应该在使用数组的代码中声明数组的维度以及它的元素类型。
+#+BEGIN_SRC lisp
      (declare (type (vector fixnum 20) v))
      ;; 以上代码声明了一个仅含有定长数，并且长度固定为 20 的向量。
-   #+END_SRC
+#+END_SRC
 
-   最为通用的数组声明形式由数组类型以及紧接其后的元素类型和一个维度列表构成：
-   #+BEGIN_SRC lisp
+最为通用的数组声明形式由数组类型以及紧接其后的元素类型和一个维度列表构成：
+#+BEGIN_SRC lisp
      (declare (type (simple-array fixnum (4 4)) ar))
-   #+END_SRC
+#+END_SRC
 ** 避免垃圾回收
 
-   * 填充指针
+* 填充指针
 
-   * map-into
+* map-into
 
-   * 鼓励编译器在栈上分配对象而不是在堆上
+* 鼓励编译器在栈上分配对象而不是在堆上
 
-     如果你知道只是临时需要某个东西，你可以通过将它声明为 dynamic extent 来避免在堆上分配空间。
-	 
-	 通过一个动态范围 (dynamic extent)变量声明，你告诉编译器，变量的值应该和变量保持相同的生命期。
-	 #+BEGIN_SRC lisp
-       (defun our-adjoin (obj lst &rest args)
-         (declare (dynamic-extent args))
-         (if (apply #'member obj lst args)
-             lst
-           (cons obj lst)))
-	 #+END_SRC
+如果你知道只是临时需要某个东西，你可以通过将它声明为 dynamic extent 来避免在堆上分配空间。
+
+通过一个动态范围 (dynamic extent)变量声明，你告诉编译器，变量的值应该和变量保持相同的生命期。
+#+BEGIN_SRC lisp
+    (defun our-adjoin (obj lst &rest args)
+      (declare (dynamic-extent args))
+      (if (apply #'member obj lst args)
+          lst
+        (cons obj lst)))
+#+END_SRC
 ** 与其他语言整合
 * Read-Macros
-  宏字符 (macro character)的概念，一个对于 read 有特别意义的字符。
-  每一个这样的字符，都有一个相关联的函数，这函数告诉 read 当遇到这个字符时该怎么处理。
-  你可以变更某个已存在宏字符所相关联的函数，或是自己定义新的宏字符。
+宏字符 (macro character)的概念，一个对于 read 有特别意义的字符。
+每一个这样的字符，都有一个相关联的函数，这函数告诉 read 当遇到这个字符时该怎么处理。
+你可以变更某个已存在宏字符所相关联的函数，或是自己定义新的宏字符。
 
-  函数 set-macro-character 提供了一种方式来定义读取宏 (read-macros)。
-  它接受一个字符及一个函数，因此当 read 碰到该字符时，它返回调用传入函数后的结果。
+函数 set-macro-character 提供了一种方式来定义读取宏 (read-macros)。
+它接受一个字符及一个函数，因此当 read 碰到该字符时，它返回调用传入函数后的结果。
 
-  Lisp 中最古老的读取宏之一是 ' ，即 quote 。我们可以定义成：
-  #+BEGIN_SRC lisp
+Lisp 中最古老的读取宏之一是 ' ，即 quote 。我们可以定义成：
+#+BEGIN_SRC lisp
     (set-macro-character #\'
                          #'(lambda (stream char)
                              (list (quote quote) (read stream t nil t))))
 
     ;; 当 read 在一个普通的语境下遇到 ' 时，它会返回在当前流和字符上调用这个函数的结果。
-  #+END_SRC
+#+END_SRC
 
-  你可以（通过使用 make-dispatch-macro-character ）来定义你自己的派发宏字符（dispatching macro character），但由于 # 已经是一个宏字符，所以你也可以直接使用。
-  六个 # 打头的组合特别保留给你使用：#! 、#? 、##[ 、##] 、#{ 、#} 。
+你可以（通过使用 make-dispatch-macro-character ）来定义你自己的派发宏字符（dispatching macro character），但由于 # 已经是一个宏字符，所以你也可以直接使用。
+六个 # 打头的组合特别保留给你使用：#! 、#? 、##[ 、##] 、#{ 、#} 。
 
-  你可以通过调用 set-dispatch-macro-character 定义新的派发宏字符组合，与 set-macro-character 类似，除了它接受两个字符参数外。
-  下面的代码定义了#? 作为返回一个整数列表的读取宏。
-  #+BEGIN_SRC lisp
+你可以通过调用 set-dispatch-macro-character 定义新的派发宏字符组合，与 set-macro-character 类似，除了它接受两个字符参数外。
+下面的代码定义了#? 作为返回一个整数列表的读取宏。
+#+BEGIN_SRC lisp
         (set-dispatch-macro-character #\# #\?
           #'(lambda (stream char1 char2)
               (list 'quote
@@ -1515,111 +1574,111 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
                         (push i lst))
                       (nreverse lst)))))
     ;; 现在 #?n 会被读取成一个含有整数 0 至 n 的列表。
-  #+END_SRC
+#+END_SRC
 * Packages
-  * 一个uninterned symbol是指一个未被包含于任意package的symbol.
+* 一个uninterned symbol是指一个未被包含于任意package的symbol.
 
-	uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被正常地转换成大写形式并被转化成符号,但这些符号并不进入任何package.
+uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被正常地转换成大写形式并被转化成符号,但这些符号并不进入任何package.
 
-	每次读取器读到一个带"#:"的名字时, *都会创建一个新的符号* 因此:
-	#+BEGIN_SRC lisp
-      (eql '#:foo '#:foo)                     ;nil
-	#+END_SRC
+每次读取器读到一个带"#:"的名字时, *都会创建一个新的符号* 因此:
+#+BEGIN_SRC lisp
+    (eql '#:foo '#:foo)                     ;nil
+#+END_SRC
 
-  * package-name 返回包的名字，
+* package-name 返回包的名字，
 
-	#+BEGIN_SRC lisp
-      (package-name *package*)
-      ;; "COMMON-LISP-USER"
-	#+END_SRC
+#+BEGIN_SRC lisp
+    (package-name *package*)
+    ;; "COMMON-LISP-USER"
+#+END_SRC
 
-  * find-package 返回一个给定名称的包
+* find-package 返回一个给定名称的包
 
-	#+BEGIN_SRC lisp
-      (find-package "COMMON-LISP-USER")
-      ;; #<Package "COMMON-LISP-USER" 4CD15E>
-	#+END_SRC
+#+BEGIN_SRC lisp
+    (find-package "COMMON-LISP-USER")
+    ;; #<Package "COMMON-LISP-USER" 4CD15E>
+#+END_SRC
 
-  * 函数 symbol-package 接受一个符号并返回该符号被 interned 的包
-	
-	#+BEGIN_SRC lisp
-      (symbol-package 'sym)
-      ;; #<Package "COMMON-LISP-USER" 4CD15E>
-	#+END_SRC
+* 函数 symbol-package 接受一个符号并返回该符号被 interned 的包
 
-  * 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上一个或两个冒号作为前缀：
-	 
-	含有单冒号的名字,只能指向一个被package导出的symbol
-	#+BEGIN_SRC lisp
-      common-lisp-user:bar
-	#+END_SRC
-	
-	而含有双冒号的名字,能指向一个package内的任意symbol
-	#+BEGIN_SRC lisp
-      common-lisp-user::sym
-	#+END_SRC
-    但是使用两个冒号作为包的前缀也是很差的风格。这么做你就违反了包本应提供的模块性。如果你不得不使用一个双冒号来参照到一个符号，这是因为某人根本不想让你用。
+#+BEGIN_SRC lisp
+    (symbol-package 'sym)
+    ;; #<Package "COMMON-LISP-USER" 4CD15E>
+#+END_SRC
 
-  * 使用defpackage定义package
-	 
-	 #+BEGIN_SRC lisp
-       (defpackage "MY-APPLICATION"            ;定义新包名为my-application,
-         (:use "COMMON-LISP" "MY-UTILITIES")   ;继承了两个包: common-lisp 与 my-utilities ，这代表着可以不需要用包修饰符（package qualifiers）来存取这些包所导出的符号。
-         (:nicknames "APP")                    ;创建昵称app,别的包可以这样引用到这些符号，比如 app:win 。
-         (:export "WIN" "LOSE" "DRAW")         ; my-application 包本身只输出三个符号: WIN 、LOSE以及DRAW
-         (:import-from :other-package :symbols...) ;从:other-package包中引入symbol1...symbolN
-         (:shadow :no-import-symbols...)                    ;放在:shadow后的符号,会在定义的包中创建一个自己的符号,这意味着,不会从其他任何包中导入这些符号
-         (:shadow-import-from :other-package :symbols...))  ;放在:shadow-import-from后面的符号指明当出现多个被use的包中包含了同名symbol时,应该使用哪个包的symbol
-	 #+END_SRC
+* 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上一个或两个冒号作为前缀：
 
-	包名字可以是一个全大写的字符串,或者一个符号. 而使用关键字符号作为包名,则是一种允许把名字书写成小写字母的常用风格
-	#+BEGIN_SRC lisp
-      (defpackage :com.gigamonkeys.email-db
-        (:use :common-lisp))
-	#+END_SRC
-	
+含有单冒号的名字,只能指向一个被package导出的symbol
+#+BEGIN_SRC lisp
+    common-lisp-user:bar
+#+END_SRC
 
-  * 使用in-package切换当前默认包
-	 #+BEGIN_SRC lisp
-       (in-package my-application)
-	 #+END_SRC
+而含有双冒号的名字,能指向一个package内的任意symbol
+#+BEGIN_SRC lisp
+    common-lisp-user::sym
+#+END_SRC
+但是使用两个冒号作为包的前缀也是很差的风格。这么做你就违反了包本应提供的模块性。如果你不得不使用一个双冒号来参照到一个符号，这是因为某人根本不想让你用。
 
-  * 使用export使得package中的符号在其他package中可见
+* 使用defpackage定义package
 
-	这时可以用单冒号来引用package中的符号
-	#+BEGIN_SRC lisp
-      (in-package common-lisp-user)
-      ;; #<Package "COMMON-LISP-USER" 4CD15E>
-      (export 'bar)
-      ;; T
-      (setf bar 5)
-      ;; 5
-      (in-package mine)
-      ;; #<Package "MINE" 63390E>
-      common-lisp-user:bar                    ;此时处于mine package中,使用单冒号引用common-lisp-user的值
-      ;; 5
-	#+END_SRC
-  
-    一个包是一个将名字映对到符号的 Lisp 对象。当前的包总是存在全局变量*package*里。当 Common Lisp 启动时，当前的包会是 *common-lisp-user* ，通常称为用户包 (user package)。
+#+BEGIN_SRC lisp
+     (defpackage "MY-APPLICATION"            ;定义新包名为my-application,
+       (:use "COMMON-LISP" "MY-UTILITIES")   ;继承了两个包: common-lisp 与 my-utilities ，这代表着可以不需要用包修饰符（package qualifiers）来存取这些包所导出的符号。
+       (:nicknames "APP")                    ;创建昵称app,别的包可以这样引用到这些符号，比如 app:win 。
+       (:export "WIN" "LOSE" "DRAW")         ; my-application 包本身只输出三个符号: WIN 、LOSE以及DRAW
+       (:import-from :other-package :symbols...) ;从:other-package包中引入symbol1...symbolN
+       (:shadow :no-import-symbols...)                    ;放在:shadow后的符号,会在定义的包中创建一个自己的符号,这意味着,不会从其他任何包中导入这些符号
+       (:shadow-import-from :other-package :symbols...))  ;放在:shadow-import-from后面的符号指明当出现多个被use的包中包含了同名symbol时,应该使用哪个包的symbol
+#+END_SRC
 
-  * 通过import将其他package中的符号引入到当前package中
+包名字可以是一个全大写的字符串,或者一个符号. 而使用关键字符号作为包名,则是一种允许把名字书写成小写字母的常用风格
+#+BEGIN_SRC lisp
+    (defpackage :com.gigamonkeys.email-db
+      (:use :common-lisp))
+#+END_SRC
 
-	#+BEGIN_SRC lisp
-      (import 'common-lisp-user:bar)
-      ;; T
-      bar
-      ;; 5
-	#+END_SRC
 
-  * 使用use-package将其他package中 *所有exported的符号* 都引入到当前package中
+* 使用in-package切换当前默认包
+#+BEGIN_SRC lisp
+     (in-package my-application)
+#+END_SRC
 
-	#+BEGIN_SRC lisp
-      (use-package 'common-lisp-user)
-      ;; T
-      ;; 现在所有common-lisp-user包所输出的符号，可以不需要使用任何限定符在 mine 包里使用。
-	#+END_SRC
+* 使用export使得package中的符号在其他package中可见
+
+这时可以用单冒号来引用package中的符号
+#+BEGIN_SRC lisp
+    (in-package common-lisp-user)
+    ;; #<Package "COMMON-LISP-USER" 4CD15E>
+    (export 'bar)
+    ;; T
+    (setf bar 5)
+    ;; 5
+    (in-package mine)
+    ;; #<Package "MINE" 63390E>
+    common-lisp-user:bar                    ;此时处于mine package中,使用单冒号引用common-lisp-user的值
+    ;; 5
+#+END_SRC
+
+一个包是一个将名字映对到符号的 Lisp 对象。当前的包总是存在全局变量*package*里。当 Common Lisp 启动时，当前的包会是 *common-lisp-user* ，通常称为用户包 (user package)。
+
+* 通过import将其他package中的符号引入到当前package中
+
+#+BEGIN_SRC lisp
+    (import 'common-lisp-user:bar)
+    ;; T
+    bar
+    ;; 5
+#+END_SRC
+
+* 使用use-package将其他package中 *所有exported的符号* 都引入到当前package中
+
+#+BEGIN_SRC lisp
+    (use-package 'common-lisp-user)
+    ;; T
+    ;; 现在所有common-lisp-user包所输出的符号，可以不需要使用任何限定符在 mine 包里使用。
+#+END_SRC
 * Loop语句
-  #+BEGIN_SRC lisp
+#+BEGIN_SRC lisp
      (loop for x from 0 to 9
             do (princ x))
     ;; 0123456789
@@ -1655,59 +1714,59 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
     (defun sum (n)
       (loop for x from 1 to n
             sum x))
-  #+END_SRC
+#+END_SRC
 * 状况处理
 
-  * error抛出错误
+* error抛出错误
 
-  * ecase类似case,但没有键值匹配时会抛出错误
-	#+BEGIN_SRC lisp
-      (ecase 1
-        (2 3)
-        (4 5))
-	#+END_SRC
+* ecase类似case,但没有键值匹配时会抛出错误
+#+BEGIN_SRC lisp
+    (ecase 1
+      (2 3)
+      (4 5))
+#+END_SRC
 
-  * check-type宏接受一个位置，一个类型名以及一个选择性字符串，并在该位置的值不是预期的类型时，捕捉一个可修正的错误
-	#+BEGIN_SRC lisp
-      (let ((x '(a b c)))
-        (check-type (car x) integer "an integer")
-        x)
-      ;; Error: The value of (CAR X), A, should be an integer.
-      ;; Options: :abort, :backtrace, :continue
+* check-type宏接受一个位置，一个类型名以及一个选择性字符串，并在该位置的值不是预期的类型时，捕捉一个可修正的错误
+#+BEGIN_SRC lisp
+    (let ((x '(a b c)))
+      (check-type (car x) integer "an integer")
+      x)
+    ;; Error: The value of (CAR X), A, should be an integer.
+    ;; Options: :abort, :backtrace, :continue
 
-	#+END_SRC
+#+END_SRC
 
-  * assert接受一个测试表达式以及一个有着一个或多个位置的列表，伴随着你可能传给 error 的参数
-	
-	#+BEGIN_SRC lisp
-      (let ((sandwich '(ham on rye)))
-        (assert (eql (car sandwich) 'chicken)
-                ((car sandwich))
-                "I wanted a ~A sandwich." 'chicken)
-        sandwich)
-      ;; Error: I wanted a CHICKEN sandwich.
-      ;; Options: :abort, :backtrace, :continue
-      ;; >> :continue
-      ;; New value of (CAR SANDWICH)? 'chicken
-      ;; (CHICKEN ON RYE)
+* assert接受一个测试表达式以及一个有着一个或多个位置的列表，伴随着你可能传给 error 的参数
 
-	#+END_SRC
+#+BEGIN_SRC lisp
+    (let ((sandwich '(ham on rye)))
+      (assert (eql (car sandwich) 'chicken)
+              ((car sandwich))
+              "I wanted a ~A sandwich." 'chicken)
+      sandwich)
+    ;; Error: I wanted a CHICKEN sandwich.
+    ;; Options: :abort, :backtrace, :continue
+    ;; >> :continue
+    ;; New value of (CAR SANDWICH)? 'chicken
+    ;; (CHICKEN ON RYE)
 
-  * (ignore-errors &rest bodys)
+#+END_SRC
 
-	bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到的状况. 若无错误,则类似progn
-	#+BEGIN_SRC lisp
-      (defun user-input (prompt)
-        (format t prompt)
-        (let ((str (read-line)))
-          (or (ignore-errors (read-from-string str))
-              nil)))
-	#+END_SRC
+* (ignore-errors &rest bodys)
+
+bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到的状况. 若无错误,则类似progn
+#+BEGIN_SRC lisp
+    (defun user-input (prompt)
+      (format t prompt)
+      (let ((str (read-line)))
+        (or (ignore-errors (read-from-string str))
+            nil)))
+#+END_SRC
 * 注释
-  * 4个分号常用于文件头注释
+* 4个分号常用于文件头注释
 
-  * 3个分号,通常作为段落注释应用到接下来的一大段代码上
+* 3个分号,通常作为段落注释应用到接下来的一大段代码上
 
-  * 2个分号说明该注释应用于接下来的代码上
+* 2个分号说明该注释应用于接下来的代码上
 
-  * 1个分号用于行尾注释,说明某个语句
+* 1个分号用于行尾注释,说明某个语句
