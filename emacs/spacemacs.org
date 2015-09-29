@@ -1,0 +1,42 @@
+* 关于.spacemacs
+** 在~/.spacemacs中配置调用哪些layer
+通过设置变量`dotspacemacs-configuration-layers'变量来配置.
+
+有些layer甚至能够配置在启用时启用哪些layer-specific特性. 例如git-layer就是一个例子
+#+BEGIN_SRC emacs-lisp
+  (setq dotspacemacs-configuration-layers
+        '(auto-completion
+          (git :variables
+               git-magit-status-fullscreen t)
+          smex))
+#+END_SRC
+** 不重启emacs对修改后的.spacemacs生效
+输入SPC f e R
+** 更改编辑方式
+通过在.spacemacs中设置变量`dotspacemacs-editing-style'为`vim'或`emacs'来改变编辑方式.
+** 更多信息
+更多信息可以参见DOCUMENTATION.org中的template章节的注释
+* 关于leader key
+默认情况下,vim style时使用SPC作为leader key,emacs style时使用M-m作为leader key. 
+
+但可以在.spacemacs中修改`dotspacemacs-leader-key'变量值来修改leader key.
+
+同时,还有一个次级leader key用于作为与major mode相关的leader-key,默认为`,'
+* 关于layer
+** layer的组成
+每个layer都是一个文件夹,该文件夹中至少包含如下文件:
++ packages.el
+
+  定义了要通过package安装哪些插件
+
++ extensions.el
+
+  配置那些不能通过package安装的插件,比如Emacs内建的功能或git submodules
+** 在private目录下创建layer
+运行命令configuration-layer/create-layer
+
+任何自定义的layer,都必须在~/.spacemacs中明确加载
+** 通过helm-spacemacs命令可以快速搜索package并得到使用该package的layer名称.
+* 关于key binding
++ SPC b开头的为buffer相关命令
++ SPC h d开头的为describe帮助相关命令
