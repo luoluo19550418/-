@@ -1,0 +1,441 @@
+* C/C++
+** 定义变量语句中若带赋值操作，则是先定义变量，在赋值。
+#+BEGIN_SRC C++ :tangle /tmp/tmp.cpp
+  #include <iostream>
+  using namespace std;
+  int i = 1;
+  int main()
+  {
+    int i = i;
+    cout<<i<<endl;     // 这里i的值未定义
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: 2280668
+
+** 在C/C++中,||或&&操作的结果为布尔值,即要么是1,要么是0,不存在类似lisp的那种返回最后一个值
+#+BEGIN_SRC C++
+  #include <iostream>
+  using namespace std;
+  int main ()
+  {
+    cout<<(1&&2)<<endl;
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: 1
+
+** 计算x转换为二进制后包含1的数量
+#+BEGIN_SRC C++
+  #include <iostream>
+  using namespace std;
+
+  int count(int x)
+  {
+          int count=0;
+          while(x)
+          {
+                  count++;
+                  x=x&(x-1);
+          }
+          return count;
+  }
+  int main ()
+  {
+          cout<<count(9999)<<endl;
+          return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: 8
+
+** C中函数参数的压栈顺序是从右向左进行的,而lisp是从左向右
+#+BEGIN_SRC C++ :results raw
+  #include <iostream>
+  #include <stdio.h>
+  using namespace std;
+
+  int say(int x)
+  {
+    cout<<x<<endl;
+    return x;
+  }
+
+  int main()
+  {
+    printf("%d,%d",say(1),say(2));
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+2
+1
+1,2
+
+** unsigned int变量赋值给unsigned char变量时会发生字节截断(3位和高于3位的将被程序自动丢弃)
+#+BEGIN_SRC C++ :results raw
+  #include <stdio.h>
+
+  int main()
+  {
+          unsigned int a = 0xFFFFFFF7;
+          unsigned char i = (unsigned char)a;
+          char* b = (char*)&a;
+          printf("%08x,%08x",i,*b);
+          return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+000000f7,fffffff7
+
+** 类型转换的两个通用指导原则如下
+1. 为了防止精度损失,如果必要的话,类型总是被提升为较宽的类型
+   
+   但long类型的一般转换有个例外,如果一个操作数是long型,而另一个是unsigned int型,那么:
+
+   + 当机器上的long型长度足以存放unsigned int所有值时,nsigned int会被转换为long.
+
+     然而一般的32位操纵系统中,long和int都是以一个字长来表示的,所以不满足这里的假设条件.
+
+   + 否则,两个操作数都提升为unsigned long
+
+2. 所有小于整型的有序类型的算术表达式在计算之前,其类型都会被转换成整型
+
+** 注意所有小于整型的有序类型的算术表达式在计算之前,其类型都会被转换成整型 
+#+BEGIN_SRC C++
+  #include <stdio.h>
+
+  int main()
+  {
+          unsigned char a=0xA5;
+          // 下面进行位移操作时,a会先转换为整型,再做取反操作,在做加法运算,再做位移操作.因此结果为250,而不是2
+          unsigned char b=~a>>4+1;
+          printf("b=%d%\n",b);
+          return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: b=250
+
+** 用一个表达式,判断一个数是否为2的N次方
+
+只要判断N的二进制只有最高位为1,即可.
+#+BEGIN_SRC C++
+  #include <iostream>
+  using namespace std;
+  bool test(int x)
+  {
+          return !(x&(x-1));
+  }
+
+  int main()
+  {
+          cout<<test(1234)<<endl;
+          cout<<test(1024)<<endl;
+          return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+| 0 |
+| 1 |
+
+** 不使用判断语句取出a,b的较大值
+有两种实现方法.
+1. 使用abs函数隐式调用判断语句
+   #+BEGIN_SRC C
+     int max=((a+b)+abs(a-b));
+   #+END_SRC
+2. 通过整数的最高位是0还是1来判断哪个数比较大
+   #+BEGIN_SRC C
+     int c = a-b;
+     char *results[] = {"a Larger","b Larger"};
+     c = unsigned(c)>>(sizeof(int)*8 - 1);
+     printf(results[c]);
+   #+END_SRC
+
+** 不使用任何中间变量,交换a,b的值
+有两种实现方法
+1. 通过加减运算实现
+   #+BEGIN_SRC C
+     a = a + b;
+     b = a - b;
+     a = a - b;
+   #+END_SRC
+   但这种方法,在a,b都是比较大的两个数时,a+b会越界
+2. 通过异或运算实现
+   #+BEGIN_SRC C
+     a = a^b;
+     b = a^b;
+     a = a^b;
+   #+END_SRC
+
+** 定义一个宏FIND,求一个结构体中某个变量相对struct的偏移量.
+通过将0强制转换为struct*指针指向的地址,则struct中某变量的地址即为相对struct的偏移量
+#+BEGIN_SRC C
+  #define FIND(struct,e) (size_t)&(((struct*)0)->e)
+#+END_SRC
+
+** 当用#define声明一个常数时,若数字过大,需要用到长整型符号L
+#+BEGIN_SRC C
+  #define SECONDS_PER_YEAR (60*60*24*365)UL
+#+END_SRC
+
+要注意宏中的每个参数用括号括起来.
+
+** 类中的数据成员加上mutable后,修饰为const的成员函数就可以修改它了.
+
+** 关于数据对齐
+CPU的优化规则大致原则是:对于n字节的元素,它的首地址能被n整除才能获得最好的性能. 
+
+因此,设计编译器时,一般遵循一个原则:对于每个变量,从当前变量向后找到第一个满足条件的地址作为首地址. 但由于结构体一般会面临数组分配的问题,因此一般讲结构体的大小扩充为整数大小倍.
+#+BEGIN_SRC C
+  #include <stdio.h>
+
+  int main()
+  {
+    int a;
+    char b;
+    int c;
+    printf("0x%08x ",&a);
+    printf("0x%08x ",&b);
+    printf("0x%08x ",&c);
+    return 0;
+  }
+#+END_SRC
+
+#+RESULTS:
+: 0x0022ccac 0x0022ccab 0x0022cca4
+
+具体来说,结构体的数据对齐原则如下:
+1. 当结构体内地元素长度都小于处理器的位数时,便以结构体内最长的数据元素为对齐单位. 即结构体的长度一定为最长的数据元素的整数倍.
+   #+BEGIN_SRC C
+     #include <stdio.h>
+     struct
+     {
+       short a1;
+       short a2;
+       short a3;
+     }A;
+
+     int main()
+     {
+       printf("%d",sizeof(A));
+       return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 6
+
+2. 如果结构体内存在长度大于处理器位数的元素,那么就以处理器的位数为对齐单位. *但是结构体内类型相同的连续元素将在连续的空间内,和数组一样*
+   #+BEGIN_SRC C
+     #include <stdio.h>
+     struct
+     {
+       long a0;
+       char a1;
+       char a2;
+       char a3;
+     }A;
+
+     int main()
+     {
+       printf("%d",sizeof(A));
+       return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 8
+
+** 由于静态变量是存放在全局数据区的,因此sizeof计算栈大小时,不会把静态变量计算在内
+#+BEGIN_SRC C++
+  #include <iostream>
+  using namespace std;
+
+  class A{
+   public:
+    int a;
+    static int b;
+  };
+
+  int main(int argc, char *argv[])
+  {
+    cout<<sizeof(A)<<endl;
+    return 0;
+  }
+
+#+END_SRC
+
+#+RESULTS:
+: 4
+
+** 关于sizeof的一些说明
+1. sizeof()括号内的内容是不会被编译的,而是被替代为类型. 例如
+   #+BEGIN_SRC C++ :results raw
+     #include <iostream>
+     using namespace std;
+     int main()
+     {
+             int a = 0;
+             cout <<sizeof(a=8)<<endl; // 这里a=8会在编译期替换成int,因此这句话不会被执行
+             cout<<a<<endl;
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   4
+   0
+
+2. 对函数使用sizeof,择编译期间会被函数返回值取代
+   #+BEGIN_SRC C++ :results raw
+     #include <iostream>
+     using namespace std;
+
+     long long f();
+     int main()
+     {
+             cout <<sizeof(f())<<endl;
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   8
+
+3. 类中即使没有任何成员变量,它的大小也至少为1
+   #+BEGIN_SRC C++
+     #include <iostream>
+     using namespace std;
+
+     class Base
+     {
+     public:
+     };
+
+     int main()
+     {
+             cout<<sizeof(Base);
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 1
+
+4. 具有虚函数的类,由于涉及虚表(虚指针),因此至少具有4的大小
+   #+BEGIN_SRC C++
+     #include <iostream>
+     using namespace std;
+
+     class Base
+     {
+     public:
+             Base(){cout<<"Base-ctor"<<endl;}
+             ~Base(){cout<<"Base-dtor"<<endl;}
+             void e(int){
+                     cout<<"Base::e(int)"<<endl;
+             }
+     };
+
+     int main()
+     {
+             cout<<sizeof(Base);
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 1
+
+   #+BEGIN_SRC C++
+     #include <iostream>
+     using namespace std;
+
+     class Base
+     {
+     public:
+             Base(){cout<<"Base-ctor"<<endl;}
+             ~Base(){cout<<"Base-dtor"<<endl;}
+             void e(int){
+                     cout<<"Base::e(int)"<<endl;
+             }
+             virtual void f(int){
+                     cout<<"Base::f(int)"<<endl;
+             }
+             virtual void f(double){
+                     cout<<"Base::f(double)"<<endl;
+             }
+             virtual void g(int i = 10){
+                     cout<<"Base::g()"<<i<<endl;
+             }
+             virtual void g2(int i = 10){
+                     cout<<"Base::g2()"<<i<<endl;
+             }
+     };
+
+     int main()
+     {
+             cout<<sizeof(Base);
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 4
+
+5. 子类包含了父类的所有成员变量
+   #+BEGIN_SRC C++
+     #include <iostream>
+     using namespace std;
+
+     class Base{
+             int a;
+     };
+     class Derived :public Base{
+
+     };
+
+     int main()
+     {
+             cout<<sizeof(Derived)<<endl;
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 4
+
+6. 虚继承的子类,由于涉及虚表(虚指针),因此大小要加上4
+   #+BEGIN_SRC C++
+     #include <iostream>
+     using namespace std;
+
+     class Base{
+             int a;
+     };
+     class Derived :public virtual Base{
+
+     };
+
+     int main()
+     {
+             cout<<sizeof(Derived)<<endl;
+             return 0;
+     }
+   #+END_SRC
+
+   #+RESULTS:
+   : 8
+
+** 定义const常量或引用时,必须同时初始化.
