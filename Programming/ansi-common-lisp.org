@@ -1576,7 +1576,7 @@ Lisp 中最古老的读取宏之一是 ' ，即 quote 。我们可以定义成�
     ;; 现在 #?n 会被读取成一个含有整数 0 至 n 的列表。
 #+END_SRC
 * Packages
-* 一个uninterned symbol是指一个未被包含于任意package的symbol.
+** 一个uninterned symbol是指一个未被包含于任意package的symbol.
 
 uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被正常地转换成大写形式并被转化成符号,但这些符号并不进入任何package.
 
@@ -1585,28 +1585,28 @@ uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被
     (eql '#:foo '#:foo)                     ;nil
 #+END_SRC
 
-* package-name 返回包的名字，
+** package-name 返回包的名字，
 
 #+BEGIN_SRC lisp
     (package-name *package*)
     ;; "COMMON-LISP-USER"
 #+END_SRC
 
-* find-package 返回一个给定名称的包
+** find-package 返回一个给定名称的包
 
 #+BEGIN_SRC lisp
     (find-package "COMMON-LISP-USER")
     ;; #<Package "COMMON-LISP-USER" 4CD15E>
 #+END_SRC
 
-* 函数 symbol-package 接受一个符号并返回该符号被 interned 的包
+** 函数 symbol-package 接受一个符号并返回该符号被 interned 的包
 
 #+BEGIN_SRC lisp
     (symbol-package 'sym)
     ;; #<Package "COMMON-LISP-USER" 4CD15E>
 #+END_SRC
 
-* 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上一个或两个冒号作为前缀：
+** 要在用户包之外参照到原来的 sym ，我们必须把包的名字加上一个或两个冒号作为前缀：
 
 含有单冒号的名字,只能指向一个被package导出的symbol
 #+BEGIN_SRC lisp
@@ -1619,7 +1619,7 @@ uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被
 #+END_SRC
 但是使用两个冒号作为包的前缀也是很差的风格。这么做你就违反了包本应提供的模块性。如果你不得不使用一个双冒号来参照到一个符号，这是因为某人根本不想让你用。
 
-* 使用defpackage定义package
+** 使用defpackage定义package
 
 #+BEGIN_SRC lisp
      (defpackage "MY-APPLICATION"            ;定义新包名为my-application,
@@ -1638,12 +1638,12 @@ uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被
 #+END_SRC
 
 
-* 使用in-package切换当前默认包
+** 使用in-package切换当前默认包
 #+BEGIN_SRC lisp
      (in-package my-application)
 #+END_SRC
 
-* 使用export使得package中的符号在其他package中可见
+** 使用export使得package中的符号在其他package中可见
 
 这时可以用单冒号来引用package中的符号
 #+BEGIN_SRC lisp
@@ -1661,7 +1661,7 @@ uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被
 
 一个包是一个将名字映对到符号的 Lisp 对象。当前的包总是存在全局变量*package*里。当 Common Lisp 启动时，当前的包会是 *common-lisp-user* ，通常称为用户包 (user package)。
 
-* 通过import将其他package中的符号引入到当前package中
+** 通过import将其他package中的符号引入到当前package中
 
 #+BEGIN_SRC lisp
     (import 'common-lisp-user:bar)
@@ -1670,7 +1670,7 @@ uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被
     ;; 5
 #+END_SRC
 
-* 使用use-package将其他package中 *所有exported的符号* 都引入到当前package中
+** 使用use-package将其他package中 *所有exported的符号* 都引入到当前package中
 
 #+BEGIN_SRC lisp
     (use-package 'common-lisp-user)
@@ -1717,9 +1717,9 @@ uninterned sybmol的写法上是以"#:"开头的, 这些名字(去掉"#:"后)被
 #+END_SRC
 * 状况处理
 
-* error抛出错误
+** error抛出错误
 
-* ecase类似case,但没有键值匹配时会抛出错误
+** ecase类似case,但没有键值匹配时会抛出错误
 #+BEGIN_SRC lisp
     (ecase 1
       (2 3)
@@ -1763,10 +1763,10 @@ bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到
             nil)))
 #+END_SRC
 * 注释
-* 4个分号常用于文件头注释
+** 4个分号常用于文件头注释
 
-* 3个分号,通常作为段落注释应用到接下来的一大段代码上
+** 3个分号,通常作为段落注释应用到接下来的一大段代码上
 
-* 2个分号说明该注释应用于接下来的代码上
+** 2个分号说明该注释应用于接下来的代码上
 
-* 1个分号用于行尾注释,说明某个语句
+** 1个分号用于行尾注释,说明某个语句
