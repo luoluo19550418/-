@@ -1527,6 +1527,16 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 *** 避免垃圾回收
 
 * 填充指针
+* online documentation
++ 使用(documentation thing type)可以查看变量或函数的doc-string
+  #+BEGIN_SRC lisp
+  (documentation 'cons 'function)
+  (documentation '*print-length* 'variable)
+  #+END_SRC
++ 使用(apropos str package)从某个包内查询函数名或变量名中带有str的symbol
+  #+BEGIN_SRC lisp
+    (apropos "TOTAL" "USER")
+  #+END_SRC
 
 * map-into
 
