@@ -1269,7 +1269,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 在一般情况下，一个槽定义可以是一个列表，第一个是槽的名称，伴随著一个或多个属性 (property)。
 属性像关键字参数那样指定。
 
-** :accessor
+*** :accessor
 
 通过替一个槽定义一个访问器 (accessor)，我们隐式地定义了一个可以引用到槽的函数，使我们不需要再调用 slot-value 函数.
 
@@ -1292,11 +1292,11 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 
 #+END_SRC
 
-** :writer / :reader
+*** :writer / :reader
 
 通过指定一个 :writer 或是一个 :reader ，而不是 :accessor ，我们可以获得访问器的写入或读取行为
 
-** :initform / :initarg
+*** :initform / :initarg
 
 要指定一个槽的缺省值，我们可以给入一个 :initform 参数。
 
@@ -1320,7 +1320,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
     ;; (0 . 0)
 #+END_SRC
 
-** :allocation
+*** :allocation
 
 该参数说明了slot是对象成员变量(:allocation :instance,默认)还是类成员变量(:allocation :instance)
 #+BEGIN_SRC lisp
@@ -1340,14 +1340,14 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 
 #+END_SRC
 
-** :documentation
+*** :documentation
 
 若有给入 :documentation 属性的话，用来作为 slot 的文档字符串。
 
-** :type
+*** :type
 
 通过指定一个 :type ，你保证一个槽里只会有这种类型的元素
-*** 通用函数
+** 通用函数
 一个通用函数 (generic function) 是由一个或多个方法组成的一个函数。方法可用defmethod 来定义，与 defun 的定义形式类似：
 #+BEGIN_SRC lisp
      ;; 参数未特化的版本
@@ -1391,7 +1391,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
      (x &optional y) (a &rest b)
      (x &key x y)    (a)  
 #+END_SRC
-*** 辅组方法
+** 辅组方法
    
 方法可以通过如 :before ， :after 以及 :around 等辅助方法来增强。
 这称为标准方法组合机制 (standard method combination)。
@@ -1460,7 +1460,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
      ;; :before 与 :after 方法的返回值不一样。
 #+END_SRC
 
-*** defgeneric
+** defgeneric
 
 * 速度
 ** 瓶颈规则
