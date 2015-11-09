@@ -2,5 +2,170 @@
 #+AUTHOR: DarkSun
 #+OPTIONS: ^:{}
 
-* Quick Start
+* 与CLOS的区别
++ 类名可以作为函数来构造对象.
+  #+BEGIN_SRC emacs-lisp
+    (defclass record () ; No superclasses
+      ((name :initarg :name
+             :initform ""
+             :type string
+             :custom string
+             :documentation "The name of a person.")
+       (birthday :initarg :birthday
+                 :initform "Jan 1, 1970"
+                 :custom string
+                 :type string
+                 :documentation "The person's birthday.")
+       (phone :initarg :phone
+              :initform ""
+              :documentation "Phone number."))
+      "A single record for tracking people I know.")
+
+     (setq rec (record "Eric" :name "Eric" :birthday "June" :phone "555-5555"))
+  #+END_SRC
+
++ eieio无法为内建类型分发method,也无法根据多个参数类型来分发method
+
++ eieio不支持自定义的metaclass,只有唯一的一个metaclass:`eieio-default-superclass'
+
++ eieio不支持EQL specialization
+
++ `:around' 方法标签无用
+
++ 每个class中的slot,都默认有`:initarg'标签
+
++ Mock object initializers
+
+  Each class contains a mock object used for fast initialization of
+  instantiated objects.  Using functions with side effects on object
+  slot values can potentially cause modifications in the mock object.
+  EIEIO should use a deep copy but currently does not.
+
+* 定义类
++ (defclass class-name superclass-list slot-list &rest options-and-doc)
+
+  class-name指定了定义的类名
+
+  superclass-list指定了该类继承于哪些类. EIEIO支持多重继承,但若多个父类有同一个slot,则最左边的父类的slot生效.
+
+  slot-list指定了该类有哪些属性
+
+  options-and-doc指定了该类的说明,它支持以下几个options:
+
+  - 字符串说明 对该类的说明性文字
+
+  - :abstract 指定该类是否为抽象类,抽象类无法实例化.
+
++ (CLASS-NAME-p object)
+
++ (CLASS-NAME-child-p object)
+
++ eieio-error-unsupported-class-tags
+
+  若为非nil,则`defclass'发现slot-list中有不支持的tag时,会抛出错误.
+
++ (slot-boundp object slot)
   
+  判断object的slot是否有值
+
++ (slot-makeunbound object slot)
+  
+  使得object的slot不再绑定值
+
+** options-and-doc说明
+options-and-doc指定了该类的说明,它支持以下几个options:
+
+- 字符串说明 对该类的说明性文字
+    
+- :abstract 指定该类是否为抽象类,抽象类无法实例化.
+
+** slot-list说明
+slot-list的格式为:
+#+BEGIN_SRC emacs-lisp
+  (SLOT-NAME :TAG1 ATTRIB-VALUE1
+             :TAG2 ATTRIB-VALUE2
+             ;; .....
+             :TAGN ATTRIB-VALUEN)
+#+END_SRC
+
+支持的TAG有:
+
++ :initarg
+
+  构造函数中初始化该slot的参数名称.
+
++ :initform
+
+  指定该slot的默认值. 
+
+  *NOTE:* 传递給initform的值,会自动quoted.
+
++ :type
+
+  指定并校验该slot的数据类型,目前支持的数据类型有
+
+  - symbol
+
+  - number
+
+  - class-name
+
+  - (or null symbol)
+
++ :allocation
+
+  指定该slot为类成员变量还是对象成员变量. 可选值为:class或:instance
+
+  默认为:instance
+
++ :documentation
+
+  该slot的相关说明
+
++ :accessor
+
+  产生一个generic函数用于读写object中的该slot
+
++ :write
+
+  产生一个generic函数来对object中的slot赋值
+
++ :reader
+
+  产生一个generic函数来读取object中slot的值
+
++ :custom
+
+  当customize一个object时,该配置项的类型, 详情参见defcustom的说明.
+
++ :label
+
+  当customize一个object时,该配置项的名称, 详情参见defcustom的说明.
+
++ :group
+
+  当customize一个object时,该配置项的所属组, 详情参见defcustom的说明.
+
++ :printer
+
+  该参数接收一个表示函数的symbol. 该函数接收slot value作为唯一的参数.
+
+  The function in ‘object-write’ will write the slot value out to a printable form on ‘standard-output’.
+
+  The output format MUST be something that could in turn be interpreted with ‘read’ such that the object can be brought back in from the output stream.
+
++ :protection
+
+  指定该slot的权限. 目前支持以下值
+
+  - :public
+    
+    任何地方都能访问该slot
+
+  - :protected
+    
+    只有同类或子类的方法才能访问该slot
+
+  - :private
+
+    只有同类的方法才能访问该slot
