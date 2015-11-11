@@ -103,7 +103,7 @@ slot-list的格式为:
 
   - class-name
 
-  - (or null symbol)
+  - (or type1 type2 ...)
 
 + :allocation
 
@@ -436,6 +436,65 @@ options-and-doc指定了该类的说明,它支持以下几个options:
 若创建class时未指定parent class,则默认继承至`eieio-default-superclass'.
 
 除此之外,EIEIO还预定义了其他一些有用的类
+
+** eieio-instance-inheritor: Enable value inheritance between instances
+
+这种类型的对象可以拥有所谓的父对象. 若子对象的某slot为unbound,则会向上查找父对象的同名slot的值.
+
+要从父对象中派生出一个子对象,只需要使用`clone'方法即可,clone出来的对象为原对象的子对象,且各个slot默认为unbound
+
+** eieio-instance-tracker: 追踪实例化对象的类
+
+该类会维护一个列表,用于追踪所有的实例化对象.
+
+在构造这种类的对象时,需要将名为`TRACKER-SYMBOL'的slot的值初始化为一个由`defvar'创建的symbol. 该symbol的值即为追踪列表
+
+该类的实现机理是定义了一个 =(defmethod initialize-instance :after ((obj eieio-instance-tracker) &optional slots))=,并在该方法中将obj添加到追踪列表中.
+
+由于有一个追踪列表持有对该object的引用,因此elisp无法自动将其识别为可回收对象,因此需要调用 =(delete-instance obj)= 来删除该object
+
++ (eieio-instance-tracker-find key slot list-symbol)
+  
+  该函数从维护列表中找出SLOT的值`equal' KEY的对象. 参数LIST-SYMBOL为表示维护列表的symbol.
+
+** eieio-singleton: 单例类
+
+** eieio-persistent: 允许持久化的类
+
+该类对象的file slot指定了该类会被持久化到哪个文件中. 若该文件名为相对路径,则是指的相对于`eieio-persistent-path-relative'的
+
+该类还有一个名为file-header-line的类slot, 表示通过`object-write'持久化时的header comment.
+
+所有的对象,不管是属于什么类型的,都能保存到文件中,但是该类的对象还有其他一些方案法:
+
++ (eieio-persistent-save (obj eieio-persistent) &optional file)
+  
+  将对象持久化到FILE中,FILE的默认值为obj中的file slot的值
+
++ (eieio-persistent-path-relative (obj eieio-persistent) file)
+  
+  Return a file name derived from FILE which is relative to the stored location of OBJ. 
+
+  This method should be used to convert file names so that they are relative to the save file, making any system of files movable from one location to another.
+
++ (object-write (obj eieio-persistent) &optional comment)
+  
+  类似普通类的`object-write'方法,只是会将参数COMMENT作为注释写到文件中,COMMENT默认值为file-header-line slot的值
+
++ (eieio-persistent-read filename &optional class allow-subclass)
+  
+  从FILENAME中读取持久化的对象,并返回该对象.
+
+  CLASS表示若读取的对象不为CLASS类型,则抛出异常.
+
+  ALLOW-SUBCLASS表示读取的对象能否为CLASS类型的子类.
+
+
+** eieio-named: 该类使用object名称作为`:name' slot的值
+
+该类的对象拥有一个名为`:name'的slot,用于存放object的名称
+
+** eieio-speedbar: 允许speedbar支持你的对象
 
 * Browsing class trees
 通过命令`eieio-browse'能够产生一个buffer,显示所有已加载的类的继承树.
