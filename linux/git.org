@@ -54,6 +54,11 @@
     #+BEGIN_SRC sh
       git config --global merge.tool vimdiff    
     #+END_SRC
+*** 提高命令输出的可读性
+将color.ui设置为auto,可以让命令的输出拥有更高的可读性
+#+BEGIN_SRC sh
+  git config --global collor.ui auto
+#+END_SRC
 *** 查看配置信息
     #+BEGIN_SRC sh
       # 查看所有的配置项
@@ -107,6 +112,15 @@
         # 使用git status会提示怎么做
         
       #+END_SRC
+** git commit中注释的格式规范一般为
++ 第一行 :: 用一行文字简述提交的更改内容
++ 第二行 :: 空行
++ 第三行 :: 记述更改的原因和详细内容
++ @用户名 :: 通知某用户
++ @组织 :: 通知某组织中的所有成员
++ @组织/团队 :: 通知某团队的所有成员
++ #编号 :: 连接到本仓库对应的issue编号
++ 用户名/仓库 #编号 :: 连接到指定仓库对应的issue编号
 ** 远程仓库命令   
    同他人协作开发某个项目时,需要管理远程仓库,以便推送/拉取数据,分享各自的工作进展. 
       #+BEGIN_SRC sh
@@ -114,24 +128,24 @@
         # 查看当前的远程仓库
         git remote                      # 列出每个远程仓库的别名
         git remote -v                   # 列出每个远程仓库的别名和对应的URL
-        
+
         # 添加远程仓库
         git remote add $远程仓库别名 $远程仓库url
-        
+
         # 从远程仓库更新本地数据
         git fetch $remote_name          # 从远程仓库拉取所有本地仓库没有的数据,但不会自动合并本地仓库的数据
         git pull                        # 默认将远程仓库origin的master分支合并到当前的master分支
-        
         # 推送数据到远程仓库
         git push                        # 默认将本地master分支推送到远程仓库的origin的master分支
         git push $remote_name $branch_name # 将本地的分支$branch_name推送到远程仓库$remote_name中
-        
+        git push -u $remote_name $branch_name # 在推送时,将$remote_name上的$branch_name分支设为本地仓库当前分支的默认upstream.
+
         # 重命名远程仓库别名
         git remote rename $old_alias $new_alias
-        
+
         # 删除远程仓库别名
         git remote rm $远程仓库别名
-        
+
         # 查看远程仓库信息
         git remote show $remote_name
       #+END_SRC
@@ -170,6 +184,7 @@
       | --abbrecv-commit | 近显示SHA-1的前几个字符,而非所有的40个字符                                           |
       | --relative-date  | 使用相对时间显示                                                                     |
       | --pretty=...     | 使用其他格式显示历史提交信息,可用选项包括oneline,short,full,fuller,format:格式标示符 |
+      | --pretty=short   | 只显示提交信息的第一行,一般为概要介绍                                                                  |
       | -n(n为数字)      | 仅显示最后提交的n条记录                                                              |
       | --since/--after  | 仅显示指定日期之后的修改                                                             |
       | --until/--before | 仅显示指定日期之前的提交                                                             |
@@ -193,44 +208,62 @@
       | %cd  | 提交的绝对日期           |
       | %cr  | 提交的相对日期           |
       | %s   | 提交说明                     |
+** reflog命令
+git log只能查看以当前状态为终点的历史日志. 而使用git reflog命令可以查看所有当前仓库的操作日志.
+** diff命令
++ 查看工作树和暂存树的差别
+  #+BEGIN_SRC sh
+    git diff  
+  #+END_SRC
+
++ 查看工作树和最新提交的差别
+  #+BEGIN_SRC sh
+    git diff HEAD
+  #+END_SRC
 ** 分支命令
    远程分支的格式一般为"远程仓库名/分支名"
    #+BEGIN_SRC sh
      # 新建分支
      git branch $分支名              # 但并未切换到该分支
-     
+
      # 切换分支
      git checkout $分支名            
      git checkout -b $分支名         # 新建并切换到分支处
-     
+     git checkout -                  # 切换至上一个分支
+
      # 跟踪分支:一种跟远程分支有直接联系的本地分支,在跟踪分支中输入git push 和git pull会自动推断相关的远程分支
      git checkout -b $分支名 $远程仓库名/$远程分支名 # 新建指定分支,并绑定为指定远程分支的跟踪分支
      git checkout --track $远程仓库名/$远程分支名    # 新建指定远程分支的跟踪分支
-     
+
      # 合并分支
      git merge $分支名               # 将分支名的分支合并到当前分支处
-     
+     git merge --no-ff $分支名       # 合并分支,并在历史记录中记录下本次分支合并
+
      # 删除分支
      git branch -d $分支名           # 若指定分支包含当前分支未合并的工作,则删除会失败
      git branch -D $分支名           # 强制删除分支
-     
+
      # 冲突的合并
      git status                      # unmerged处显示哪几个文件有冲突
      git mergetool                   # 使用自定义的图形化工具合并文件,当然也可以用vi来手工合并
      git add $合并后的文件           # 将合并后的文件标记为冲突已解决
-     
+
      # 显示本地分支
      git branch                      # 显示当前所有分支的清单
      git branch --merge              # 查看那些分支已经合并入当前分支,这些分支可用被del了
      git branch --no-merged          # 查看尚未合并的分支
-     
+
      # 推送分支
      git push $远程仓库名 $本地分支名 # 推送指定本地分支到远程仓库中
      git push $远程仓库名 $本地分支名:$远程分支名 # 推送指定的本地分支到远程仓库中,并命名为指定的远程分支名
-     
+
      # 删除远程分支
      git push $远程仓库名 :$远程分支名 # 可用理解为将本地的空白分支推送到远程仓库覆盖远程分支
-     
+
+     # 回到历史版本
+     git reset $hash                 # 保持当前修改
+     git reset --hard $hash          # 不保留当前修改
+
      # 衍合,所谓衍合就是把一个分支里提交的改变在另一个分支里重放一遍
      git rebase $分支                # 把指定分支的改变在当前分支重作一边形成新的版本
      git rebase $主分支 $特征分支    # 把特征分支的改变在主分支中重做一边形成新的版本
