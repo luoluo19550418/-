@@ -298,10 +298,12 @@
    * (map type fn seq...)
 
 	 返回一个类型位type的新序列,该序列的值位fn作用到seq中各元素的返回值
+     
+     这里的参数TYPE可以为nil,'list或'vector
 
    * map-into
 
-	 map-into类似map,但它并不产生给定类型的新序列,它将结果放置在一个作为第一个参数传递的序列中
+	 map-into类似map,但它并不产生给定类型的新序列,它将结果放置在一个作为第一个参数传递的序列中,该函数会覆盖第一个参数序列中的各元素值.
 
    * (maplist fn list...)
 
@@ -338,6 +340,23 @@
      :conc-name指定了要放在字段前面的名字，并用这个名字来生成存取函数。预设是 point- ；现在变成只有 p 。不使用缺省的方式使代码的可读性些微降低了，只有在需要常常用到这些存取函数时，你才会想取个短点的名字。
 
      :print-function是在需要显示结构出来看时，指定用来打印结构的函数 ── 需要显示的情况比如，要在顶层显示时。这个函数需要接受三个实参：要被印出的结构，在哪里被印出，第三个参数通常可以忽略。 [2] 我们会在 7.1 节讨论流（stream）。现在来说，只要知道流可以作为参数传给 format 就好了。
+     
+     :constructor可以重定义结构体构造函数名称及参数列表. 例如
+     #+BEGIN_SRC lisp
+       (defstruct (3d-point
+                    (:constructor
+                     create-3d-point (x y z)))
+         x y z)
+
+       (create-3d-point 1 -2 3)
+     #+END_SRC
+     
+     :include可以使得一个结构体继承自另一个结构体. (结构体只支持但继承关系). 任何作用于父结构体的函数也能作用于子结构体.
+     #+BEGIN_SRC lisp
+       (defstruct (manager
+                    (:include employee))
+         bonus direct-reports)
+     #+END_SRC
 
 	 其中参数SLOTN可以是属性名symbol或(属性名symbol 默认值form)这种格式
 	 #+BEGIN_SRC lisp
@@ -1374,8 +1393,8 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
        'boom)
 #+END_SRC
 
-方法可以像一般 Common Lisp 函数一样有复杂的参数列表(*但只有必要参数可以被特化*),所有组成通用函数方法的参数列表必须是一致的
-参数的数量必须一致，同样数量的选择性参数（如果有的话），要嘛一起使用&rest 或是 &key 参数，或者一起不要用。
+方法可以像一般 Common Lisp 函数一样有复杂的参数列表(*但只有必要参数可以被特化*),所有组成通用函数方法的参数列表必须是 *一致的*
+参数的数量必须一致，同样数量的选择性参数（如果有的话），要嘛一起使用&rest 或是 &key 参数，或者一起不要用。 key参数的名字,也需要是一致的.
 #+BEGIN_SRC lisp
      下面的参数列表对是全部一致的，
 
@@ -1391,7 +1410,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
      (x &optional y) (a &rest b)
      (x &key x y)    (a)  
 #+END_SRC
-** 辅组方法
+** 辅助方法
    
 方法可以通过如 :before ， :after 以及 :around 等辅助方法来增强。
 这称为标准方法组合机制 (standard method combination)。
@@ -1402,9 +1421,9 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 	  
    2. 否则，依序，
 
-      1. 所有的 :before 方法，从最具体到最不具体。
+      1. 所有的 :before 方法，从最具体到最不具体。(注意是所有符合的辅助方法!)
       2. 最具体的主方法
-      3. 所有的 :after 方法，从最不具体到最具体
+      3. 所有的 :after 方法，从最不具体到最具体.(注意是所有符合的辅助方法!)
 
 	  返回值为 :around 方法的返回值（情况 1）
       或是最具体的主方法的返回值（情况 2）。
@@ -1461,6 +1480,38 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 #+END_SRC
 
 ** defgeneric
+
+** 其他相关函数
++ (find-class class-name)
+  
+  CLASS-NAME为一个symbol,find-class根据这个名称,返回实际的class对象
+  #+BEGIN_SRC lisp
+    (find-class 'empty-object)
+    ;; #<STANDARD-CLASS EMPTY-OBJECT>
+  #+END_SRC
+
++ (class-precedence-list class-object)
+  
+  获取class的class precedence list信息，该信息决定了该类有限属于哪个父类
+
+  CLASS-OBJECT一般通过`find-class'获得.
+
++ (class-direct-subclasses class-object)
+  
+  获取直接子类的列表
+
++ (class-direct-superclasses class-object)
+  
+  获取直接父类的列表
+
++ (class-direct-slots class-object)
+  
+  获取class中非继承来的slot列表
+
++ (class-direct-methods class-object)
+  
+  获取class中非继承来的method列表.
+
 
 * 速度
 ** 瓶颈规则
@@ -1780,3 +1831,35 @@ bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到
 ** 2个分号说明该注释应用于接下来的代码上
 
 ** 1个分号用于行尾注释,说明某个语句
+* 帮助函数
++ (apropos pattern &optional package)
+
+  这里PATTERN可能是string或symbol类型. 
+
+  PACKAGE指定了在哪个package中搜索,若省略表示在所有的package中搜索
+
+  该函数搜索并返回指定模式的symbol
+
++ (describe object)
+
++ (inspect object)
+  
+  inspect类似describe,但不会直接把所有信息输出,而是提供一个界面供用户探查. 该函数特别适合用于探测复杂结构的变量.
+
++ (documentation object documentation-type-symbol)
+  
+  返回object的doc-string. 
+
+  参数DOCUMENTATION-TYPE-SYMBOL可以是以下值
+
+  | 'variable           | defvar,  defparameter,  defconstant |
+  | 'functioin          | defun,  defmacro , special forms    |
+  | 'structure          | defstruct                           |
+  | 'type               | deftype                             |
+  | 'setf               | defsetf                             |
+  | 'compiler-macro     | define-compiler-macro               |
+  | 'method-combination | define-method-combination           |
+  | t                   | 根据参数OBJECT的类型推测            |
+  |                     |                                     |
+
+  
