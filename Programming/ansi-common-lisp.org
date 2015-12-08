@@ -773,73 +773,24 @@
        ;; #P"myfile"
 	 #+END_SRC
 **** with-open-file宏
-	 (with-open-file (stream path [keyword value]) bodys)
+(with-open-file (stream path [keyword value]) bodys)
 
-	 创建一个stream指向path文件,提供給bodys中使用
-*** 输入流函数
-**** read-line
+创建一个stream指向path文件,提供給bodys中使用
 
-	 (read-line &optional stream error default-value)
+**** (file-position stream &optional new-position)
 
-	 读取stream中的一行内行作为字符串返回
+返回stream的位移. 若参数NEW-POSITION有值,则同时设置stream的位移.
 
-**** read
+**** file-length
 
-	 (read &optional stream error default-value)
+返回stream的长度
 
-	 读取stream中的一个lisp object
-
-**** read-from-string
-	 (read-from-string str &optional error default-value)
-
-	 从str中读取一个lisp object.
-
-	 参数error表示读取到字符串结尾时是否报错.
-
-	 参数default-value表示若读取到文件结尾时不报错,则返回哪个值.
-
-	 该函数返回两个值,第一个值为读取到的object. 第二个值为停止读取字符串的位置
-
-**** read-char
-
-	 从字符串中读取一个char
-
-**** peek-char
-
-	 从字符串中读取一个char,但该char不会从字符串流中移除
-	
-*** 输出流函数
-	
-**** prin1
-
-	 以程序可读的形式产生输出.例如 prin1 会印出字符串左右的双引号
-	 #+BEGIN_SRC lisp
-       (prin1 "Hello")
-       ;; "Hello"
-       ;; "Hello"
-	 #+END_SRC
-
-**** princ
-
-	 以人可读的格式产生输出. 例如princ不会打印出字符串左右的双引号
-	 #+BEGIN_SRC lisp
-       (princ "Hello")
-       ;; Hello
-       ;; "Hello"
-	 #+END_SRC
-
-**** terpri
-
-	 输出eof
-
-**** format
-	 
 ** 二进制流
-   一个二进制流是一个整数的来源及/或终点，而不是字符。
-   你通过指定一个整数的子类型来创建一个二进制流 ── 当你打开流时，通常是用 unsigned-byte ── 来作为 :element-type 的参数。
+一个二进制流是一个整数的来源及/或终点，而不是字符。
+你通过指定一个整数的子类型来创建一个二进制流 ── 当你打开流时，通常是用 unsigned-byte ── 来作为 :element-type 的参数。
 
-   关于二进制流的 I/O 函数仅有两个，read-byte 以及 write-byte 
-   #+BEGIN_SRC lisp
+关于二进制流的 I/O 函数仅有两个，read-byte 以及 write-byte 
+#+BEGIN_SRC lisp
      (defun copy-file (from to)
        (with-open-file (in from :direction :input
                            :element-type 'unsigned-byte)
@@ -851,170 +802,296 @@
                                          (declare (fixnum i))
                                          (write-byte i out)))))
      ;; 仅通过指定 unsigned-byte 给 :element-type ，你让操作系统选择一个字节 (byte)的长度。举例来说，如果你明确地想要读写 7 比特的整数，你可以使用：(unsigned-byte 7)
-   #+END_SRC
+#+END_SRC
+
+** 其他流
++ two-way-stream :: 将一个输出流和一个输入流整合成一个双向流
++ broadcast-stream :: 将多个输出流整合到一个流中，发往这个流就会将消息分发到各个输出流中
++ concatenated-stream :: 将多个输入流整合到一个流中，读取该流时，会依次读取各个输入流的内容
++ echo-stream :: 整合了一个输入流和一个输出流，且从输入流读取的内容会回显到输出流中
++ synonym-stream :: 该流可以使另一个流的别名，这样允许在运行期改变实际的流，而保持synonym-stream不变
++ string-stream :: 输入输出内容到内存中.
+** 输入流函数
+
+*以下函数中的 RECURSIVE-P参数,只是用在lisp reader宏中*
+
++ (read-byte stream &optional eof-error-p eof-value)
+  
++ (read-line &optional stream error default-value)
+  
+  读取stream中的一行内行作为字符串返回
+  
++ (read &optional stream error default-value)
+  
+  读取stream中的一个lisp object
+  
++ (read-from-string str &optional error default-value)
+  
+  从str中读取一个lisp object.
+  
+  参数error表示读取到字符串结尾时是否报错.
+  
+  参数default-value表示若读取到文件结尾时不报错,则返回哪个值.
+  
+  该函数返回两个值,第一个值为读取到的object. 第二个值为停止读取字符串的位置
+  
++ (read-char &optional stream eof-error-p eof-value recursive-p)
+  
+  从流中读取一个char
+  
++ (peek-char &optional peek-type stream eof-error-p eof-value recursive-p)
+  
+  从字符串中读取一个char,但该char不会从字符串流中移除
+  
++ (unread-char character &optional stream)
+  
+  将character塞回stream中
+  
++ (listen &optional stream)
+  
+  判断输入流是否有数据准备妥当
+  
++ (read-char-no-hang &optional stream eof-error-p eof-value recursive-p)
+  
+  非阻塞式读取
+  
++ (finish-output &optional stream)
+  
+  FINISH-OUTPUT  tries to make sure that buffered output reaches its destination, then returns. 
+  
++ (force-output &optional stream)
+  
+  FORCE-OUTPUT attempts to initiate output from the buffer, but does not wait for completion like  FINISH-OUTPUT . 
+  
++ (clear-output &optional stream)
+  
+  CLEAR-OUTPUT attempts to discard buffered data and abort any output still in progress
+
++ (with-input-from-string (stream-variable string) &rest bodys)
+  
+  stream-variable设置为内容为STRING的string-input-stream
+  #+BEGIN_SRC lisp
+    (with-input-from-string (stream "This is my input via stream.")
+                            (read stream))
+    ;; THIS
+  #+END_SRC
+  
+** 输出流函数
+
++ (write-byte byte stream)
+  
++ (write-char char &optional stream)
+  
++ (write-line string &optional stream &key start end)
+  
++ (write-string string &optional stream &key start end)
+
++ (with-output-to-string (stream-variable) &rest bodys)
+
+  在执行bodys中的语句,并使得STREAM-VARIABLE绑定为一个新的string-output-stream
+  #+BEGIN_SRC lisp
+    (with-output-to-string (stream)
+                           (princ "I'm writing to memory!" stream))
+    ;; "I'm writing to memory!" 
+  #+END_SRC
+  
++ prin1
+  
+  以程序可读的形式产生输出.例如 prin1 会印出字符串左右的双引号
+  #+BEGIN_SRC lisp
+    (prin1 "Hello")
+    ;; "Hello"
+    ;; "Hello"
+  #+END_SRC
+  
++ princ
+  
+  以人可读的格式产生输出. 例如princ不会打印出字符串左右的双引号
+  #+BEGIN_SRC lisp
+    (princ "Hello")
+    ;; Hello
+    ;; "Hello"
+  #+END_SRC
+  
++ (terpri &optional stream)
+  
+  输出eof
+  
++ (fresh-line &optional stream)
+  
+  若没有回车,才输出eof,并返回t. 否则不输出eof,并返回nil
+  
++ (clear-input &optional stream)
+  
+  清空输入流
+  
+  
++ format
+  
+  
 * 符号
 ** 符号名称  
-   以使用(symbol-name symbol)获取symbol的名称字符串
+以使用(symbol-name symbol)获取symbol的名称字符串
 
-   缺省情况下，Common Lisp 在读入时，会把符号名字所有的英文字母都转成大写。代表 Common Lisp 缺省是不分大小写的：
-   #+BEGIN_SRC lisp
+缺省情况下，Common Lisp 在读入时，会把符号名字所有的英文字母都转成大写。代表 Common Lisp 缺省是不分大小写的：
+#+BEGIN_SRC lisp
      (eql 'abc 'Abc)
      ;; T
      (CaR '(a b c))
      ;; A
-   #+END_SRC
+#+END_SRC
 
-   若symbol名字包含空白，或其它可能被读取器认为是重要的字符的符号，要用特殊的语法来引用。
+若symbol名字包含空白，或其它可能被读取器认为是重要的字符的符号，要用特殊的语法来引用。
 
-   任何存在垂直杠 (vertical bar)之间的字符序列将被视为符号。可以如下这般在符号的名字中，放入任何字符：
-   #+BEGIN_SRC lisp
+任何存在垂直杠 (vertical bar)之间的字符序列将被视为符号。可以如下这般在符号的名字中，放入任何字符：
+#+BEGIN_SRC lisp
      (list '|Lisp 1.5| '|| '|abc| '|ABC|)
      ;; (|Lisp 1.5| || |abc| ABC)
-   #+END_SRC
-   当这种符号被读入时，不会有大小写转换
+#+END_SRC
+当这种符号被读入时，不会有大小写转换
 
-   NOTE: *垂直杠是一种表示符号的特殊语法。它们不是符号的名字之一*
-   #+BEGIN_SRC lisp
+NOTE: *垂直杠是一种表示符号的特殊语法。它们不是符号的名字之一*
+#+BEGIN_SRC lisp
      (symbol-name '|a b c|)
      ;; "a b c
-   #+END_SRC
-	 
-   如果想要在符号名称内使用垂直杠，可以放一个反斜线在垂直杠的前面
+#+END_SRC
+
+如果想要在符号名称内使用垂直杠，可以放一个反斜线在垂直杠的前面
 ** 属性列表
 
-   在 Common Lisp 里，每个符号都有一个属性列表（property-list）或称为 plist 。
+在 Common Lisp 里，每个符号都有一个属性列表（property-list）或称为 plist 。
 
    * (get symbol property)
-
+     
      返回在符号的属性列表中，与键值相关的数值：
      #+BEGIN_SRC lisp
      (get 'alizarin 'color)
      ;; NIL
      #+END_SRC
-   
+     
    * (setf (get symbol property) newValue)
-   
-	 为symbol的property赋值
+     
+     为symbol的property赋值
      #+BEGIN_SRC lisp
      (setf (get 'alizarin 'color) 'red)
      ;; RED
      (get 'alizarin 'color)
      ;; RED
      #+END_SRC
-
+     
    * (symbol-plist symbol)
-
-	 返回symbol中的plist
+     
+     返回symbol中的plist
 ** 包(Package)
 
-   概念上来说，包是将名字映射到符号的符号表（symbol-tables）。
-   每个普通的符号都属于一个特定的包。
-   符号属于某个包，我们称为符号被包所有（intern）。
-   函数与变量用符号作为名称。包借由限制哪个符号可以访问来实现模块化（modularity），也是因为这样，我们才可以引用到函数与变量。
-   
-   在第一次输入一个新符号的名字时，Lisp 会产生一个新的符号对象，并将它归到到当下的包所有（缺省是 common-lisp-user 包)。
+概念上来说，包是将名字映射到符号的符号表（symbol-tables）。
+每个普通的符号都属于一个特定的包。
+符号属于某个包，我们称为符号被包所有（intern）。
+函数与变量用符号作为名称。包借由限制哪个符号可以访问来实现模块化（modularity），也是因为这样，我们才可以引用到函数与变量。
 
-   但也可以通过给入字符串与选择性包参数给 intern 函数，来捕获一个名称为字符串名的符号:
+在第一次输入一个新符号的名字时，Lisp 会产生一个新的符号对象，并将它归到到当下的包所有（缺省是 common-lisp-user 包)。
+
+但也可以通过给入字符串与选择性包参数给 intern 函数，来捕获一个名称为字符串名的符号:
 
    * (intern symbol-name &optional package)
-
-	 创建名为symbol-name的symbol.
-
-	 该函数返回两个值:第一个值是创建的symbol. 第二个值表示该symbol是否早就存在于package中
-	 #+BEGIN_SRC lisp
+     
+     创建名为symbol-name的symbol.
+     
+     该函数返回两个值:第一个值是创建的symbol. 第二个值表示该symbol是否早就存在于package中
+     #+BEGIN_SRC lisp
        (intern "RANDOM-SYMBOL")
        ;; RANDOM-SYMBOL
        ;; NIL
-	 #+END_SRC
-
+     #+END_SRC
+     
    * 引用其他包里的符号
-
-	 语法为:`package:symbol'
-
+     
+     语法为:`package:symbol'
+     
    * 使用defpackage定义package
-	 
-	 #+BEGIN_SRC lisp
+     
+     #+BEGIN_SRC lisp
        (defpackage "MY-APPLICATION"            ;定义新包名为my-application
          (:use "COMMON-LISP" "MY-UTILITIES")   ;继承了两个包: common-lisp 与 my-utilities ，这代表着可以不需要用包修饰符（package qualifiers）来存取这些包所导出的符号。
          (:nicknames "APP")                    ;创建昵称app,别的包可以这样引用到这些符号，比如 app:win 。
          (:export "WIN" "LOSE" "DRAW"))        ; my-application 包本身只输出三个符号: WIN 、LOSE以及DRAW
-	 #+END_SRC
-
+     #+END_SRC
+     
    * 使用in-package切换当前默认包
-	 #+BEGIN_SRC lisp
+     #+BEGIN_SRC lisp
        (in-package my-application)
-	 #+END_SRC
+     #+END_SRC
 ** 关键字
 
-   在 keyword包中的符号 (称为关键字)有两个独特的性质：它们总是对自己求值，以及可以在任何地方引用它们，如 :x 而不是 keyword:x
-   
-   为什么使用关键字而不用一般的符号？因为关键字在哪都可以存取。一个函数接受符号作为实参，应该要写成预期关键字的函数。举例来说，这个函数可以安全地在任何包里调用:
-   #+BEGIN_SRC lisp
+在 keyword包中的符号 (称为关键字)有两个独特的性质：它们总是对自己求值，以及可以在任何地方引用它们，如 :x 而不是 keyword:x
+
+为什么使用关键字而不用一般的符号？因为关键字在哪都可以存取。一个函数接受符号作为实参，应该要写成预期关键字的函数。举例来说，这个函数可以安全地在任何包里调用:
+#+BEGIN_SRC lisp
      (defun noise (animal)
        (case animal
          (:dog :woof)
          (:cat :meow)
          (:pig :oink)))
-   #+END_SRC
+#+END_SRC
 ** 符号与变量
 
-   Lisp 有一件可能会使你困惑的事情是，符号与变量的从两个非常不同的层面互相关联。
-   当符号是特别变量（special variable）的名字时，变量的值存在符号的 value 栏位。symbol-value函数引用到那个栏位，所以在符号与特殊变量的值之间，有直接的连接关系。
+Lisp 有一件可能会使你困惑的事情是，符号与变量的从两个非常不同的层面互相关联。
+当符号是特别变量（special variable）的名字时，变量的值存在符号的 value 栏位。symbol-value函数引用到那个栏位，所以在符号与特殊变量的值之间，有直接的连接关系。
 
-   而对于词法变量（lexical variables）来说，事情就完全不一样了。
-   一个作为词法变量的符号只不过是个占位符（placeholder）。
-   编译器会将其转为一个寄存器（register）或内存位置的引用位址。
-   在最后编译出来的代码中，我们无法追踪这个符号 (除非它被保存在调 试器「debugger」的某个地方)。因此符号与词法变量的值之间是没有连接的；只要一有值，符号就消失了。
+而对于词法变量（lexical variables）来说，事情就完全不一样了。
+一个作为词法变量的符号只不过是个占位符（placeholder）。
+编译器会将其转为一个寄存器（register）或内存位置的引用位址。
+在最后编译出来的代码中，我们无法追踪这个符号 (除非它被保存在调 试器「debugger」的某个地方)。因此符号与词法变量的值之间是没有连接的；只要一有值，符号就消失了。
 * 数字
 
-  Common Lisp 提供了四种不同类型的数字：整数、浮点数、比值与复数。
+Common Lisp 提供了四种不同类型的数字：整数、浮点数、比值与复数。
   * 整数写成一串数字：如 2001 。
   * 浮点数是可以写成一串包含小数点的数字，如 253.72 ，或是用科学表示法，如 2.5372e2 。
   * 比值是写成由整数组成的分数：如 2/3 。
   * 复数 a+bi 写成 #c(a b) ，其中 a 与 b 是任两个类型相同的实数。
-
+    
   谓词 integerp 、 floatp 以及 complexp 针对相应的数字类型返回真
-
-  常量most-positive-fixnum 与 most-negative-fixnum 表示一个实现不使用大数所可表示的最大与最小的数字大小
-
-* 宏
-  作为一个规则，写成宏是因为你不能将它写成函数。
-  但这个规则有几个例外。
-  有时候你或许想要定义一个操作符来作为宏，好让它在编译期完成它的工作。
   
+  常量most-positive-fixnum 与 most-negative-fixnum 表示一个实现不使用大数所可表示的最大与最小的数字大小
+  
+* 宏
+作为一个规则，写成宏是因为你不能将它写成函数。
+但这个规则有几个例外。
+有时候你或许想要定义一个操作符来作为宏，好让它在编译期完成它的工作。
+
   * 宏的形参列表中,可以使用&body来作为&rest的同义词. 许多开发环境会根据&body关键字来修改缩进的方式
-
+    
   * 使用coerce可以将列表转换为代码
-
-	#+BEGIN_SRC lisp
+    
+    #+BEGIN_SRC lisp
       (coerce '(lambda (x) x) 'function)
       ;; #<Interpreted-Function BF9D96>
-	#+END_SRC
-
+    #+END_SRC
+    
   * 使用compile将列表转换为代码
-
-	而如果你将 nil 作为第一个参数传给 compile ，它会编译作为第二个参数传入的 lambda 表达式。
-	#+BEGIN_SRC lisp
+    
+    而如果你将 nil 作为第一个参数传给 compile ，它会编译作为第二个参数传入的 lambda 表达式。
+    #+BEGIN_SRC lisp
       (compile nil '(lambda (x) (+ x 2)))
       ;; #<Compiled-Function BF55BE>
       ;; NIL
       ;; NIL
-	#+END_SRC
-
+    #+END_SRC
+    
   * eval将列表当代码来执行
-	#+BEGIN_SRC lisp
+    #+BEGIN_SRC lisp
       (eval '(+ 1 2))
       ;; 3
-	#+END_SRC
+    #+END_SRC
 ** 经典宏
 有三类经典的宏:
 
 1. 使用宏创建上下文环境,让代码块在上下文环境中执行. 例如那些with-宏
-
+   
 2. 当宏中的参数要根据条件来决定是否执行时,必须使用宏. (因为函数中的参数肯定会被执行一次)
-
+   
 3. 当宏中的参数需要被执行多次时,也必须使用宏. (因为函数中的参数只能执行一次)
-
+   
 4. 当需要拆开参数form时,也只能使用宏
 ** 宏的实现
 对一个宏的调用,实际上是被转换为一个函数的调用
@@ -1032,7 +1109,7 @@
 #+END_SRC
 
 + 定义宏时,要注意变量捕获的问题
-
+  
   使用gensym来生产内部变量名
   #+BEGIN_SRC lisp
         (defmacro ntimes (n &rest body)
@@ -1068,11 +1145,11 @@
   由于闭包是for展开时生成的第一个东西，因此所有出现在宏体内的自由符号将全部指向宏调用环境中的变量。现在do通过闭包的参数跟宏体通信。闭包需要从do知道的全部就是当前迭代的数字，所以它只有一个参数，也就是宏调用中作为索引指定的那个符号。
   
   *但这种方法不如使用gensym方便*
-
+  
 + 定义宏时,需要注意将各个展开式中的任何子form个求值顺序要与宏调用时的子form相同.
-
+  
 + Common Lisp并不保证绑定在&rest形参上的列表是新生成的。它们可能会和程序其他地方的列表共享数据结构。后果就是，你不能破坏性地修改&rest形参，因为你不知道你将会改掉其他什么东西。
-
+  
   任何宏参数只要是列表就应该单独对待。如果我们定义了一个会修改其参数的宏，以及一个调用该宏的函数 那么主调函数的源代码就有可能被修改，例如:
   #+BEGIN_SRC lisp
     (defmacro crazy (expr) (nconc expr (list t)))
@@ -1080,7 +1157,7 @@
     (foo)
     ;; (T T)
   #+END_SRC
-
+  
 + 使用macroexpand-1可以查看宏扩展后的表达式
   
   #+BEGIN_SRC lisp
@@ -1210,11 +1287,129 @@ Common Lisp提供了函数get-setf-expansion,它接受一个产生广义变量�
 #+END_SRC
 
 symbol-macrolet主体中的表达式在求值的时候，效果就像每一个参数位置的hi都替换成了(progn (print "Howdy") 1)
+* 逻辑操作
++ (boole operation int1 int2)
+  
+  该函数对int1和int2的每一位进行逻辑运算,并返回一个int结果
+  
+  OPERATION有16种值:
+  | 值          | 说明                                             |
+  |-------------+--------------------------------------------------|
+  | BOOLE-2     | returns arg2 2.                                  |
+  | BOOLE-ANDC1 | and complement of arg1 with arg2 3.              |
+  | BOOLE-ANDC2 | and arg1 with complement of arg2 4.              |
+  | BOOLE-AND   | and arg1 with arg2 5.                            |
+  | BOOLE-C1    | complement of arg1 6.                            |
+  | BOOLE-C2    | complement of arg2 7.                            |
+  | BOOLE-CLR   | always all zeroes 8.                             |
+  | BOOLE-EQV   | exclusive-nor of arg1 with arg2 (equivalence) 9. |
+  | BOOLE-IOR   | inclusive-or of arg1 with arg2 10.               |
+  | BOOLE-NAND  | not-and of arg1 with arg2 11.                    |
+  | BOOLE-NOR   | not-or of arg1 with arg2 12.                     |
+  | BOOLE-ORC1  | or complement of arg1 with arg2 13.              |
+  | BOOLE-ORC2  | or arg1 with complement of arg2 14.              |
+  | BOOLE-SET   | always all ones 15.                              |
+  | BOOLE-XOR   | exclusive-or of arg1 with arg2                   |
+  
++ (logand int1 int2)
+  
++ (logandc1 int1 int2)
+  
++ (logandc2 int1 int2)
+  
++ (logeqv int1 int2)
+  
++ (logior int1 int2)
+  
++ (lognand int1 int2)
+  
++ (lognor int1 int2)
+  
++ (lognot int)
+  
++ (logorc1 int1 int2)
+  
++ (logorc2 int1 int2)
+  
++ (logxor int1 int2)
+  
++ (logtest int1 int2)
+  若int1或int2中,有一个满足所有的地位都为1,则返回t
+  
+  #+BEGIN_SRC lisp
+    (logtest 7 16)
+    ;; NIL
+    (logtest 15 5)
+    ;; T
+  #+END_SRC
+  
++ (logbitp pos int)
+  
+  测试int的第pos位是否为1
+  
++ (logcount int)
+  
+  若int为正整数,则返回其二进制表达中1的个数.
+  #+BEGIN_SRC lisp
+    (logcount 35)
+    ;; 3
+  #+END_SRC
+  
+  若int为负整数,则返回其二进制补码形式中0的个数.
+  #+BEGIN_SRC lisp
+    (logcount -2)
+    ;; 1
+  #+END_SRC
+** bit vector
+bit vector的表现形式类似#*0010101这样.
+
+cl提供了11种作用于bit vector的逻辑运算:
+
++ bit-and
+  
++ bit-andc1
+  
++ bit-andc2
+  
++ bit-eqv
+  
++ bit-ior
+  
++ bit-nand
+  
++ bit-nor
+  
++ bit-not
+  
++ bit-orc1
+  
++ bit-orc2
+  
++ bit-xor
+  
+可以通过bit函数获取bit vector中第N位的值
+
++ (bit bit-vector pos)
+  
+  获取bit vector中第N位的值
+  #+BEGIN_SRC emacs-lisp
+    (bit #*01001 1)
+    ;; 1
+  #+END_SRC
+  
+  若想修改bit vector中的值,可以通过setf和bit一起用.
+  #+BEGIN_SRC lisp
+    (let ((bv (copy-seq #*00000)))
+      (setf (bit bv 3) 1)
+      bv)
+    ;; #*00010
+  #+END_SRC
+  
 * CLOS
 ** 创建对象
 
 1. 使用defclass定义一个类
-
+   
    #+BEGIN_SRC lisp
         (defclass class (parent-classes...)
           (slot1...slotN))                      ;CLOS中的slot就是C++中的成员变量
@@ -1242,11 +1437,11 @@ symbol-macrolet主体中的表达式在求值的时候，效果就像每一个�
 ** 对象操作
 
 1. 使用slot-value获取对象成员变量
-
+   
    #+BEGIN_SRC lisp
      (slot-value obj slot)
    #+END_SRC
-
+   
 ** 基类
 
 defclass 接受的第二个参数是一个列出其基类的列表。一个类别继承了所有基类槽的联集
@@ -1380,7 +1575,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
                (name top)))
 #+END_SRC
 一个方法的特化指出它是应用至何种类别的参数。刚定义的方法仅能在传给combine的参数分别是class1与classs2的实例时有效
-   
+
 方法特化时,可以对任意个参数作特化,也可以使用lisp内建的类型. 例如
 #+BEGIN_SRC lisp
      (defmethod combine ((x number) (y number))
@@ -1411,21 +1606,21 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
      (x &key x y)    (a)  
 #+END_SRC
 ** 辅助方法
-   
+
 方法可以通过如 :before ， :after 以及 :around 等辅助方法来增强。
 这称为标准方法组合机制 (standard method combination)。
 在标准方法组合机制里，调用一个通用函数会调用
 #+BEGIN_QUOTE
-   
-   1. 最具体的 :around 方法，如果有的话。
-	  
-   2. 否则，依序，
 
+   1. 最具体的 :around 方法，如果有的话。
+      
+   2. 否则，依序，
+      
       1. 所有的 :before 方法，从最具体到最不具体。(注意是所有符合的辅助方法!)
       2. 最具体的主方法
       3. 所有的 :after 方法，从最不具体到最具体.(注意是所有符合的辅助方法!)
-
-	  返回值为 :around 方法的返回值（情况 1）
+         
+      返回值为 :around 方法的返回值（情况 1）
       或是最具体的主方法的返回值（情况 2）。
 #+END_QUOTE
 
@@ -1489,30 +1684,30 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
     (find-class 'empty-object)
     ;; #<STANDARD-CLASS EMPTY-OBJECT>
   #+END_SRC
-
+  
 + (class-precedence-list class-object)
   
   获取class的class precedence list信息，该信息决定了该类有限属于哪个父类
-
+  
   CLASS-OBJECT一般通过`find-class'获得.
-
+  
 + (class-direct-subclasses class-object)
   
   获取直接子类的列表
-
+  
 + (class-direct-superclasses class-object)
   
   获取直接父类的列表
-
+  
 + (class-direct-slots class-object)
   
   获取class中非继承来的slot列表
-
+  
 + (class-direct-methods class-object)
   
   获取class中非继承来的method列表.
-
-
+  
+  
 * 速度
 ** 瓶颈规则
 不管是什么实现，关于优化都可以整理出三点规则：
@@ -1537,7 +1732,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 #+END_SRC
 *** 类型说明
 在 Common Lisp 中，类型声明完全是可选的。它们可以让程序运行的更快，但(除非错误)不会改变程序的行为。
-   
+
 全局声明以 declaim 伴随一个或多个声明的形式来实现。一个类型声明是一个列表，包含了符号 type ，后跟一个类型名，以及一个或多个变量组成。
 #+BEGIN_SRC lisp
      (declaim (type fixnum *count*))
@@ -1546,7 +1741,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 #+BEGIN_SRC lisp
      (declaim (fixnum *count*))
 #+END_SRC
-   
+
 局部声明通过 declare 完成，它接受的参数和 declaim 的一样。声明可以放在那些创建变量的 *代码体* 之前：如 defun 、lambda 、let 、do ，诸如此类。
 #+BEGIN_SRC lisp
      (defun poly (a b x)
@@ -1564,7 +1759,7 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
 #+END_SRC
 
 可以通过 make-array 的 :element-type 参数指定数组包含值的种类。这样的数组被称为特化数组(specialized array)。
-   
+
 除了在创建数组时指定元素的类型，你还应该在使用数组的代码中声明数组的维度以及它的元素类型。
 #+BEGIN_SRC lisp
      (declare (type (vector fixnum 20) v))
@@ -1588,9 +1783,20 @@ defclass 接受的第二个参数是一个列出其基类的列表。一个类�
   #+BEGIN_SRC lisp
     (apropos "TOTAL" "USER")
   #+END_SRC
-
+  
 * map-into
-
+* 调试
++ 使用(break &optional fmt &rest args)可以明确进入lisp debugger的位置.
+  
+  常用于调试循环过递归程序. 当有多个(break)时,参数FMT和ARGS可以组成一个字符串用于标识是哪个debugger.
+  
++ 使用(trace &rest functions)可以追踪调用function的参数及输出.
+  
++ 使用(untrace &rest functions)取消对function的追踪. 
+  
+  若FUNCTIONS为nil,则取消所有的function的追踪
+  
++ 使用(step form)单步调试form的执行.
 * 鼓励编译器在栈上分配对象而不是在堆上
 
 如果你知道只是临时需要某个东西，你可以通过将它声明为 dynamic extent 来避免在堆上分配空间。
@@ -1833,25 +2039,25 @@ bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到
 ** 1个分号用于行尾注释,说明某个语句
 * 帮助函数
 + (apropos pattern &optional package)
-
+  
   这里PATTERN可能是string或symbol类型. 
-
+  
   PACKAGE指定了在哪个package中搜索,若省略表示在所有的package中搜索
-
+  
   该函数搜索并返回指定模式的symbol
-
+  
 + (describe object)
-
+  
 + (inspect object)
   
   inspect类似describe,但不会直接把所有信息输出,而是提供一个界面供用户探查. 该函数特别适合用于探测复杂结构的变量.
-
+  
 + (documentation object documentation-type-symbol)
   
   返回object的doc-string. 
-
+  
   参数DOCUMENTATION-TYPE-SYMBOL可以是以下值
-
+  
   | 'variable           | defvar,  defparameter,  defconstant |
   | 'functioin          | defun,  defmacro , special forms    |
   | 'structure          | defstruct                           |
@@ -1861,5 +2067,5 @@ bodys若抛出错误,则ignore-errors会直接返回两个值:nil以及捕捉到
   | 'method-combination | define-method-combination           |
   | t                   | 根据参数OBJECT的类型推测            |
   |                     |                                     |
-
+  
   
