@@ -207,3 +207,20 @@ dired内部是调用`ls'命令来产生文件列表的,通过设置变量`dired-
   (when (member system-type '(ms-dos windows-nt))
     (setq vc-git-commits-coding-system 'gbk))
 #+END_SRC
+* desktop-save-mode
+** 如何使用desktop-save-mode保持"*scratch*" buffer内容重启emacs后不变.
+只需要两个步骤即可
+1. 通知desktop-save-mode保存变量`initial-scratch-message'的值
+2. 在emacs退出前,将"*scratch*" buffer内容赋值给`initial-scratch-message'
+   
+#+BEGIN_SRC emacs-lisp
+  require ’desktop)
+  (add-to-list ’desktop-globals-to-save ’initial-scratch-message)
+  (desktop-save-mode)
+
+  (add-hook 'kill-emacs-hook
+            (lambda ()
+              (with-current-buffer "*scratch*"
+                (setq-default initial-scratch-message
+                              (buffer-string)))))
+#+END_SRC
