@@ -63,7 +63,6 @@
          ("M-o w" . highlight-phrase)))
 #+END_SRC
 
-
 ** :mode与:interpreter
 可以使用`:mode'与`:interpret'关键字来修改`auto-mode-alist'和`interpreter-mode-alist'的值.
 
