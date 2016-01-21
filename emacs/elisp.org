@@ -6898,6 +6898,9 @@ Tabulated List Mode继承至Special mode,且同时被多个子mode继承,例如P
 
 * Desktop Save Mode
 
+* Emacs Display
+** The Display Property
+** Images
 * Number相关函数
   * 判断是否为自然数(0+正整数)
 

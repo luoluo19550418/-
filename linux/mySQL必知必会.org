@@ -51,24 +51,117 @@ values(vals......)
 ......
 可以一次插入N列
 
+*若插入的值中包含单引号',则需要用\'或''代替*
+
+也可以通过select语句插入数据:
+#+BEGIN_SRC sql
+  insert into TABLE(COLUMS...)
+  select语句
+#+END_SRC
+
 ** UPDATE语句
 UPDATE IGNORE.....
 可以忽略跟新时出现的错误，使错误发生前更新的列不被恢复为原来的值
+** CASE语句
+#+BEGIN_SRC sql
+  case
+      when 条件1 then 值1
+      when 调减2 then 值2
+      ...
+  end
 
-** select语句
-   * mysql支持正则匹配! 
-     #+BEGIN_SRC sql
-       --语法为 
-       select * from $table where $列名 regexp 正则表达式
-     #+END_SRC
-   * 使用limit来限制搜索出的记录条数 
-     #+BEGIN_SRC sql
-       select * from table limit 记录条数
-     #+END_SRC
-     或者 
-     #+BEGIN_SRC sql
-       select * from table limit 起始记录,记录条数
-     #+END_SRC
+#+END_SRC
+** regexp语句
+mysql支持正则匹配! 
+#+BEGIN_SRC sql
+  --语法为 
+  select * from $table where $列名 regexp 正则表达式
+#+END_SRC
+
+** limit语句
+使用limit来限制搜索出的记录条数 
+#+BEGIN_SRC sql
+  select * from table limit 记录条数
+#+END_SRC
+或者 
+#+BEGIN_SRC sql
+  select * from table limit 起始记录,记录条数
+#+END_SRC
+
+需要留意 *起始记录数从0开始算起*
+** order by 语句
++ 非字母字符出现在数字的前面或后面
++ 数字出现在字母的前面
++ NULL出现在数字的前面
++ NULL出现在字母的前面
++ 大写字母出现在小写字母的前面
+
+** 连接操作
++ cross join返回两张表的每一行相乘的结果
+
+  #+BEGIN_SRC sql
+    select * from TABLE1 cross join TABLE2
+    --也可以省略cross join为逗号
+    select *from TABLE1,TABLE2
+  #+END_SRC
+
++ inner join根据条件对cross join的结果进行裁剪
+
+  inner join的裁剪条件由on表达式表示,其结果类似cross join + where语句
+
+  #+BEGIN_SRC sql
+    select mc.last_name,mc.first_name,p.profession
+    from my_contacts as mc
+    inner join profession as p
+    on mc.prof_id = p.prof_id
+  #+END_SRC
+
++ natural join只有在联接的列在两张表中的名称都相同时才会有用
+  
+  使用natural join可以省略调on子句,因为它会自动匹配
+
+  #+BEGIN_SRC sql
+    select * from TABLE1 natural join TABLE2
+  #+END_SRC
+
++ left outer join / right outer join
+
+  外联接返回某张表的所有行,并带有来自另一张表的条件相符的行.
+
+** 子查询
++ 子查询能作为select语句的选取列之一:
+
+  #+BEGIN_SRC sql
+    select mc.first_name,mc.last_name,(select state from zip_code where mc.zip_code = zip_code) as state
+    from my_contacts mc;
+  #+END_SRC
+
++ 若子查询为非关联子查询,则SQL会先处理内层查询,在将结果应用于外层查询.
+
+  若子查询可以独立运行且不会引用外层查询的任何结果,即称为非关联子查询.
+
++ exists/not exists
+
+  exists与not exists常与关联子查询结合在一起.
+
+  #+BEGIN_SRC sql
+    select mc.first_name,mc.last_name,mc.email
+    from my_contacts mc
+    where not EXISTS
+    (select *from job_current jc where mc.contact_id=jc.contact_id)
+  #+END_SRC
+** UNION
++ union只能接受一个order by,且只能位于语句末端.
++ union默认会清除联合结果中的重复值
++ 若想看到重复数据,需使用union all运算符.
+** intersect / except
+
+intersect(交集)/except(差集)的使用方式与union一致.其中
+
++ intersect只会返回同时在第一个查询和第二个查询中有的数据
+
++ except返回只在第一个查询,不在第二个查询中出现的数据
+
 * 表的操作
 ** CREATE TABLE语句
    * 若想在一个表不存在的时候创建表，则在CREATE TABLE 语句的表名后面给出IF NOT EXISTS
@@ -79,7 +172,8 @@ UPDATE IGNORE.....
      #+BEGIN_SRC sql
        CREATE TABLE 表名
        (
-       列名 类型 [CHARACTER SET 字符集 COLLATE 校对名] --对列设置字符集和校对
+           列名 类型 [NOT NULL] [AUTO_INCREMENT] [CHARACTER SET 字符集 COLLATE 校对名] --对列设置字符集和校对
+           primary key (列名,...) 
        )[ENGINE=引擎名]                        --指定引擎类型
        [DEFAULT CHARACTER SET 字符集]          --指定字符集
        [COLLATE 校对名]                                -- 指定校对
@@ -87,13 +181,79 @@ UPDATE IGNORE.....
    * InnoDB引擎不支持全文本搜索
    * MyISAM引擎不支持事务处理
    * 定义外键的语法为FOREIGN KEY(列名) REFERENCES 外部表名(外部键名)
+   * 外键 *不一定是父表的主键,但必须具有唯一性*
+   * 还可以通过select语句创建表格
+     #+BEGIN_SRC sql
+       create table 表名 AS
+       select语句
+     #+END_SRC
+     或
+     #+BEGIN_SRC sql
+       create table 表名
+       (
+       列定义
+       )AS
+       select语句
+     #+END_SRC
+** check约束
+除了not null,primary key,foreign key,unique外,还有一种check约束:
+
++ 约束列的值只能在有限的几个选项中选择
+  
+  #+BEGIN_SRC sql
+    check (COLUMN in (OPTION1,OPTION2,OPTION3...))
+  #+END_SRC
+
++ 约束列的值只能大于200
+  
+  #+BEGIN_SRC sql
+    check (COLUMN > 200)
+  #+END_SRC
+
++ 约束列的值必须以'A'或'B'开头
+
+  #+BEGIN_SRC sql
+    check ('A' = substring(COLUMN,1,1) or 'B' = substring(COLUMN,1,1))
+  #+END_SRC
+
++ *基本上,除了子查询,所有用于where子句的条件都能用于check约束*
 ** 重命名表
    RENAME TABLE 旧表名 TO 新表名
+** ALTER TABLE语句
+#+BEGIN_SRC sql
+  alter table 表名
+  rename to 新表名, -- 修改表名
+  add column 列名 类型 [not null] [auto_increment] [first|second|third|last] [before|after 列名]
+  add primary key (列名,...)
+  drop column 列名
+  drop primary key
+  change column 旧列名 新列名 新列的定义  -- 同时改变现有列的名称和数据类型
+  modify column 列名 新的列定义 [列位置说明]  -- 修改现有列的数据类型及位置
+#+END_SRC
+其中
++ first,表示新加的列放在第一列的位置
++ after列名,可以指定新加的列放在指定列的后面
++ before列名,可以指明新加的列放在指定列的前面
++ last,表示新加的列放在最后一列的位置
 ** 视图
 使用SHOW CREATE VIEW 视图名;来查看创建视图的语句
-跟新视图，可以先DROP再CREATE VIEW，也可以直接用CREATE OR REPLACE VIEW语句
 
-*高级用法
+跟新视图，可以先DROP VIEW再CREATE VIEW，也可以直接用CREATE OR REPLACE VIEW语句
+
++ 可以对视图进行update,insert与delete操作
+
+  但前提是,该视图的内容包括了它引用的表中所有设定为not null的列
+
++ 视图后面可以使用check option来要求数据库检查每个insert,update与delete语句是否与视图的where子句相匹配
+  
+  #+BEGIN_SRC sql
+    create view pb_dimes as
+    select *from piggy_bank where coin='D' with check_option;
+    -- 此时插入/更新/删除条件中若coin不为'D'则会出错
+  #+END_SRC
+
+  因此,实际上可以使用视图来模仿check约束的功能
+
 ** 存储过程
 *** 执行存储过程
 CALL 存储名(@参数名...)	--所有MySQL变量使用时都必须以@开始,
@@ -185,9 +345,10 @@ DROP TRIGGER 触发器名称		--触发器不能跟新，只能删除再创建
 1、在DELETE触发器代码内，你可以引用一个名为OLD的虚拟表，访问被删除的行;
 
 ** 事务处理
+
 START TRANSACTION;		--标识事务的开始
 SAVEPOINT 保留点名;		--为了支持回退部分事务处理，必须能在事务处理块中合适的位置放置保留点，可使用SAVEPOINT语句
-ROLLBACK [TO 保留点;
+ROLLBACK [TO 保留点];
 RELEASE SAVEPOINT 保留点;	--释放保留点
 COMMIT;
 
@@ -195,31 +356,49 @@ SET autocommit=0		--MySQL不自动提交更改
 SET autocommit=1		--MySQL自动提交更改
     				--标志位连接专用，所以autocommit标志是针对每个连接而不是服务器的。
 
+*只有BDB或InnoDB两种存储引擎是支持事务的*
 ** 全球化与本地化
 1、校对在对ORDER BY子句检索出来的数据排序时起重要作用
 SELECT * FROM $table ORDER BY $column COLLATE 校对名;--COLLATE还可以用于GOURP BY，HAVING，聚集函数，别名等
 
 ** 查看表结构
-   desc $table;
+desc 表名
 * 数据库维护  
 ** 察看服务器信息
-   1. \s
-      察看服务器信息
-   2. show create database 数据库名
-      察看建数据库脚本
-   3. show create table 表名
-      察看建表脚本
-   4. 
+1. \s
+
+   察看服务器信息
+
+2. show create database 数据库名
+   
+   察看建数据库脚本
+
+3. show create table 表名
+
+   察看建表脚本
+
+4. show columns from 表名
+
+   显示表的所有列及其数据类型,还有其他关于各列的细节信息
+
+5. show index from 表名
+
+   显示表的索引列及索引类型
+
+6. show warnings
+
+   如果从控制台收到SQL命令照成的错误信息,键入这个命令就能取到确切的警告内容
+   
 ** 备份数据库
-1、mysqldump -h $hostname -u $username 数据库名 >备份.sql
+1. mysqldump -h $hostname -u $username 数据库名 >备份.sql
 mysql 数据库名 <备份.sql
-2、mysqlhotcopy
-3、BACKUP TABLE或SELECT INTO OUTFILE备份，用RESTORE TABLE还原
+2. mysqlhotcopy
+3. BACKUP TABLE或SELECT INTO OUTFILE备份，用RESTORE TABLE还原
 --为保证所有数据被写到磁盘，可能需要在备份前使用FLUSH TABLES语句
 ** 数据库维护
-ANALYZE TABLE 表名;				--检查表键是否正确
-CHECK TABLE 表名;				--针对许多问题对表进行检查
-OPTIMIZE TABLE 表名;				--回收表空间
+1. ANALYZE TABLE 表名;				--检查表键是否正确
+2. CHECK TABLE 表名;				--针对许多问题对表进行检查
+3. OPTIMIZE TABLE 表名;				--回收表空间
 ** 诊断启动问题
 mysqld --help					--显示帮助列表
        --safe-mode				--装载减去某些最佳配置的服务器
@@ -272,3 +451,43 @@ SET PASSWORD=Password('新密码')			--不指定用户名时更改自己密码
    character-set-server = utf8  // 服务器、数据库和表字符集
    collation-server = utf8_general_ci   //服务器、数据库和表校验字符集
    #+END_QUOTE
+* 数据库范式
+** 1NF
+1. 每列数据都具有原子性,即
+
+   + 一列中不包含多个类型相同的数据
+
+     例如不能出现一个`爱好'列内包含 读书,钓鱼,跑步
+
+   + 表中不会用多列来存放类型相同的数据.
+
+     例如表中不能出现`爱好1',`爱好2',`爱好3'这样的列
+
+2. 需要有一个主键来唯一识别数据行
+** 2NF
+1. 当某列的数据必须随着另一列的数据的改变而改变时,表示第一列 *函数依赖* 于第二列,记作:
+
+   TABLE.COLUMN2->TABLE.COLUMN1
+
+2. 部分函数依赖是指,非主键的列依赖于 *组合主键* 的某个部分,但不是完全依赖于组合主键.
+
+3. 若表没有部分函数依赖性,则表示该表符合2NF
+
+** 3NF
+1. 如果改变任何非键列可能造成其他列的改变,即为传递依赖.
+
+2. 表中不存在传递函数依赖性(所有列完全依赖于主键),则该表符合3NF
+
+* 函数
+** 字符串函数
++ right(STRING,NUMS)
++ left(STRING,NUMS)
++ substring_index(STRING,SEPERATOR,第几个SEPERATOR)
++ substring(STRING,START,LENGTH)
++ upper(STRING)
++ lower(STRING)
++ reverse(STRING)
++ ltrim(STRING)
++ rtrin(STRING)
++ length(STRING)
++ substr(STRING,START)
