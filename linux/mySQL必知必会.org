@@ -150,6 +150,27 @@ mysql支持正则匹配!
     where not EXISTS
     (select *from job_current jc where mc.contact_id=jc.contact_id)
   #+END_SRC
+
+** ANY,ALL与SOME
+
+这三个关键字在子查询中非常好用:
+
++ 大于加上ALL可以找出任何大于集合中最大值的值
+
+  #+BEGIN_SRC sql
+    select name,rating from restaurant_ratings
+    where rating > ALL
+    (select rating from restaurant_ratings where name="K&T")
+  #+END_SRC
+
++ 小于加上ALL可以找出任何小于集合中最小值的值
+
++ 大于加上ANY可以找出任何大于子集合中最小值的值
+
++ 小于加上ANY可以找出任何小于集合中最大值的值
+
++ SOME的意义与ANY一样
+
 ** UNION
 + union只能接受一个order by,且只能位于语句末端.
 + union默认会清除联合结果中的重复值
@@ -411,36 +432,121 @@ hostname-bin					--二进制日志，记录跟新过的数据
 hostname-slow.log				--缓慢查询日志，记录执行缓慢的任何查询
 ** 安全管理
 *** 管理用户
-*****获得用户账号列表
-use mysql;
-select user from user;
-***** 创建用户账号
-CREATE USER 用户名 IDENTIFIED BY '密吗'
-*****重新命名用户账号
-RENAME USER 旧用户名 TO 新用户名
-***** 删除用户账号
-DROP USER 用户名
-***** 设置访问权限
-SHOW GRANTS FOR 用户名;		--看到用户账号的权限
-     	    			--注意GRANTS有个S
-				--USAGE表示根本没有权限
+**** 获得用户账号列表
 
-GRANT						--授权
-SELECT|ALL|...					--要授予的权限
-						--可以列出各权限并用','分隔
-ON 数据库.表名|ALL|database.*|特定的列|存储过程	--被授予访问权限的数据库和表
-   						--对象可以是不存在的
-TO 用户名;					--用户名
+#+BEGIN_SRC sql
+  use mysql;
+  select user from user;
+#+END_SRC
 
-REVOKE						--撤销权限
-SELECT|ALL|...					--撤销的权限
-						--可以列出各权限并用','分隔
-ON 数据库.表名|ALL|database.*|特定的列|存储过程	--撤销权限的数据库和表
-   						--对象可以是不存在的
-FROM 用户名;					--用户名
-***** 更改用户口令
-SET PASSWORD FOR 用户名=Password('新密码')
-SET PASSWORD=Password('新密码')			--不指定用户名时更改自己密码
+**** 查询当前使用的账号
+
+#+BEGIN_SRC sql
+  select current_user
+#+END_SRC
+
+**** 创建用户账号
+
+#+BEGIN_SRC sql
+  CREATE USER 用户名 IDENTIFIED BY '密吗'
+#+END_SRC
+
+创建用户语句还能同时赋予权限
+
+#+BEGIN_SRC sql
+  grant 权限 on 表 to 用户indentityied by 密码
+#+END_SRC
+
+**** 重新命名用户账号
+
+#+BEGIN_SRC sql
+  RENAME USER 旧用户名 TO 新用户名
+#+END_SRC
+**** 删除用户账号
+
+#+BEGIN_SRC sql
+  DROP USER 用户名
+#+END_SRC
+**** 更改用户口令
+
+#+BEGIN_SRC sql
+  SET PASSWORD FOR 用户名=Password('新密码')
+  SET PASSWORD=Password('新密码')         --不指定用户名时更改自己密码
+#+END_SRC
+*** 设置访问权限
+**** 看到用户账号的权限
+#+BEGIN_SRC sql
+  SHOW GRANTS FOR 用户名; --注意GRANTS有个S
+                  --USAGE表示根本没有权限
+#+END_SRC
+**** 授权
+#+BEGIN_SRC sql
+  GRANT                       
+  SELECT|SELECT(列名...)|ALL|...  --要授予的权限,且可以指定操作的行
+                          --可以列出各权限并用','分隔
+  ON 数据库.表名|ALL|database.*|特定的列|存储过程 --被授予访问权限的数据库和表
+                          --对象可以是不存在的
+  TO 用户名               --用户名
+  [WITH GRANT OPTION]     --可以把该权限赋予其他人
+#+END_SRC
+**** 撤销权限
+#+BEGIN_SRC sql
+  REVOKE
+  SELECT|GRANT OPTION ON $权限|ALL|...    --撤销的权限,GRANT OPTION ON $权限表示测试的是下放$权限的权限
+                          --可以列出各权限并用','分隔
+  ON 数据库.表名|ALL|database.*|特定的列|存储过程 --撤销权限的数据库和表
+                          --对象可以是不存在的
+  FROM 用户名;                    --用户名
+#+END_SRC
+
++ 测试某人的权限后,则 *该人所有下放的权限皆无效*.
+
++ 使用CASCADE移除目标用户的权限后,则其下放的权限一起无效
+
+  #+BEGIN_SRC sql
+    revoke delete on 表名 from 用户名 cascade;
+  #+END_SRC
+
++ 使用RESTRICT,若移除目标用户的权限会影响第三方人的权限,则该移除权限操作会失败.
+
+  #+BEGIN_SRC sql
+    revoke delete on 表名 from 用户名 restrict;
+  #+END_SRC
+*** 管理角色
+角色把特定权限汇聚成组,再把组权限赋予一群人.
+**** 创建角色
+
+#+BEGIN_SRC sql
+  create  role 角色名称
+#+END_SRC
+
+**** 为角色赋予权限,直接把角色当成用户就好
+
+#+BEGIN_SRC sql
+  grant select,insert on some_table to role_name
+#+END_SRC
+
+角色的 *with admin option* 语句,让具有该角色的每个用户都能把角色赋予其他人.
+
+**** 撤销用户的角色
+
+#+BEGIN_SRC sql
+  revoke 角色 from 用户
+#+END_SRC
+
+撤销角色时,也支持 *cascade与restrict*
+
+**** 赋予用户角色
+
+#+BEGIN_SRC sql
+  grant 角色 to 用户
+#+END_SRC
+
+**** 删除角色
+
+#+BEGIN_SRC sql
+  drop role 角色
+#+END_SRC
 * mysql配置文件
 ** 字符集配置
    #+BEGIN_QUOTE
