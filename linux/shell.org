@@ -6,25 +6,25 @@
 * 计算式
 1. C写法的计算式：
    $((计算式))
-   #+BEGIN_SRC 
+   #+BEGIN_SRC sh
    a=1
    a=$((a+1))
    #+END_SRC
 2. 用bc计算可以设置小数点位数
    echo "scale=小数点位数;计算式" |bc
    可以使用-l选项启用bc函数库，可以使用三角函数
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    answer=$(echo "scale=5;$a/$b"|bc)
    answer=$("echo s($a)"|bc -l ) #计算sin(a)的值
    #+END_SRC
 3. 用expr确定串的长度
    expr的内部length函数可以确定串长度
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    (expr length "abcdefg")
    #+END_SRC
 4. 用expr显示一个子串
    expr的内置函数substr函数可以截取子串
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    (expr substr "abcdefg" 2 4) #sbustr(string,子串的第一个字符所在位置,子串的字符数)
    #+END_SRC
 * 重定向
@@ -34,20 +34,20 @@
    exec 5>>file
    exec 6<>file
 2. 访问指定打开文件的描述符，用句法>&fd，其中fd代表个位数描述符
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    #这里用于访问该文件的数字描述符操作，必须与exec命令打开文件时指定的操作方式相匹配
    echo "The quick brown fox jumped over the lazy dog">&3
    read line <&4
    #+END_SRC
 3. 关闭打开的文件，用句法exec fd>&-，其中fd代表个位数描述符
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    #可以关闭一个没有打开的
    exec 3>&-
    #+END_SRC
 4. 可以使用shell的内置命令print和read来对打开的文件描述符进行读写操作
    1. ksh支持print和read
       可以使用-u开关指定文件描述符，句法为print|read -u文件描述符
-      #+BEGIN_SRC
+      #+BEGIN_SRC sh
       print -u3 "hello"
       read -u3 line
       #+END_SRC
@@ -56,7 +56,7 @@
    2. 用"mknod 管道名 p" 来创建一个管道，当进程写入该管道时就会挂起，直到有进程从管道中读取时，用该方法可以实现进程间同步
 * 键盘响应
 1. 用stty -icanon可以开启即时键盘响应
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    #!/bin/bash
    #即时键盘响应
    old_stty_settings=$(stty -g) #保存初始设置
@@ -71,7 +71,7 @@
 * X系统
 1. 可以设置DISPLAY变量或x程序的-display选项设置X服务器。
    设定的句法为：主机地址:显示屏号
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    xclock -display 192.168.1.2:11    #将在192.168.1.2主机上显示xlock
    #+END_SRC
 2. 在X服务器上运行xhost许可或禁止X应用在X服务器上显示
@@ -82,7 +82,7 @@
 * 定义模板文件
 1. 使用$(eval echo 模板文件)将模板文件中的变量转换为变量值
    NOTE:用"\\"作为转义符转移特殊字符
-   #+BEGIN_SRC
+   #+BEGIN_SRC sh
    cat $model_file |while read line
    do
    place_holder=$(eval echo $line)
