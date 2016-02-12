@@ -3,24 +3,32 @@
 #+OPTIONS: ^:{}
 
 * 简介
-  EWW,全称the Emacs Web Wowser,是Emacs24.4开始自带的一款web浏览器. 要使用EWW,需要有libxml2的支持.
+EWW,全称the Emacs Web Wowser,是Emacs24.4开始自带的一款web浏览器. 要使用EWW,需要有libxml2的支持.
 
-  在ubuntu下,可以使用`sudo apt-get install libxml2`来安装
+在ubuntu下,可以使用`sudo apt-get install libxml2`来安装
 
-  在windows下,可以去http://ncu.dl.sourceforge.net/project/ezwinports/libxml2-2.7.8-w32-bin.zip 下载libxml2
+在windows下,可以去http://ncu.dl.sourceforge.net/project/ezwinports/libxml2-2.7.8-w32-bin.zip 下载libxml2
+
+** eww的特点
++ 通过重命名eww buffer,可以同时使用多个eww buffer打开多个URL.
+
++ eww buffer中的URI和访问页面的title可以别保存在desktop文件中.
+
++ 验证有效的https页面会在header处标志成绿色,验证无效的https页面会在header处标志为红色.
+
 * 基本操作
   * 浏览网页
-
+    
     要浏览网页很简单,只需要执行M-x eww,然后输入网址,回车就行了. 若输入的不像是URL或者主机名,则eww会自动搜索关键字,至于使用哪个搜索引擎,则由变量`eww-search-prefix`来决定. 默认是https://duckduckgo.com
-
+    
     若想浏览本地页面,则有两种方法:
-
+    
     一种是执行M-x eww,在输入网址时使用file://xxx 的url
-
+    
     另一种是执行M-x eww-open-file,然后像find-file一样选择要打开的本地文件就行.
-
+    
   * eww-mode的操作
-
+    
     | 按键 | 函数                             | 作用                                                                             |
     |------+----------------------------------+----------------------------------------------------------------------------------|
     | q    | eww-quit                         | 退出eww                                                                          |
@@ -35,35 +43,49 @@
     | &    | eww-browse-with-external-browser | 使用外部浏览器打开当前浏览的URL,外部浏览器由变量`shr-external-browser`决定       |
     | v    | eww-view-source                  | 查看页面源代码                                                                   |
     | C    | eww-cookie-list                  | 列示Cookie                                                                       |
-    |      |                                  |                                                                                  |
-
+    | S    | eww-list-buffers                 | 列出所有的eww buffer,通过重命名eww buffer的方式可以打开多个eww-buffer                               |
+    
 * 配置
   * eww-search-prefix
-
-	若输入給eww的字符串不像是URL或主机名,则会使用eww-search-prefix作为搜索引擎.
-
+    
+    若输入給eww的字符串不像是URL或主机名,则会使用eww-search-prefix作为搜索引擎.
+    
   * eww-download-directory
-
-	配置eww的下载目录
-
+    
+    配置eww的下载目录
+    
   * shr-external-browser
-
-	该变量指定了eww使用的外部浏览器
-
+    
+    该变量指定了eww使用的外部浏览器
+    
   * eww-use-external-browser-for-content-type
-
-	当打开指定类型的content时,自动使用外部浏览器打开.
-
+    
+    当打开指定类型的content时,自动使用外部浏览器打开.
+    
   * eww-header-line-format
-
-	该变量指示了eww buffer的head line以什么格式来显示
-
-	它是一个格式字符串,其中%t表示website的标题,%u表示访问的URL
-
+    
+    该变量指示了eww buffer的head line以什么格式来显示
+    
+    它是一个格式字符串,其中%t表示website的标题,%u表示访问的URL
+    
   * shr-max-image-proportion
-
-	该值为一个不超过1的浮点数,表示当显示图片时,图片的大小不能超过整个eww window的shr-max-imag-proportion倍
-
+    
+    该值为一个不超过1的浮点数,表示当显示图片时,图片的大小不能超过整个eww window的shr-max-imag-proportion倍
+    
   * shr-blocked-images
+    
+    该变量为一个正则表达式,若图片的URL匹配该表达式,则该图片被屏蔽.
+    
+* 其他命令
 
-	该变量为一个正则表达式,若图片的URL匹配该表达式,则该图片被屏蔽.
++ eww-toggle-fonts
+  
+  切换是使用等宽还是可变字体来显示
+  
++ eww-toggle-colors
+  
+  切换是否使用HTML的颜色
+  
++ eww-readable
+  
+  尝试只显示当前页面的主要阅读部分,去除导航菜单之类的东西.
