@@ -63,7 +63,7 @@ D-Bus机制有两个基本的消息总线:"system bus"与"session bus".
 
   参数`bus'必须是`:system'或`:session'
 
-+ (dubs-list-known-name bus)
++ (dubs-list-known-names bus)
 
   列出指定总线中的所有"known name". 若服务名称不是以`:'开头的,则该服务拥有"known name"
 
@@ -332,10 +332,131 @@ The first elements, to be introspected for a D-Bus object, are further object pa
 
 + (dbus-introspect-get-interface-names bus service path)
   
+  该函数返回`BUS'总线上,"known name"为`SERVICE'的,且object path在`PATH'下的所有interface名称列表.
   
+  *返回的interface列表中必然包含有org.freedesktop.DBus.Introspectable接口*
+
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-interface-names
+     :system "org.freedesktop.Hal"
+     "/org/freedesktop/Hal/devices/computer")
+
+     ;; ("org.freedesktop.DBus.Introspectable"
+     ;;   "org.freedesktop.Hal.Device"
+     ;;   "org.freedesktop.Hal.Device.SystemPowerManagement"
+     ;;   "org.freedesktop.Hal.Device.CPUFreq")
+  #+END_SRC
+
++ (dbus-introspect-get-interface bus service path interface)
+
+  获取BUS中"known name"为SERVER在且object path为PATH的节点中接口名为INTERFACE的接口信息.
+
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-interface
+     :session "org.freedesktop.xesam.searcher"
+     "/org/freedesktop/xesam/searcher/main"
+     "org.freedesktop.xesam.Search")
+
+    ⇒ (interface ((name . "org.freedesktop.xesam.Search"))
+                 (method ((name . "GetHitData"))
+                         (arg ((name . "search") (type . "s") (direction . "in")))
+                         (arg ((name . "hit_ids") (type . "au") (direction . "in")))
+                         (arg ((name . "fields") (type . "as") (direction . "in")))
+                         (arg ((name . "hit_data") (type . "aav") (direction . "out")))
+                         )
+                 …
+                 (signal ((name . "HitsAdded"))
+                         (arg ((name . "search") (type . "s")))
+                         (arg ((name . "count") (type . "u")))
+                         )
+                 )
+  #+END_SRC
+
++ 获取系统中的所有可探测信息
+
+  使用上面的那些函数,可以获取系统中的所有可探测信息
+  #+BEGIN_SRC emacs-lisp
+    (with-current-buffer (switch-to-buffer "*introspect*")
+      (erase-buffer)
+      (dolist (service (dbus-list-known-names :session))
+        (dolist (path (dbus-introspect-get-all-nodes :session service "/"))
+          ;; We want to introspect only elements, which have more than
+          ;; the default interface "org.freedesktop.DBus.Introspectable".
+          (when (delete
+                 "org.freedesktop.DBus.Introspectable"
+                 (dbus-introspect-get-interface-names :session service path))
+            (insert (message "\nservice: \"%s\" path: \"%s\"\n" service path)
+                    (dbus-introspect :session service path))
+            (redisplay t)))))
+  #+END_SRC
 
 ** 方法(methods)与信号(signal)
+
+方法与信号都是D-Bus通讯的方式. 下面所列函数可以用来探测关于方法与信号的信息
+
++ (dbus-introspect-get-method-names bus service path interface)
+  
+  返回SERVER中INTERFACE包含的所有方法.
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-method-names
+     :session "org.freedesktop.xesam.searcher"
+     "/org/freedesktop/xesam/searcher/main"
+     "org.freedesktop.xesam.Search")
+
+    ⇒ ("GetState" "StartSearch" "GetHitCount" "GetHits" "NewSession"
+       "CloseSession" "GetHitData" "SetProperty" "NewSearch"
+       "GetProperty" "CloseSearch")
+  #+END_SRC
+
++ (dbus-introspect-get-method bus service path interface method)
+
+  获取INTERFACE中METHOD的信息
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-method
+     :session "org.freedesktop.xesam.searcher"
+     "/org/freedesktop/xesam/searcher/main"
+     "org.freedesktop.xesam.Search" "GetHitData")
+
+    ⇒ (method ((name . "GetHitData"))
+              (arg ((name . "search") (type . "s") (direction . "in")))
+              (arg ((name . "hit_ids") (type . "au") (direction . "in")))
+              (arg ((name . "fields") (type . "as") (direction . "in")))
+              (arg ((name . "hit_data") (type . "aav") (direction . "out")))
+              )
+  #+END_SRC
+
++ (dbus-introspect-get-signal-names bus service path interface)
+
+  获取INTERFACE中的信号列表
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-signal-names
+     :session "org.freedesktop.xesam.searcher"
+     "/org/freedesktop/xesam/searcher/main"
+     "org.freedesktop.xesam.Search")
+
+    ⇒ ("StateChanged" "SearchDone" "HitsModified"
+       "HitsRemoved" "HitsAdded")
+  #+END_SRC
+
++ (dbus-introspect-get-signal bus service path interface)
+
+  获取INTERFACE中名为SIGNAL的信号调用信息
+  #+BEGIN_SRC emacs-lisp
+    (dbus-introspect-get-signal
+     :session "org.freedesktop.xesam.searcher"
+     "/org/freedesktop/xesam/searcher/main"
+     "org.freedesktop.xesam.Search" "HitsAdded")
+
+    ⇒ (signal ((name . "HitsAdded"))
+              (arg ((name . "search") (type . "s")))
+              (arg ((name . "count") (type . "u")))
+              )
+  #+END_SRC
+
 ** 属性(properties)与注解(Annotatiions)
+
+
+
 ** 参数(Arguments)与签名(Signatures)
 * D-Bus类型与Lisp类型的映射关系
 * 调用同步方法
