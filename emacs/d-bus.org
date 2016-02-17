@@ -454,6 +454,9 @@ The first elements, to be introspected for a D-Bus object, are further object pa
   #+END_SRC
 
 ** 属性(properties)与注解(Annotatiions)
+
+
+
 ** 参数(Arguments)与签名(Signatures)
 * D-Bus类型与Lisp类型的映射关系
 * 调用同步方法
