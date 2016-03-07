@@ -6891,6 +6891,58 @@ Tabulated List Mode继承至Special mode,且同时被多个子mode继承,例如P
 
   若参数REMEMBER-POS为非nil,则该函数在刷新buffer前会记住当前行的ID,并在刷新后自动定位到该ID行
 
++ (tabulated-list-print-entry id cols)
+
+  在光标处插入新entry,entry信息由ID和COLS决定
+
+  其中ID是一个用于标示entry的lisp对象,而COLS为一个由各列信息组成的vector
+
++ (tabulated-list-print-col n col-desc x) ??
+  
+  为光标处entry插入一个特定的entry列
+
+  其中N为列编号,COL-DESC为列描述,X为光标处的列编号
+
+  该函数在插入后,返回列编号
+
+** 其他函数
++ (tabulated-list-get-id &optional POS)
+  
+  返回POS位置entry的ID. POS默认为光标当前位置
+
++ (tabulated-list-get-entry &optional POS)
+  
+  返回POS位置entry的信息. 返回的格式为一个由列信息组成的vector
+
+  POS默认为光标当前位置
+
++ (tabulated-list-delete-entry)
+
+  删除光标所在位置的entry. 并返回一个(ID COLS...)的列表来暂时被删除entry的信息.
+
+  *该函数同时会将光标移动到entry的最开头位置*
+
+  *该函数只会更改buffer内容,而不会更改`tabulated-list-entries'的值*
+
++ (tabulated-list-set-col COL DESC &optional CHANGE-ENTRY-DATA)
+
+  更改当前位置的entry中第COL列的内容为DESC
+
+  COL可以是列的位置,也可以是列的名称.
+
+  CHANGE-ENTRY-DATA指示了是否同时更改`tabulated-list-entries'的值
+
++ (tabulated-list-put-tag tag &optional advance)
+  
+  将TAG放入当前entry的padding区域
+
+  TAG为字符串,且大小不能大于`tabulated-list-padding'的值
+
+  若ADVANCE为非nil,则光标同时移动到下一行
+
++ tabulated-list-padding
+
+  每个entry前预留于padding的字符个数
 
 
   
