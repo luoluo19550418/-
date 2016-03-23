@@ -1,0 +1,144 @@
+#+TITLE: docker
+#+AUTHOR: DarkSun
+#+CATEGORY: linux
+#+DATE: [2016-03-22 周二 14:15]
+#+OPTIONS: ^:{}
+* docker基础说明
+** docker images
+image是用于创建container的一个静态模板.
+** docker registries
+用于管理docker image的地方叫做docker registry.
+
+当我们创建了自己的image之后,就可以使用push命令将之上传docker registry.
+下次要在另一个机器上使用这个image时,只需要从仓库上pull下来就行了.
+** docker containers
+container从image创建. 它可以被启动,开始,停止,删除. 每个容器都是相互隔离,安全的平台.
+
+当我们运行 ~docker run -i -t ubunut /bin/bash~ 时,docker在后台运行的操作如下:
+
+1. 如果本地没有ubuntu这个image,则从公有仓库下载
+2. 从image创建容器
+3. 分配一个文件系统,并在只读的image层外挂载一层可读写的层
+4. 从宿主主机配置的网桥接口中桥接一个虚拟接口到容器中去
+5. 从地址池中配置一个ip地址給容器
+6. 执行指定的程序,这里是/bin/bash
+7. -i -t 指定标准输入和输出
+* docker使用说明
+** docker image相关命令
+*** 显示本机上的images
+#+BEGIN_SRC sh
+    sudo docker images
+#+END_SRC
+
+在列出的信息中可以看到3个字段信息
+  1. 来自哪个仓库
+  2. tag标签
+  3. 镜像的id号
+     
+  一个仓库可能有一个image的多个发行版,这样就需要使用tag来指定image. 使用tag的方法是在image后加上冒号和tag: 例如 ~sudo docker run -t -i ubunut:latest /bin.bash~
+  
+*** 查找images
+
+docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 来搜索合适的image. 例如
+#+BEGIN_SRC sh
+    sudo docker search emacs
+#+END_SRC
+
+可以看到返回的信息包括image名称,描述,受欢迎程度,是否官方创建,是否自动创建的信息.
+
+*** 获取images
+
+我们可以使用 ~docker pull~ 命令来预先下载我们需要的image
+#+BEGIN_SRC sh
+    sudo docker pull ubuntu
+#+END_SRC
+
+*** 创建自己的image
+有两种方法创建自己的image:
+
++ 使用 ~docker commit~ 扩展一个image
+
+  1. 先使用 ~docker run~ 根据image启动容器
+     #+BEGIN_SRC sh
+       sudo docker run -t -i ubuntu /bin/bash
+     #+END_SRC
+
+  2. 对容器做出修改后,使用 ~docker commit~ 提交结果到新的image
+     #+BEGIN_SRC sh
+       # sudo docker commit -m="新容器提交信息" -a="新容器作者" 容器ID 新image名称
+       sudo docker commit -m="Installed ruby" -a="darksun" 0b2616b0e5a8 lujun9972/ruby:v2
+     #+END_SRC
+     
++ 从Dockerfile创建
+  
+  使用docker commit来扩展一个image比较简单,但它不容易在一个团队中分享它. 
+
+  我们还可以使用 ~docker build~ 来根据dockerfile创建一个新image
+
+  1. 创建一个目录和一个dockerfile
+     #+BEGIN_SRC sh
+       mkdir ruby
+       cd ruby
+       touch Dockerfile
+       echo "#this is a comment
+       FROM ubuntu:latest
+       MAINTAINER darksun <lujun9972@gmail.com>
+       RUN apt-get -qqy update;exit 0
+       RUN apt-get -qqy install ruby ruby-dev
+       RUN gem install sinatra" > Dockerfile
+     #+END_SRC
+
+     #+RESULTS:
+
+  2. 使用 ~docker build~ 来根据dockerfile创建image
+     #+BEGIN_SRC sh
+       sudo docker build -t="lujun9972/ruby:v2"
+     #+END_SRC
+     使用-t标记来指定新的image名称及tag
+
+     我们可以看到dockfile中的指令被一条条的执行了. 每一步都创建了一个新的容器,当所有的指令都执行完毕之后,返回一个image id,并且所有的中间步骤所产生的容器都被删除和清理了.
+
+     *注意:一个image不能超过127层*
+
+*** 上传images到公共images仓库
+使用docker push上传images
+#+BEGIN_SRC sh
+  sudo docker push lujun9972/ruby
+#+END_SRC
+
+需要注意的是: *若仓库实现了角色控制,则上传前需要使用docker login先登录,下载则无需先登录*
+
+*** 删除本地images
+使用 ~docker rmi~ 可以删除本地images
+#+BEGIN_SRC sh
+  sudo docker rmi lujun9972/ruby
+#+END_SRC
+
+** docker container相关命令
+
+** docker中的网络介绍
+
+*** docker网络相关的命令列表
+
++ -b BRIDGE / --bridge=BRIDGE :: 桥接配置
++ --bip=CIDR :: 定制docker0的掩码
++ -H SOCKET / --host=SOCKET :: 告诉docker从哪个通道来接受控制container的命令,即指定docker api的地址
++ --icc=true|false :: 
++ --ip-forward=true|false ::
++ --iptables=true|false ::
++ --mtu=BYTES ::
++ --dns=IP_ADDRESS ::
++ --dns-search=DOMAIN ::
++ -h HOSTNAME / --hostname=HOSTNAME :: 主机配置
++ --link=CONTAINER_NAME:ALIAS :: 与其他容器进行互联,其中其他容器在容器中以ALIAS为名
++ --net=bridge|none|container:NAME_OR_ID|host :: 桥接配置
++ -p SPEC / --publish=SPEC :: 映射容器端口到宿主主机
++ -P / --publish-all=true|false :: 映射容器端口到宿主主机
+
+*** 配置DNS
+
+
+*** 映射内部容器端口到host端口
+
+*** 容器间互联
+* Dockerfile编写说明
