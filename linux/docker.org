@@ -260,11 +260,60 @@ docker允许指定docker0的ip地址和子网掩码,还能定义MTU(接口允许
 
 *** 容器间互联
 
-** Docker数据管理
+** Docker Volumes
 
-*** Data Volumes
+数据卷是一个由UFS文件系统专门设计的特殊目录,它有如下特性:
 
-*** Data Volumes Container
+1. 数据卷可以在容器之间共享和重用
+
+2. 对数据卷的改变是立马生效
+
+3. 数据卷中的数据不会包含在image中
+
+4. 卷会一直存在直到没有容器使用它
+
+*** 添加一个数据卷
+使用 ~docker run~ 命令时,使用-v选项来添加一个数据卷. 且一次run中可以多次使用-v来挂载多个数据卷:
+#+BEGIN_SRC sh
+  # 添加一个新卷到容器的/var/www中
+  sudo docker run -d -P --name web -v /var/www lujun9972/apache 
+#+END_SRC
+
+*** 挂载主机目录为数据卷
+使用 ~-v 主机目录绝对路径:容器路径~ 来挂载主机目录为数据卷
+#+BEGIN_SRC sh
+  # 挂载主机中的/home/lujun9972/www到容器的/var/www目录
+  sudo docker run -d -P --name web -v /home/lujun9972/www:/var/www lujun9972/apache
+#+END_SRC
+
+*** 挂载只读数据卷
+docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容器路径:ro~ 来挂载只读数据卷
+#+BEGIN_SRC sh
+  # 加了ro之后,就挂载为只读了
+  sudo docker run -d -P --name web -v /home/lujun9972/www:/var/www:ro lujun9972/apache
+#+END_SRC
+
+*** 挂载一个宿主主机文件作为数据卷
+-v标记还可以从主机挂载 *单个文件* 到容器中
+#+BEGIN_SRC sh
+  sudo docker run --rm -it -v ~/.bash_history:./bash_history ubunut /bin/bash
+#+END_SRC
+
+*** 多个容器间共享数据卷
+~docker run~ 中使用选项 ~--volumes-from 其他容器~ 来挂载其他容器中的卷,已达到与其他容器共享数据卷的目的.
+
+一般会单独创建一个容器专门用于挂载共享的数据卷
+#+BEGIN_SRC sh
+  # 创建数据卷容器,该容器专用于挂载共享数据卷
+  sudo docker run -d -v /dbdata --name dbdata trainning/posgres echo Data-only container for postgeres
+
+  # 使用--volumes-from挂载/dbdata卷
+  sudo docker run -d --volumes-from dbdata --name db1 tranning/postgres
+  sudo docker run -d --volumes-from dbdata --name db2 tranning/postgres
+
+  # 甚至可以从其他已经挂载了容器卷的容器来挂载数据卷
+  sudo docker run -d --volumes-from db1 --name db3 tranning/postgres
+#+END_SRC
 
 ** 搭建自己的私有仓库
 * Dockerfile编写说明
