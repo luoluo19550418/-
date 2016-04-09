@@ -15,6 +15,270 @@
 *** 列表是序列的一种，它可以被改变
 *** 列表与数组类似，但列表没有固定类型的约束
 *** 
+** 类
+
+1. python类支持多重继承
+
+   当从多个基类继承同名方法时,先继承的类中的方法会覆盖后继承类的方法.
+
+2. 可以将对象中的原本方法,绑定到一个函数
+   #+BEGIN_SRC python
+     class Class:
+         def method(self):
+             print("I have a self")
+
+     def function():
+         print("I don't have self")
+
+     instance = Class()
+
+     instance.method()               # I have a self
+
+     instance.method=function
+     instance.method()               # I don't have self
+   #+END_SRC
+
+3. 也可以将一个对象的方法绑定到一个变量上
+   #+BEGIN_SRC python
+     class Bird(object):
+         def __init__(self,song):
+             self.song = song
+
+         def sing(self):
+             print(self.song)
+
+     bird = Bird("Squaawk!")
+
+     birdsong = bird.sing
+     birdsong()                      # Squaawk!
+   #+END_SRC
+
+4. python并不直接支持私有方式,而是通过修改以__开头的成员名称的方式间接实现.
+
+   在类的内部定义中,所有以双下划线开始的名称都被翻译成前面加上单下划线和类名称的形式.
+
+   如类Secretive中名为 ~__inaccessible~ 的名称被翻译成 ~_Secretive__inaccessible~
+
+5. 所有在类中定义的函数或变量都处于类命名空间内，即为类所属的成员
+   #+BEGIN_SRC python
+     class MemberCounter:
+         members=0
+         def __init__(self):
+             MemberCounter.members += 1
+
+     m1 = MemberCounter()
+     print (MemberCounter.members)
+
+     m2 = MemberCounter()
+     print (MemberCounter.members)
+   #+END_SRC
+   上面的members即为类MemberCounter的成员变量。
+
+6. 类定义之后,可以通过类名动态添加类数据属性. 实例生成之后,也可以动态添加实例的属性.
+   #+BEGIN_SRC python
+     class ClsA:
+         pass
+
+     ClsA.cls_attr = "attr"
+
+     a = ClsA()
+     print(a.cls_attr)               # attr
+
+     b = ClsA()
+     print(b.cls_attr)               # attr
+
+     a.obj_attr = "attr"
+     print(a.obj_attr)               # attr
+   #+END_SRC
+
+7. 调查继承
+
+   + 如果想要查看一个类是否是另一个类的子类,可以使用内建的issubclass函数
+     #+BEGIN_SRC python
+       class Base:
+           pass
+
+       class Sub(Base):
+           pass
+
+       print(issubclass(Sub,Base))     # True
+     #+END_SRC
+
+   + 如果想要知道已知类的基类,可以使用类的 =__base__= 属性
+     #+BEGIN_SRC python
+       print (Sub.__base__)            # <class '__main__.Base'>
+       print (Base.__base__)           # <class 'object'>
+     #+END_SRC
+
+   + 使用isinstance方法检查一个对象是否是一个类的实例
+     #+BEGIN_SRC python
+       s = Base()
+       print (isinstance(s,object))    # True
+       print (isinstance(s,Base))      # True
+       print (isinstance(s,Sub))       # False
+     #+END_SRC
+
+   + 如果想知道一个对象是属于哪个类,可以使用对象的 =__class__= 属性
+     #+BEGIN_SRC python
+       s = Base()
+       print (s.__class__)             # <class '__main__.Base'>
+     #+END_SRC
+
+     也可以使用type(对象)来查看对象的类
+     #+BEGIN_SRC python
+       print(type(s))                  # <class '__main__.Base'>
+     #+END_SRC
+
+8. 内省
+   
+   + 使用 ~hasattr~ 检查对象是否包含特定属性
+
+     #+BEGIN_SRC python
+       class Cls:
+           def __init__(self):
+               self.attr = 1
+           
+       obj = Cls()
+       print(hasattr(obj,"__init__"))  # True
+       print(hasattr(obj,"talk"))      # False
+       print(hasattr(obj,"attr"))      # True
+     #+END_SRC
+
+     #+RESULTS:
+
+   + 使用 ~getattr~ 可以获取对象中的属性
+     #+BEGIN_SRC python
+       print(getattr(obj,"attr",None)) # 1
+       print(getattr(obj,"__init__",None)) # <bound method Cls.__init__ of <__main__.Cls object at 0x017782B0>>
+       print(getattr(obj,"non-exist-attr",None)) # None
+     #+END_SRC
+     
+     ~getattr~ 函数允许提供默认值,以便在特性不存在时使用.
+
+   + 要判断一个属性到底是方法还是成员变量,可以检查该属性是否包含 ~__call__~ 属性
+     #+BEGIN_SRC python
+       attr = (getattr(obj,"attr",None))
+       print(hasattr(attr,"__call__")) # false
+       attr = getattr(obj,"__init__",None) 
+       print(hasattr(attr,"__call__")) # True
+     #+END_SRC
+
+   + 若要设置对象中的属性,则使用 ~setattr~ 函数
+     #+BEGIN_SRC python
+       setattr(obj,"attr",100)
+       print(obj.attr)                 # 100
+       setattr(obj,"non_exist_attr",10)
+       print(obj.non_exist_attr)                # 10
+     #+END_SRC
+     
+     从上例可以看出, ~setattr~ 能够为对象设置以前不存在的属性
+
+   + 若想查看对象内所有存储的值,可以使用对象的 ~__dict__~ 属性
+     #+BEGIN_SRC python
+       print(obj.__dict__)             # {'non_exist_attr': 10, 'attr2': 10, 'attr': 100}
+     #+END_SRC
+
+9. 类的特殊属性
+
+   | 类属性     | 含义                   |
+   |------------+------------------------|
+   | __name__   | 类名(字符串)           |
+   | __doc__    | 类的文档字符串         |
+   | __bases__  | 类的所有父类组成的元组 |
+   | __dict__   | 类的属性组成的字典     |
+   | __module__ | 类所属的模块           |
+   | __class__  | 类对象的类型                 |
+     
+*** 异常处理
+
++ python中的异常,应该属于Exception的子类
+  
+  python内建了许多异常,下面是一些常用的内建异常类:
+  | 类名              | 描述                                       |
+  |-------------------+--------------------------------------------|
+  | Exception         | 所有异常的基类                             |
+  | AttributeError    | 对象属性引用或赋值失败时引发               |
+  | IOError           | 试图打开不存在文件或无权限时引发           |
+  | IndexError        | 当使用序列中不存在的索引时引发             |
+  | KeyError          | 使用映射中不存在的键时引发                 |
+  | NameError         | 当找不到变量名时引发                       |
+  | SynaxError        | 语法错误时引发                             |
+  | TypeError         | 当内建操作或函数应用于错误类型的对象时引发 |
+  | ValueError        | 在内建操作或函数应用于非法值时引发         |
+  | ZeroDivisionError | 被除数为0                                      |
+
++ 使用 ~raise~ 语句抛出异常
+  
+  ~raise~ 语句既可以接一个异常类,也可以结一个异常对象. 当使用类调用 ~raise~ 语句时,python会自动创建实例.
+  #+BEGIN_SRC python
+    raise Exception                
+    # =>
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 1, in <module>
+    #   File "c:/Users/ADMINI~1/AppData/Local/Temp/py5360o8N", line 1, in <module>
+    # Exception
+
+    raise Exception("exception message")
+    # =>
+    # Traceback (most recent call last):
+    #   File "<stdin>", line 1, in <module>
+    #   File "c:/Users/ADMINI~1/AppData/Local/Temp/py53601GU", line 8, in <module>
+    # Exception: exception message
+
+  #+END_SRC
+
++ 捕捉异常
+
+  使用 ~try/catch~ 来捕捉异常
+  #+BEGIN_SRC python
+    try:
+        代码块
+    except 异常类1:
+        异常处理1
+    except 异常类2:
+        异常处理2
+  #+END_SRC
+
+  若捕捉到了异常,但是又想重新引发它,那么可以调用不带参数的 ~raise~ 语句
+  #+BEGIN_SRC python
+    Class MuffledCalculator:
+        muffled = False
+
+        def calc(self,expr):
+            try:
+                return eval(expr)
+            except ZeroDivisionError:
+                if self.muffled:
+                    print "Division by zero"
+                else:
+                    raise           # 抛出原异常
+  #+END_SRC
+
+  一个块可以捕捉多个类型的异常,只需要将它们作为元组列出即可
+  #+BEGIN_SRC python
+    try:
+        代码块
+    except (异常类型1,异常类型2...):
+        异常处理
+  #+END_SRC
+  
+  如果希望在except子句中访问异常对象本身,只需要在except子句的异常类型/异常类型列表后加上一个变量名. 这个变量名在except子句中引用到被捕获的异常对象
+  #+BEGIN_SRC python
+    try:
+        代码块
+    except (异常类型1,异常类型2...) 异常变量:
+        异常处理,其中可以使用异常变量引用被捕获的异常对象
+  #+END_SRC
+
+  若except子句后不接异常类型,则表示捕获所有异常
+  #+BEGIN_SRC python
+    try:
+        x = input("Enter the first number:")
+        y = input("Enter the second number:")
+        print(x/y)
+    except:
+        print("Something wrong happend...")
+  #+END_SRC
 * Note
 1. 数字、字符串和元组是不可变的；列表和字典是可变的
 2. 可作用于多种类型的通用型操作都是以内置函数或表达式的形式出现的；但是类型特定的操作是以方法调用的形式出现的。
