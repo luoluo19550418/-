@@ -91,7 +91,7 @@
      print(a.obj_attr)               # attr
    #+END_SRC
 
-7. 调查继承
+*** 调查继承
 
    + 如果想要查看一个类是否是另一个类的子类,可以使用内建的issubclass函数
      #+BEGIN_SRC python
@@ -129,7 +129,7 @@
        print(type(s))                  # <class '__main__.Base'>
      #+END_SRC
 
-8. 内省
+*** 内省
    
    + 使用 ~hasattr~ 检查对象是否包含特定属性
 
@@ -178,7 +178,7 @@
        print(obj.__dict__)             # {'non_exist_attr': 10, 'attr2': 10, 'attr': 100}
      #+END_SRC
 
-9. 类的特殊属性
+*** 类的特殊属性
 
    | 类属性     | 含义                   |
    |------------+------------------------|
@@ -189,9 +189,9 @@
    | __module__ | 类所属的模块           |
    | __class__  | 类对象的类型                 |
      
-*** 异常处理
+** 异常处理
 
-+ python中的异常,应该属于Exception的子类
+*** python中的异常,应该属于Exception的子类
   
   python内建了许多异常,下面是一些常用的内建异常类:
   | 类名              | 描述                                       |
@@ -207,7 +207,7 @@
   | ValueError        | 在内建操作或函数应用于非法值时引发         |
   | ZeroDivisionError | 被除数为0                                      |
 
-+ 使用 ~raise~ 语句抛出异常
+*** 使用 ~raise~ 语句抛出异常
   
   ~raise~ 语句既可以接一个异常类,也可以结一个异常对象. 当使用类调用 ~raise~ 语句时,python会自动创建实例.
   #+BEGIN_SRC python
@@ -227,7 +227,7 @@
 
   #+END_SRC
 
-+ 捕捉异常
+*** 捕捉异常
 
   使用 ~try/catch~ 来捕捉异常
   #+BEGIN_SRC python
@@ -273,12 +273,37 @@
   若except子句后不接异常类型,则表示捕获所有异常
   #+BEGIN_SRC python
     try:
-        x = input("Enter the first number:")
-        y = input("Enter the second number:")
+        x = float(input("Enter the first number:"))
+        y = float(input("Enter the second number:"))
         print(x/y)
     except:
         print("Something wrong happend...")
   #+END_SRC
+
+*** else子句
+~else~ 子句只有在 ~try~ 子句未发生异常的情况下才会执行.
+#+BEGIN_SRC python
+  while True:
+      try:
+          x = float(input("Enter the first number:"))
+          y = float(input("Enter the second number:"))
+          print(x/y)
+      except:
+          print("Something wrong happend...")
+      else:
+          break
+#+END_SRC
+
+*** finally子句
+~finally~ 子句常用来对可能的异常后进行清理. 它无论是否发生异常,都会保证执行.
+#+BEGIN_SRC python
+  x = None
+  try:
+      x = 1/0
+  finally:
+      print("Cleanning up")
+      del x
+#+END_SRC
 * Note
 1. 数字、字符串和元组是不可变的；列表和字典是可变的
 2. 可作用于多种类型的通用型操作都是以内置函数或表达式的形式出现的；但是类型特定的操作是以方法调用的形式出现的。
