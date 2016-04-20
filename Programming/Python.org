@@ -188,7 +188,63 @@
    | __dict__   | 类的属性组成的字典     |
    | __module__ | 类所属的模块           |
    | __class__  | 类对象的类型                 |
-     
+
+*** 类的特殊方法
+
+**** 构造方法:__init__
+当对象被创建后,会立即调用构造方法.
+#+BEGIN_SRC python
+  class Bird:
+      def __init__(self,hungry=True):
+          self.hungry = hungry
+      def eat(self):
+          if self.hungry:
+              print("Aaaaah")
+              self.hungry = False
+          else:
+              print("No. Thanks!")
+#+END_SRC
+
+一般来说,一个子类的构造方法中都需要调用父类的构造方法,否则对象很可能无法正确地初始化. 有两种方法能达到这个目的:
+
++ 调用超类构造方法的未绑定版本(不推荐)
+  #+BEGIN_SRC python
+    class SongBird(Bird):
+        def __init__(self,hungry=True):
+            Bird.__init__(self,hungry)     # 调用父类构造方法的未绑定版本
+            self.sound = "Squawk!"
+
+        def sing(self):
+            print(self.sound)
+
+    sb = SongBird()
+    sb.sing()                       # "Squawk"
+    sb.eat()                        # "Aaaah
+    sb.eat()                        # No. thanks
+  #+END_SRC
+
++ 使用super函数
+
+  super函数接受一个类和对象作为参数,其返回的对象上的任何方法调用,都会调用到超类的方法而不是当前类的方法.
+  #+BEGIN_SRC python
+    class SongBird(Bird):
+        def __init__(self,hungry=True):
+            super(SongBird,self).__init__()
+            self.sound = "Squawk!"
+
+        def sing(self):
+            print(self.sound)
+
+    sb = SongBird()
+    sb.sing()                       # "Squawk!"
+    sb.eat()                        # "Aaaah"
+    sb.eat()                        # No. thanks!
+  #+END_SRC
+  
+  super函数能正确处理继承多个超类的情况,因此推荐使用
+
+**** 析构方法:__del__
+析构方法在对象被来及回收之前被调用,但由于调用的具体时间不可知,因此一般应避免__del__函数.
 ** 异常处理
 
 *** python中的异常,应该属于Exception的子类
