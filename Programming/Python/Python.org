@@ -249,20 +249,200 @@
 **** 实现为序列和映射的接口说明
 若对象是不可变的，只需要实现前两个方法，若对象是可变的则需要实现全部的四个方法。
 
+若使用的索引为非法类型,一般抛出TypeError异常, 若索引类型正确但超出范围,一般引发IndexError异常
+
+在python中,甚至可以继承内置类型,例如list,string,dict
+
 + __len__(self)
 
   这个方法应该返回集合中所含项目的数量. 对于序列来说,这就是元素的个数,对于映射来说,则是键值对的数量.
 
   若__len__返回0,且没有重新实现__nonzero__,则该对象会被当作False
-
+  
+  若为无限序列,则可以不实现该函数
+  
 + __getitem__(self,key)
   
   这个方法返回与所給键对应的值. 
 
   对序列来说,键一个整数. 对于序列来说,则可以是任意种类的键
-
   
+  对于一个序列来说,如果能接受负整数的键,那么要从末尾开始计数,即x[-n] == x[len(x)-n]
 
+  若对序列进行的是分片操作,则key会为一个 ~分片对象~. 
+
++ __setitem__(self,key,value)
+
+  这个方法存储与key相关的value
+
++ __delitem__(self,key)
+  
+  这个方法在对一部分对象使用del语句时被删除,同时必须删除和元素相关的键.
+
+  若没有实现__del__方法,则表示删除元素是非法的.
+
+**** __getattribute__,__getattr__,__setattr__和__delattr__
++ __getattribute__(self,name) :: 当属性name被访问时自动调用,使用时请注意 *重复触发的情况*,因为访问__dict__也会触发该方法!
++ __getattr__(self,name) :: 当属性name被访问且对象 *没有相应属性时* 被自动调用
++ __setattr__(self,name,value) :: 当试图給属性name赋值时会自动调用,使用时请注意 *重复触发的情况*
++ __delattr__(self,name) :: 当试图删除属性name时被自动调用,若是非法的name,需抛出 *AttributeError异常*
+
+可以使用这些方法来模拟propery函数的作用
+#+BEGIN_SRC python
+  class Rectangle:
+      def __init__(self):
+          self.width = 0
+          self.height = 0
+      def __setattr__(self,name,value):
+          if name == "size":
+              self.width,self,height = value
+          else:
+              self.__dict__[name] = value
+      def __getattr__(self,name):
+          if name == "size":
+              return self,width,self,height
+          else:
+              raise AttributeError
+#+END_SRC
+
+**** 迭代器:__iter__
+__iter__方法返回一个迭代器,所谓迭代器就是指具有__next__方法的对象.
+
+当调用__next__方法时,迭代器会返回它的下一个值.
+
+当__next__方法被调用,但迭代器没有值返回时,需要引发一个 ~StopIteration~ 异常.
+
+#+BEGIN_SRC python
+  class Fibs:
+      def __init__(self):
+          self.a = 0
+          self.b = 1
+      def __next__(self):
+          self.a,self.b = self.b,self.a+self.b
+          return self.a
+      def __iter__(self):
+          return self
+
+  fibs = Fibs()
+  for f in fibs:
+      if f > 1000:
+          print(f)
+          break
+#+END_SRC
+
+实现了__iter__方法的对象被称为可迭代对象, 而实现了__next__方法的对象被称为迭代器,注意两者的区别
+
+使用函数可以从可迭代对象中获取迭代器
+#+BEGIN_SRC python
+  it = iter([1,2,3])
+  it.next()                       # 1
+  it.next()                       # 2
+#+END_SRC
+
+**** 生成器
+
+*** Property
+使用 ~property~ 函数可以创建一个并不实际存在的属性,其函数签名为 ~propery(fget=None,fset=None,fdel=None,doc=None)~. 其中
+
++ fget为获取属性的方法,若未设置则表示属性为不可读的
++ fset为设置属性的方法,若未设置则表示属性为不可写的
++ fdel为删除属性的方法(它无需参数),若为设置则表示属性为不可删除的.
++ doc为文档字符串.
+#+BEGIN_SRC python
+  class Rectangle:
+      def __init__(self):
+          self.width = 0
+          self.height = 0
+      def setSize(self,size):
+          self.width,self.height = size
+      def getSize(self):
+          return self.width,self.height
+      size = property(getSize,setSize)
+#+END_SRC  
+
+上面的代码使用proerty函数为Rectangle创建了一个并不实际存在的属性:property. 然后可以像处理width,height一样处理size.
+#+BEGIN_SRC python
+  r = Rectangle()
+  r.width = 10
+  r.height = 5
+  r.size                          # (10,5)
+
+  r.size = 150,100
+  r.width                         # 150
+#+END_SRC
+
+*** 静态方法和类成员方法
+静态方法与类成员方法不同点在于:
+
++ 静态方法的定义没有self参数,且能够被类本身直接调用.
+
+  静态方法在创建时需要被封装到staticmethod类型的对象中
+
++ 类方法在定义时则需要名为cls的参数,其作用与self类似,表示类本身的引用.
+
+  类成员方法可以被类的对象所调用.
+  
+  类成员方法在创建时需要被封装到classmethod类型的对象中.
+
+#+BEGIN_SRC python
+  class MyClass:
+      def smeth():
+          print("This is a static method")
+      smeth = staticmethod(smeth)
+
+      def cmeth(cls):
+          print("This is a class method of",cls)
+      cmeth = classmethod(smeth)
+#+END_SRC
+
+静态方法和类成员方法在python中用的比较少,因为一般情况下都能用函数或绑定方法来代替.
+
+*** 装饰器
+装饰器的语法很简单,就是在方法或函数上方写上形如 ~@xxxx~,这里的xxxx可以是任意东西.
+
+解析器会自动修改为 ~方法名 = xxxx(方法名)~ 这种格式.
+
+可以指定多个装饰器, 多个装饰器的应用顺序与指定顺序相反. 例如
+#+BEGIN_SRC python
+  def m1(fn):
+      print("m1")
+      return fn
+  def m2(fn):
+      print("m2")
+      return fn
+  @m1
+  @m2
+  def fun1():
+      print("fun1")
+
+  fun1()
+  # m2
+  # m1
+  # fun1
+
+  def fun2():
+      print("fun2")
+  fun2 = m1(m2(fun2))
+  fun2()
+  # m2
+  # m1
+  # fun2
+#+END_SRC
+
+因此定义静态方法和类成员方法时也可以使用装饰器来简化代码
+#+BEGIN_SRC python
+  class MyClass:
+      @staticmethod
+      def smeth():
+          print("This is a static method")
+
+      @classmethod
+      def cmeth(cls):
+          print("This is a class method of ",cls)
+
+  MyClass.smeth()                 # This is a static method
+  MyClass.cmeth()                 # This is a class method of <class '__main__.MyClass'>
+#+END_SRC
 ** 异常处理
 
 *** python中的异常,应该属于Exception的子类
