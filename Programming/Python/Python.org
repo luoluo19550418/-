@@ -339,8 +339,6 @@ __iter__方法返回一个迭代器,所谓迭代器就是指具有__next__方法的对象.
   it.next()                       # 2
 #+END_SRC
 
-**** 生成器
-
 *** Property
 使用 ~property~ 函数可以创建一个并不实际存在的属性,其函数签名为 ~propery(fget=None,fset=None,fdel=None,doc=None)~. 其中
 
@@ -559,12 +557,68 @@ __iter__方法返回一个迭代器,所谓迭代器就是指具有__next__方法的对象.
       del x
 #+END_SRC
 ** 生成器
-生成器是一种用普通的函数语法定义的迭代器. 任何包含yield语句的函数就是生成器.
+*** 生成器推导式
+生成器推导式的工作方式与列表推导式的工作方式类似,只不过返回的不是列表,而是生成器
 
-当函数执行到yield语句时会返回一个值,但并不是向return那样会退出函数,而是暂时冻结函数执行,等待被激活. 函数被激活后会从冻结点开始执行.
+生成器推导式与列表推导式的语法不同点在于生成器推导式在 =()= 后,列表推导式在 =[]= 后.
 #+BEGIN_SRC python
-
+  g = ((i + 2) ** 2 for i in range(2,27))
+  g.__next__()                        # 16
+  g.__next__()                        # 25
 #+END_SRC
+
+生成器推导式可以在当前的圆括号内直接使用. 例如在函数调用的括号中,不需要增加另外一对圆括号
+#+BEGIN_SRC python
+  sum(i**2 for i in range(10))    # 285
+#+END_SRC
+
+
+
+*** 生成器
+生成器是一种用普通函数语法定义的迭代器. 任何包含yield语句的函数都被称为生成器.
+#+BEGIN_SRC python
+  def my_range(start,end):
+      while start < end:
+          yield start
+          start+=1
+#+END_SRC
+
+yield与return语句一样都会返回一个值,所不同的在于它不会退出函数,相反它会暂时冻结函数的执行,等待再次被激活.
+
+实际上,yield函数返回的是一个迭代器,当迭代器被请求一个值时,它会执行生成器中的代码,直到遇到一个yield或return语句.
++ yield语句意味着生成一个新值
++ return语句意味着生成器停止执行.
+
+**** 生成器的其他方法
++ send方法
+
+  外部作用域调用生成器的send方法时,就像调用它的__next__方法一样,只是send方法可以带一个参数,这个参数会作为生成器内yield语句的返回值. 若__next__方法被调用,则yield语句返回的是None值
+
+  #+BEGIN_SRC python
+    def repeater(value) :
+        while True:
+            new = yield value
+            if new is not None:
+                value = new
+
+    r = repeater(42)
+    r.__next__()                    # 42
+    r.send("Hello")                 # "Hello"
+    r.__next__()                    # "Hello"
+  #+END_SRC
+  
+  注意,使用send方法,只有在生成器执行到yield方法时才有意义.
+
++ throw方法
+
+  该方法会使得yield语句抛出一个异常
+
++ close方法
+
+  该方法用于停止生成器,但是它的实现原理其实是在yield语句中抛出一个GeneratorExit异常.
+
+  因此,若需要生成器内进行代码清理的话,需要将yield语句放在try/catch语句中,并捕获GeneratorExit异常. *但记得随后还需要重新引发一个异常*,否则无法停止生成器.
+
 ** 模块
 
 * 文件
