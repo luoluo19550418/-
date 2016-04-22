@@ -90,6 +90,7 @@
      a.obj_attr = "attr"
      print(a.obj_attr)               # attr
    #+END_SRC
+*** ÎÄµµ×Ö·û´®
 
 *** µ÷²é¼Ì³Ð
 
@@ -177,17 +178,6 @@
      #+BEGIN_SRC python
        print(obj.__dict__)             # {'non_exist_attr': 10, 'attr2': 10, 'attr': 100}
      #+END_SRC
-
-*** ÀàµÄÌØÊâÊôÐÔ
-
-   | ÀàÊôÐÔ     | º¬Òå                   |
-   |------------+------------------------|
-   | __name__   | ÀàÃû(×Ö·û´®)           |
-   | __doc__    | ÀàµÄÎÄµµ×Ö·û´®         |
-   | __bases__  | ÀàµÄËùÓÐ¸¸Àà×é³ÉµÄÔª×é |
-   | __dict__   | ÀàµÄÊôÐÔ×é³ÉµÄ×Öµä     |
-   | __module__ | ÀàËùÊôµÄÄ£¿é           |
-   | __class__  | Àà¶ÔÏóµÄÀàÐÍ                 |
 
 *** ÀàµÄÌØÊâ·½·¨
 
@@ -441,6 +431,19 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
   MyClass.smeth()                 # This is a static method
   MyClass.cmeth()                 # This is a class method of <class '__main__.MyClass'>
 #+END_SRC
+
+** ÌØÊâÊôÐÔËµÃ÷
+
+   | ÀàÊôÐÔ     | º¬Òå                   | ËµÃ÷                                                              |
+   |------------+------------------------+-------------------------------------------------------------------|
+   | __name__   | ÀàÃû(×Ö·û´®)  ,        | ÔÚÖ÷³ÌÐòÖÐÖ´ÐÐÊ±,ËüµÄÖµÎª"__main__",ÔÚµ¼ÈëÄ£°åÊ±,ÆäÖµÎªÄ£°åµÄÃû×Ö |
+   | __doc__    | ÀàµÄÎÄµµ×Ö·û´®         |                                                                   |
+   | __bases__  | ÀàµÄËùÓÐ¸¸Àà×é³ÉµÄÔª×é |                                                                   |
+   | __dict__   | ÀàµÄÊôÐÔ×é³ÉµÄ×Öµä     |                                                                   |
+   | __module__ | ÀàËùÊôµÄÄ£¿é           |                                                                   |
+   | __class__  | Àà¶ÔÏóµÄÀàÐÍ           |                                                                   |
+   | __all__    | ¶¨ÒåÁËÄ£°åµÄ¹«ÓÐ½Ó¿Ú   | Ò»°ãÓÃÓÚÄ£¿éÖÐ,¸æËß½âÊÍÆ÷´ÓÄ£¿éµ¼ÈëËùÓÐÃû×ÖÊ±Êµ¼Êµ¼ÈëÁËÄÄÐ©Ãû×Ö   |
+   | __file__   | Ä£¿éµÄÔ´´úÂë´æ·ÅÔÚÄÄ¸öÎÄ¼þÖÐ | ÓÐÐ©Ä£¿é²¢Ã»ÓÐÔ´´úÂë,Ëü¿ÉÄÜÒÑ¾­ÈÚÈë½âÊÍÆ÷ÖÐÁË                                           |
 ** Òì³£´¦Àí
 
 *** pythonÖÐµÄÒì³£,Ó¦¸ÃÊôÓÚExceptionµÄ×ÓÀà
@@ -620,7 +623,22 @@ yieldÓëreturnÓï¾äÒ»Ñù¶¼»á·µ»ØÒ»¸öÖµ,Ëù²»Í¬µÄÔÚÓÚËü²»»áÍË³öº¯Êý,Ïà·´Ëü»áÔÝÊ±¶³½áº
   Òò´Ë,ÈôÐèÒªÉú³ÉÆ÷ÄÚ½øÐÐ´úÂëÇåÀíµÄ»°,ÐèÒª½«yieldÓï¾ä·ÅÔÚtry/catchÓï¾äÖÐ,²¢²¶»ñGeneratorExitÒì³£. *µ«¼ÇµÃËæºó»¹ÐèÒªÖØÐÂÒý·¢Ò»¸öÒì³£*,·ñÔòÎÞ·¨Í£Ö¹Éú³ÉÆ÷.
 
 ** Ä£¿é
+*** Ä£°åµ¼Èë¹ý³Ì
++ python¼ì²éÄ£°åÊÇ·ñÒÑ¾­µ¼Èë¹ý,ÈôÒÑ¾­µ¼Èë¹ý,Ôò²»ÔÙµ¼Èë
 
+  ¼à²âµÄ·½·¨ÊÇ²é¿´sys.modulesÖÐÊÇ·ñÒÑ¾­ÓÐ¸ÃÄ£¿é
+
++ python»á´Ó ~sys.path~ Ö¸¶¨µÄÄ¿Â¼ÖÐÑ°ÕÒÖ¸¶¨Ãû×ÖµÄÄ£°å.
+
+  µ«Ò»°ã²»»áÖ±½Ó±à¼­ ~sys.path~ ±äÁ¿,¶øÊÇÉè¶¨ÔÚ ~PYTHONPATH~ »·¾³±äÁ¿ÖÐ
+
++ ÈôÄ£°å¶ÔÓ¦Ò»¸öpythonÎÄ¼þ,ÔòÖ´ÐÐ¸ÃÎÄ¼þÄÚÈÝ. ÈôÄ£°å¶ÔÓ¦Ò»¸öÄ¿Â¼Ãû(ÕâÀàÄ£°åÒ²½Ð×ö°ü),ÔòÔÚÄ¿Â¼ÃûÏÂÑ°ÕÒ__init__.pyÖ´ÐÐ.
+*** µ¼ÈëÄ£¿éµÄ·½·¨
++ import Ä£¿éÃû
++ from Ä£¿éÃû import *
++ from Ä£¿éÃû import º¯Êýs
+*** Ä£¿éµÄÎÄµµ×Ö·û´®
+ÓëÀàÒ»Ñù,Ä£¿éµÄÎÄµµ×Ö·û´®Ð´ÔÚÄ£¿éµÄ¿ªÍ·
 * ÎÄ¼þ
 
 * socket
@@ -1243,3 +1261,24 @@ yieldÓëreturnÓï¾äÒ»Ñù¶¼»á·µ»ØÒ»¸öÖµ,Ëù²»Í¬µÄÔÚÓÚËü²»»áÍË³öº¯Êý,Ïà·´Ëü»áÔÝÊ±¶³½áº
    * helpÃüÁî»áÏÔÊ¾ËùÓÐÓÐ°ïÖúËµÃ÷µÄxxxÃüÁî
    * ? xxx»áµ÷ÓÃhelp_xxxÀ´Êä³öxxxÃüÁîµÄ°ïÖú
    * Ö±½ÓÔËÐÐxxx,»áµ÷ÓÃdo_xxxº¯Êý
+** sysÄ£¿é
+sysÄ£¿éÈÃÄãÄÜ¹»·ÃÎÊÓëpython½âÊÍÆ÷ÁªÏµ½ôÃÜµÄ±äÁ¿ºÍº¯Êý.
+
+#+TABLE: sysÄ£¿éÖÐµÄÖØÒªº¯ÊýºÍ±äÁ¿
+| º¯Êý/±äÁ¿   | ÀàÐÍËµÃ÷   | ÃèÊö                                          |
+|-------------+------------+-----------------------------------------------|
+| argv        | ×Ö·û´®ÁÐ±í | ´«µÝ¸øÃüÁîÐÐµÄ²ÎÊý,°üÀ¨½Å±¾Ãû³Æ               |
+| exit([arg]) | º¯Êý       | ÍË³öµ±Ç°³ÌÐò,¿ÉÑ¡²ÎÊýÎª¸ø¶¨µÄ·µ»ØÖµ»ò´íÎóÐÅÏ¢ |
+| modules     | ×Öµä       | Ó³ÉäÒÑ¾­ÔØÈëµÄÄ£¿éÃûºÍÔØÈëÄ£¿éµÄ×Öµä          |
+| path        | ÁÐ±í       | ÔÚÄÄÐ©Ä¿Â¼ÖÐ²éÕÒÄ£¿éµÄÁÐ±í                    |
+| platform    | ×Ö·û´®  | ²Ù×÷ÏµÍ³Æ½Ì¨»òÆäËûµÄÆ½Ì¨±êÊ¶·û             |
+| stdin       | ÀàÎÄ¼þ¶ÔÏó | ±ê×¼ÊäÈëÁ÷                           |
+| stdout      | ÀàÎÄ¼þ¶ÔÏó | ±ê×¼Êä³öÁ÷                           |
+| stderr      | ÀàÎÄ¼þ¶ÔÏó | ±ê×¼´íÎóÁ÷                                |
+** osÄ£¿é
+osÄ£¿éÎªÄãÌá¹©ÁË·ÃÎÊ¶à¸ö²Ù×÷ÏµÍ³·þÎñµÄ¹¦ÄÜ.
+* »ñÈ¡°ïÖú
+** dirº¯Êý
+dirº¯Êý»á½«¶ÔÏó(Ä£°åµÄËùÓÐº¯Êý,Àà,±äÁ¿µÈ)µÄËùÓÐÌØÐÔ¶¼ÁÐ³ö.
+** helpº¯Êý
+helpº¯Êý»áÏÔÊ¾¶ÔÏóµÄ__doc__ÄÚÈÝ
