@@ -644,6 +644,14 @@ yieldÓëreturnÓï¾äÒ»Ñù¶¼»á·µ»ØÒ»¸öÖµ,Ëù²»Í¬µÄÔÚÓÚËü²»»áÍË³öº¯Êý,Ïà·´Ëü»áÔÝÊ±¶³½áº
 * socket
 
 * ²âÊÔ
+
+** doctest
+doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍÆ÷ÖÐÊäÈëµÄÀý×ÓµÄÎÄ±¾,Ö®ºó¼ì²éÀý×ÓÊÇ·ñ·ûºÏÊµ¼ÊÒªÇó.
+
+* ÐÔÄÜ²âÊÔ
+
+** profile
+Ê¹ÓÃprofile·ÖÎö³ÌÐò·Ç³£¼òµ¥.
 * Note
 1. Êý×Ö¡¢×Ö·û´®ºÍÔª×éÊÇ²»¿É±äµÄ£»ÁÐ±íºÍ×ÖµäÊÇ¿É±äµÄ
 2. ¿É×÷ÓÃÓÚ¶àÖÖÀàÐÍµÄÍ¨ÓÃÐÍ²Ù×÷¶¼ÊÇÒÔÄÚÖÃº¯Êý»ò±í´ïÊ½µÄÐÎÊ½³öÏÖµÄ£»µ«ÊÇÀàÐÍÌØ¶¨µÄ²Ù×÷ÊÇÒÔ·½·¨µ÷ÓÃµÄÐÎÊ½³öÏÖµÄ¡£
