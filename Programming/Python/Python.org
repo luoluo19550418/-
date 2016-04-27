@@ -715,7 +715,33 @@ doctest.testmod函数会从一个模块中读取所有文档字符串,找出所哟看起来像是在交互解释
 * 性能测试
 
 ** profile
-使用profile分析程序非常简单.
+使用profile分析程序非常简单. 只需要用字符串参数调用它的run方法就会输出信息,包括各个函数和方法调用的次数,每个函数所花费的时间.
+#+BEGIN_SRC python
+  import profile
+  profile.run("2+2")
+
+  #       4 function calls in 0.000 seconds
+
+  # Ordered by: standard name
+
+  # ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  #      1    0.000    0.000    0.000    0.000 :0(exec)
+  #      1    0.000    0.000    0.000    0.000 :0(setprofile)
+  #      1    0.000    0.000    0.000    0.000 <string>:1(<module>)
+  #      1    0.000    0.000    0.000    0.000 profile:0(2+2)
+  #      0    0.000             0.000          profile:0(profiler)
+#+END_SRC
+
+如果給profile.run提供了一个文件名作为第二个参数,则结果会保存到文件中. 可以在之后用pstats模块检查分析结果.
+#+BEGIN_SRC python
+  import pstats
+  import profile
+
+  profile.run("2+2","/tmp/profile.log")
+  p = pstats.Stats("/tmp/profile.log")
+  help(p)
+#+END_SRC
+
 * Note
 1. 数字、字符串和元组是不可变的；列表和字典是可变的
 2. 可作用于多种类型的通用型操作都是以内置函数或表达式的形式出现的；但是类型特定的操作是以方法调用的形式出现的。
