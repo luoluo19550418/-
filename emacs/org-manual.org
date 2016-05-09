@@ -3775,6 +3775,42 @@ By default, when ‘:sep’ is not specified output tables are tab delimited.
 ~:epilogue~ 参数决定了在执行代码块中的代码之后,作什么清理操作
 
 ** 处理代码块的运行结果
+~:session~ 与 ~:results~ 为 =value= 还是 =output= 共同决定了results的结果
+
+|                 | Non-session      | session          |
+|-----------------+------------------+------------------|
+| :results value  | 最后语句的返回值 | 最后语句的返回值 |
+| :results output | STDOUT的输出     | 解释器的输出结果         |
+
+*当 =:results value= 时,无论是否开启 =:session= ,results都会尽可能的以table的方式展示出来*
+
+*当 =:results value= 时,代码块的内容会被包含在一个函数中,然后执行该函数. 因此对于像Python这样的语言来说,若最后语句不是return,则一定返回None*
+
+*注意 =:results output= 在session与non-session时的不同*
+#+BEGIN_SRC org
+  ,#+BEGIN_SRC python :results output
+   print "hello"
+   2
+   print "bye"
+  ,#+END_SRC
+
+  ,#+RESULTS:
+  : hello
+  : bye
+
+
+  ,#+BEGIN_SRC python :results output :session
+   print "hello"
+   2
+   print "bye"
+  ,#+END_SRC
+
+  ,#+RESULTS:
+  : hello
+  : 2
+  : bye
+
+#+END_SRC
 ** org mode下的文学编程
 ** 代码块相关快捷键与函数
 ** 在命令行中调用代码块中的函数
