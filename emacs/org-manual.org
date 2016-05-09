@@ -3811,9 +3811,49 @@ By default, when ‘:sep’ is not specified output tables are tab delimited.
   : bye
 
 #+END_SRC
-** org mode下的文学编程
+** Noweb引用语法--org mode下的文学编程
+[[http:www.cs.tufts.edu/~nr/noweb/][noweb]] 文学编程系统允许使用类似 ~<<code-block-name>>~ 的格式来引用一段命名的代码块.
+
+当代码块被tangled或执行时,是否将noweb引用扩展为对应代码的行为由代码块的 ~:noweb~ 决定. ~:noweb yes~ 表示代码块执行前,其中的noweb引用会被扩展. 默认值为 ~:noweb no~ 表示不会扩展.
+
+也可以引用命名代码块的执行结果而不是代码内容. 语法是 ~<<code-block-name(optional arguments)>>~ 
+
+*若org文件特别大,则noweb tangle起来会很缓慢,则考虑设置 ~org-babel-use-quick-and-dirty-noweb-expansion~ 为t,但代价是无法正确识别继承的 ~:noweb-ref~ 参数*
 ** 代码块相关快捷键与函数
+在代码块中
+| ‘C-c C-c’  | ‘org-babel-execute-src-block’     |
+| ‘C-c C-o’  | ‘org-babel-open-src-block-result’ |
+| ‘M-<up>’   | ‘org-babel-load-in-session’       |
+| ‘M-<down>’ | ‘org-babel-switch-to-session’     |
+
 ** 在命令行中调用代码块中的函数
+下面这段代码会针对每个传递给它的参数调用 =org-babel-tangle=
+
+#+BEGIN_SRC sh
+  #!/bin/sh
+  # -*- mode: shell-script -*-
+  #
+  # tangle files with org-mode
+  #
+  DIR=`pwd`
+  FILES=""
+
+  # wrap each argument in the code required to call tangle on it
+  for i in $@; do
+      FILES="$FILES \"$i\""
+  done
+
+  emacs -Q --batch \
+        --eval "(progn
+       (add-to-list 'load-path (expand-file-name \"~/src/org/lisp/\"))
+       (add-to-list 'load-path (expand-file-name \"~/src/org/contrib/lisp/\" t))
+       (require 'org)(require 'org-exp)(require 'ob)(require 'ob-tangle)
+       (mapc (lambda (file)
+              (find-file (expand-file-name file \"$DIR\"))
+              (org-babel-tangle)
+              (kill-buffer)) '($FILES)))" 2>&1 |grep tangled
+
+#+END_SRC
 * Footnotes
 
 [fn:1] install-info的输出也是系统依赖的. 在特定的Debian及其衍生系统中使用两种不同版本的install-info程序.如果你看到
