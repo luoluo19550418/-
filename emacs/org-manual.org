@@ -3064,10 +3064,91 @@ org-mode还允许将一系列项目内相关的org文件发布为一系列的HTM
 | ‘:html-head-include-scripts’       | ‘org-html-head-include-scripts’       |
 
 写在org 文件中的option的优先级 > =org-publish-project-alist= 中配置的优先级 > org相关变量的值
-*** 
-** 上传文件到服务器
+*** Links between published files
+在org文件中可以使用下面两种方式创建连接到另一个org文件中的链接. 
+#+BEGIN_SRC org
+  [[file:foo.org][The foo]] 
+  file:foo.org
+#+END_SRC
+
+当发布这种org文件时,这种连接到org的链接会自动转换为连接到对应的html文件.
+
+若你不希望进行这种转换,则需要使用 =http:= 协议而不能是 =file:= 协议.
+*** Generating a sitemap
++ :auto-sitemap :: 若为非nil,则在 `org-publish-current-project' 或 `prg-publish-all' 时自动发布sitemap
++ :sitemap-filename :: sitemap的输出文件名,默认为`sitemap.org'(发布后变成sitemap.html)
++ sitemap-title :: sitemap网页的title. 默认为sitemap的文件名
++ sitemap-function :: 用来生成sitemap的函数. 默认为 =org-publish-org-sitemap=,它会生成一个系列连接到项目内其他文件的链接列表
++ sitemap-sort-folders :: sitemap中文件夹的存放位置. 默认是 =first=,表示将文件夹放在最前面. 也可以设置成 =last=,表示将文件夹放在最后面. 其他的值则表示交叉放置
++ sitemap-sort-files :: sitemap中文件的排序方式. 默认为 =alphabetically=,还可以是 =chronologically= 或 =anti-chronologically=
++ sitemap-ignore-case :: sitemap中文件排序时,是否忽略大小写,默认为nil表示不忽略
++ sitemap-file-entry-format :: 指定sitemap中链接的格式. 其中 =%t= 表示title, =%a= 表示author, =%d= 表示date,该date由函数 =org-publish-find-date= 获取,并经由 =org-publish-sitemap-date-format= 格式化
++ :sitemap-date-format :: 指定了sitemap entry中的date的显示格式
++ :sitemap-sans-extension :: 若为非nil,则在产生sitemap时会删除掉文件名的后缀. 默认为nil
+*** Generating an index
+org-mode发布时,可以自动产生index文件.
+
++ :makeindex :: 若为非nil,则会产生 =theindex.org= 并发布为 =theindex.html= 
+
+The file will be created when first publishing a project with the =:makeindex= set. The file only contains a statement =#+INCLUDE: theindex.inc=.  
+You can then build around this include statement by adding a title, style information, etc.
+
 ** 发布相关命令
++ C-c C-e P x (org-publish) :: 选择并发布项目
++ C-c C-e P p (org-publish-current-project) :: 发布当前文件所属的项目
++ C-c C-e P f (org-publish-current-file) :: 只发布当前文件
++ C-c C-e P a (org-publish-all) :: 发布所有项目
+
+org根据时间戳来决定文件是否被修改. 一般情况下,上面的函数只会发布已经更改过的文件. 但可以通过以下几种方法来强制发布所有文件
++ 调用上面函数时,带上前缀参数
++ 设置变量 =org-publish-use-timestamps-flag= 为nil
+
 ** 例子
+*** 一个单组件项目的发布
+下面的例子中,将一些org文件发布到本机的 =~/public_html= 目录中
+#+BEGIN_SRC emacs-lisp
+  (setq org-publish-project-alist
+           '(("org"
+              :base-directory "~/org/"
+              :publishing-directory "~/public_html"
+              :section-numbers nil
+              :with-toc nil
+              :html-head "<link rel=\"stylesheet\"
+                         href=\"../other/mystyle.css\"
+                         type=\"text/css\"/>")))
+
+#+END_SRC
+
+*** 一个多组件项目的发布
+下面是一个复杂的多的项目发布例子. 除了将org文件发布成html文件外,还包括图片,源代码和样式文件的发布.
+#+BEGIN_SRC emacs-lisp
+  (setq org-publish-project-alist
+        '(("orgfiles"
+            :base-directory "~/org/"
+            :base-extension "org"
+            :publishing-directory "/ssh:user@host:~/html/notebook/"
+            :publishing-function org-html-publish-to-html
+            :exclude "PrivatePage.org"   ;; regexp
+            :headline-levels 3
+            :section-numbers nil
+            :with-toc nil
+            :html-head "<link rel=\"stylesheet\"
+                    href=\"../other/mystyle.css\" type=\"text/css\"/>"
+            :html-preamble t)
+
+           ("images"
+            :base-directory "~/images/"
+            :base-extension "jpg\\|gif\\|png"
+            :publishing-directory "/ssh:user@host:~/html/images/"
+            :publishing-function org-publish-attachment)
+
+           ("other"
+            :base-directory "~/other/"
+            :base-extension "css\\|el"
+            :publishing-directory "/ssh:user@host:~/html/other/"
+            :publishing-function org-publish-attachment)
+           ("website" :components ("orgfiles" "images" "other"))))
+#+END_SRC
 * Working with source code
 org提供了对代码块的多种处理方式,比如使用原生的major-mode编辑代码块,执行代码块,将代码块抽取到其他源文件中去,导出代码块及其结果为其他格式的文档.
 ** 代码块的结构
