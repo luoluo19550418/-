@@ -3299,9 +3299,102 @@ The central repository of code blocks in the “Library of Babel” is housed in
 
 要想将某个代码块加入到 =Library of Babel= 中,只需要调用函数 ~org-babel-lob-ingest~ 即可,该函数的快捷键为 ~C-c C-v i~
 ** 支持的语言
-*** Python
-*** C / C++
-*** Lisp
+*** SQL
+要想执行SQL的代码块,必须先安装好数据库管理系统. 目前Org mode支持以下几种实现:dbi,monetdb,msosql,mysql,postgresql.
+**** Header Arguments
+~:colnames~ 参数默认为"yes"
+
+SQL支持以下几种特殊的header arguments
+
++ :engine :: 指定数据库管理系统的实现. 目前Org mode支持以下几种实现:dbi,monetdb,msosql,mysql,postgresql.
++ :cmdline :: 传递给RDBMS可执行文件的额外命令行参数
++ :dbhost :: 数据库服务器主机名
++ :dbuser :: 登录数据库的用户名
++ :dbpassword :: 登录数据库的密码
++ :database :: 数据库名称
+**** Sessions
+目前SQL代码块不支持session
+*** C / C++ /D
+若代码块中没有 =main= 函数,则会将整个代码块包裹在一个 =main= 函数中再执行.
+**** Header Arguments
+
+C/C++/D支持以下几种特殊的header arguments
+
++ :cmdline :: 传递给编译器的额外参数
++ :flags :: 传递给编译器的flags
++ :main :: 设置为"no",则会阻止将整个代码块内容包裹进 =main= 函数中
++ :includes :: (C/C++) 设置在代码块前 =#include= 哪些头文件
++ :import :: (D) 预先插入哪些 =import= 语句
++ :defines :: (C/C++) 在代码块前 =#define= 哪些定义
++ :libs :: (C/C++) 用于指明连接哪些库
+**** Session
+目前不支持Session
+**** 例子
+注意到,对于C语言来说,无需 =#include "stdio"=,因为这些库太常用了,总是会被include进来. 
+#+begin_src C
+  printf ("Hello World!\n");
+#+end_src
+
+#+RESULTS:
+: Hello World!
+
+但是对于C++的代码,总是要显式include
+#+begin_src C++ :includes <iostream>
+  std::cout<<"Hello World!\n";
+#+end_src
+
+#+RESULTS:
+: Hello World!
+
+还可以在header arguments中定义变量
+#+header: :var mystring="Sunday" :var myint=145 :var mydouble=3.14
+#+BEGIN_SRC C
+  printf ("mystring %s\n", mystring);
+  printf ("myint    %d\n", myint);
+  printf ("mydouble %g\n", mydouble);
+#+END_SRC
+
+#+RESULTS:
+| mystring | Sunday |
+| myint    |    145 |
+| mydouble |   3.14 |
+
+当使用表格作为input数据时,表格数据会作为二元数组来看待.
+#+name: somedata
+| zero  |   0 |  0.23 |
+| one   |   1 |  1.31 |
+| two   |   4 |  4.61 |
+| three |   9 |  9.05 |
+| four  |  16 | 16.55 |
+
+#+header: :exports results
+#+begin_src C++ :var somedata=somedata
+  #include "stdlib.h"
+  int main()
+  {
+    for (int i=0; i<somedata_rows; i++) {
+      printf ("%2d ", i);
+      for (int j=1; j<somedata_cols; j++) {
+        const char* cell = somedata[i][j];
+        printf ("%5s %5g ", cell, 1000*atof(cell));
+      }
+      printf("\n");
+    }
+    return 0;
+  }
+#+end_src
+
+
+
+
+*** Common Lisp
+
+默认情况下,Common Lisp解释器,永远处于session中,因此在执行代码块之前,一定要先运行SLIME session(=M-x slime=)
+
+Common Lisp的header argument支持一个名为 ~:package~ 的header argument,用于指明是在哪个包环境下运行代码. 默认为 =:any= 表示当前package
+
+*** 增加新语言
+请按照 =org-contrib/babel/ob-template.el= 中的模板编写对新语言的支持.
 ** header arguments
 *** 设置header arguments
 有多种途径设置header arguments,每种途径设置参数的作用域与优先级都不一样. 一般来说作用域越大的优先级越低
