@@ -10997,14 +10997,17 @@ Emacs在不同类型的终端下启动时,都会加载不同的终端相关的li
 
 	(insert-register ?1 t)
 * Org相关函数
-** 取entry属性
-   (org-entry-get nil "属性名" 是否继承属性)
-** 取entry的tag list
-   (org-get-tags)
-** 取entry的TODO state
-   变量`org-get-tags`
-** 判断哪些state是完成状态
-   变量`org-done-keywords`
++ 取entry属性 :: (org-entry-get nil "属性名" 是否继承属性)
++ 取entry的tag list :: (org-get-tags)
++ 取entry的TODO state :: org-get-tags
++ 判断哪些state是完成状态 :: org-done-keywords
++ 跳转到headline :: (org-back-to-heading)
++ 判断是否处于clockin状态 :: org-clock-clocking-in
++ clock in :: (org-clock-in)
++ clock out :: (org-clock-out)
++ 当前clock entry的headline :: org-clock-heading
++ clock out触发的hook :: org-clock-out-hook
++ 更新mode-line的内容 :: (org-clock-update-mode-line)
 * 版本信息
   * 变量emacs-version
   * 变量emacs-major-version
