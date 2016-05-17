@@ -1,0 +1,21 @@
+#+TITLE: Invent-Your-Own-Computer-Games-With-Python
+#+AUTHOR: lujun9972
+#+CATEGORY: Programming, Python
+#+DATE: [2016-05-03 周二 08:32]
+#+OPTIONS: ^:{}
+
+* 字符串
+#+BEGIN_SRC python 
+  print("2" + "3")
+  print(2+3)
+#+END_SRC
+
+#+RESULTS:
+: 23
+: 5
+
+
+# Local Variables:
+# org-babel-default-header-args:python: ((:session . "none") (:results . "output") (:exports . "code") (:cache))
+# org-babel-python-command: "python3"
+# End:
