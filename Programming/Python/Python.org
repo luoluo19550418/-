@@ -3,25 +3,25 @@
 #+EMAIL: lujun9972@gmail.com
 #+OPTIONS: H3 num:nil toc:nil \n:nil ::t |:t ^:nil -:nil f:t *:t <:t
 
-* Óï·¨
-** ÐòÁÐ
-*** ·ÖÆ¬²Ù×÷
+* è¯­æ³•
+** åºåˆ—
+*** åˆ†ç‰‡æ“ä½œ
     "abcdefg"[1:3]      #=[bc]
-*** ÐòÁÐ¿ÉÒÔÍ¨¹ý+ºÏ²¢£¬»ò*ÖØ¸´
+*** åºåˆ—å¯ä»¥é€šè¿‡+åˆå¹¶ï¼Œæˆ–*é‡å¤
     s="abc"
     print s+"123"       #="abc123"
     print s*2           #="abcabc"
-** ÁÐ±í
-*** ÁÐ±íÊÇÐòÁÐµÄÒ»ÖÖ£¬Ëü¿ÉÒÔ±»¸Ä±ä
-*** ÁÐ±íÓëÊý×éÀàËÆ£¬µ«ÁÐ±íÃ»ÓÐ¹Ì¶¨ÀàÐÍµÄÔ¼Êø
+** åˆ—è¡¨
+*** åˆ—è¡¨æ˜¯åºåˆ—çš„ä¸€ç§ï¼Œå®ƒå¯ä»¥è¢«æ”¹å˜
+*** åˆ—è¡¨ä¸Žæ•°ç»„ç±»ä¼¼ï¼Œä½†åˆ—è¡¨æ²¡æœ‰å›ºå®šç±»åž‹çš„çº¦æŸ
 *** 
-** Àà
+** ç±»
 
-1. pythonÀàÖ§³Ö¶àÖØ¼Ì³Ð
+1. pythonç±»æ”¯æŒå¤šé‡ç»§æ‰¿
 
-   µ±´Ó¶à¸ö»ùÀà¼Ì³ÐÍ¬Ãû·½·¨Ê±,ÏÈ¼Ì³ÐµÄÀàÖÐµÄ·½·¨»á¸²¸Çºó¼Ì³ÐÀàµÄ·½·¨.
+   å½“ä»Žå¤šä¸ªåŸºç±»ç»§æ‰¿åŒåæ–¹æ³•æ—¶,å…ˆç»§æ‰¿çš„ç±»ä¸­çš„æ–¹æ³•ä¼šè¦†ç›–åŽç»§æ‰¿ç±»çš„æ–¹æ³•.
 
-2. ¿ÉÒÔ½«¶ÔÏóÖÐµÄÔ­±¾·½·¨,°ó¶¨µ½Ò»¸öº¯Êý
+2. å¯ä»¥å°†å¯¹è±¡ä¸­çš„åŽŸæœ¬æ–¹æ³•,ç»‘å®šåˆ°ä¸€ä¸ªå‡½æ•°
    #+BEGIN_SRC python
      class Class:
          def method(self):
@@ -38,7 +38,7 @@
      instance.method()               # I don't have self
    #+END_SRC
 
-3. Ò²¿ÉÒÔ½«Ò»¸ö¶ÔÏóµÄ·½·¨°ó¶¨µ½Ò»¸ö±äÁ¿ÉÏ
+3. ä¹Ÿå¯ä»¥å°†ä¸€ä¸ªå¯¹è±¡çš„æ–¹æ³•ç»‘å®šåˆ°ä¸€ä¸ªå˜é‡ä¸Š
    #+BEGIN_SRC python
      class Bird(object):
          def __init__(self,song):
@@ -53,13 +53,13 @@
      birdsong()                      # Squaawk!
    #+END_SRC
 
-4. python²¢²»Ö±½ÓÖ§³ÖË½ÓÐ·½Ê½,¶øÊÇÍ¨¹ýÐÞ¸ÄÒÔ__¿ªÍ·µÄ³ÉÔ±Ãû³ÆµÄ·½Ê½¼ä½ÓÊµÏÖ.
+4. pythonå¹¶ä¸ç›´æŽ¥æ”¯æŒç§æœ‰æ–¹å¼,è€Œæ˜¯é€šè¿‡ä¿®æ”¹ä»¥__å¼€å¤´çš„æˆå‘˜åç§°çš„æ–¹å¼é—´æŽ¥å®žçŽ°.
 
-   ÔÚÀàµÄÄÚ²¿¶¨ÒåÖÐ,ËùÓÐÒÔË«ÏÂ»®Ïß¿ªÊ¼µÄÃû³Æ¶¼±»·­Òë³ÉÇ°Ãæ¼ÓÉÏµ¥ÏÂ»®ÏßºÍÀàÃû³ÆµÄÐÎÊ½.
+   åœ¨ç±»çš„å†…éƒ¨å®šä¹‰ä¸­,æ‰€æœ‰ä»¥åŒä¸‹åˆ’çº¿å¼€å§‹çš„åç§°éƒ½è¢«ç¿»è¯‘æˆå‰é¢åŠ ä¸Šå•ä¸‹åˆ’çº¿å’Œç±»åç§°çš„å½¢å¼.
 
-   ÈçÀàSecretiveÖÐÃûÎª ~__inaccessible~ µÄÃû³Æ±»·­Òë³É ~_Secretive__inaccessible~
+   å¦‚ç±»Secretiveä¸­åä¸º ~__inaccessible~ çš„åç§°è¢«ç¿»è¯‘æˆ ~_Secretive__inaccessible~
 
-5. ËùÓÐÔÚÀàÖÐ¶¨ÒåµÄº¯Êý»ò±äÁ¿¶¼´¦ÓÚÀàÃüÃû¿Õ¼äÄÚ£¬¼´ÎªÀàËùÊôµÄ³ÉÔ±
+5. æ‰€æœ‰åœ¨ç±»ä¸­å®šä¹‰çš„å‡½æ•°æˆ–å˜é‡éƒ½å¤„äºŽç±»å‘½åç©ºé—´å†…ï¼Œå³ä¸ºç±»æ‰€å±žçš„æˆå‘˜
    #+BEGIN_SRC python
      class MemberCounter:
          members=0
@@ -72,9 +72,9 @@
      m2 = MemberCounter()
      print (MemberCounter.members)
    #+END_SRC
-   ÉÏÃæµÄmembers¼´ÎªÀàMemberCounterµÄ³ÉÔ±±äÁ¿¡£
+   ä¸Šé¢çš„memberså³ä¸ºç±»MemberCounterçš„æˆå‘˜å˜é‡ã€‚
 
-6. Àà¶¨ÒåÖ®ºó,¿ÉÒÔÍ¨¹ýÀàÃû¶¯Ì¬Ìí¼ÓÀàÊý¾ÝÊôÐÔ. ÊµÀýÉú³ÉÖ®ºó,Ò²¿ÉÒÔ¶¯Ì¬Ìí¼ÓÊµÀýµÄÊôÐÔ.
+6. ç±»å®šä¹‰ä¹‹åŽ,å¯ä»¥é€šè¿‡ç±»ååŠ¨æ€æ·»åŠ ç±»æ•°æ®å±žæ€§. å®žä¾‹ç”Ÿæˆä¹‹åŽ,ä¹Ÿå¯ä»¥åŠ¨æ€æ·»åŠ å®žä¾‹çš„å±žæ€§.
    #+BEGIN_SRC python
      class ClsA:
          pass
@@ -90,11 +90,11 @@
      a.obj_attr = "attr"
      print(a.obj_attr)               # attr
    #+END_SRC
-*** ÎÄµµ×Ö·û´®
+*** æ–‡æ¡£å­—ç¬¦ä¸²
 
-*** µ÷²é¼Ì³Ð
+*** è°ƒæŸ¥ç»§æ‰¿
 
-   + Èç¹ûÏëÒª²é¿´Ò»¸öÀàÊÇ·ñÊÇÁíÒ»¸öÀàµÄ×ÓÀà,¿ÉÒÔÊ¹ÓÃÄÚ½¨µÄissubclassº¯Êý
+   + å¦‚æžœæƒ³è¦æŸ¥çœ‹ä¸€ä¸ªç±»æ˜¯å¦æ˜¯å¦ä¸€ä¸ªç±»çš„å­ç±»,å¯ä»¥ä½¿ç”¨å†…å»ºçš„issubclasså‡½æ•°
      #+BEGIN_SRC python
        class Base:
            pass
@@ -105,13 +105,13 @@
        print(issubclass(Sub,Base))     # True
      #+END_SRC
 
-   + Èç¹ûÏëÒªÖªµÀÒÑÖªÀàµÄ»ùÀà,¿ÉÒÔÊ¹ÓÃÀàµÄ =__base__= ÊôÐÔ
+   + å¦‚æžœæƒ³è¦çŸ¥é“å·²çŸ¥ç±»çš„åŸºç±»,å¯ä»¥ä½¿ç”¨ç±»çš„ =__base__= å±žæ€§
      #+BEGIN_SRC python
        print (Sub.__base__)            # <class '__main__.Base'>
        print (Base.__base__)           # <class 'object'>
      #+END_SRC
 
-   + Ê¹ÓÃisinstance·½·¨¼ì²éÒ»¸ö¶ÔÏóÊÇ·ñÊÇÒ»¸öÀàµÄÊµÀý
+   + ä½¿ç”¨isinstanceæ–¹æ³•æ£€æŸ¥ä¸€ä¸ªå¯¹è±¡æ˜¯å¦æ˜¯ä¸€ä¸ªç±»çš„å®žä¾‹
      #+BEGIN_SRC python
        s = Base()
        print (isinstance(s,object))    # True
@@ -119,20 +119,20 @@
        print (isinstance(s,Sub))       # False
      #+END_SRC
 
-   + Èç¹ûÏëÖªµÀÒ»¸ö¶ÔÏóÊÇÊôÓÚÄÄ¸öÀà,¿ÉÒÔÊ¹ÓÃ¶ÔÏóµÄ =__class__= ÊôÐÔ
+   + å¦‚æžœæƒ³çŸ¥é“ä¸€ä¸ªå¯¹è±¡æ˜¯å±žäºŽå“ªä¸ªç±»,å¯ä»¥ä½¿ç”¨å¯¹è±¡çš„ =__class__= å±žæ€§
      #+BEGIN_SRC python
        s = Base()
        print (s.__class__)             # <class '__main__.Base'>
      #+END_SRC
 
-     Ò²¿ÉÒÔÊ¹ÓÃtype(¶ÔÏó)À´²é¿´¶ÔÏóµÄÀà
+     ä¹Ÿå¯ä»¥ä½¿ç”¨type(å¯¹è±¡)æ¥æŸ¥çœ‹å¯¹è±¡çš„ç±»
      #+BEGIN_SRC python
        print(type(s))                  # <class '__main__.Base'>
      #+END_SRC
 
-*** ÄÚÊ¡
+*** å†…çœ
    
-   + Ê¹ÓÃ ~hasattr~ ¼ì²é¶ÔÏóÊÇ·ñ°üº¬ÌØ¶¨ÊôÐÔ
+   + ä½¿ç”¨ ~hasattr~ æ£€æŸ¥å¯¹è±¡æ˜¯å¦åŒ…å«ç‰¹å®šå±žæ€§
 
      #+BEGIN_SRC python
        class Cls:
@@ -147,16 +147,16 @@
 
      #+RESULTS:
 
-   + Ê¹ÓÃ ~getattr~ ¿ÉÒÔ»ñÈ¡¶ÔÏóÖÐµÄÊôÐÔ
+   + ä½¿ç”¨ ~getattr~ å¯ä»¥èŽ·å–å¯¹è±¡ä¸­çš„å±žæ€§
      #+BEGIN_SRC python
        print(getattr(obj,"attr",None)) # 1
        print(getattr(obj,"__init__",None)) # <bound method Cls.__init__ of <__main__.Cls object at 0x017782B0>>
        print(getattr(obj,"non-exist-attr",None)) # None
      #+END_SRC
      
-     ~getattr~ º¯ÊýÔÊÐíÌá¹©Ä¬ÈÏÖµ,ÒÔ±ãÔÚÌØÐÔ²»´æÔÚÊ±Ê¹ÓÃ.
+     ~getattr~ å‡½æ•°å…è®¸æä¾›é»˜è®¤å€¼,ä»¥ä¾¿åœ¨ç‰¹æ€§ä¸å­˜åœ¨æ—¶ä½¿ç”¨.
 
-   + ÒªÅÐ¶ÏÒ»¸öÊôÐÔµ½µ×ÊÇ·½·¨»¹ÊÇ³ÉÔ±±äÁ¿,¿ÉÒÔ¼ì²é¸ÃÊôÐÔÊÇ·ñ°üº¬ ~__call__~ ÊôÐÔ
+   + è¦åˆ¤æ–­ä¸€ä¸ªå±žæ€§åˆ°åº•æ˜¯æ–¹æ³•è¿˜æ˜¯æˆå‘˜å˜é‡,å¯ä»¥æ£€æŸ¥è¯¥å±žæ€§æ˜¯å¦åŒ…å« ~__call__~ å±žæ€§
      #+BEGIN_SRC python
        attr = (getattr(obj,"attr",None))
        print(hasattr(attr,"__call__")) # false
@@ -164,7 +164,7 @@
        print(hasattr(attr,"__call__")) # True
      #+END_SRC
 
-   + ÈôÒªÉèÖÃ¶ÔÏóÖÐµÄÊôÐÔ,ÔòÊ¹ÓÃ ~setattr~ º¯Êý
+   + è‹¥è¦è®¾ç½®å¯¹è±¡ä¸­çš„å±žæ€§,åˆ™ä½¿ç”¨ ~setattr~ å‡½æ•°
      #+BEGIN_SRC python
        setattr(obj,"attr",100)
        print(obj.attr)                 # 100
@@ -172,17 +172,17 @@
        print(obj.non_exist_attr)                # 10
      #+END_SRC
      
-     ´ÓÉÏÀý¿ÉÒÔ¿´³ö, ~setattr~ ÄÜ¹»Îª¶ÔÏóÉèÖÃÒÔÇ°²»´æÔÚµÄÊôÐÔ
+     ä»Žä¸Šä¾‹å¯ä»¥çœ‹å‡º, ~setattr~ èƒ½å¤Ÿä¸ºå¯¹è±¡è®¾ç½®ä»¥å‰ä¸å­˜åœ¨çš„å±žæ€§
 
-   + ÈôÏë²é¿´¶ÔÏóÄÚËùÓÐ´æ´¢µÄÖµ,¿ÉÒÔÊ¹ÓÃ¶ÔÏóµÄ ~__dict__~ ÊôÐÔ
+   + è‹¥æƒ³æŸ¥çœ‹å¯¹è±¡å†…æ‰€æœ‰å­˜å‚¨çš„å€¼,å¯ä»¥ä½¿ç”¨å¯¹è±¡çš„ ~__dict__~ å±žæ€§
      #+BEGIN_SRC python
        print(obj.__dict__)             # {'non_exist_attr': 10, 'attr2': 10, 'attr': 100}
      #+END_SRC
 
-*** ÀàµÄÌØÊâ·½·¨
+*** ç±»çš„ç‰¹æ®Šæ–¹æ³•
 
-**** ¹¹Ôì·½·¨:__init__
-µ±¶ÔÏó±»´´½¨ºó,»áÁ¢¼´µ÷ÓÃ¹¹Ôì·½·¨.
+**** æž„é€ æ–¹æ³•:__init__
+å½“å¯¹è±¡è¢«åˆ›å»ºåŽ,ä¼šç«‹å³è°ƒç”¨æž„é€ æ–¹æ³•.
 #+BEGIN_SRC python
   class Bird:
       def __init__(self,hungry=True):
@@ -195,13 +195,13 @@
               print("No. Thanks!")
 #+END_SRC
 
-Ò»°ãÀ´Ëµ,Ò»¸ö×ÓÀàµÄ¹¹Ôì·½·¨ÖÐ¶¼ÐèÒªµ÷ÓÃ¸¸ÀàµÄ¹¹Ôì·½·¨,·ñÔò¶ÔÏóºÜ¿ÉÄÜÎÞ·¨ÕýÈ·µØ³õÊ¼»¯. ÓÐÁ½ÖÖ·½·¨ÄÜ´ïµ½Õâ¸öÄ¿µÄ:
+ä¸€èˆ¬æ¥è¯´,ä¸€ä¸ªå­ç±»çš„æž„é€ æ–¹æ³•ä¸­éƒ½éœ€è¦è°ƒç”¨çˆ¶ç±»çš„æž„é€ æ–¹æ³•,å¦åˆ™å¯¹è±¡å¾ˆå¯èƒ½æ— æ³•æ­£ç¡®åœ°åˆå§‹åŒ–. æœ‰ä¸¤ç§æ–¹æ³•èƒ½è¾¾åˆ°è¿™ä¸ªç›®çš„:
 
-+ µ÷ÓÃ³¬Àà¹¹Ôì·½·¨µÄÎ´°ó¶¨°æ±¾(²»ÍÆ¼ö)
++ è°ƒç”¨è¶…ç±»æž„é€ æ–¹æ³•çš„æœªç»‘å®šç‰ˆæœ¬(ä¸æŽ¨è)
   #+BEGIN_SRC python
     class SongBird(Bird):
         def __init__(self,hungry=True):
-            Bird.__init__(self,hungry)     # µ÷ÓÃ¸¸Àà¹¹Ôì·½·¨µÄÎ´°ó¶¨°æ±¾
+            Bird.__init__(self,hungry)     # è°ƒç”¨çˆ¶ç±»æž„é€ æ–¹æ³•çš„æœªç»‘å®šç‰ˆæœ¬
             self.sound = "Squawk!"
 
         def sing(self):
@@ -213,9 +213,9 @@
     sb.eat()                        # No. thanks
   #+END_SRC
 
-+ Ê¹ÓÃsuperº¯Êý
++ ä½¿ç”¨superå‡½æ•°
 
-  superº¯Êý½ÓÊÜÒ»¸öÀàºÍ¶ÔÏó×÷Îª²ÎÊý,Æä·µ»ØµÄ¶ÔÏóÉÏµÄÈÎºÎ·½·¨µ÷ÓÃ,¶¼»áµ÷ÓÃµ½³¬ÀàµÄ·½·¨¶ø²»ÊÇµ±Ç°ÀàµÄ·½·¨.
+  superå‡½æ•°æŽ¥å—ä¸€ä¸ªç±»å’Œå¯¹è±¡ä½œä¸ºå‚æ•°,å…¶è¿”å›žçš„å¯¹è±¡ä¸Šçš„ä»»ä½•æ–¹æ³•è°ƒç”¨,éƒ½ä¼šè°ƒç”¨åˆ°è¶…ç±»çš„æ–¹æ³•è€Œä¸æ˜¯å½“å‰ç±»çš„æ–¹æ³•.
   #+BEGIN_SRC python
     class SongBird(Bird):
         def __init__(self,hungry=True):
@@ -231,53 +231,53 @@
     sb.eat()                        # No. thanks!
   #+END_SRC
   
-  superº¯ÊýÄÜÕýÈ·´¦Àí¼Ì³Ð¶à¸ö³¬ÀàµÄÇé¿ö,Òò´ËÍÆ¼öÊ¹ÓÃ
+  superå‡½æ•°èƒ½æ­£ç¡®å¤„ç†ç»§æ‰¿å¤šä¸ªè¶…ç±»çš„æƒ…å†µ,å› æ­¤æŽ¨èä½¿ç”¨
 
-**** Îö¹¹·½·¨:__del__
-Îö¹¹·½·¨ÔÚ¶ÔÏó±»À´¼°»ØÊÕÖ®Ç°±»µ÷ÓÃ,µ«ÓÉÓÚµ÷ÓÃµÄ¾ßÌåÊ±¼ä²»¿ÉÖª,Òò´ËÒ»°ãÓ¦±ÜÃâ__del__º¯Êý.
+**** æžæž„æ–¹æ³•:__del__
+æžæž„æ–¹æ³•åœ¨å¯¹è±¡è¢«æ¥åŠå›žæ”¶ä¹‹å‰è¢«è°ƒç”¨,ä½†ç”±äºŽè°ƒç”¨çš„å…·ä½“æ—¶é—´ä¸å¯çŸ¥,å› æ­¤ä¸€èˆ¬åº”é¿å…__del__å‡½æ•°.
 
-**** ÊµÏÖÎªÐòÁÐºÍÓ³ÉäµÄ½Ó¿ÚËµÃ÷
-Èô¶ÔÏóÊÇ²»¿É±äµÄ£¬Ö»ÐèÒªÊµÏÖÇ°Á½¸ö·½·¨£¬Èô¶ÔÏóÊÇ¿É±äµÄÔòÐèÒªÊµÏÖÈ«²¿µÄËÄ¸ö·½·¨¡£
+**** å®žçŽ°ä¸ºåºåˆ—å’Œæ˜ å°„çš„æŽ¥å£è¯´æ˜Ž
+è‹¥å¯¹è±¡æ˜¯ä¸å¯å˜çš„ï¼Œåªéœ€è¦å®žçŽ°å‰ä¸¤ä¸ªæ–¹æ³•ï¼Œè‹¥å¯¹è±¡æ˜¯å¯å˜çš„åˆ™éœ€è¦å®žçŽ°å…¨éƒ¨çš„å››ä¸ªæ–¹æ³•ã€‚
 
-ÈôÊ¹ÓÃµÄË÷ÒýÎª·Ç·¨ÀàÐÍ,Ò»°ãÅ×³öTypeErrorÒì³£, ÈôË÷ÒýÀàÐÍÕýÈ·µ«³¬³ö·¶Î§,Ò»°ãÒý·¢IndexErrorÒì³£
+è‹¥ä½¿ç”¨çš„ç´¢å¼•ä¸ºéžæ³•ç±»åž‹,ä¸€èˆ¬æŠ›å‡ºTypeErrorå¼‚å¸¸, è‹¥ç´¢å¼•ç±»åž‹æ­£ç¡®ä½†è¶…å‡ºèŒƒå›´,ä¸€èˆ¬å¼•å‘IndexErrorå¼‚å¸¸
 
-ÔÚpythonÖÐ,ÉõÖÁ¿ÉÒÔ¼Ì³ÐÄÚÖÃÀàÐÍ,ÀýÈçlist,string,dict
+åœ¨pythonä¸­,ç”šè‡³å¯ä»¥ç»§æ‰¿å†…ç½®ç±»åž‹,ä¾‹å¦‚list,string,dict
 
 + __len__(self)
 
-  Õâ¸ö·½·¨Ó¦¸Ã·µ»Ø¼¯ºÏÖÐËùº¬ÏîÄ¿µÄÊýÁ¿. ¶ÔÓÚÐòÁÐÀ´Ëµ,Õâ¾ÍÊÇÔªËØµÄ¸öÊý,¶ÔÓÚÓ³ÉäÀ´Ëµ,ÔòÊÇ¼üÖµ¶ÔµÄÊýÁ¿.
+  è¿™ä¸ªæ–¹æ³•åº”è¯¥è¿”å›žé›†åˆä¸­æ‰€å«é¡¹ç›®çš„æ•°é‡. å¯¹äºŽåºåˆ—æ¥è¯´,è¿™å°±æ˜¯å…ƒç´ çš„ä¸ªæ•°,å¯¹äºŽæ˜ å°„æ¥è¯´,åˆ™æ˜¯é”®å€¼å¯¹çš„æ•°é‡.
 
-  Èô__len__·µ»Ø0,ÇÒÃ»ÓÐÖØÐÂÊµÏÖ__nonzero__,Ôò¸Ã¶ÔÏó»á±»µ±×÷False
+  è‹¥__len__è¿”å›ž0,ä¸”æ²¡æœ‰é‡æ–°å®žçŽ°__nonzero__,åˆ™è¯¥å¯¹è±¡ä¼šè¢«å½“ä½œFalse
   
-  ÈôÎªÎÞÏÞÐòÁÐ,Ôò¿ÉÒÔ²»ÊµÏÖ¸Ãº¯Êý
+  è‹¥ä¸ºæ— é™åºåˆ—,åˆ™å¯ä»¥ä¸å®žçŽ°è¯¥å‡½æ•°
   
 + __getitem__(self,key)
   
-  Õâ¸ö·½·¨·µ»ØÓëËù½o¼ü¶ÔÓ¦µÄÖµ. 
+  è¿™ä¸ªæ–¹æ³•è¿”å›žä¸Žæ‰€çµ¦é”®å¯¹åº”çš„å€¼. 
 
-  ¶ÔÐòÁÐÀ´Ëµ,¼üÒ»¸öÕûÊý. ¶ÔÓÚÐòÁÐÀ´Ëµ,Ôò¿ÉÒÔÊÇÈÎÒâÖÖÀàµÄ¼ü
+  å¯¹åºåˆ—æ¥è¯´,é”®ä¸€ä¸ªæ•´æ•°. å¯¹äºŽåºåˆ—æ¥è¯´,åˆ™å¯ä»¥æ˜¯ä»»æ„ç§ç±»çš„é”®
   
-  ¶ÔÓÚÒ»¸öÐòÁÐÀ´Ëµ,Èç¹ûÄÜ½ÓÊÜ¸ºÕûÊýµÄ¼ü,ÄÇÃ´Òª´ÓÄ©Î²¿ªÊ¼¼ÆÊý,¼´x[-n] == x[len(x)-n]
+  å¯¹äºŽä¸€ä¸ªåºåˆ—æ¥è¯´,å¦‚æžœèƒ½æŽ¥å—è´Ÿæ•´æ•°çš„é”®,é‚£ä¹ˆè¦ä»Žæœ«å°¾å¼€å§‹è®¡æ•°,å³x[-n] == x[len(x)-n]
 
-  Èô¶ÔÐòÁÐ½øÐÐµÄÊÇ·ÖÆ¬²Ù×÷,Ôòkey»áÎªÒ»¸ö ~·ÖÆ¬¶ÔÏó~. 
+  è‹¥å¯¹åºåˆ—è¿›è¡Œçš„æ˜¯åˆ†ç‰‡æ“ä½œ,åˆ™keyä¼šä¸ºä¸€ä¸ª ~åˆ†ç‰‡å¯¹è±¡~. 
 
 + __setitem__(self,key,value)
 
-  Õâ¸ö·½·¨´æ´¢ÓëkeyÏà¹ØµÄvalue
+  è¿™ä¸ªæ–¹æ³•å­˜å‚¨ä¸Žkeyç›¸å…³çš„value
 
 + __delitem__(self,key)
   
-  Õâ¸ö·½·¨ÔÚ¶ÔÒ»²¿·Ö¶ÔÏóÊ¹ÓÃdelÓï¾äÊ±±»É¾³ý,Í¬Ê±±ØÐëÉ¾³ýºÍÔªËØÏà¹ØµÄ¼ü.
+  è¿™ä¸ªæ–¹æ³•åœ¨å¯¹ä¸€éƒ¨åˆ†å¯¹è±¡ä½¿ç”¨delè¯­å¥æ—¶è¢«åˆ é™¤,åŒæ—¶å¿…é¡»åˆ é™¤å’Œå…ƒç´ ç›¸å…³çš„é”®.
 
-  ÈôÃ»ÓÐÊµÏÖ__del__·½·¨,Ôò±íÊ¾É¾³ýÔªËØÊÇ·Ç·¨µÄ.
+  è‹¥æ²¡æœ‰å®žçŽ°__del__æ–¹æ³•,åˆ™è¡¨ç¤ºåˆ é™¤å…ƒç´ æ˜¯éžæ³•çš„.
 
-**** __getattribute__,__getattr__,__setattr__ºÍ__delattr__
-+ __getattribute__(self,name) :: µ±ÊôÐÔname±»·ÃÎÊÊ±×Ô¶¯µ÷ÓÃ,Ê¹ÓÃÊ±Çë×¢Òâ *ÖØ¸´´¥·¢µÄÇé¿ö*,ÒòÎª·ÃÎÊ__dict__Ò²»á´¥·¢¸Ã·½·¨!
-+ __getattr__(self,name) :: µ±ÊôÐÔname±»·ÃÎÊÇÒ¶ÔÏó *Ã»ÓÐÏàÓ¦ÊôÐÔÊ±* ±»×Ô¶¯µ÷ÓÃ
-+ __setattr__(self,name,value) :: µ±ÊÔÍ¼½oÊôÐÔname¸³ÖµÊ±»á×Ô¶¯µ÷ÓÃ,Ê¹ÓÃÊ±Çë×¢Òâ *ÖØ¸´´¥·¢µÄÇé¿ö*
-+ __delattr__(self,name) :: µ±ÊÔÍ¼É¾³ýÊôÐÔnameÊ±±»×Ô¶¯µ÷ÓÃ,ÈôÊÇ·Ç·¨µÄname,ÐèÅ×³ö *AttributeErrorÒì³£*
+**** __getattribute__,__getattr__,__setattr__å’Œ__delattr__
++ __getattribute__(self,name) :: å½“å±žæ€§nameè¢«è®¿é—®æ—¶è‡ªåŠ¨è°ƒç”¨,ä½¿ç”¨æ—¶è¯·æ³¨æ„ *é‡å¤è§¦å‘çš„æƒ…å†µ*,å› ä¸ºè®¿é—®__dict__ä¹Ÿä¼šè§¦å‘è¯¥æ–¹æ³•!
++ __getattr__(self,name) :: å½“å±žæ€§nameè¢«è®¿é—®ä¸”å¯¹è±¡ *æ²¡æœ‰ç›¸åº”å±žæ€§æ—¶* è¢«è‡ªåŠ¨è°ƒç”¨
++ __setattr__(self,name,value) :: å½“è¯•å›¾çµ¦å±žæ€§nameèµ‹å€¼æ—¶ä¼šè‡ªåŠ¨è°ƒç”¨,ä½¿ç”¨æ—¶è¯·æ³¨æ„ *é‡å¤è§¦å‘çš„æƒ…å†µ*
++ __delattr__(self,name) :: å½“è¯•å›¾åˆ é™¤å±žæ€§nameæ—¶è¢«è‡ªåŠ¨è°ƒç”¨,è‹¥æ˜¯éžæ³•çš„name,éœ€æŠ›å‡º *AttributeErrorå¼‚å¸¸*
 
-¿ÉÒÔÊ¹ÓÃÕâÐ©·½·¨À´Ä£Äâproperyº¯ÊýµÄ×÷ÓÃ
+å¯ä»¥ä½¿ç”¨è¿™äº›æ–¹æ³•æ¥æ¨¡æ‹Ÿproperyå‡½æ•°çš„ä½œç”¨
 #+BEGIN_SRC python
   class Rectangle:
       def __init__(self):
@@ -295,12 +295,12 @@
               raise AttributeError
 #+END_SRC
 
-**** µü´úÆ÷:__iter__
-__iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
+**** è¿­ä»£å™¨:__iter__
+__iter__æ–¹æ³•è¿”å›žä¸€ä¸ªè¿­ä»£å™¨,æ‰€è°“è¿­ä»£å™¨å°±æ˜¯æŒ‡å…·æœ‰__next__æ–¹æ³•çš„å¯¹è±¡.
 
-µ±µ÷ÓÃ__next__·½·¨Ê±,µü´úÆ÷»á·µ»ØËüµÄÏÂÒ»¸öÖµ.
+å½“è°ƒç”¨__next__æ–¹æ³•æ—¶,è¿­ä»£å™¨ä¼šè¿”å›žå®ƒçš„ä¸‹ä¸€ä¸ªå€¼.
 
-µ±__next__·½·¨±»µ÷ÓÃ,µ«µü´úÆ÷Ã»ÓÐÖµ·µ»ØÊ±,ÐèÒªÒý·¢Ò»¸ö ~StopIteration~ Òì³£.
+å½“__next__æ–¹æ³•è¢«è°ƒç”¨,ä½†è¿­ä»£å™¨æ²¡æœ‰å€¼è¿”å›žæ—¶,éœ€è¦å¼•å‘ä¸€ä¸ª ~StopIteration~ å¼‚å¸¸.
 
 #+BEGIN_SRC python
   class Fibs:
@@ -320,9 +320,9 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
           break
 #+END_SRC
 
-ÊµÏÖÁË__iter__·½·¨µÄ¶ÔÏó±»³ÆÎª¿Éµü´ú¶ÔÏó, ¶øÊµÏÖÁË__next__·½·¨µÄ¶ÔÏó±»³ÆÎªµü´úÆ÷,×¢ÒâÁ½ÕßµÄÇø±ð
+å®žçŽ°äº†__iter__æ–¹æ³•çš„å¯¹è±¡è¢«ç§°ä¸ºå¯è¿­ä»£å¯¹è±¡, è€Œå®žçŽ°äº†__next__æ–¹æ³•çš„å¯¹è±¡è¢«ç§°ä¸ºè¿­ä»£å™¨,æ³¨æ„ä¸¤è€…çš„åŒºåˆ«
 
-Ê¹ÓÃº¯Êý¿ÉÒÔ´Ó¿Éµü´ú¶ÔÏóÖÐ»ñÈ¡µü´úÆ÷
+ä½¿ç”¨å‡½æ•°å¯ä»¥ä»Žå¯è¿­ä»£å¯¹è±¡ä¸­èŽ·å–è¿­ä»£å™¨
 #+BEGIN_SRC python
   it = iter([1,2,3])
   it.next()                       # 1
@@ -330,12 +330,12 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
 #+END_SRC
 
 *** Property
-Ê¹ÓÃ ~property~ º¯Êý¿ÉÒÔ´´½¨Ò»¸ö²¢²»Êµ¼Ê´æÔÚµÄÊôÐÔ,Æäº¯ÊýÇ©ÃûÎª ~propery(fget=None,fset=None,fdel=None,doc=None)~. ÆäÖÐ
+ä½¿ç”¨ ~property~ å‡½æ•°å¯ä»¥åˆ›å»ºä¸€ä¸ªå¹¶ä¸å®žé™…å­˜åœ¨çš„å±žæ€§,å…¶å‡½æ•°ç­¾åä¸º ~propery(fget=None,fset=None,fdel=None,doc=None)~. å…¶ä¸­
 
-+ fgetÎª»ñÈ¡ÊôÐÔµÄ·½·¨,ÈôÎ´ÉèÖÃÔò±íÊ¾ÊôÐÔÎª²»¿É¶ÁµÄ
-+ fsetÎªÉèÖÃÊôÐÔµÄ·½·¨,ÈôÎ´ÉèÖÃÔò±íÊ¾ÊôÐÔÎª²»¿ÉÐ´µÄ
-+ fdelÎªÉ¾³ýÊôÐÔµÄ·½·¨(ËüÎÞÐè²ÎÊý),ÈôÎªÉèÖÃÔò±íÊ¾ÊôÐÔÎª²»¿ÉÉ¾³ýµÄ.
-+ docÎªÎÄµµ×Ö·û´®.
++ fgetä¸ºèŽ·å–å±žæ€§çš„æ–¹æ³•,è‹¥æœªè®¾ç½®åˆ™è¡¨ç¤ºå±žæ€§ä¸ºä¸å¯è¯»çš„
++ fsetä¸ºè®¾ç½®å±žæ€§çš„æ–¹æ³•,è‹¥æœªè®¾ç½®åˆ™è¡¨ç¤ºå±žæ€§ä¸ºä¸å¯å†™çš„
++ fdelä¸ºåˆ é™¤å±žæ€§çš„æ–¹æ³•(å®ƒæ— éœ€å‚æ•°),è‹¥ä¸ºè®¾ç½®åˆ™è¡¨ç¤ºå±žæ€§ä¸ºä¸å¯åˆ é™¤çš„.
++ docä¸ºæ–‡æ¡£å­—ç¬¦ä¸².
 #+BEGIN_SRC python
   class Rectangle:
       def __init__(self):
@@ -348,7 +348,7 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
       size = property(getSize,setSize)
 #+END_SRC  
 
-ÉÏÃæµÄ´úÂëÊ¹ÓÃproertyº¯ÊýÎªRectangle´´½¨ÁËÒ»¸ö²¢²»Êµ¼Ê´æÔÚµÄÊôÐÔ:property. È»ºó¿ÉÒÔÏñ´¦Àíwidth,heightÒ»Ñù´¦Àísize.
+ä¸Šé¢çš„ä»£ç ä½¿ç”¨proertyå‡½æ•°ä¸ºRectangleåˆ›å»ºäº†ä¸€ä¸ªå¹¶ä¸å®žé™…å­˜åœ¨çš„å±žæ€§:property. ç„¶åŽå¯ä»¥åƒå¤„ç†width,heightä¸€æ ·å¤„ç†size.
 #+BEGIN_SRC python
   r = Rectangle()
   r.width = 10
@@ -359,18 +359,18 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
   r.width                         # 150
 #+END_SRC
 
-*** ¾²Ì¬·½·¨ºÍÀà³ÉÔ±·½·¨
-¾²Ì¬·½·¨ÓëÀà³ÉÔ±·½·¨²»Í¬µãÔÚÓÚ:
+*** é™æ€æ–¹æ³•å’Œç±»æˆå‘˜æ–¹æ³•
+é™æ€æ–¹æ³•ä¸Žç±»æˆå‘˜æ–¹æ³•ä¸åŒç‚¹åœ¨äºŽ:
 
-+ ¾²Ì¬·½·¨µÄ¶¨ÒåÃ»ÓÐself²ÎÊý,ÇÒÄÜ¹»±»Àà±¾ÉíÖ±½Óµ÷ÓÃ.
++ é™æ€æ–¹æ³•çš„å®šä¹‰æ²¡æœ‰selfå‚æ•°,ä¸”èƒ½å¤Ÿè¢«ç±»æœ¬èº«ç›´æŽ¥è°ƒç”¨.
 
-  ¾²Ì¬·½·¨ÔÚ´´½¨Ê±ÐèÒª±»·â×°µ½staticmethodÀàÐÍµÄ¶ÔÏóÖÐ
+  é™æ€æ–¹æ³•åœ¨åˆ›å»ºæ—¶éœ€è¦è¢«å°è£…åˆ°staticmethodç±»åž‹çš„å¯¹è±¡ä¸­
 
-+ Àà·½·¨ÔÚ¶¨ÒåÊ±ÔòÐèÒªÃûÎªclsµÄ²ÎÊý,Æä×÷ÓÃÓëselfÀàËÆ,±íÊ¾Àà±¾ÉíµÄÒýÓÃ.
++ ç±»æ–¹æ³•åœ¨å®šä¹‰æ—¶åˆ™éœ€è¦åä¸ºclsçš„å‚æ•°,å…¶ä½œç”¨ä¸Žselfç±»ä¼¼,è¡¨ç¤ºç±»æœ¬èº«çš„å¼•ç”¨.
 
-  Àà³ÉÔ±·½·¨¿ÉÒÔ±»ÀàµÄ¶ÔÏóËùµ÷ÓÃ.
+  ç±»æˆå‘˜æ–¹æ³•å¯ä»¥è¢«ç±»çš„å¯¹è±¡æ‰€è°ƒç”¨.
   
-  Àà³ÉÔ±·½·¨ÔÚ´´½¨Ê±ÐèÒª±»·â×°µ½classmethodÀàÐÍµÄ¶ÔÏóÖÐ.
+  ç±»æˆå‘˜æ–¹æ³•åœ¨åˆ›å»ºæ—¶éœ€è¦è¢«å°è£…åˆ°classmethodç±»åž‹çš„å¯¹è±¡ä¸­.
 
 #+BEGIN_SRC python
   class MyClass:
@@ -383,14 +383,14 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
       cmeth = classmethod(smeth)
 #+END_SRC
 
-¾²Ì¬·½·¨ºÍÀà³ÉÔ±·½·¨ÔÚpythonÖÐÓÃµÄ±È½ÏÉÙ,ÒòÎªÒ»°ãÇé¿öÏÂ¶¼ÄÜÓÃº¯Êý»ò°ó¶¨·½·¨À´´úÌæ.
+é™æ€æ–¹æ³•å’Œç±»æˆå‘˜æ–¹æ³•åœ¨pythonä¸­ç”¨çš„æ¯”è¾ƒå°‘,å› ä¸ºä¸€èˆ¬æƒ…å†µä¸‹éƒ½èƒ½ç”¨å‡½æ•°æˆ–ç»‘å®šæ–¹æ³•æ¥ä»£æ›¿.
 
-*** ×°ÊÎÆ÷
-×°ÊÎÆ÷µÄÓï·¨ºÜ¼òµ¥,¾ÍÊÇÔÚ·½·¨»òº¯ÊýÉÏ·½Ð´ÉÏÐÎÈç ~@xxxx~,ÕâÀïµÄxxxx¿ÉÒÔÊÇÈÎÒâ¶«Î÷.
+*** è£…é¥°å™¨
+è£…é¥°å™¨çš„è¯­æ³•å¾ˆç®€å•,å°±æ˜¯åœ¨æ–¹æ³•æˆ–å‡½æ•°ä¸Šæ–¹å†™ä¸Šå½¢å¦‚ ~@xxxx~,è¿™é‡Œçš„xxxxå¯ä»¥æ˜¯ä»»æ„ä¸œè¥¿.
 
-½âÎöÆ÷»á×Ô¶¯ÐÞ¸ÄÎª ~·½·¨Ãû = xxxx(·½·¨Ãû)~ ÕâÖÖ¸ñÊ½.
+è§£æžå™¨ä¼šè‡ªåŠ¨ä¿®æ”¹ä¸º ~æ–¹æ³•å = xxxx(æ–¹æ³•å)~ è¿™ç§æ ¼å¼.
 
-¿ÉÒÔÖ¸¶¨¶à¸ö×°ÊÎÆ÷, ¶à¸ö×°ÊÎÆ÷µÄÓ¦ÓÃË³ÐòÓëÖ¸¶¨Ë³ÐòÏà·´. ÀýÈç
+å¯ä»¥æŒ‡å®šå¤šä¸ªè£…é¥°å™¨, å¤šä¸ªè£…é¥°å™¨çš„åº”ç”¨é¡ºåºä¸ŽæŒ‡å®šé¡ºåºç›¸å. ä¾‹å¦‚
 #+BEGIN_SRC python
   def m1(fn):
       print("m1")
@@ -417,7 +417,7 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
   # fun2
 #+END_SRC
 
-Òò´Ë¶¨Òå¾²Ì¬·½·¨ºÍÀà³ÉÔ±·½·¨Ê±Ò²¿ÉÒÔÊ¹ÓÃ×°ÊÎÆ÷À´¼ò»¯´úÂë
+å› æ­¤å®šä¹‰é™æ€æ–¹æ³•å’Œç±»æˆå‘˜æ–¹æ³•æ—¶ä¹Ÿå¯ä»¥ä½¿ç”¨è£…é¥°å™¨æ¥ç®€åŒ–ä»£ç 
 #+BEGIN_SRC python
   class MyClass:
       @staticmethod
@@ -432,39 +432,55 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
   MyClass.cmeth()                 # This is a class method of <class '__main__.MyClass'>
 #+END_SRC
 
-** ÌØÊâÊôÐÔËµÃ÷
+*** __slots__é­”æ³•
+åœ¨Pythonä¸­,æ¯ä¸ªç±»éƒ½æœ‰å®žä¾‹å±žæ€§. é»˜è®¤æƒ…å†µä¸‹Pythonç”¨ä¸€ä¸ªå­—å…¸æ¥ä¿å­˜ä¸€ä¸ªå¯¹è±¡çš„å®žä¾‹å±žæ€§. 
+*å› æ­¤å®ƒå…è®¸æˆ‘ä»¬åœ¨è¿è¡Œæ—¶åŽ»è®¾ç½®ä»»æ„çš„æ–°å±žæ€§*.
+ç„¶è€Œ,å¯¹äºŽæœ‰ç€å·²çŸ¥å±žæ€§çš„å°ç±»æ¥è¯´,å®ƒå¯èƒ½æ˜¯ä¸ªç“¶é¢ˆ.è¿™ä¸ªå­—å…¸æµªè´¹äº†å¾ˆå¤šå†…å­˜.
+Pythonä¸èƒ½åœ¨å¯¹è±¡åˆ›å»ºæ—¶ç›´æŽ¥åˆ†é…ä¸€ä¸ªå›ºå®šé‡çš„å†…å­˜æ¥ä¿å­˜æ‰€æœ‰çš„å±žæ€§.
+å› æ­¤å¦‚æžœä½ åˆ›å»ºè®¸å¤šå¯¹è±¡(æˆ‘æŒ‡çš„æ˜¯æˆåƒä¸Šä¸‡ä¸ª),å®ƒä¼šæ¶ˆè€—æŽ‰å¾ˆå¤šå†…å­˜.
 
-   | ÀàÊôÐÔ     | º¬Òå                   | ËµÃ÷                                                              |
+ä¸è¿‡è¿˜æ˜¯æœ‰ä¸€ä¸ªæ–¹æ³•æ¥è§„é¿è¿™ä¸ªé—®é¢˜.è¿™ä¸ªæ–¹æ³•éœ€è¦ä½¿ç”¨ =__slots__= æ¥å‘Šè¯‰Pythonä¸è¦ä½¿ç”¨å­—å…¸ï¼Œè€Œåªç»™ä¸€ä¸ªå›ºå®šé›†åˆçš„å±žæ€§åˆ†é…ç©ºé—´. 
+ä¸‹é¢æ˜¯ä¸€ä¸ªä¾‹å­
+#+BEGIN_SRC python
+  class MyClass(object):
+      __slots__ = ['name','identifier']
+      def __init__(self,name,identifier):
+          self.name = name
+          self.identifier = identifier
+#+END_SRC
+** ç‰¹æ®Šå±žæ€§è¯´æ˜Ž
+
+   | ç±»å±žæ€§     | å«ä¹‰                   | è¯´æ˜Ž                                                              |
    |------------+------------------------+-------------------------------------------------------------------|
-   | __name__   | ÀàÃû(×Ö·û´®)  ,        | ÔÚÖ÷³ÌÐòÖÐÖ´ÐÐÊ±,ËüµÄÖµÎª"__main__",ÔÚµ¼ÈëÄ£°åÊ±,ÆäÖµÎªÄ£°åµÄÃû×Ö |
-   | __doc__    | ÀàµÄÎÄµµ×Ö·û´®         |                                                                   |
-   | __bases__  | ÀàµÄËùÓÐ¸¸Àà×é³ÉµÄÔª×é |                                                                   |
-   | __dict__   | ÀàµÄÊôÐÔ×é³ÉµÄ×Öµä     |                                                                   |
-   | __module__ | ÀàËùÊôµÄÄ£¿é           |                                                                   |
-   | __class__  | Àà¶ÔÏóµÄÀàÐÍ           |                                                                   |
-   | __all__    | ¶¨ÒåÁËÄ£°åµÄ¹«ÓÐ½Ó¿Ú   | Ò»°ãÓÃÓÚÄ£¿éÖÐ,¸æËß½âÊÍÆ÷´ÓÄ£¿éµ¼ÈëËùÓÐÃû×ÖÊ±Êµ¼Êµ¼ÈëÁËÄÄÐ©Ãû×Ö   |
-   | __file__   | Ä£¿éµÄÔ´´úÂë´æ·ÅÔÚÄÄ¸öÎÄ¼þÖÐ | ÓÐÐ©Ä£¿é²¢Ã»ÓÐÔ´´úÂë,Ëü¿ÉÄÜÒÑ¾­ÈÚÈë½âÊÍÆ÷ÖÐÁË                                           |
-** Òì³£´¦Àí
+   | __name__   | ç±»å(å­—ç¬¦ä¸²)  ,        | åœ¨ä¸»ç¨‹åºä¸­æ‰§è¡Œæ—¶,å®ƒçš„å€¼ä¸º"__main__",åœ¨å¯¼å…¥æ¨¡æ¿æ—¶,å…¶å€¼ä¸ºæ¨¡æ¿çš„åå­— |
+   | __doc__    | ç±»çš„æ–‡æ¡£å­—ç¬¦ä¸²         |                                                                   |
+   | __bases__  | ç±»çš„æ‰€æœ‰çˆ¶ç±»ç»„æˆçš„å…ƒç»„ |                                                                   |
+   | __dict__   | ç±»çš„å±žæ€§ç»„æˆçš„å­—å…¸     |                                                                   |
+   | __module__ | ç±»æ‰€å±žçš„æ¨¡å—           |                                                                   |
+   | __class__  | ç±»å¯¹è±¡çš„ç±»åž‹           |                                                                   |
+   | __all__    | å®šä¹‰äº†æ¨¡æ¿çš„å…¬æœ‰æŽ¥å£   | ä¸€èˆ¬ç”¨äºŽæ¨¡å—ä¸­,å‘Šè¯‰è§£é‡Šå™¨ä»Žæ¨¡å—å¯¼å…¥æ‰€æœ‰åå­—æ—¶å®žé™…å¯¼å…¥äº†å“ªäº›åå­—   |
+   | __file__   | æ¨¡å—çš„æºä»£ç å­˜æ”¾åœ¨å“ªä¸ªæ–‡ä»¶ä¸­ | æœ‰äº›æ¨¡å—å¹¶æ²¡æœ‰æºä»£ç ,å®ƒå¯èƒ½å·²ç»èžå…¥è§£é‡Šå™¨ä¸­äº†                                           |
+** å¼‚å¸¸å¤„ç†
 
-*** pythonÖÐµÄÒì³£,Ó¦¸ÃÊôÓÚExceptionµÄ×ÓÀà
+*** pythonä¸­çš„å¼‚å¸¸,åº”è¯¥å±žäºŽExceptionçš„å­ç±»
   
-  pythonÄÚ½¨ÁËÐí¶àÒì³£,ÏÂÃæÊÇÒ»Ð©³£ÓÃµÄÄÚ½¨Òì³£Àà:
-  | ÀàÃû              | ÃèÊö                                       |
+  pythonå†…å»ºäº†è®¸å¤šå¼‚å¸¸,ä¸‹é¢æ˜¯ä¸€äº›å¸¸ç”¨çš„å†…å»ºå¼‚å¸¸ç±»:
+  | ç±»å              | æè¿°                                       |
   |-------------------+--------------------------------------------|
-  | Exception         | ËùÓÐÒì³£µÄ»ùÀà                             |
-  | AttributeError    | ¶ÔÏóÊôÐÔÒýÓÃ»ò¸³ÖµÊ§°ÜÊ±Òý·¢               |
-  | IOError           | ÊÔÍ¼´ò¿ª²»´æÔÚÎÄ¼þ»òÎÞÈ¨ÏÞÊ±Òý·¢           |
-  | IndexError        | µ±Ê¹ÓÃÐòÁÐÖÐ²»´æÔÚµÄË÷ÒýÊ±Òý·¢             |
-  | KeyError          | Ê¹ÓÃÓ³ÉäÖÐ²»´æÔÚµÄ¼üÊ±Òý·¢                 |
-  | NameError         | µ±ÕÒ²»µ½±äÁ¿ÃûÊ±Òý·¢                       |
-  | SynaxError        | Óï·¨´íÎóÊ±Òý·¢                             |
-  | TypeError         | µ±ÄÚ½¨²Ù×÷»òº¯ÊýÓ¦ÓÃÓÚ´íÎóÀàÐÍµÄ¶ÔÏóÊ±Òý·¢ |
-  | ValueError        | ÔÚÄÚ½¨²Ù×÷»òº¯ÊýÓ¦ÓÃÓÚ·Ç·¨ÖµÊ±Òý·¢         |
-  | ZeroDivisionError | ±»³ýÊýÎª0                                      |
+  | Exception         | æ‰€æœ‰å¼‚å¸¸çš„åŸºç±»                             |
+  | AttributeError    | å¯¹è±¡å±žæ€§å¼•ç”¨æˆ–èµ‹å€¼å¤±è´¥æ—¶å¼•å‘               |
+  | IOError           | è¯•å›¾æ‰“å¼€ä¸å­˜åœ¨æ–‡ä»¶æˆ–æ— æƒé™æ—¶å¼•å‘           |
+  | IndexError        | å½“ä½¿ç”¨åºåˆ—ä¸­ä¸å­˜åœ¨çš„ç´¢å¼•æ—¶å¼•å‘             |
+  | KeyError          | ä½¿ç”¨æ˜ å°„ä¸­ä¸å­˜åœ¨çš„é”®æ—¶å¼•å‘                 |
+  | NameError         | å½“æ‰¾ä¸åˆ°å˜é‡åæ—¶å¼•å‘                       |
+  | SynaxError        | è¯­æ³•é”™è¯¯æ—¶å¼•å‘                             |
+  | TypeError         | å½“å†…å»ºæ“ä½œæˆ–å‡½æ•°åº”ç”¨äºŽé”™è¯¯ç±»åž‹çš„å¯¹è±¡æ—¶å¼•å‘ |
+  | ValueError        | åœ¨å†…å»ºæ“ä½œæˆ–å‡½æ•°åº”ç”¨äºŽéžæ³•å€¼æ—¶å¼•å‘         |
+  | ZeroDivisionError | è¢«é™¤æ•°ä¸º0                                      |
 
-*** Ê¹ÓÃ ~raise~ Óï¾äÅ×³öÒì³£
+*** ä½¿ç”¨ ~raise~ è¯­å¥æŠ›å‡ºå¼‚å¸¸
   
-  ~raise~ Óï¾ä¼È¿ÉÒÔ½ÓÒ»¸öÒì³£Àà,Ò²¿ÉÒÔ½áÒ»¸öÒì³£¶ÔÏó. µ±Ê¹ÓÃÀàµ÷ÓÃ ~raise~ Óï¾äÊ±,python»á×Ô¶¯´´½¨ÊµÀý.
+  ~raise~ è¯­å¥æ—¢å¯ä»¥æŽ¥ä¸€ä¸ªå¼‚å¸¸ç±»,ä¹Ÿå¯ä»¥ç»“ä¸€ä¸ªå¼‚å¸¸å¯¹è±¡. å½“ä½¿ç”¨ç±»è°ƒç”¨ ~raise~ è¯­å¥æ—¶,pythonä¼šè‡ªåŠ¨åˆ›å»ºå®žä¾‹.
   #+BEGIN_SRC python
     raise Exception                
     # =>
@@ -482,19 +498,19 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
 
   #+END_SRC
 
-*** ²¶×½Òì³£
+*** æ•æ‰å¼‚å¸¸
 
-  Ê¹ÓÃ ~try/catch~ À´²¶×½Òì³£
+  ä½¿ç”¨ ~try/catch~ æ¥æ•æ‰å¼‚å¸¸
   #+BEGIN_SRC python
     try:
-        ´úÂë¿é
-    except Òì³£Àà1:
-        Òì³£´¦Àí1
-    except Òì³£Àà2:
-        Òì³£´¦Àí2
+        ä»£ç å—
+    except å¼‚å¸¸ç±»1:
+        å¼‚å¸¸å¤„ç†1
+    except å¼‚å¸¸ç±»2:
+        å¼‚å¸¸å¤„ç†2
   #+END_SRC
 
-  Èô²¶×½µ½ÁËÒì³£,µ«ÊÇÓÖÏëÖØÐÂÒý·¢Ëü,ÄÇÃ´¿ÉÒÔµ÷ÓÃ²»´ø²ÎÊýµÄ ~raise~ Óï¾ä
+  è‹¥æ•æ‰åˆ°äº†å¼‚å¸¸,ä½†æ˜¯åˆæƒ³é‡æ–°å¼•å‘å®ƒ,é‚£ä¹ˆå¯ä»¥è°ƒç”¨ä¸å¸¦å‚æ•°çš„ ~raise~ è¯­å¥
   #+BEGIN_SRC python
     Class MuffledCalculator:
         muffled = False
@@ -506,26 +522,26 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
                 if self.muffled:
                     print "Division by zero"
                 else:
-                    raise           # Å×³öÔ­Òì³£
+                    raise           # æŠ›å‡ºåŽŸå¼‚å¸¸
   #+END_SRC
 
-  Ò»¸ö¿é¿ÉÒÔ²¶×½¶à¸öÀàÐÍµÄÒì³£,Ö»ÐèÒª½«ËüÃÇ×÷ÎªÔª×éÁÐ³ö¼´¿É
+  ä¸€ä¸ªå—å¯ä»¥æ•æ‰å¤šä¸ªç±»åž‹çš„å¼‚å¸¸,åªéœ€è¦å°†å®ƒä»¬ä½œä¸ºå…ƒç»„åˆ—å‡ºå³å¯
   #+BEGIN_SRC python
     try:
-        ´úÂë¿é
-    except (Òì³£ÀàÐÍ1,Òì³£ÀàÐÍ2...):
-        Òì³£´¦Àí
+        ä»£ç å—
+    except (å¼‚å¸¸ç±»åž‹1,å¼‚å¸¸ç±»åž‹2...):
+        å¼‚å¸¸å¤„ç†
   #+END_SRC
   
-  Èç¹ûÏ£ÍûÔÚexcept×Ó¾äÖÐ·ÃÎÊÒì³£¶ÔÏó±¾Éí,Ö»ÐèÒªÔÚexcept×Ó¾äµÄÒì³£ÀàÐÍ/Òì³£ÀàÐÍÁÐ±íºó¼ÓÉÏÒ»¸ö±äÁ¿Ãû. Õâ¸ö±äÁ¿ÃûÔÚexcept×Ó¾äÖÐÒýÓÃµ½±»²¶»ñµÄÒì³£¶ÔÏó
+  å¦‚æžœå¸Œæœ›åœ¨exceptå­å¥ä¸­è®¿é—®å¼‚å¸¸å¯¹è±¡æœ¬èº«,åªéœ€è¦åœ¨exceptå­å¥çš„å¼‚å¸¸ç±»åž‹/å¼‚å¸¸ç±»åž‹åˆ—è¡¨åŽåŠ ä¸Šä¸€ä¸ªå˜é‡å. è¿™ä¸ªå˜é‡ååœ¨exceptå­å¥ä¸­å¼•ç”¨åˆ°è¢«æ•èŽ·çš„å¼‚å¸¸å¯¹è±¡
   #+BEGIN_SRC python
     try:
-        ´úÂë¿é
-    except (Òì³£ÀàÐÍ1,Òì³£ÀàÐÍ2...) Òì³£±äÁ¿:
-        Òì³£´¦Àí,ÆäÖÐ¿ÉÒÔÊ¹ÓÃÒì³£±äÁ¿ÒýÓÃ±»²¶»ñµÄÒì³£¶ÔÏó
+        ä»£ç å—
+    except (å¼‚å¸¸ç±»åž‹1,å¼‚å¸¸ç±»åž‹2...) å¼‚å¸¸å˜é‡:
+        å¼‚å¸¸å¤„ç†,å…¶ä¸­å¯ä»¥ä½¿ç”¨å¼‚å¸¸å˜é‡å¼•ç”¨è¢«æ•èŽ·çš„å¼‚å¸¸å¯¹è±¡
   #+END_SRC
 
-  Èôexcept×Ó¾äºó²»½ÓÒì³£ÀàÐÍ,Ôò±íÊ¾²¶»ñËùÓÐÒì³£
+  è‹¥exceptå­å¥åŽä¸æŽ¥å¼‚å¸¸ç±»åž‹,åˆ™è¡¨ç¤ºæ•èŽ·æ‰€æœ‰å¼‚å¸¸
   #+BEGIN_SRC python
     try:
         x = float(input("Enter the first number:"))
@@ -535,8 +551,8 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
         print("Something wrong happend...")
   #+END_SRC
 
-*** else×Ó¾ä
-~else~ ×Ó¾äÖ»ÓÐÔÚ ~try~ ×Ó¾äÎ´·¢ÉúÒì³£µÄÇé¿öÏÂ²Å»áÖ´ÐÐ.
+*** elseå­å¥
+~else~ å­å¥åªæœ‰åœ¨ ~try~ å­å¥æœªå‘ç”Ÿå¼‚å¸¸çš„æƒ…å†µä¸‹æ‰ä¼šæ‰§è¡Œ.
 #+BEGIN_SRC python
   while True:
       try:
@@ -549,8 +565,8 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
           break
 #+END_SRC
 
-*** finally×Ó¾ä
-~finally~ ×Ó¾ä³£ÓÃÀ´¶Ô¿ÉÄÜµÄÒì³£ºó½øÐÐÇåÀí. ËüÎÞÂÛÊÇ·ñ·¢ÉúÒì³£,¶¼»á±£Ö¤Ö´ÐÐ.
+*** finallyå­å¥
+~finally~ å­å¥å¸¸ç”¨æ¥å¯¹å¯èƒ½çš„å¼‚å¸¸åŽè¿›è¡Œæ¸…ç†. å®ƒæ— è®ºæ˜¯å¦å‘ç”Ÿå¼‚å¸¸,éƒ½ä¼šä¿è¯æ‰§è¡Œ.
 #+BEGIN_SRC python
   x = None
   try:
@@ -559,26 +575,8 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
       print("Cleanning up")
       del x
 #+END_SRC
-** Éú³ÉÆ÷
-*** Éú³ÉÆ÷ÍÆµ¼Ê½
-Éú³ÉÆ÷ÍÆµ¼Ê½µÄ¹¤×÷·½Ê½ÓëÁÐ±íÍÆµ¼Ê½µÄ¹¤×÷·½Ê½ÀàËÆ,Ö»²»¹ý·µ»ØµÄ²»ÊÇÁÐ±í,¶øÊÇÉú³ÉÆ÷
-
-Éú³ÉÆ÷ÍÆµ¼Ê½ÓëÁÐ±íÍÆµ¼Ê½µÄÓï·¨²»Í¬µãÔÚÓÚÉú³ÉÆ÷ÍÆµ¼Ê½ÔÚ =()= ºó,ÁÐ±íÍÆµ¼Ê½ÔÚ =[]= ºó.
-#+BEGIN_SRC python
-  g = ((i + 2) ** 2 for i in range(2,27))
-  g.__next__()                        # 16
-  g.__next__()                        # 25
-#+END_SRC
-
-Éú³ÉÆ÷ÍÆµ¼Ê½¿ÉÒÔÔÚµ±Ç°µÄÔ²À¨ºÅÄÚÖ±½ÓÊ¹ÓÃ. ÀýÈçÔÚº¯Êýµ÷ÓÃµÄÀ¨ºÅÖÐ,²»ÐèÒªÔö¼ÓÁíÍâÒ»¶ÔÔ²À¨ºÅ
-#+BEGIN_SRC python
-  sum(i**2 for i in range(10))    # 285
-#+END_SRC
-
-
-
-*** Éú³ÉÆ÷
-Éú³ÉÆ÷ÊÇÒ»ÖÖÓÃÆÕÍ¨º¯ÊýÓï·¨¶¨ÒåµÄµü´úÆ÷. ÈÎºÎ°üº¬yieldÓï¾äµÄº¯Êý¶¼±»³ÆÎªÉú³ÉÆ÷.
+** ç”Ÿæˆå™¨
+ç”Ÿæˆå™¨æ˜¯ä¸€ç§ç”¨æ™®é€šå‡½æ•°è¯­æ³•å®šä¹‰çš„è¿­ä»£å™¨. ä»»ä½•åŒ…å«yieldè¯­å¥çš„å‡½æ•°éƒ½è¢«ç§°ä¸ºç”Ÿæˆå™¨.
 #+BEGIN_SRC python
   def my_range(start,end):
       while start < end:
@@ -586,16 +584,16 @@ __iter__·½·¨·µ»ØÒ»¸öµü´úÆ÷,ËùÎ½µü´úÆ÷¾ÍÊÇÖ¸¾ßÓÐ__next__·½·¨µÄ¶ÔÏó.
           start+=1
 #+END_SRC
 
-yieldÓëreturnÓï¾äÒ»Ñù¶¼»á·µ»ØÒ»¸öÖµ,Ëù²»Í¬µÄÔÚÓÚËü²»»áÍË³öº¯Êý,Ïà·´Ëü»áÔÝÊ±¶³½áº¯ÊýµÄÖ´ÐÐ,µÈ´ýÔÙ´Î±»¼¤»î.
+yieldä¸Žreturnè¯­å¥ä¸€æ ·éƒ½ä¼šè¿”å›žä¸€ä¸ªå€¼,æ‰€ä¸åŒçš„åœ¨äºŽå®ƒä¸ä¼šé€€å‡ºå‡½æ•°,ç›¸åå®ƒä¼šæš‚æ—¶å†»ç»“å‡½æ•°çš„æ‰§è¡Œ,ç­‰å¾…å†æ¬¡è¢«æ¿€æ´».
 
-Êµ¼ÊÉÏ,yieldº¯Êý·µ»ØµÄÊÇÒ»¸öµü´úÆ÷,µ±µü´úÆ÷±»ÇëÇóÒ»¸öÖµÊ±,Ëü»áÖ´ÐÐÉú³ÉÆ÷ÖÐµÄ´úÂë,Ö±µ½Óöµ½Ò»¸öyield»òreturnÓï¾ä.
-+ yieldÓï¾äÒâÎ¶×ÅÉú³ÉÒ»¸öÐÂÖµ
-+ returnÓï¾äÒâÎ¶×ÅÉú³ÉÆ÷Í£Ö¹Ö´ÐÐ.
+å®žé™…ä¸Š,yieldå‡½æ•°è¿”å›žçš„æ˜¯ä¸€ä¸ªè¿­ä»£å™¨,å½“è¿­ä»£å™¨è¢«è¯·æ±‚ä¸€ä¸ªå€¼æ—¶,å®ƒä¼šæ‰§è¡Œç”Ÿæˆå™¨ä¸­çš„ä»£ç ,ç›´åˆ°é‡åˆ°ä¸€ä¸ªyieldæˆ–returnè¯­å¥.
++ yieldè¯­å¥æ„å‘³ç€ç”Ÿæˆä¸€ä¸ªæ–°å€¼
++ returnè¯­å¥æ„å‘³ç€ç”Ÿæˆå™¨åœæ­¢æ‰§è¡Œ.
 
-**** Éú³ÉÆ÷µÄÆäËû·½·¨
-+ send·½·¨
+*** ç”Ÿæˆå™¨çš„å…¶ä»–æ–¹æ³•
++ sendæ–¹æ³•
 
-  Íâ²¿×÷ÓÃÓòµ÷ÓÃÉú³ÉÆ÷µÄsend·½·¨Ê±,¾ÍÏñµ÷ÓÃËüµÄ__next__·½·¨Ò»Ñù,Ö»ÊÇsend·½·¨¿ÉÒÔ´øÒ»¸ö²ÎÊý,Õâ¸ö²ÎÊý»á×÷ÎªÉú³ÉÆ÷ÄÚyieldÓï¾äµÄ·µ»ØÖµ. Èô__next__·½·¨±»µ÷ÓÃ,ÔòyieldÓï¾ä·µ»ØµÄÊÇNoneÖµ
+  å¤–éƒ¨ä½œç”¨åŸŸè°ƒç”¨ç”Ÿæˆå™¨çš„sendæ–¹æ³•æ—¶,å°±åƒè°ƒç”¨å®ƒçš„__next__æ–¹æ³•ä¸€æ ·,åªæ˜¯sendæ–¹æ³•å¯ä»¥å¸¦ä¸€ä¸ªå‚æ•°,è¿™ä¸ªå‚æ•°ä¼šä½œä¸ºç”Ÿæˆå™¨å†…yieldè¯­å¥çš„è¿”å›žå€¼. è‹¥__next__æ–¹æ³•è¢«è°ƒç”¨,åˆ™yieldè¯­å¥è¿”å›žçš„æ˜¯Noneå€¼
 
   #+BEGIN_SRC python
     def repeater(value) :
@@ -610,86 +608,153 @@ yieldÓëreturnÓï¾äÒ»Ñù¶¼»á·µ»ØÒ»¸öÖµ,Ëù²»Í¬µÄÔÚÓÚËü²»»áÍË³öº¯Êý,Ïà·´Ëü»áÔÝÊ±¶³½áº
     r.__next__()                    # "Hello"
   #+END_SRC
   
-  ×¢Òâ,Ê¹ÓÃsend·½·¨,Ö»ÓÐÔÚÉú³ÉÆ÷Ö´ÐÐµ½yield·½·¨Ê±²ÅÓÐÒâÒå.
+  æ³¨æ„,ä½¿ç”¨sendæ–¹æ³•,åªæœ‰åœ¨ç”Ÿæˆå™¨æ‰§è¡Œåˆ°yieldæ–¹æ³•æ—¶æ‰æœ‰æ„ä¹‰.
 
-+ throw·½·¨
++ throwæ–¹æ³•
 
-  ¸Ã·½·¨»áÊ¹µÃyieldÓï¾äÅ×³öÒ»¸öÒì³£
+  è¯¥æ–¹æ³•ä¼šä½¿å¾—yieldè¯­å¥æŠ›å‡ºä¸€ä¸ªå¼‚å¸¸
 
-+ close·½·¨
++ closeæ–¹æ³•
 
-  ¸Ã·½·¨ÓÃÓÚÍ£Ö¹Éú³ÉÆ÷,µ«ÊÇËüµÄÊµÏÖÔ­ÀíÆäÊµÊÇÔÚyieldÓï¾äÖÐÅ×³öÒ»¸öGeneratorExitÒì³£.
+  è¯¥æ–¹æ³•ç”¨äºŽåœæ­¢ç”Ÿæˆå™¨,ä½†æ˜¯å®ƒçš„å®žçŽ°åŽŸç†å…¶å®žæ˜¯åœ¨yieldè¯­å¥ä¸­æŠ›å‡ºä¸€ä¸ªGeneratorExitå¼‚å¸¸.
 
-  Òò´Ë,ÈôÐèÒªÉú³ÉÆ÷ÄÚ½øÐÐ´úÂëÇåÀíµÄ»°,ÐèÒª½«yieldÓï¾ä·ÅÔÚtry/catchÓï¾äÖÐ,²¢²¶»ñGeneratorExitÒì³£. *µ«¼ÇµÃËæºó»¹ÐèÒªÖØÐÂÒý·¢Ò»¸öÒì³£*,·ñÔòÎÞ·¨Í£Ö¹Éú³ÉÆ÷.
+  å› æ­¤,è‹¥éœ€è¦ç”Ÿæˆå™¨å†…è¿›è¡Œä»£ç æ¸…ç†çš„è¯,éœ€è¦å°†yieldè¯­å¥æ”¾åœ¨try/catchè¯­å¥ä¸­,å¹¶æ•èŽ·GeneratorExitå¼‚å¸¸. *ä½†è®°å¾—éšåŽè¿˜éœ€è¦é‡æ–°å¼•å‘ä¸€ä¸ªå¼‚å¸¸*,å¦åˆ™æ— æ³•åœæ­¢ç”Ÿæˆå™¨.
+** æŽ¨å¯¼å¼
+*** åˆ—è¡¨æŽ¨å¯¼å¼
+åˆ—è¡¨æŽ¨å¯¼å¼ï¼ˆåˆç§°åˆ—è¡¨è§£æžå¼ï¼‰æä¾›äº†ä¸€ç§ç®€æ˜Žæ‰¼è¦çš„æ–¹æ³•æ¥åˆ›å»ºåˆ—è¡¨ã€‚
+å®ƒçš„ç»“æž„æ˜¯åœ¨ä¸€ä¸ª =[]= ä¸­åŒ…å«ä¸€ä¸ªè¡¨è¾¾å¼ï¼Œç„¶åŽæ˜¯ä¸€ä¸ª =for= è¯­å¥ï¼Œç„¶åŽæ˜¯0ä¸ªæˆ–å¤šä¸ª =for= æˆ–è€… =if= è¯­å¥ã€‚
+é‚£ä¸ªè¡¨è¾¾å¼å¯ä»¥æ˜¯ä»»æ„çš„ï¼Œæ„æ€æ˜¯ä½ å¯ä»¥åœ¨åˆ—è¡¨ä¸­æ”¾å…¥ä»»æ„ç±»åž‹çš„å¯¹è±¡ã€‚è¿”å›žç»“æžœå°†æ˜¯ä¸€ä¸ªæ–°çš„åˆ—è¡¨ï¼Œåœ¨è¿™ä¸ªä»¥ =if= å’Œ =for= è¯­å¥ä¸ºä¸Šä¸‹æ–‡çš„è¡¨è¾¾å¼è¿è¡Œå®Œæˆä¹‹åŽäº§ç”Ÿ.
+#+BEGIN_SRC python
+  # variable=[out_exp for out_exp in input_list if out_exp == 2]
+  [i for i in range(30) if i % 3 is 0]
+#+END_SRC
 
-** Ä£¿é
-*** Ä£°åµ¼Èë¹ý³Ì
-+ python¼ì²éÄ£°åÊÇ·ñÒÑ¾­µ¼Èë¹ý,ÈôÒÑ¾­µ¼Èë¹ý,Ôò²»ÔÙµ¼Èë
+#+RESULTS:
+: 
+: [0, 3, 6, 9, 12, 15, 18, 21, 24, 27]
 
-  ¼à²âµÄ·½·¨ÊÇ²é¿´sys.modulesÖÐÊÇ·ñÒÑ¾­ÓÐ¸ÃÄ£¿é
 
-+ python»á´Ó ~sys.path~ Ö¸¶¨µÄÄ¿Â¼ÖÐÑ°ÕÒÖ¸¶¨Ãû×ÖµÄÄ£°å.
+*** é›†åˆæŽ¨å¯¼å¼
+é›†åˆæŽ¨å¯¼å¼ä¸Žåˆ—è¡¨æŽ¨å¯¼å¼ç±»ä¼¼,å”¯ä¸€çš„åŒºåˆ«åœ¨äºŽ *å®ƒåŒ…å«åœ¨äº† ={}= ä¸­*
+#+BEGIN_SRC python
+  {x**2 for x in [1,1,2,2,3,3]}
+#+END_SRC
 
-  µ«Ò»°ã²»»áÖ±½Ó±à¼­ ~sys.path~ ±äÁ¿,¶øÊÇÉè¶¨ÔÚ ~PYTHONPATH~ »·¾³±äÁ¿ÖÐ
+#+RESULTS:
+: {1, 9, 4}
 
-+ ÈôÄ£°å¶ÔÓ¦Ò»¸öpythonÎÄ¼þ,ÔòÖ´ÐÐ¸ÃÎÄ¼þÄÚÈÝ. ÈôÄ£°å¶ÔÓ¦Ò»¸öÄ¿Â¼Ãû(ÕâÀàÄ£°åÒ²½Ð×ö°ü),ÔòÔÚÄ¿Â¼ÃûÏÂÑ°ÕÒ__init__.pyÖ´ÐÐ.
-*** µ¼ÈëÄ£¿éµÄ·½·¨
-+ import Ä£¿éÃû
-+ from Ä£¿éÃû import *
-+ from Ä£¿éÃû import º¯Êýs
-*** Ä£¿éµÄÎÄµµ×Ö·û´®
-ÓëÀàÒ»Ñù,Ä£¿éµÄÎÄµµ×Ö·û´®Ð´ÔÚÄ£¿éµÄ¿ªÍ·
-* ÎÄ¼þ
-** Ê¹ÓÃopenº¯Êý´ò¿ªÎÄ¼þ
-openº¯ÊýÓï·¨Îª ~open(name,mode="w",buffer=1)~
+*** å­—å…¸æŽ¨å¯¼å¼
+å­—å…¸æŽ¨å¯¼å¼ä¸Žåˆ—è¡¨æŽ¨å¯¼å¼ç±»ä¼¼,ä½† *å®ƒçš„ç»“æž„åœ¨ä¸€ä¸ª ={}= ä¸­*,ä¸” *ä½¿ç”¨ä¸¤ä¸ªç”¨ =:= åˆ†éš”çš„è¡¨è¾¾å¼,åˆ†åˆ«è¡¨ç¤ºkeyä¸Žvalueçš„å€¼*
+#+BEGIN_SRC python
+  mcase = {'a': 10, 'b': 34, 'A': 7, 'Z': 3}
+  mcase_frequency = {
+      k.lower(): mcase.get(k.lower(), 0) + mcase.get(k.upper(), 0) for k in mcase.keys()
+  }
+  mcase_frequency
+#+END_SRC
 
-+ ~name~ ÎªÎÄ¼þÂ·¾¶.
+#+RESULTS:
+: 
+: ... ... >>> {'a': 17, 'b': 34, 'z': 3}
+*** ç”Ÿæˆå™¨æŽ¨å¯¼å¼
+ç”Ÿæˆå™¨æŽ¨å¯¼å¼çš„å·¥ä½œæ–¹å¼ä¸Žåˆ—è¡¨æŽ¨å¯¼å¼çš„å·¥ä½œæ–¹å¼ç±»ä¼¼,åªä¸è¿‡è¿”å›žçš„ä¸æ˜¯åˆ—è¡¨,è€Œæ˜¯ç”Ÿæˆå™¨
 
-+ ~mode~ ÎªÎÄ¼þÄ£Ê½
+ç”Ÿæˆå™¨æŽ¨å¯¼å¼ä¸Žåˆ—è¡¨æŽ¨å¯¼å¼çš„è¯­æ³•ä¸åŒç‚¹åœ¨äºŽç”Ÿæˆå™¨æŽ¨å¯¼å¼åœ¨ =()= åŽ,åˆ—è¡¨æŽ¨å¯¼å¼åœ¨ =[]= åŽ.
+#+BEGIN_SRC python
+  g = ((i + 2) ** 2 for i in range(2,27))
+  g.__next__()                        # 16
+  g.__next__()                        # 25
+#+END_SRC
 
-  #+CAPTION: openº¯ÊýÖÐÄ£Ê½²ÎÊýµÄ³£ÓÃÖµ
-  | Öµ | ËµÃ÷                                |
+ç”Ÿæˆå™¨æŽ¨å¯¼å¼å¯ä»¥åœ¨å½“å‰çš„åœ†æ‹¬å·å†…ç›´æŽ¥ä½¿ç”¨. ä¾‹å¦‚åœ¨å‡½æ•°è°ƒç”¨çš„æ‹¬å·ä¸­,ä¸éœ€è¦å¢žåŠ å¦å¤–ä¸€å¯¹åœ†æ‹¬å·
+#+BEGIN_SRC python
+  sum(i**2 for i in range(10))    # 285
+#+END_SRC
+
+** æ¨¡å—
+*** æ¨¡æ¿å¯¼å…¥è¿‡ç¨‹
++ pythonæ£€æŸ¥æ¨¡æ¿æ˜¯å¦å·²ç»å¯¼å…¥è¿‡,è‹¥å·²ç»å¯¼å…¥è¿‡,åˆ™ä¸å†å¯¼å…¥
+
+  ç›‘æµ‹çš„æ–¹æ³•æ˜¯æŸ¥çœ‹sys.modulesä¸­æ˜¯å¦å·²ç»æœ‰è¯¥æ¨¡å—
+
++ pythonä¼šä»Ž ~sys.path~ æŒ‡å®šçš„ç›®å½•ä¸­å¯»æ‰¾æŒ‡å®šåå­—çš„æ¨¡æ¿.
+
+  ä½†ä¸€èˆ¬ä¸ä¼šç›´æŽ¥ç¼–è¾‘ ~sys.path~ å˜é‡,è€Œæ˜¯è®¾å®šåœ¨ ~PYTHONPATH~ çŽ¯å¢ƒå˜é‡ä¸­
+
++ è‹¥æ¨¡æ¿å¯¹åº”ä¸€ä¸ªpythonæ–‡ä»¶,åˆ™æ‰§è¡Œè¯¥æ–‡ä»¶å†…å®¹. è‹¥æ¨¡æ¿å¯¹åº”ä¸€ä¸ªç›®å½•å(è¿™ç±»æ¨¡æ¿ä¹Ÿå«åšåŒ…),åˆ™åœ¨ç›®å½•åä¸‹å¯»æ‰¾__init__.pyæ‰§è¡Œ.
+*** å¯¼å…¥æ¨¡å—çš„æ–¹æ³•
++ import æ¨¡å—å
++ from æ¨¡å—å import *
++ from æ¨¡å—å import å‡½æ•°s
+*** æ¨¡å—çš„æ–‡æ¡£å­—ç¬¦ä¸²
+ä¸Žç±»ä¸€æ ·,æ¨¡å—çš„æ–‡æ¡£å­—ç¬¦ä¸²å†™åœ¨æ¨¡å—çš„å¼€å¤´
+** lambdaè¡¨è¾¾å¼
+lambdaè¡¨è¾¾å¼çš„æ ¼å¼ä¸º =lambda å‚æ•°: æ“ä½œ=
+#+BEGIN_SRC python
+  add = lambda x,y : x + y
+  add(3,5)
+
+  a = [(1, 2), (4, 1), (9, 10), (13, -3)]
+  a.sort(key=lambda x: x[1])
+  print(a)
+#+END_SRC
+
+#+RESULTS:
+: 
+: 8
+:  [(13, -3), (4, 1), (1, 2), (9, 10)]
+
+* æ–‡ä»¶
+** ä½¿ç”¨openå‡½æ•°æ‰“å¼€æ–‡ä»¶
+openå‡½æ•°è¯­æ³•ä¸º ~open(name,mode="w",buffer=1)~
+
++ ~name~ ä¸ºæ–‡ä»¶è·¯å¾„.
+
++ ~mode~ ä¸ºæ–‡ä»¶æ¨¡å¼
+
+  #+CAPTION: openå‡½æ•°ä¸­æ¨¡å¼å‚æ•°çš„å¸¸ç”¨å€¼
+  | å€¼ | è¯´æ˜Ž                                |
   |----+-------------------------------------|
-  | r  | ¶ÁÄ£Ê½                              |
-  | w  | Ð´Ä£Ê½                              |
-  | a  | ×·¼ÓÄ£Ê½                            |
-  | b  | ¿ÉÓëÆäËûÄ£Ê½Ò»ÆðÊ¹ÓÃ,±íÊ¾¶þ½øÖÆÄ£Ê½ |
-  | +  | ¿ÉÓëÆäËûÄ£Ê½Ò»ÆðÊ¹ÓÃ,±íÊ¾¶ÁÐ´Ä£Ê½ |
+  | r  | è¯»æ¨¡å¼                              |
+  | w  | å†™æ¨¡å¼                              |
+  | a  | è¿½åŠ æ¨¡å¼                            |
+  | b  | å¯ä¸Žå…¶ä»–æ¨¡å¼ä¸€èµ·ä½¿ç”¨,è¡¨ç¤ºäºŒè¿›åˆ¶æ¨¡å¼ |
+  | +  | å¯ä¸Žå…¶ä»–æ¨¡å¼ä¸€èµ·ä½¿ç”¨,è¡¨ç¤ºè¯»å†™æ¨¡å¼ |
 
-+ ~buffer~ Îª»º´æÉèÖÃ
++ ~buffer~ ä¸ºç¼“å­˜è®¾ç½®
   
-  #+CAPTION: openº¯ÊýÖÐ»º³å²ÎÊýËµÃ÷
-  | Öµ      | ËµÃ÷             |
+  #+CAPTION: openå‡½æ•°ä¸­ç¼“å†²å‚æ•°è¯´æ˜Ž
+  | å€¼      | è¯´æ˜Ž             |
   |---------+------------------|
-  | 0/False | ÎÞ»º´æ           |
-  | 1/True  | ÓÐ»º´æ           |
-  | >1      | »º´æµÄ´óÐ¡       |
-  | <0      | Ê¹ÓÃÄ¬ÈÏ»º´æ´óÐ¡ |
-** »ù±¾ÎÄ¼þ·½·¨
-+ ¶Á·½·¨
-  | read([Êý×Ö])     | ¶ÁÈëÖ¸¶¨¸ö×Ö·û,Ä¬ÈÏÎª¶ÁÈ¡Ê£ÏÂµÄËùÓÐÄÚÈÝ |
-  | readline()       | ¶ÁÈ¡µ¥¶ÀÒ»ÐÐ                            |
-  | readline(ÕýÕûÊý) | ¶ÁÈ¡µ¥¶ÀÒ»ÐÐ,»òÖ¸¶¨¸ö×Ö·û               |
-  | readlines()      | ¶ÁÈ¡ÎÄ¼þÖÐËùÓÐÐÐ²¢½«Æä×÷ÎªÁÐ±í·µ»Ø      |
+  | 0/False | æ— ç¼“å­˜           |
+  | 1/True  | æœ‰ç¼“å­˜           |
+  | >1      | ç¼“å­˜çš„å¤§å°       |
+  | <0      | ä½¿ç”¨é»˜è®¤ç¼“å­˜å¤§å° |
+** åŸºæœ¬æ–‡ä»¶æ–¹æ³•
++ è¯»æ–¹æ³•
+  | read([æ•°å­—])     | è¯»å…¥æŒ‡å®šä¸ªå­—ç¬¦,é»˜è®¤ä¸ºè¯»å–å‰©ä¸‹çš„æ‰€æœ‰å†…å®¹ |
+  | readline()       | è¯»å–å•ç‹¬ä¸€è¡Œ                            |
+  | readline(æ­£æ•´æ•°) | è¯»å–å•ç‹¬ä¸€è¡Œ,æˆ–æŒ‡å®šä¸ªå­—ç¬¦               |
+  | readlines()      | è¯»å–æ–‡ä»¶ä¸­æ‰€æœ‰è¡Œå¹¶å°†å…¶ä½œä¸ºåˆ—è¡¨è¿”å›ž      |
 
-+ Ð´·½·¨
++ å†™æ–¹æ³•
 
-  Ð´·½·¨ÖÐÒª×¢Òâ:³ÌÐò²»»á×Ô¶¯Ìí¼Ó»Ø³µ·û,ÐèÒª×Ô¼ºÌí¼Ó.
-  | write(string)           | Ð´Èë²ÎÊýSTRING |
-  | writelines(string-list) | ½«ÁÐ±íÖÐËùÓÐµÄ×Ö·ûÐ´ÈëÎÄ¼þÁ÷ÖÐ.  |
-** ÎÄ¼þÖÐµÄÎ»ÖÃ
-+ ~tell()~ ·½·¨·µ»Øµ±Ç°·ÃÎÊµÄÎ»ÖÃ
-+ ~seek(offset,whence=0)~ ·½·¨Ìø×ªµ½ÎÄ¼þÖÐÏà¶ÔwhenceµÄoffsetÎ»ÖÃ,ÆäÖÐ
+  å†™æ–¹æ³•ä¸­è¦æ³¨æ„:ç¨‹åºä¸ä¼šè‡ªåŠ¨æ·»åŠ å›žè½¦ç¬¦,éœ€è¦è‡ªå·±æ·»åŠ .
+  | write(string)           | å†™å…¥å‚æ•°STRING |
+  | writelines(string-list) | å°†åˆ—è¡¨ä¸­æ‰€æœ‰çš„å­—ç¬¦å†™å…¥æ–‡ä»¶æµä¸­.  |
+** æ–‡ä»¶ä¸­çš„ä½ç½®
++ ~tell()~ æ–¹æ³•è¿”å›žå½“å‰è®¿é—®çš„ä½ç½®
++ ~seek(offset,whence=0)~ æ–¹æ³•è·³è½¬åˆ°æ–‡ä»¶ä¸­ç›¸å¯¹whenceçš„offsetä½ç½®,å…¶ä¸­
 
-  - whence=0 :: Æ«ÒÆÁ¿´ÓÎÄ¼þ¿ªÍ·ËãÆð
+  - whence=0 :: åç§»é‡ä»Žæ–‡ä»¶å¼€å¤´ç®—èµ·
 
-  - whence=1 :: Æ«ÒÆÁ¿Ïà¶Ôµ±Ç°Î»ÖÃËãÆð
+  - whence=1 :: åç§»é‡ç›¸å¯¹å½“å‰ä½ç½®ç®—èµ·
 
-  - whence=2 :: Æ«ÒÆÁ¿Ïà¶ÔÎÄ¼þ½áÎ²ËãÆð
-** ¹Ø±ÕÎÄ¼þ
-ÓÐÁ½ÖÖ·½·¨¹Ø±ÕÎÄ¼þ:
+  - whence=2 :: åç§»é‡ç›¸å¯¹æ–‡ä»¶ç»“å°¾ç®—èµ·
+** å…³é—­æ–‡ä»¶
+æœ‰ä¸¤ç§æ–¹æ³•å…³é—­æ–‡ä»¶:
 
-+ µ÷ÓÃÎÄ¼þ¶ÔÏóµÄ ~close()~ ·½·¨
++ è°ƒç”¨æ–‡ä»¶å¯¹è±¡çš„ ~close()~ æ–¹æ³•
   #+BEGIN_SRC python
     f = open("/tmp/xxx.log","w")
     try:
@@ -698,24 +763,24 @@ openº¯ÊýÓï·¨Îª ~open(name,mode="w",buffer=1)~
         f.close()
   #+END_SRC
 
-+ Ê¹ÓÃ ~with~ Óï¾ä
++ ä½¿ç”¨ ~with~ è¯­å¥
   #+BEGIN_SRC python
     with open("/tmp/xxx.txt") as f:
         f.write("somelines\n")
   #+END_SRC
-* Êý¾Ý¿âÖ§³Ö
+* æ•°æ®åº“æ”¯æŒ
 
 * socket
 
-* ²âÊÔ
+* æµ‹è¯•
 
 ** doctest
-doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍÆ÷ÖÐÊäÈëµÄÀý×ÓµÄÎÄ±¾,Ö®ºó¼ì²éÀý×ÓÊÇ·ñ·ûºÏÊµ¼ÊÒªÇó.
+doctest.testmodå‡½æ•°ä¼šä»Žä¸€ä¸ªæ¨¡å—ä¸­è¯»å–æ‰€æœ‰æ–‡æ¡£å­—ç¬¦ä¸²,æ‰¾å‡ºæ‰€å“Ÿçœ‹èµ·æ¥åƒæ˜¯åœ¨äº¤äº’è§£é‡Šå™¨ä¸­è¾“å…¥çš„ä¾‹å­çš„æ–‡æœ¬,ä¹‹åŽæ£€æŸ¥ä¾‹å­æ˜¯å¦ç¬¦åˆå®žé™…è¦æ±‚.
 
-* ÐÔÄÜ²âÊÔ
+* æ€§èƒ½æµ‹è¯•
 
 ** profile
-Ê¹ÓÃprofile·ÖÎö³ÌÐò·Ç³£¼òµ¥. Ö»ÐèÒªÓÃ×Ö·û´®²ÎÊýµ÷ÓÃËüµÄrun·½·¨¾Í»áÊä³öÐÅÏ¢,°üÀ¨¸÷¸öº¯ÊýºÍ·½·¨µ÷ÓÃµÄ´ÎÊý,Ã¿¸öº¯ÊýËù»¨·ÑµÄÊ±¼ä.
+ä½¿ç”¨profileåˆ†æžç¨‹åºéžå¸¸ç®€å•. åªéœ€è¦ç”¨å­—ç¬¦ä¸²å‚æ•°è°ƒç”¨å®ƒçš„runæ–¹æ³•å°±ä¼šè¾“å‡ºä¿¡æ¯,åŒ…æ‹¬å„ä¸ªå‡½æ•°å’Œæ–¹æ³•è°ƒç”¨çš„æ¬¡æ•°,æ¯ä¸ªå‡½æ•°æ‰€èŠ±è´¹çš„æ—¶é—´.
 #+BEGIN_SRC python
   import profile
   profile.run("2+2")
@@ -732,7 +797,7 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
   #      0    0.000             0.000          profile:0(profiler)
 #+END_SRC
 
-Èç¹û½oprofile.runÌá¹©ÁËÒ»¸öÎÄ¼þÃû×÷ÎªµÚ¶þ¸ö²ÎÊý,Ôò½á¹û»á±£´æµ½ÎÄ¼þÖÐ. ¿ÉÒÔÔÚÖ®ºóÓÃpstatsÄ£¿é¼ì²é·ÖÎö½á¹û.
+å¦‚æžœçµ¦profile.runæä¾›äº†ä¸€ä¸ªæ–‡ä»¶åä½œä¸ºç¬¬äºŒä¸ªå‚æ•°,åˆ™ç»“æžœä¼šä¿å­˜åˆ°æ–‡ä»¶ä¸­. å¯ä»¥åœ¨ä¹‹åŽç”¨pstatsæ¨¡å—æ£€æŸ¥åˆ†æžç»“æžœ.
 #+BEGIN_SRC python
   import pstats
   import profile
@@ -742,9 +807,9 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
   help(p)
 #+END_SRC
 
-* ³ÌÐò´ò°ü
+* ç¨‹åºæ‰“åŒ…
 ** Distutils
-Ò»¸ö¼òµ¥µÄDistutils°²×°½Å±¾ÈçÏÂ£º
+ä¸€ä¸ªç®€å•çš„Distutilså®‰è£…è„šæœ¬å¦‚ä¸‹ï¼š
 #+BEGIN_SRC python
   from idstutils.core import setup
 
@@ -755,15 +820,15 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
         py_modules=['hello'])
 #+END_SRC
 
-Ïà¹ØÃüÁî
-| ÃüÁî  | ËµÃ÷ |
+ç›¸å…³å‘½ä»¤
+| å‘½ä»¤  | è¯´æ˜Ž |
 |-------+------|
-| build | ´ò°ü |
-| setup | °²×° |
-| sdist | Ô´Âë·¢²¼ |
+| build | æ‰“åŒ… |
+| setup | å®‰è£… |
+| sdist | æºç å‘å¸ƒ |
 |       |          |
-* ÈÕÖ¾
-** loggingÄ£¿é
+* æ—¥å¿—
+** loggingæ¨¡å—
 #+BEGIN_SRC python
   import logging
   logging.basicConfig(level=logging.INFO,filename='/tmp/mylog.log')
@@ -773,39 +838,39 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
   logging.info('will not be logged')
 #+END_SRC
 * Note
-1. Êý×Ö¡¢×Ö·û´®ºÍÔª×éÊÇ²»¿É±äµÄ£»ÁÐ±íºÍ×ÖµäÊÇ¿É±äµÄ
-2. ¿É×÷ÓÃÓÚ¶àÖÖÀàÐÍµÄÍ¨ÓÃÐÍ²Ù×÷¶¼ÊÇÒÔÄÚÖÃº¯Êý»ò±í´ïÊ½µÄÐÎÊ½³öÏÖµÄ£»µ«ÊÇÀàÐÍÌØ¶¨µÄ²Ù×÷ÊÇÒÔ·½·¨µ÷ÓÃµÄÐÎÊ½³öÏÖµÄ¡£
-3. ·½·¨Ò²ÊÇº¯ÊýÊôÐÔ
-4. ¿ÉÒÔµ÷ÓÃÄÚÖÃµÄdirº¯Êý£¬½«»á·µ»ØÒ»¸öÁÐ±í£¬ÆäÖÐ°üº¬ÁË¶ÔÏóµÄËùÓÐÊôÐÔ£¨·½·¨Ò²ÊÇÊôÐÔ£©
-5. dirº¯Êý¼òµ¥µØ¸ø³öÁË·½·¨µÄÃû³Æ¡£²éÑ¯ËûÃÇ×öÊ²Ã´£¬¿ÉÒÔ´«µÝ¸øhelpº¯Êý
-6. ÊµµØ¸Ä±ä¶ÔÏó²¢²»»á°Ñ±äÁ¿»®·ÖÎª±¾µØ±äÁ¿£¬Êµ¼ÊÉÏÖ»ÓÐ¶Ô±äÁ¿Ãû¸³Öµ²Å¿ÉÒÔ¡£
-   ÀýÈç£¬Èç¹û±äÁ¿ÃûLÔÚÄ£¿é¶¥¶Ë±»¸³ÖµÎªÒ»¸öÁÐ±í£¬
-   ÔÚº¯ÊýÄÚ²¿µÄÏñL.append(X)ÕâÑùµÄÓï¾ä²¢²»»á½«L»®·ÖÎª±¾µØ±äÁ¿£¬
-   ¶øL=XÈ´¿ÉÒÔ
-7. ±äÁ¿ÃûÒýÓÃ·ÖÎªËÄ¸ö×÷ÓÃÓò½øÐÐ²éÕÒ£º±¾µØ-¡·º¯ÊýÄÚ-¡·È«¾Ö-¡·ÄÚÖÃ
-8. Ã¿¸ö×ÓÀà×îºÃ¶¨Òå×Ô¼ºµÄ¹¹ÔìÆ÷£¬²»È»»ùÀàµÄ¹¹ÔìÆ÷»á±»µ÷ÓÃ¡£È»¶ø£¬Èç¹û×ÓÀàÖØÐ´»ùÀàµÄ¹¹ÔìÆ÷£¬»ùÀàµÄ¹¹ÔìÆ÷¾Í²»»á×Ô¶¯µ÷ÓÃÁË£¬ÕâÑù»ùÀàµÄ¹¹ÔìÆ÷¾Í±ØÐëÏÔÊ½Ð´³ö²Å»á±»Ö´ÐÐ
-9. ÄÚ½¨ÀàÐÍÃ»ÓÐ__dict__ÊôÐÔ
-10. pythonÖÐÊµÀý¿ÉÒÔ·ÃÎÊÀàÖÐµÄÊôÐÔ£¬µ«ÊÇÎÞ·¨¸üÐÂÀàÊôÐÔ¡£ÒòÎªÒ»µ©³¢ÊÔÔÚÊµÀýÖÐ¸üÐÂÀàÊôÐÔ£¬python»áÔÚÊµÀýµÄÃüÃû¿Õ¼äÄÚÐÂ½¨Ò»¸öÊôÐÔ¶øÆÁ±ÎÁËÀàÊôÐÔ
-11. ÔÚÀàÖÐ£¬Ò»°ã²»Ö±½Óµ÷ÓÃÀàÃû£¬¶øÊÇÊ¹ÓÃself.__class__´úÌæ
-12. python²»Ö§³ÖÖØÔØ
-13. __getattribute__()Óë__getattr__()ÀàËÆ£¬²»Í¬ÔÚÓÚÇ°ÕßÔÚÃ¿Ò»´ÎÊôÐÔ·ÃÎÊÊ±¶¼»áµ÷ÓÃ£¬¶øºóÕßÖ»µ±ÊôÐÔ·ÃÎÊ²»µ½ÊÇµ÷ÓÃ.Èç¹ûÀàÍ¬Ê±¶¨ÒåÁË__getattribute__()¼°__getattr__()·½·¨,³ý·ÇÃ÷È·´Ó__get-attribute__()µ÷ÓÃ£¬»ò__getattribute__()Òý·¢ÁË AttributeError Òì³£,·ñÔòºóÕß²»»á±»µ÷ÓÃ. 
+1. æ•°å­—ã€å­—ç¬¦ä¸²å’Œå…ƒç»„æ˜¯ä¸å¯å˜çš„ï¼›åˆ—è¡¨å’Œå­—å…¸æ˜¯å¯å˜çš„
+2. å¯ä½œç”¨äºŽå¤šç§ç±»åž‹çš„é€šç”¨åž‹æ“ä½œéƒ½æ˜¯ä»¥å†…ç½®å‡½æ•°æˆ–è¡¨è¾¾å¼çš„å½¢å¼å‡ºçŽ°çš„ï¼›ä½†æ˜¯ç±»åž‹ç‰¹å®šçš„æ“ä½œæ˜¯ä»¥æ–¹æ³•è°ƒç”¨çš„å½¢å¼å‡ºçŽ°çš„ã€‚
+3. æ–¹æ³•ä¹Ÿæ˜¯å‡½æ•°å±žæ€§
+4. å¯ä»¥è°ƒç”¨å†…ç½®çš„dirå‡½æ•°ï¼Œå°†ä¼šè¿”å›žä¸€ä¸ªåˆ—è¡¨ï¼Œå…¶ä¸­åŒ…å«äº†å¯¹è±¡çš„æ‰€æœ‰å±žæ€§ï¼ˆæ–¹æ³•ä¹Ÿæ˜¯å±žæ€§ï¼‰
+5. dirå‡½æ•°ç®€å•åœ°ç»™å‡ºäº†æ–¹æ³•çš„åç§°ã€‚æŸ¥è¯¢ä»–ä»¬åšä»€ä¹ˆï¼Œå¯ä»¥ä¼ é€’ç»™helpå‡½æ•°
+6. å®žåœ°æ”¹å˜å¯¹è±¡å¹¶ä¸ä¼šæŠŠå˜é‡åˆ’åˆ†ä¸ºæœ¬åœ°å˜é‡ï¼Œå®žé™…ä¸Šåªæœ‰å¯¹å˜é‡åèµ‹å€¼æ‰å¯ä»¥ã€‚
+   ä¾‹å¦‚ï¼Œå¦‚æžœå˜é‡åLåœ¨æ¨¡å—é¡¶ç«¯è¢«èµ‹å€¼ä¸ºä¸€ä¸ªåˆ—è¡¨ï¼Œ
+   åœ¨å‡½æ•°å†…éƒ¨çš„åƒL.append(X)è¿™æ ·çš„è¯­å¥å¹¶ä¸ä¼šå°†Låˆ’åˆ†ä¸ºæœ¬åœ°å˜é‡ï¼Œ
+   è€ŒL=Xå´å¯ä»¥
+7. å˜é‡åå¼•ç”¨åˆ†ä¸ºå››ä¸ªä½œç”¨åŸŸè¿›è¡ŒæŸ¥æ‰¾ï¼šæœ¬åœ°-ã€‹å‡½æ•°å†…-ã€‹å…¨å±€-ã€‹å†…ç½®
+8. æ¯ä¸ªå­ç±»æœ€å¥½å®šä¹‰è‡ªå·±çš„æž„é€ å™¨ï¼Œä¸ç„¶åŸºç±»çš„æž„é€ å™¨ä¼šè¢«è°ƒç”¨ã€‚ç„¶è€Œï¼Œå¦‚æžœå­ç±»é‡å†™åŸºç±»çš„æž„é€ å™¨ï¼ŒåŸºç±»çš„æž„é€ å™¨å°±ä¸ä¼šè‡ªåŠ¨è°ƒç”¨äº†ï¼Œè¿™æ ·åŸºç±»çš„æž„é€ å™¨å°±å¿…é¡»æ˜¾å¼å†™å‡ºæ‰ä¼šè¢«æ‰§è¡Œ
+9. å†…å»ºç±»åž‹æ²¡æœ‰__dict__å±žæ€§
+10. pythonä¸­å®žä¾‹å¯ä»¥è®¿é—®ç±»ä¸­çš„å±žæ€§ï¼Œä½†æ˜¯æ— æ³•æ›´æ–°ç±»å±žæ€§ã€‚å› ä¸ºä¸€æ—¦å°è¯•åœ¨å®žä¾‹ä¸­æ›´æ–°ç±»å±žæ€§ï¼Œpythonä¼šåœ¨å®žä¾‹çš„å‘½åç©ºé—´å†…æ–°å»ºä¸€ä¸ªå±žæ€§è€Œå±è”½äº†ç±»å±žæ€§
+11. åœ¨ç±»ä¸­ï¼Œä¸€èˆ¬ä¸ç›´æŽ¥è°ƒç”¨ç±»åï¼Œè€Œæ˜¯ä½¿ç”¨self.__class__ä»£æ›¿
+12. pythonä¸æ”¯æŒé‡è½½
+13. __getattribute__()ä¸Ž__getattr__()ç±»ä¼¼ï¼Œä¸åŒåœ¨äºŽå‰è€…åœ¨æ¯ä¸€æ¬¡å±žæ€§è®¿é—®æ—¶éƒ½ä¼šè°ƒç”¨ï¼Œè€ŒåŽè€…åªå½“å±žæ€§è®¿é—®ä¸åˆ°æ˜¯è°ƒç”¨.å¦‚æžœç±»åŒæ—¶å®šä¹‰äº†__getattribute__()åŠ__getattr__()æ–¹æ³•,é™¤éžæ˜Žç¡®ä»Ž__get-attribute__()è°ƒç”¨ï¼Œæˆ–__getattribute__()å¼•å‘äº† AttributeError å¼‚å¸¸,å¦åˆ™åŽè€…ä¸ä¼šè¢«è°ƒç”¨. 
 14. input()=eval(raw_input())
-15. execfile(filename,global=globals(),local=locals())²»±£Ö¤²»»áÐÞ¸Ä¾Ö²¿Ãû×Ö¿Õ¼ä£¬Òò´Ë±È½Ï°²È«µÄ×ö·¨ÊÇ´«ÈëÒ»¸öÐé¼ÙµÄlocals×Öµä²¢¼ì²éÊÇ·ñÓÐ¸±×÷ÓÃ
-16. python -m ¿âÃû³Æ£¨²»ÓÃ½Óºó×º.py£©  £¬¿ÉÒÔ½«¿âµ±×ö´úÂëÀ´Ö´ÐÐ£¬×Ô¶¯»áÍ¨¹ýpythonµÄµ¼Èë»úÖÆÕÒµ½¿âµÄµØÖ·£¬È»ºóÓÃ__main__=='__main__'µÄ·½Ê½Ö´ÐÐ¿â´úÂë
-17. startfile(filePath) ,Ê¹ÓÃÄ¬ÈÏµÄ¹ØÁª³ÌÐò´ò¿ªÎÄ¼þ
-18. os.spawn()¼Ò×åº¯Êý=fork()+exec()¼Ò×åº¯Êý
-19. ÏÖÔÚÒ»°ãÓÃsubprocessÈ¡´úosÄ£¿éÀ´µ÷ÓÃ×Ó½ø³Ì
-20. commands.getoutput(cmd),ÔÚ×Ó½ø³ÌÖÐÖ´ÐÐÎÄ¼þ£¬ÒÔ×Ö·û´®·µ»ØËùÓÐµÄÊä³ö£¬µ«¸Ã·½·¨Ö»ÄÜÔÚUNIXÏÂµ÷ÓÃ
-21. µ±µ÷ÓÃsys.exit()Ê±£¬¾Í»áÒý·¢systemExit()Òì³£
-22. sys.exitfunc()Ä¬ÈÏÊÇ²»¿ÉÓÃµÄ£¬µ«Äã¿ÉÒÔ¸ÄÐ´ËüÒÔÌá¹©¶îÍâµÄ¹¦ÄÜ¡£µ±µ÷ÓÃÁËsys.exit()²¢ÔÚ½âÊÍÆ÷ÍË³öÖ®Ç°£¬¾Í»áµ÷ÓÃÕâ¸öº¯ÊýÁË£¬Õâ¸öº¯Êý²»´øÈÎºÎ²ÎÊý£¬ËùÒÔÄã´´½¨µÄº¯ÊýÒ²Ó¦¸ÃÊÇÎÞ²ÎµÄ
-23. os._exit(status)²ÎÊýÓëÆ½Ì¨ÓÐ¹Ø£¬¸Ãº¯ÊýÓësys.exit()ºÍexitfunc()²»Í¬£¬Ëü¸ù±¾²»Ö´ÐÐÈÎºÎÇåÀí¾ÍÁ¢¼´ÍË³ö£¬¶øÇÒ×´Ì¬²ÎÊýÊÇ±ØÐëµÃ
-24. os.kill()º¯ÊýÄ£Äâ´«Í³µÄ unix º¯ÊýÀ´·¢ËÍÐÅºÅ¸ø½ø³Ì¡£kill()²ÎÊýÊÇ½ø³Ì±êÊ¶Êý(PID)ºÍÄãÏëÒª·¢ËÍµ½½ø³ÌµÄÐÅºÅ¡£·¢ËÍµÄµäÐÍÐÅºÅÎª SIGINT, SIGQUIT,»ò¸ü³¹µ×µØ£¬SIGKILL,À´Ê¹½ø³ÌÖÕ½á¡£ 
-25. SocketServerµÄÇëÇó´¦ÀíÆ÷µÄÄ¬ÈÏÐÐÎªÊÇ½ÓÊÜÁ¬½Ó£¬µÃµ½ÇëÇó£¬È»ºó¾Í¹Ø±ÕÁ¬½Ó£¬ÕâÊ¹µÃÎÒÃÇ²»ÄÜÔÚ³ÌÐòµÄÔËÐÐÊ±£¬Ò»Ö±±£³ÖÁ¬½Ó×´Ì¬£¬ÒªÃ¿´Î·¢ËÍÊý¾Ýµ½·þÎñÆ÷µÄÊ±ºò¶¼Òª´´½¨Ò»¸öÐÂµÄÌ×½Ó×Ö
-26. ÔÚÏò CGI½Å±¾·µ»Ø½á¹ûÊ±£¬ÐëÏÈ·µ»ØÒ»¸öÊÊµ±µÄ HTTPÍ·ÎÄ¼þºó²Å»á·µ»Ø½á¹û HTML Ò³Ãæ¡£ ½øÒ»²½Ëµ£¬ ÎªÁËÇø·ÖÕâÐ©Í·ÎÄ¼þºÍ½á¹û HTML Ò³Ãæ£¬ ÐèÒªÔÚÍ·ÓëHTMLÒ³ÃæÖ®¼ä¶à²åÈëÒ»¸ö»»ÐÐ·û¡£ÀýÈç£º
+15. execfile(filename,global=globals(),local=locals())ä¸ä¿è¯ä¸ä¼šä¿®æ”¹å±€éƒ¨åå­—ç©ºé—´ï¼Œå› æ­¤æ¯”è¾ƒå®‰å…¨çš„åšæ³•æ˜¯ä¼ å…¥ä¸€ä¸ªè™šå‡çš„localså­—å…¸å¹¶æ£€æŸ¥æ˜¯å¦æœ‰å‰¯ä½œç”¨
+16. python -m åº“åç§°ï¼ˆä¸ç”¨æŽ¥åŽç¼€.pyï¼‰  ï¼Œå¯ä»¥å°†åº“å½“åšä»£ç æ¥æ‰§è¡Œï¼Œè‡ªåŠ¨ä¼šé€šè¿‡pythonçš„å¯¼å…¥æœºåˆ¶æ‰¾åˆ°åº“çš„åœ°å€ï¼Œç„¶åŽç”¨__main__=='__main__'çš„æ–¹å¼æ‰§è¡Œåº“ä»£ç 
+17. startfile(filePath) ,ä½¿ç”¨é»˜è®¤çš„å…³è”ç¨‹åºæ‰“å¼€æ–‡ä»¶
+18. os.spawn()å®¶æ—å‡½æ•°=fork()+exec()å®¶æ—å‡½æ•°
+19. çŽ°åœ¨ä¸€èˆ¬ç”¨subprocesså–ä»£osæ¨¡å—æ¥è°ƒç”¨å­è¿›ç¨‹
+20. commands.getoutput(cmd),åœ¨å­è¿›ç¨‹ä¸­æ‰§è¡Œæ–‡ä»¶ï¼Œä»¥å­—ç¬¦ä¸²è¿”å›žæ‰€æœ‰çš„è¾“å‡ºï¼Œä½†è¯¥æ–¹æ³•åªèƒ½åœ¨UNIXä¸‹è°ƒç”¨
+21. å½“è°ƒç”¨sys.exit()æ—¶ï¼Œå°±ä¼šå¼•å‘systemExit()å¼‚å¸¸
+22. sys.exitfunc()é»˜è®¤æ˜¯ä¸å¯ç”¨çš„ï¼Œä½†ä½ å¯ä»¥æ”¹å†™å®ƒä»¥æä¾›é¢å¤–çš„åŠŸèƒ½ã€‚å½“è°ƒç”¨äº†sys.exit()å¹¶åœ¨è§£é‡Šå™¨é€€å‡ºä¹‹å‰ï¼Œå°±ä¼šè°ƒç”¨è¿™ä¸ªå‡½æ•°äº†ï¼Œè¿™ä¸ªå‡½æ•°ä¸å¸¦ä»»ä½•å‚æ•°ï¼Œæ‰€ä»¥ä½ åˆ›å»ºçš„å‡½æ•°ä¹Ÿåº”è¯¥æ˜¯æ— å‚çš„
+23. os._exit(status)å‚æ•°ä¸Žå¹³å°æœ‰å…³ï¼Œè¯¥å‡½æ•°ä¸Žsys.exit()å’Œexitfunc()ä¸åŒï¼Œå®ƒæ ¹æœ¬ä¸æ‰§è¡Œä»»ä½•æ¸…ç†å°±ç«‹å³é€€å‡ºï¼Œè€Œä¸”çŠ¶æ€å‚æ•°æ˜¯å¿…é¡»å¾—
+24. os.kill()å‡½æ•°æ¨¡æ‹Ÿä¼ ç»Ÿçš„ unix å‡½æ•°æ¥å‘é€ä¿¡å·ç»™è¿›ç¨‹ã€‚kill()å‚æ•°æ˜¯è¿›ç¨‹æ ‡è¯†æ•°(PID)å’Œä½ æƒ³è¦å‘é€åˆ°è¿›ç¨‹çš„ä¿¡å·ã€‚å‘é€çš„å…¸åž‹ä¿¡å·ä¸º SIGINT, SIGQUIT,æˆ–æ›´å½»åº•åœ°ï¼ŒSIGKILL,æ¥ä½¿è¿›ç¨‹ç»ˆç»“ã€‚ 
+25. SocketServerçš„è¯·æ±‚å¤„ç†å™¨çš„é»˜è®¤è¡Œä¸ºæ˜¯æŽ¥å—è¿žæŽ¥ï¼Œå¾—åˆ°è¯·æ±‚ï¼Œç„¶åŽå°±å…³é—­è¿žæŽ¥ï¼Œè¿™ä½¿å¾—æˆ‘ä»¬ä¸èƒ½åœ¨ç¨‹åºçš„è¿è¡Œæ—¶ï¼Œä¸€ç›´ä¿æŒè¿žæŽ¥çŠ¶æ€ï¼Œè¦æ¯æ¬¡å‘é€æ•°æ®åˆ°æœåŠ¡å™¨çš„æ—¶å€™éƒ½è¦åˆ›å»ºä¸€ä¸ªæ–°çš„å¥—æŽ¥å­—
+26. åœ¨å‘ CGIè„šæœ¬è¿”å›žç»“æžœæ—¶ï¼Œé¡»å…ˆè¿”å›žä¸€ä¸ªé€‚å½“çš„ HTTPå¤´æ–‡ä»¶åŽæ‰ä¼šè¿”å›žç»“æžœ HTML é¡µé¢ã€‚ è¿›ä¸€æ­¥è¯´ï¼Œ ä¸ºäº†åŒºåˆ†è¿™äº›å¤´æ–‡ä»¶å’Œç»“æžœ HTML é¡µé¢ï¼Œ éœ€è¦åœ¨å¤´ä¸ŽHTMLé¡µé¢ä¹‹é—´å¤šæ’å…¥ä¸€ä¸ªæ¢è¡Œç¬¦ã€‚ä¾‹å¦‚ï¼š
     #+BEGIN_SRC
     import cgi
 
-    reshtml='''Content-Type:text/html\n            #ÕâÀï¶àÁËÒ»¸ö»»ÐÐ
+    reshtml='''Content-Type:text/html\n            #è¿™é‡Œå¤šäº†ä¸€ä¸ªæ¢è¡Œ
     <html>
     <head>
 	<title>Friends CGI Demo</title>
@@ -821,90 +886,90 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
     howmany=form['howmany'].value
     print reshtml %(name,howmany)
     #+END_SRC
-27. ¶ÁÈ¡ÃÜÂëÊ±£¬¿ÉÒÔÓÃgetpassÄ£¿éµÄgetpass()·½·¨À´»ñÈ¡
-28. __¿ªÍ·µÄ±äÁ¿»á±»pythonÖØÃüÃûÎª´øÓÐÀàÃûÇ°×ºµÄÃû³Æ¡£¸ÃÌØÐÔ±»ÓÃÀ´±ÜÃâ¼Ì³Ð´øÀ´µÄÃüÃû³åÍ»£¬µ«ÊÇÔÚÊµ¼ùÖÐ£¬´Ó²»Ê¹ÓÃ__¡£µ±±íÊ¾Ò»¸öÊôÐÔ·Ç¹«¿ªÊ±£¬¹ßÀýÊÇÓÃÒ»¸ö_Ç°×º¡£Õâ²»»áµ÷ÓÃÈÎºÎ¸Ä±àËã·¨£¬¶øÖ»ÊÇÖ¤Ã÷Õâ¸öÌØÐÔÊÇ¸ÃÀàµÄË½ÓÐÔªËØ
-29. Ê¹ÓÃÄÚ½¨º¯Êývars()¿ÉÒÔ·µ»Øµ±Ç°×÷ÓÃÓòµÄ×Öµä.
-* Êý¾Ý¿â
+27. è¯»å–å¯†ç æ—¶ï¼Œå¯ä»¥ç”¨getpassæ¨¡å—çš„getpass()æ–¹æ³•æ¥èŽ·å–
+28. __å¼€å¤´çš„å˜é‡ä¼šè¢«pythoné‡å‘½åä¸ºå¸¦æœ‰ç±»åå‰ç¼€çš„åç§°ã€‚è¯¥ç‰¹æ€§è¢«ç”¨æ¥é¿å…ç»§æ‰¿å¸¦æ¥çš„å‘½åå†²çªï¼Œä½†æ˜¯åœ¨å®žè·µä¸­ï¼Œä»Žä¸ä½¿ç”¨__ã€‚å½“è¡¨ç¤ºä¸€ä¸ªå±žæ€§éžå…¬å¼€æ—¶ï¼Œæƒ¯ä¾‹æ˜¯ç”¨ä¸€ä¸ª_å‰ç¼€ã€‚è¿™ä¸ä¼šè°ƒç”¨ä»»ä½•æ”¹ç¼–ç®—æ³•ï¼Œè€Œåªæ˜¯è¯æ˜Žè¿™ä¸ªç‰¹æ€§æ˜¯è¯¥ç±»çš„ç§æœ‰å…ƒç´ 
+29. ä½¿ç”¨å†…å»ºå‡½æ•°vars()å¯ä»¥è¿”å›žå½“å‰ä½œç”¨åŸŸçš„å­—å…¸.
+* æ•°æ®åº“
 ** Python DB-API
-    1. Ä£¿éÊôÐÔ
+    1. æ¨¡å—å±žæ€§
        #+BEGIN_EXAMPLE
-       DB-API Ä£¿éÊôÐÔ 
-       ÊôÐÔÃû          ÃèÊö 
-       apilevel        DB-API Ä£¿é¼æÈÝµÄ DB-API °æ±¾ºÅ 
-       threadsafety    Ïß³Ì°²È«¼¶±ð 
-       paramstyle      ¸ÃÄ£¿éÖ§³ÖµÄ SQL Óï¾ä²ÎÊý·ç¸ñ 
-       connect()       Á¬½Óº¯Êý 
+       DB-API æ¨¡å—å±žæ€§ 
+       å±žæ€§å          æè¿° 
+       apilevel        DB-API æ¨¡å—å…¼å®¹çš„ DB-API ç‰ˆæœ¬å· 
+       threadsafety    çº¿ç¨‹å®‰å…¨çº§åˆ« 
+       paramstyle      è¯¥æ¨¡å—æ”¯æŒçš„ SQL è¯­å¥å‚æ•°é£Žæ ¼ 
+       connect()       è¿žæŽ¥å‡½æ•° 
 
-       connect()   º¯Êý ÊôÐÔ 
-       ²ÎÊý            ÃèÊö 
+       connect()   å‡½æ•° å±žæ€§ 
+       å‚æ•°            æè¿° 
        user            Username  
        password        Password  
        host            Hostname 
        database        Database name 
        dsn             Data source name         
-       ×¢Òâ²»ÊÇËùÓÐµÄ½Ó¿Ú³ÌÐò¶¼ÊÇÑÏ¸ñ°´ÕÕ¹æ·¶ÊµÏÖµÄ. MySQLdb ¾ÍÊ¹ÓÃÁË db ²ÎÊý¶ø²»ÊÇ¹æ·¶ÍÆ¼öµÄ database ²ÎÊýÀ´±íÊ¾Òª·ÃÎÊµÄÊý¾Ý¿â.ÀýÈç£º
+       æ³¨æ„ä¸æ˜¯æ‰€æœ‰çš„æŽ¥å£ç¨‹åºéƒ½æ˜¯ä¸¥æ ¼æŒ‰ç…§è§„èŒƒå®žçŽ°çš„. MySQLdb å°±ä½¿ç”¨äº† db å‚æ•°è€Œä¸æ˜¯è§„èŒƒæŽ¨èçš„ database å‚æ•°æ¥è¡¨ç¤ºè¦è®¿é—®çš„æ•°æ®åº“.ä¾‹å¦‚ï¼š
        MySQLdb.connect(host='dbserv', db='inv', user='smith') 
-       Á¬½Ó¶ÔÏó·½·¨ 
+       è¿žæŽ¥å¯¹è±¡æ–¹æ³• 
        Method Name     Description 
-       close()         ¹Ø±ÕÊý¾Ý¿âÁ¬½Ó 
-       commit()        Ìá½»µ±Ç°ÊÂÎñ                  #ÔÚcommit()Ö®Ç°close()µÄ»°£¬»á×Ô¶¯rollback()
-       rollback()      È¡Ïûµ±Ç°ÊÂÎñ 
-       cursor()        Ê¹ÓÃÕâ¸öÁ¬½Ó´´½¨²¢·µ»ØÒ»¸öÓÎ±ê»òÀàÓÎ±êµÄ¶ÔÏó 
+       close()         å…³é—­æ•°æ®åº“è¿žæŽ¥ 
+       commit()        æäº¤å½“å‰äº‹åŠ¡                  #åœ¨commit()ä¹‹å‰close()çš„è¯ï¼Œä¼šè‡ªåŠ¨rollback()
+       rollback()      å–æ¶ˆå½“å‰äº‹åŠ¡ 
+       cursor()        ä½¿ç”¨è¿™ä¸ªè¿žæŽ¥åˆ›å»ºå¹¶è¿”å›žä¸€ä¸ªæ¸¸æ ‡æˆ–ç±»æ¸¸æ ‡çš„å¯¹è±¡ 
        errorhandler (cxn, cur,errcls, errval) 
 
-       ÓÎ±ê¶ÔÏóµÄÊôÐÔ 
-       ¶ÔÏóÊôÐÔ                ÃèÊö
-       arraysize       Ê¹ÓÃ fechmany()·½·¨Ò»´ÎÈ¡³ö¶àÉÙÌõ¼ÇÂ¼, Ä¬ÈÏÖµÎª 1 
-       connectionn     ´´½¨´ËÓÎ±ê¶ÔÏóµÄÁ¬½Ó(¿ÉÑ¡) 
-       description     ·µ»ØÓÎ±ê»î¶¯×´Ì¬(Ò»¸ö°üº¬Æß¸öÔªËØµÄÔª×é):  (name, type_code, display_size, internal_ size, precision, scale, null_ok); Ö»ÓÐ name ºÍ type_code ÊÇ±ØÐëÌá¹©µÄ.  
-       lastrowid       ·µ»Ø×îºó¸üÐÂÐÐµÄ id (¿ÉÑ¡), Èç¹ûÊý¾Ý¿â²»Ö§³ÖÐÐ id, Ä¬ÈÏ·µ»Ø None) 
-       rowcount        ×îºóÒ»´Î execute() ²Ù×÷·µ»Ø»òÓ°ÏìµÄÐÐÊý.  
-       callproc(func[,args])  µ÷ÓÃÒ»¸ö´æ´¢¹ý³Ì 
-       close()             ¹Ø±ÕÓÎ±ê¶ÔÏó 
-       execute(op[,args])    Ö´ÐÐÒ»¸öÊý¾Ý¿â²éÑ¯»òÃüÁî 
-       executemany(op,args)  ÀàËÆ execute() ºÍ map() µÄ½áºÏ, Îª¸ø¶¨µÄÃ¿Ò»¸ö²ÎÊý×¼±¸²¢Ö´ÐÐÒ»¸öÊý¾Ý¿â²éÑ¯/ÃüÁî
-       fetchone()      µÃµ½½á¹û¼¯µÄÏÂÒ»ÐÐ 
+       æ¸¸æ ‡å¯¹è±¡çš„å±žæ€§ 
+       å¯¹è±¡å±žæ€§                æè¿°
+       arraysize       ä½¿ç”¨ fechmany()æ–¹æ³•ä¸€æ¬¡å–å‡ºå¤šå°‘æ¡è®°å½•, é»˜è®¤å€¼ä¸º 1 
+       connectionn     åˆ›å»ºæ­¤æ¸¸æ ‡å¯¹è±¡çš„è¿žæŽ¥(å¯é€‰) 
+       description     è¿”å›žæ¸¸æ ‡æ´»åŠ¨çŠ¶æ€(ä¸€ä¸ªåŒ…å«ä¸ƒä¸ªå…ƒç´ çš„å…ƒç»„):  (name, type_code, display_size, internal_ size, precision, scale, null_ok); åªæœ‰ name å’Œ type_code æ˜¯å¿…é¡»æä¾›çš„.  
+       lastrowid       è¿”å›žæœ€åŽæ›´æ–°è¡Œçš„ id (å¯é€‰), å¦‚æžœæ•°æ®åº“ä¸æ”¯æŒè¡Œ id, é»˜è®¤è¿”å›ž None) 
+       rowcount        æœ€åŽä¸€æ¬¡ execute() æ“ä½œè¿”å›žæˆ–å½±å“çš„è¡Œæ•°.  
+       callproc(func[,args])  è°ƒç”¨ä¸€ä¸ªå­˜å‚¨è¿‡ç¨‹ 
+       close()             å…³é—­æ¸¸æ ‡å¯¹è±¡ 
+       execute(op[,args])    æ‰§è¡Œä¸€ä¸ªæ•°æ®åº“æŸ¥è¯¢æˆ–å‘½ä»¤ 
+       executemany(op,args)  ç±»ä¼¼ execute() å’Œ map() çš„ç»“åˆ, ä¸ºç»™å®šçš„æ¯ä¸€ä¸ªå‚æ•°å‡†å¤‡å¹¶æ‰§è¡Œä¸€ä¸ªæ•°æ®åº“æŸ¥è¯¢/å‘½ä»¤
+       fetchone()      å¾—åˆ°ç»“æžœé›†çš„ä¸‹ä¸€è¡Œ 
        fetchmany([size=cursor. 
-       arraysize])      µÃµ½½á¹û¼¯µÄÏÂ¼¸ÐÐ (¼¸ = size) 
-       fetchall()      ·µ»Ø½á¹û¼¯ÖÐÊ£ÏÂµÄËùÓÐÐÐ 
-       __iter__()      ´´½¨Ò»¸öµü´ú¶ÔÏó (¿ÉÑ¡; ²ÎÔÄ next()) 
-       messages        ÓÎ±êÖ´ÐÐºóÊý¾Ý¿â·µ»ØµÄÐÅÏ¢ÁÐ±í (Ôª×é¼¯ºÏ) (¿ÉÑ¡) 
-       next()      Ê¹ÓÃµü´ú¶ÔÏóµÃµ½½á¹û¼¯µÄÏÂÒ»ÐÐ(¿ÉÑ¡; ÀàËÆ fetchone(), ²ÎÔÄ __iter__()) 
-       nextset()       ÒÆµ½ÏÂÒ»¸ö½á¹û¼¯ (Èç¹ûÖ§³ÖµÄ»°) 
-       rownumber       µ±Ç°½á¹û¼¯ÖÐÓÎ±êµÄË÷Òý (ÒÔÐÐÎªµ¥Î», ´Ó 0 ¿ªÊ¼) (¿ÉÑ¡) 
-       setinput- sizes(sizes) ÉèÖÃÊäÈë×î´óÖµ (±ØÐëÓÐ, µ«¾ßÌåÊµÏÖÊÇ¿ÉÑ¡µÄ) 
-       setoutput- size(size[,col]) ÉèÖÃ´óÁÐµÄ»º³åÇø´óÐ´(±ØÐëÓÐ, µ«¾ßÌåÊµÏÖÊÇ¿ÉÑ¡µÄ) 
+       arraysize])      å¾—åˆ°ç»“æžœé›†çš„ä¸‹å‡ è¡Œ (å‡  = size) 
+       fetchall()      è¿”å›žç»“æžœé›†ä¸­å‰©ä¸‹çš„æ‰€æœ‰è¡Œ 
+       __iter__()      åˆ›å»ºä¸€ä¸ªè¿­ä»£å¯¹è±¡ (å¯é€‰; å‚é˜… next()) 
+       messages        æ¸¸æ ‡æ‰§è¡ŒåŽæ•°æ®åº“è¿”å›žçš„ä¿¡æ¯åˆ—è¡¨ (å…ƒç»„é›†åˆ) (å¯é€‰) 
+       next()      ä½¿ç”¨è¿­ä»£å¯¹è±¡å¾—åˆ°ç»“æžœé›†çš„ä¸‹ä¸€è¡Œ(å¯é€‰; ç±»ä¼¼ fetchone(), å‚é˜… __iter__()) 
+       nextset()       ç§»åˆ°ä¸‹ä¸€ä¸ªç»“æžœé›† (å¦‚æžœæ”¯æŒçš„è¯) 
+       rownumber       å½“å‰ç»“æžœé›†ä¸­æ¸¸æ ‡çš„ç´¢å¼• (ä»¥è¡Œä¸ºå•ä½, ä»Ž 0 å¼€å§‹) (å¯é€‰) 
+       setinput- sizes(sizes) è®¾ç½®è¾“å…¥æœ€å¤§å€¼ (å¿…é¡»æœ‰, ä½†å…·ä½“å®žçŽ°æ˜¯å¯é€‰çš„) 
+       setoutput- size(size[,col]) è®¾ç½®å¤§åˆ—çš„ç¼“å†²åŒºå¤§å†™(å¿…é¡»æœ‰, ä½†å…·ä½“å®žçŽ°æ˜¯å¯é€‰çš„) 
 
-       Òì³£Àà 
-       Òì³£                ÃèÊö 
-       Warning            ¾¯¸æÒì³£»ùÀà 
-       Error              ´íÎóÒì³£»ùÀà 
-       InterfaceError     Êý¾Ý¿â½Ó¿Ú´íÎó 
-       DatabaseError      Êý¾Ý¿â´íÎó 
-       DataError           ÀíÊý¾ÝÊ±³ö´í 
-       OperationalError    Êý¾Ý¿âÖ´ÐÐÃüÁîÊ±³ö´í 
-       IntegrityError      Êý¾ÝÍêÕûÐÔ´íÎó 
-       InternalError      Êý¾Ý¿âÄÚ²¿³ö´í 
-       ProgrammingError    SQL Ö´ÐÐÊ§°Ü 
-       NotSupportedError   ÊÔÍ¼Ö´ÐÐÊý¾Ý¿â²»Ö§³ÖµÄÌØÐÔ
+       å¼‚å¸¸ç±» 
+       å¼‚å¸¸                æè¿° 
+       Warning            è­¦å‘Šå¼‚å¸¸åŸºç±» 
+       Error              é”™è¯¯å¼‚å¸¸åŸºç±» 
+       InterfaceError     æ•°æ®åº“æŽ¥å£é”™è¯¯ 
+       DatabaseError      æ•°æ®åº“é”™è¯¯ 
+       DataError           ç†æ•°æ®æ—¶å‡ºé”™ 
+       OperationalError    æ•°æ®åº“æ‰§è¡Œå‘½ä»¤æ—¶å‡ºé”™ 
+       IntegrityError      æ•°æ®å®Œæ•´æ€§é”™è¯¯ 
+       InternalError      æ•°æ®åº“å†…éƒ¨å‡ºé”™ 
+       ProgrammingError    SQL æ‰§è¡Œå¤±è´¥ 
+       NotSupportedError   è¯•å›¾æ‰§è¡Œæ•°æ®åº“ä¸æ”¯æŒçš„ç‰¹æ€§
 
-       ÀàÐÍ¶ÔÏóºÍ¹¹ÔìÆ÷                #£¬¶ÔÓÚPython DB-APIµÄ¿ª·¢ÕßÀ´Ëµ£¬Äã´«µÝ¸øÊý¾Ý¿âµÄ²ÎÊýÊÇ×Ö·û´®ÐÎÊ½µÄ£¬µ«Êý¾Ý¿âÐèÒª½«Ëü×ª»»Îª¶àÖÖ²»Í¬µÄÐÎÊ½£¬¸Ã·½Ê½ÓÃÀ´½«PythonµÄ×Ö·û´®²ÎÊý×ª»»ÎªSQLÀàÐÍµÄ²ÎÊý
-       ÀàÐÍ¶ÔÏó        ÃèÊö 
-       Date(yr,mo,dy)      ÈÕÆÚÖµ¶ÔÏó 
-       Time(hr,min,sec)   Ê±¼äÖµ¶ÔÏó 
-       Timestamp(yr,mo,dy,hr, min,sec)      Ê±¼ä´Á¶ÔÏó 
-       DateFromTicks(ticks) Í¨¹ý×Ô 1970-01-01 00:00:01 utc ÒÔÀ´µÄ ticks ÃëÊýµÃµ½ÈÕÆÚ 
-       TimeFromTicks(ticks) Í¨¹ý×Ô 1970-01-01 00:00:01 utc ÒÔÀ´µÄ ticks ÃëÊýµÃµ½Ê±¼äÖµ¶ÔÏó 
-       TimestampFromTicks(ticks) Í¨¹ý×Ô 1970-01-01 00:00:01 utc ÒÔÀ´µÄ ticks ÃëÊýµÃµ½Ê±¼ä´Á¶ÔÏó 
-       Binary(string)  ¶ÔÓ¦¶þ½øÖÆ³¤×Ö·û´®ÖµµÄ¶ÔÏó 
-       STRING        ÃèÊö×Ö·û´®ÁÐµÄ¶ÔÏó, ±ÈÈç VARCHAR 
-       BINARY        ÃèÊö¶þ½øÖÆ³¤ÁÐµÄ¶ÔÏó ±ÈÈç RAW, BLOB 
-       NUMBER        ÃèÊöÊý×ÖÁÐµÄ¶ÔÏó 
-       DATETIME      ÃèÊöÈÕÆÚÊ±¼äÁÐµÄ¶ÔÏó 
-       ROWID          ÃèÊö ¡°row ID¡± ÁÐµÄ¶ÔÏó
+       ç±»åž‹å¯¹è±¡å’Œæž„é€ å™¨                #ï¼Œå¯¹äºŽPython DB-APIçš„å¼€å‘è€…æ¥è¯´ï¼Œä½ ä¼ é€’ç»™æ•°æ®åº“çš„å‚æ•°æ˜¯å­—ç¬¦ä¸²å½¢å¼çš„ï¼Œä½†æ•°æ®åº“éœ€è¦å°†å®ƒè½¬æ¢ä¸ºå¤šç§ä¸åŒçš„å½¢å¼ï¼Œè¯¥æ–¹å¼ç”¨æ¥å°†Pythonçš„å­—ç¬¦ä¸²å‚æ•°è½¬æ¢ä¸ºSQLç±»åž‹çš„å‚æ•°
+       ç±»åž‹å¯¹è±¡        æè¿° 
+       Date(yr,mo,dy)      æ—¥æœŸå€¼å¯¹è±¡ 
+       Time(hr,min,sec)   æ—¶é—´å€¼å¯¹è±¡ 
+       Timestamp(yr,mo,dy,hr, min,sec)      æ—¶é—´æˆ³å¯¹è±¡ 
+       DateFromTicks(ticks) é€šè¿‡è‡ª 1970-01-01 00:00:01 utc ä»¥æ¥çš„ ticks ç§’æ•°å¾—åˆ°æ—¥æœŸ 
+       TimeFromTicks(ticks) é€šè¿‡è‡ª 1970-01-01 00:00:01 utc ä»¥æ¥çš„ ticks ç§’æ•°å¾—åˆ°æ—¶é—´å€¼å¯¹è±¡ 
+       TimestampFromTicks(ticks) é€šè¿‡è‡ª 1970-01-01 00:00:01 utc ä»¥æ¥çš„ ticks ç§’æ•°å¾—åˆ°æ—¶é—´æˆ³å¯¹è±¡ 
+       Binary(string)  å¯¹åº”äºŒè¿›åˆ¶é•¿å­—ç¬¦ä¸²å€¼çš„å¯¹è±¡ 
+       STRING        æè¿°å­—ç¬¦ä¸²åˆ—çš„å¯¹è±¡, æ¯”å¦‚ VARCHAR 
+       BINARY        æè¿°äºŒè¿›åˆ¶é•¿åˆ—çš„å¯¹è±¡ æ¯”å¦‚ RAW, BLOB 
+       NUMBER        æè¿°æ•°å­—åˆ—çš„å¯¹è±¡ 
+       DATETIME      æè¿°æ—¥æœŸæ—¶é—´åˆ—çš„å¯¹è±¡ 
+       ROWID          æè¿° â€œrow IDâ€ åˆ—çš„å¯¹è±¡
        #+END_EXAMPLE
-    2. Ä³Ð©½Ó¿Ú³ÌÐòµÄÁ¬½Ó¶ÔÏóÓµÓÐquery()·½·¨¿ÉÒÔÖ´ÐÐSQL²éÑ¯£¬µ«²»½¨ÒéÊ¹ÓÃÕâ¸ö·½·¨£¬»òÕßÊÂÏÈ¼ì²é¸Ã·½·¨ÔÚµ±Ç°½Ó¿Ú³ÌÐòµ±ÖÐÊÇ·ñ¿ÉÓÃ¡£ÒòÎªÕâ²»¹æ·¶£¬Õý³£À´ËµÓ¦¸ÃÊ¹ÓÃÓÎ±ê¶ÔÏócursorsµÄexecute()·½·¨
-    3. sqlite±»Python¼¯³É½øÁË±ê×¼¿â£¬import sqlite3
+    2. æŸäº›æŽ¥å£ç¨‹åºçš„è¿žæŽ¥å¯¹è±¡æ‹¥æœ‰query()æ–¹æ³•å¯ä»¥æ‰§è¡ŒSQLæŸ¥è¯¢ï¼Œä½†ä¸å»ºè®®ä½¿ç”¨è¿™ä¸ªæ–¹æ³•ï¼Œæˆ–è€…äº‹å…ˆæ£€æŸ¥è¯¥æ–¹æ³•åœ¨å½“å‰æŽ¥å£ç¨‹åºå½“ä¸­æ˜¯å¦å¯ç”¨ã€‚å› ä¸ºè¿™ä¸è§„èŒƒï¼Œæ­£å¸¸æ¥è¯´åº”è¯¥ä½¿ç”¨æ¸¸æ ‡å¯¹è±¡cursorsçš„execute()æ–¹æ³•
+    3. sqliteè¢«Pythoné›†æˆè¿›äº†æ ‡å‡†åº“ï¼Œimport sqlite3
        #+BEGIN_SRC
        >>> import sqlite3 
        >>> cxn = sqlite3.connect('sqlite_test/test') 
@@ -925,186 +990,186 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
        >>> cxn.commit() 
        >>> cxn.close() 
        #+END_SRC
-** TODO ¶ÔÏó-¹ØÏµ¹ÜÀíÆ÷(ORMs)
-* ¸ß¼¶Ó¦ÓÃ
-** Æ«º¯ÊýÓ¦ÓÃ
-1. currying µÄ¸ÅÄî½«º¯ÊýÊ½±à³ÌµÄ¸ÅÄîºÍÄ¬ÈÏ²ÎÊýÒÔ¼°¿É±ä²ÎÊý½áºÏÔÚÒ»Æð¡£Ò»¸ö´ø n ¸ö²ÎÊý£¬ curried µÄº¯Êý¹Ì»¯µÚÒ»¸ö²ÎÊýÎª¹Ì¶¨²ÎÊý£¬²¢·µ»ØÁíÒ»¸ö´ø n-1 ¸ö²ÎÊýº¯Êý¶ÔÏó£¬·Ö±ðÀàËÆÓÚ LISP µÄÔ­Ê¼º¯Êý car ºÍ cdr µÄÐÐÎª¡£Currying ÄÜ·º»¯³ÉÎªÆ«º¯ÊýÓ¦ÓÃ£¨PFA£©£¬ ÕâÖÖº¯Êý½«ÈÎÒâÊýÁ¿£¨Ë³ Ðò£©µÄ²ÎÊýµÄº¯Êý×ª»¯³ÉÁíÒ»¸ö´øÊ£Óà²ÎÊýµÄº¯Êý¶ÔÏó¡£ 
-2. Äã¿ÉÒÔÍ¨¹ýÊ¹ÓÃ functional Ä£¿éÖÐµÄ partial£¨£©º¯ÊýÀ´´´½¨ PFA:
-3. ÀýÈç
+** TODO å¯¹è±¡-å…³ç³»ç®¡ç†å™¨(ORMs)
+* é«˜çº§åº”ç”¨
+** åå‡½æ•°åº”ç”¨
+1. currying çš„æ¦‚å¿µå°†å‡½æ•°å¼ç¼–ç¨‹çš„æ¦‚å¿µå’Œé»˜è®¤å‚æ•°ä»¥åŠå¯å˜å‚æ•°ç»“åˆåœ¨ä¸€èµ·ã€‚ä¸€ä¸ªå¸¦ n ä¸ªå‚æ•°ï¼Œ curried çš„å‡½æ•°å›ºåŒ–ç¬¬ä¸€ä¸ªå‚æ•°ä¸ºå›ºå®šå‚æ•°ï¼Œå¹¶è¿”å›žå¦ä¸€ä¸ªå¸¦ n-1 ä¸ªå‚æ•°å‡½æ•°å¯¹è±¡ï¼Œåˆ†åˆ«ç±»ä¼¼äºŽ LISP çš„åŽŸå§‹å‡½æ•° car å’Œ cdr çš„è¡Œä¸ºã€‚Currying èƒ½æ³›åŒ–æˆä¸ºåå‡½æ•°åº”ç”¨ï¼ˆPFAï¼‰ï¼Œ è¿™ç§å‡½æ•°å°†ä»»æ„æ•°é‡ï¼ˆé¡º åºï¼‰çš„å‚æ•°çš„å‡½æ•°è½¬åŒ–æˆå¦ä¸€ä¸ªå¸¦å‰©ä½™å‚æ•°çš„å‡½æ•°å¯¹è±¡ã€‚ 
+2. ä½ å¯ä»¥é€šè¿‡ä½¿ç”¨ functional æ¨¡å—ä¸­çš„ partialï¼ˆï¼‰å‡½æ•°æ¥åˆ›å»º PFA:
+3. ä¾‹å¦‚
    #+BEGIN_SRC Python
    from functools import partial
    def add(a,b):return a+b
    add100=partial(add,100)
    add100(1)            #=101
    baseTwo=partial(int,base=2)
-   baseTwo('10010')       #=18   Òª×¢ÒâµÄÊÇÕâÀïÐèÒª¹Ø¼ü×Ö²ÎÊý base 
+   baseTwo('10010')       #=18   è¦æ³¨æ„çš„æ˜¯è¿™é‡Œéœ€è¦å…³é”®å­—å‚æ•° base 
                           #baseTwo=int(x,base=2)
    #+END_SRC
-** ÌØÊâµÄÀàÊôÐÔ
-   #+CAPTION:ÌØÊâÀàÊôÐÔ
-   | C.__name__   | ÀàCµÄÃû×Ö£¨×Ö·û´®£©     |
+** ç‰¹æ®Šçš„ç±»å±žæ€§
+   #+CAPTION:ç‰¹æ®Šç±»å±žæ€§
+   | C.__name__   | ç±»Cçš„åå­—ï¼ˆå­—ç¬¦ä¸²ï¼‰     |
    |--------------+-------------------------|
-   | C.__doc__    | ÀàCµÄÎÄµµ×Ö·û´®         |
+   | C.__doc__    | ç±»Cçš„æ–‡æ¡£å­—ç¬¦ä¸²         |
    |--------------+-------------------------|
-   | C.__dict__   | ÀàCµÄËùÓÐ¸¸Àà¹¹³ÉµÄÔª×é |
+   | C.__dict__   | ç±»Cçš„æ‰€æœ‰çˆ¶ç±»æž„æˆçš„å…ƒç»„ |
    |--------------+-------------------------|
-   | C.__module__ | ÀàC¶¨ÒåËùÔÚµÄÄ£¿é       |
+   | C.__module__ | ç±»Cå®šä¹‰æ‰€åœ¨çš„æ¨¡å—       |
    |--------------+-------------------------|
-   | C.__class__  | ÊµÀýC¶ÔÓ¦µÄÀà           |
+   | C.__class__  | å®žä¾‹Cå¯¹åº”çš„ç±»           |
    |--------------+-------------------------|
-** __new__¹¹ÔìÆ÷·½·¨
-   ÓÉÓÚ__init__·½·¨ÊÇÔÚ¶ÔÏó¹¹ÔìÍê³Éºó£¬ÔÙµ÷ÓÃ__init__·½·¨À´¶Ô¶ÔÏó½øÐÐ³õÊ¼»¯µÄ£¬Õâ¾ÍÊ¹µÃ¹¹Ôì³öÀ´µÄ¶ÔÏó½øÐÐÁË¸Ä±ä¡£
-   ÄÇÃ´ÈçºÎ¹¹Ôì²»¿É±ä¶ÔÏóÄØ£¿Õâ¾ÍÐèÒª__new__·½·¨¡£
-   pythonÔÚÊµÀý»¯²»¿É±äÀàÐÍÊ±»áµ÷ÓÃÀàµÄ__new__·½·¨£¬ÕâÊÇÒ»¸ö¾²Ì¬·½·¨£¬²¢ÇÒ´«ÈëµÄ²ÎÊýÊÇÔÚÀàÊµÀý»¯²Ù×÷Ê±Éú³ÉµÄ¡£__new__»áµ÷ÓÃ¸¸ÀàµÄ__new__À´´´½¨¶ÔÏó
-   __new__±ØÐë·µ»ØÒ»¸öºÏ·¨µÄÊµÀý£¬²¢ÇÒ__new__ºÍ__init__ÔÚÀà´´½¨Ê±£¬¶¼´«ÈëÁËÏàÍ¨µÄ²ÎÊý
-** ÌØÊâµÄÊµÀýÊôÐÔ
-   #+CAPTION:ÌØÊâµÄÊµÀýÊôÐÔ
-   | I.__calss__ | ÊµÀý»¯IµÄÀà |
+** __new__æž„é€ å™¨æ–¹æ³•
+   ç”±äºŽ__init__æ–¹æ³•æ˜¯åœ¨å¯¹è±¡æž„é€ å®ŒæˆåŽï¼Œå†è°ƒç”¨__init__æ–¹æ³•æ¥å¯¹å¯¹è±¡è¿›è¡Œåˆå§‹åŒ–çš„ï¼Œè¿™å°±ä½¿å¾—æž„é€ å‡ºæ¥çš„å¯¹è±¡è¿›è¡Œäº†æ”¹å˜ã€‚
+   é‚£ä¹ˆå¦‚ä½•æž„é€ ä¸å¯å˜å¯¹è±¡å‘¢ï¼Ÿè¿™å°±éœ€è¦__new__æ–¹æ³•ã€‚
+   pythonåœ¨å®žä¾‹åŒ–ä¸å¯å˜ç±»åž‹æ—¶ä¼šè°ƒç”¨ç±»çš„__new__æ–¹æ³•ï¼Œè¿™æ˜¯ä¸€ä¸ªé™æ€æ–¹æ³•ï¼Œå¹¶ä¸”ä¼ å…¥çš„å‚æ•°æ˜¯åœ¨ç±»å®žä¾‹åŒ–æ“ä½œæ—¶ç”Ÿæˆçš„ã€‚__new__ä¼šè°ƒç”¨çˆ¶ç±»çš„__new__æ¥åˆ›å»ºå¯¹è±¡
+   __new__å¿…é¡»è¿”å›žä¸€ä¸ªåˆæ³•çš„å®žä¾‹ï¼Œå¹¶ä¸”__new__å’Œ__init__åœ¨ç±»åˆ›å»ºæ—¶ï¼Œéƒ½ä¼ å…¥äº†ç›¸é€šçš„å‚æ•°
+** ç‰¹æ®Šçš„å®žä¾‹å±žæ€§
+   #+CAPTION:ç‰¹æ®Šçš„å®žä¾‹å±žæ€§
+   | I.__calss__ | å®žä¾‹åŒ–Içš„ç±» |
    |-------------+-------------|
-   | I.__dict__  | IµÄÊôÐÔ     |
+   | I.__dict__  | Içš„å±žæ€§     |
    |-------------+-------------|
    |             |             |
    |-------------+-------------|
-** super()ÄÚ½¨·½·¨
-   1. super()ÄÚ½¨º¯Êý¿ÉÒÔ×Ô¶¯²¶»ñ¶ÔÓ¦µÄ¸¸Àà
-   2. super()²»µ«ÄÜÕÒµ½»ùÀà·½·¨£¬¶øÇÒ»¹ÎªÎÒÃÇ´«½øself£¬ÕâÑùÎÒÃÇ¾Í²»ÓÃÏÔÊ¾Ð´¸¸ÀàµÄÃû³ÆÁË
-   3. super()Óï·¨Îª£ºsuper(type[,obj]).Èç¹ûÄãÏ£Íû¸¸Àà±»°ó¶¨£¬¿ÉÒÔ´«Èëobj²ÎÊý£¬·ñÔò¸¸Àà²»»á±»°ó¶¨£¬obj²ÎÊýÒ²¿ÉÒÔÊÇÒ»¸öÀàÐÍ£¬µ«ËüÓ¦µ±ÊÇtypeµÄÒ»¸ö×ÓÀà
+** super()å†…å»ºæ–¹æ³•
+   1. super()å†…å»ºå‡½æ•°å¯ä»¥è‡ªåŠ¨æ•èŽ·å¯¹åº”çš„çˆ¶ç±»
+   2. super()ä¸ä½†èƒ½æ‰¾åˆ°åŸºç±»æ–¹æ³•ï¼Œè€Œä¸”è¿˜ä¸ºæˆ‘ä»¬ä¼ è¿›selfï¼Œè¿™æ ·æˆ‘ä»¬å°±ä¸ç”¨æ˜¾ç¤ºå†™çˆ¶ç±»çš„åç§°äº†
+   3. super()è¯­æ³•ä¸ºï¼šsuper(type[,obj]).å¦‚æžœä½ å¸Œæœ›çˆ¶ç±»è¢«ç»‘å®šï¼Œå¯ä»¥ä¼ å…¥objå‚æ•°ï¼Œå¦åˆ™çˆ¶ç±»ä¸ä¼šè¢«ç»‘å®šï¼Œobjå‚æ•°ä¹Ÿå¯ä»¥æ˜¯ä¸€ä¸ªç±»åž‹ï¼Œä½†å®ƒåº”å½“æ˜¯typeçš„ä¸€ä¸ªå­ç±»
    #+BEGIN_SRC Python
    class C(P):
        def foo(self):
            super(C,self).foo()
 	   print 'Hi, I am C-foo()'
    #+END_SRC
-   ÊÂÊµÉÏ£¬super()ÊÇÒ»¸ö¹¤³§º¯Êý£¬Ëü´´ÔìÁËÒ»¸ösuper object£¬ÎªÒ»¸ö¸ø¶¨µÄÀàÊ¹ÓÃ__mro__È¥²éÕÒÏàÓ¦µÄ¸¸Àà¡£ºÜÃ÷ÏÔ£¬Ëü´Óµ±Ç°ËùÕÒµ½µÄÀà¿ªÊ¼ËÑË÷MRO
-** __new__·½·¨
-   1. ËùÓÐµÄ__new__·½·¨¶¼ÊÇÀà·½·¨£¬ÎÒÃÇÒªÏÔÊ¾´«ÈëÀà×óÓÒµÚÒ»¸ö²ÎÊý
-** dir()·½·¨
-** ÀàµÄÌØÊâ·½·¨
-   #+CAPTION:ÀàµÄÌØÊâ·½·¨
-   | ÌØÊâ·½·¨                       | ÃèÊö                                             |
+   äº‹å®žä¸Šï¼Œsuper()æ˜¯ä¸€ä¸ªå·¥åŽ‚å‡½æ•°ï¼Œå®ƒåˆ›é€ äº†ä¸€ä¸ªsuper objectï¼Œä¸ºä¸€ä¸ªç»™å®šçš„ç±»ä½¿ç”¨__mro__åŽ»æŸ¥æ‰¾ç›¸åº”çš„çˆ¶ç±»ã€‚å¾ˆæ˜Žæ˜¾ï¼Œå®ƒä»Žå½“å‰æ‰€æ‰¾åˆ°çš„ç±»å¼€å§‹æœç´¢MRO
+** __new__æ–¹æ³•
+   1. æ‰€æœ‰çš„__new__æ–¹æ³•éƒ½æ˜¯ç±»æ–¹æ³•ï¼Œæˆ‘ä»¬è¦æ˜¾ç¤ºä¼ å…¥ç±»å·¦å³ç¬¬ä¸€ä¸ªå‚æ•°
+** dir()æ–¹æ³•
+** ç±»çš„ç‰¹æ®Šæ–¹æ³•
+   #+CAPTION:ç±»çš„ç‰¹æ®Šæ–¹æ³•
+   | ç‰¹æ®Šæ–¹æ³•                       | æè¿°                                             |
    |--------------------------------+--------------------------------------------------|
-   | C.__init__                     | ¹¹ÔìÆ÷                                           |
+   | C.__init__                     | æž„é€ å™¨                                           |
    |--------------------------------+--------------------------------------------------|
-   | C.__new__                      | ¹¹ÔìÆ÷£¬Í¨³£ÓÃÔÚÉèÖÃ²»±äÊý¾ÝÀàÐÍµÄ×ÓÀà           |
+   | C.__new__                      | æž„é€ å™¨ï¼Œé€šå¸¸ç”¨åœ¨è®¾ç½®ä¸å˜æ•°æ®ç±»åž‹çš„å­ç±»           |
    |--------------------------------+--------------------------------------------------|
-   | C.__del__(self)                | ½â¹¹Æ÷                                           |
+   | C.__del__(self)                | è§£æž„å™¨                                           |
    |--------------------------------+--------------------------------------------------|
-   | C.__str__(self)                | ¿É´òÓ¡µÄ×Ö·ûÊä³ö£»ÄÚ½¨str()ÒÔ¼°printÓï¾ä         |
+   | C.__str__(self)                | å¯æ‰“å°çš„å­—ç¬¦è¾“å‡ºï¼›å†…å»ºstr()ä»¥åŠprintè¯­å¥         |
    |--------------------------------+--------------------------------------------------|
-   | C.__repr__(self)               | ÔËÐÐÊ±µÄ×Ö·û´®Êä³ö£¬ÄÚ½¨repr()ºÍ``²Ù×÷·û         |
+   | C.__repr__(self)               | è¿è¡Œæ—¶çš„å­—ç¬¦ä¸²è¾“å‡ºï¼Œå†…å»ºrepr()å’Œ``æ“ä½œç¬¦         |
    |--------------------------------+--------------------------------------------------|
-   | C.__unicode__(self)            | Unicode×Ö·û´®Êä³ö£¬ÄÚ½¨unicode()                 |
+   | C.__unicode__(self)            | Unicodeå­—ç¬¦ä¸²è¾“å‡ºï¼Œå†…å»ºunicode()                 |
    |--------------------------------+--------------------------------------------------|
-   | C.__call__(self,*args)         | ±íÊ¾¿Éµ÷ÓÃµÄÊµÀý£¬ÈÎºÎÔÚÊµÀýµ÷ÓÃÖÐ¸ø³öµÄ²ÎÊý¶¼»á±»´«Èëµ½__call__ÖÐ    |
+   | C.__call__(self,*args)         | è¡¨ç¤ºå¯è°ƒç”¨çš„å®žä¾‹ï¼Œä»»ä½•åœ¨å®žä¾‹è°ƒç”¨ä¸­ç»™å‡ºçš„å‚æ•°éƒ½ä¼šè¢«ä¼ å…¥åˆ°__call__ä¸­    |
    |--------------------------------+--------------------------------------------------|
-   | C.__nonzero__(self)            | Îªobject¶¨ÒåFalseÖµ£¬ÄÚ½¨bool()                  |
+   | C.__nonzero__(self)            | ä¸ºobjectå®šä¹‰Falseå€¼ï¼Œå†…å»ºbool()                  |
    |--------------------------------+--------------------------------------------------|
-   | C.__len__*self)                | ³¤¶È£¨¿ÉÓÃÓÚÀà£©£»ÄÚ½¨len()                      |
+   | C.__len__*self)                | é•¿åº¦ï¼ˆå¯ç”¨äºŽç±»ï¼‰ï¼›å†…å»ºlen()                      |
    |--------------------------------+--------------------------------------------------|
-   | ¶ÔÏóÖµ±È½Ï                     |                                                  |
+   | å¯¹è±¡å€¼æ¯”è¾ƒ                     |                                                  |
    |--------------------------------+--------------------------------------------------|
-   | C.__cmp__(self,obj)            | ¶ÔÏó±È½Ï£»ÄÚ½¨cmp()                              |
+   | C.__cmp__(self,obj)            | å¯¹è±¡æ¯”è¾ƒï¼›å†…å»ºcmp()                              |
    |--------------------------------+--------------------------------------------------|
-   | C.__lt__(self,obj)             | Ð¡ÓÚ£¬Ð¡ÓÚµÈÓÚ£»¶ÔÓ¦</<=²Ù×÷·û                   |
+   | C.__lt__(self,obj)             | å°äºŽï¼Œå°äºŽç­‰äºŽï¼›å¯¹åº”</<=æ“ä½œç¬¦                   |
    |--------------------------------+--------------------------------------------------|
-   | C.__gt__(self,obj)             | ´óÓÚ£¬´óÓÚµÈÓÚ£»¶ÔÓ¦>/>=²Ù×÷·û                   |
+   | C.__gt__(self,obj)             | å¤§äºŽï¼Œå¤§äºŽç­‰äºŽï¼›å¯¹åº”>/>=æ“ä½œç¬¦                   |
    |--------------------------------+--------------------------------------------------|
-   | C¡£__eq__(self,obj)            | µÈÓÚ£¬²»µÈÓÚ£»¶ÔÓ¦==£¬£¡=ÒÔ¼°<>²Ù×÷·û            |
+   | Cã€‚__eq__(self,obj)            | ç­‰äºŽï¼Œä¸ç­‰äºŽï¼›å¯¹åº”==ï¼Œï¼=ä»¥åŠ<>æ“ä½œç¬¦            |
    |--------------------------------+--------------------------------------------------|
-   | ÊôÐÔ                           |                                                  |
+   | å±žæ€§                           |                                                  |
    |--------------------------------+--------------------------------------------------|
-   | C.__getattr__(self, attr)      | »ñÈ¡ÊôÐÔ£»ÄÚ½¨ getattr()£»½öµ±ÊôÐÔÃ»ÓÐÕÒµ½Ê±µ÷ÓÃ |
+   | C.__getattr__(self, attr)      | èŽ·å–å±žæ€§ï¼›å†…å»º getattr()ï¼›ä»…å½“å±žæ€§æ²¡æœ‰æ‰¾åˆ°æ—¶è°ƒç”¨ |
    |--------------------------------+--------------------------------------------------|
-   | C.__setattr__(self, attr, val) | ÉèÖÃÊôÐÔ                                         |
+   | C.__setattr__(self, attr, val) | è®¾ç½®å±žæ€§                                         |
    |--------------------------------+--------------------------------------------------|
-   | C.__delattr__(self, attr)      | É¾³ýÊôÐÔ                                         |
+   | C.__delattr__(self, attr)      | åˆ é™¤å±žæ€§                                         |
    |--------------------------------+--------------------------------------------------|
-   | C.__getattribute__(self, attr) | »ñÈ¡ÊôÐÔ£»ÄÚ½¨ getattr()£»×ÜÊÇ±»µ÷ÓÃ             |
+   | C.__getattribute__(self, attr) | èŽ·å–å±žæ€§ï¼›å†…å»º getattr()ï¼›æ€»æ˜¯è¢«è°ƒç”¨             |
    |--------------------------------+--------------------------------------------------|
-   | C.__get__(self, attr)          | £¨ÃèÊö·û£©»ñÈ¡ÊôÐÔ                               |
+   | C.__get__(self, attr)          | ï¼ˆæè¿°ç¬¦ï¼‰èŽ·å–å±žæ€§                               |
    |--------------------------------+--------------------------------------------------|
-   | C.__set__(self, attr, val)     | £¨ÃèÊö·û£©ÉèÖÃÊôÐÔ                               |
+   | C.__set__(self, attr, val)     | ï¼ˆæè¿°ç¬¦ï¼‰è®¾ç½®å±žæ€§                               |
    |--------------------------------+--------------------------------------------------|
-   | C.__delete__(self, attr)       | Êö·û£©É¾³ýÊôÐÔ                                   |
+   | C.__delete__(self, attr)       | è¿°ç¬¦ï¼‰åˆ é™¤å±žæ€§                                   |
    |--------------------------------+--------------------------------------------------|
    #+BEGIN_EXAMPLE
-   ¶¨ÖÆÀà/Ä£ÄâÀàÐÍ 
-   ÊýÖµÀàÐÍ£º¶þ½øÖÆ²Ù×÷·û 
-   C.__*add__(self, obj)             ¼Ó£»+²Ù×÷·û 
-   C.__*sub__(self, obj)             ¼õ£»-²Ù×÷·û 
-   C.__*mul__(self, obj)             ³Ë£»*²Ù×÷·û 
-   C.__*div__(self, obj)             ³ý£»/²Ù×÷·û 
-   C.__*truediv__(self, obj)         True ³ý£»/²Ù×÷·û 
-   C.__*floordiv__(self, obj)        Floor ³ý£»//²Ù×÷·û 
-   C.__*mod__(self, obj)             È¡Ä£/È¡Óà£»%²Ù×÷·û 
-   C.__*divmod__(self, obj)          ³ýºÍÈ¡Ä££»ÄÚ½¨ divmod()                        |                                          |
-   C.__*mod__(self, obj)             È¡Ä£/È¡Óà£»%²Ù×÷·û 
-   C.__*divmod__(self, obj)          ³ýºÍÈ¡Ä££»ÄÚ½¨ divmod() 
-   C.__*pow__(self, obj[, mod])      ³ËÃÝ£»ÄÚ½¨ pow();**²Ù×÷·û 
-   C.__*lshift__(self, obj)          ×óÒÆÎ»£»<<²Ù×÷·û 
+   å®šåˆ¶ç±»/æ¨¡æ‹Ÿç±»åž‹ 
+   æ•°å€¼ç±»åž‹ï¼šäºŒè¿›åˆ¶æ“ä½œç¬¦ 
+   C.__*add__(self, obj)             åŠ ï¼›+æ“ä½œç¬¦ 
+   C.__*sub__(self, obj)             å‡ï¼›-æ“ä½œç¬¦ 
+   C.__*mul__(self, obj)             ä¹˜ï¼›*æ“ä½œç¬¦ 
+   C.__*div__(self, obj)             é™¤ï¼›/æ“ä½œç¬¦ 
+   C.__*truediv__(self, obj)         True é™¤ï¼›/æ“ä½œç¬¦ 
+   C.__*floordiv__(self, obj)        Floor é™¤ï¼›//æ“ä½œç¬¦ 
+   C.__*mod__(self, obj)             å–æ¨¡/å–ä½™ï¼›%æ“ä½œç¬¦ 
+   C.__*divmod__(self, obj)          é™¤å’Œå–æ¨¡ï¼›å†…å»º divmod()                        |                                          |
+   C.__*mod__(self, obj)             å–æ¨¡/å–ä½™ï¼›%æ“ä½œç¬¦ 
+   C.__*divmod__(self, obj)          é™¤å’Œå–æ¨¡ï¼›å†…å»º divmod() 
+   C.__*pow__(self, obj[, mod])      ä¹˜å¹‚ï¼›å†…å»º pow();**æ“ä½œç¬¦ 
+   C.__*lshift__(self, obj)          å·¦ç§»ä½ï¼›<<æ“ä½œç¬¦ 
  
-   ±í 13.4 ¿É¶¨ÖÆÀàµÄÌØÊâ·½·¨£¨Ðø£© 
+   è¡¨ 13.4 å¯å®šåˆ¶ç±»çš„ç‰¹æ®Šæ–¹æ³•ï¼ˆç»­ï¼‰ 
  
-   ÌØÊâ·½·¨                          ÃèÊö 
-   ¶¨ÖÆÀà/Ä£ÄâÀàÐÍ 
-   ÊýÖµÀàÐÍ£º¶þ½øÖÆ²Ù×÷·û 
-   C.__*rshift__(self, obj)         ÓÒÒÆ£»>>²Ù×÷·û 
-   C.__*and__(self, obj)            °´Î»Óë£»&²Ù×÷·û 
-   C.__*or__(self, obj)             °´Î»»ò£»|²Ù×÷·û 
-   C.__*xor__(self, obj)            °´Î»Óë»ò£»^²Ù×÷·û 
-   ÊýÖµÀàÐÍ£ºÒ»Ôª²Ù×÷·û 
-   C.__neg__(self)                  Ò»Ôª¸º 
-   C.__pos__(self)                  Ò»ÔªÕý 
-   C.__abs__(self)                  ¾ø¶ÔÖµ£»ÄÚ½¨ abs() 
-   C.__invert__(self)              °´Î»Çó·´£»~²Ù×÷·û 
-   ÊýÖµÀàÐÍ£ºÊýÖµ×ª»» 
-   C.__complex__(self, com)        ×ªÎª complex(¸´Êý);ÄÚ½¨ complex() 
-   C.__int__(self)                 ×ªÎª int;ÄÚ½¨ int() 
-   C.__long__(self)                ×ªÎª long£»ÄÚ½¨ long() 
-   C.__float__(self)               ×ªÎª float£»ÄÚ½¨ float() 
-   ÊýÖµÀàÐÍ£º»ù±¾±íÊ¾·¨£¨String£© 
-   C.__oct__(self)                °Ë½øÖÆ±íÊ¾£»ÄÚ½¨ oct() 
-   C.__hex__(self)                Ê®Áù½øÖÆ±íÊ¾£»ÄÚ½¨ hex() 
-   ÊýÖµÀàÐÍ£ºÊýÖµÑ¹Ëõ 
-   C.__coerce__(self, num)        Ñ¹Ëõ³ÉÍ¬ÑùµÄÊýÖµÀàÐÍ£»ÄÚ½¨ coerce() 
-   C.__index__(self)              ÔÚÓÐ±ØÒªÊ±,Ñ¹Ëõ¿ÉÑ¡µÄÊýÖµÀàÐÍÎªÕûÐÍ£¨±ÈÈç£ºÓÃÓÚÇÐÆ¬Ë÷ÒýµÈµÈ£© 
-   £­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­£­ 
-   Ðø 
+   ç‰¹æ®Šæ–¹æ³•                          æè¿° 
+   å®šåˆ¶ç±»/æ¨¡æ‹Ÿç±»åž‹ 
+   æ•°å€¼ç±»åž‹ï¼šäºŒè¿›åˆ¶æ“ä½œç¬¦ 
+   C.__*rshift__(self, obj)         å³ç§»ï¼›>>æ“ä½œç¬¦ 
+   C.__*and__(self, obj)            æŒ‰ä½ä¸Žï¼›&æ“ä½œç¬¦ 
+   C.__*or__(self, obj)             æŒ‰ä½æˆ–ï¼›|æ“ä½œç¬¦ 
+   C.__*xor__(self, obj)            æŒ‰ä½ä¸Žæˆ–ï¼›^æ“ä½œç¬¦ 
+   æ•°å€¼ç±»åž‹ï¼šä¸€å…ƒæ“ä½œç¬¦ 
+   C.__neg__(self)                  ä¸€å…ƒè´Ÿ 
+   C.__pos__(self)                  ä¸€å…ƒæ­£ 
+   C.__abs__(self)                  ç»å¯¹å€¼ï¼›å†…å»º abs() 
+   C.__invert__(self)              æŒ‰ä½æ±‚åï¼›~æ“ä½œç¬¦ 
+   æ•°å€¼ç±»åž‹ï¼šæ•°å€¼è½¬æ¢ 
+   C.__complex__(self, com)        è½¬ä¸º complex(å¤æ•°);å†…å»º complex() 
+   C.__int__(self)                 è½¬ä¸º int;å†…å»º int() 
+   C.__long__(self)                è½¬ä¸º longï¼›å†…å»º long() 
+   C.__float__(self)               è½¬ä¸º floatï¼›å†…å»º float() 
+   æ•°å€¼ç±»åž‹ï¼šåŸºæœ¬è¡¨ç¤ºæ³•ï¼ˆStringï¼‰ 
+   C.__oct__(self)                å…«è¿›åˆ¶è¡¨ç¤ºï¼›å†…å»º oct() 
+   C.__hex__(self)                åå…­è¿›åˆ¶è¡¨ç¤ºï¼›å†…å»º hex() 
+   æ•°å€¼ç±»åž‹ï¼šæ•°å€¼åŽ‹ç¼© 
+   C.__coerce__(self, num)        åŽ‹ç¼©æˆåŒæ ·çš„æ•°å€¼ç±»åž‹ï¼›å†…å»º coerce() 
+   C.__index__(self)              åœ¨æœ‰å¿…è¦æ—¶,åŽ‹ç¼©å¯é€‰çš„æ•°å€¼ç±»åž‹ä¸ºæ•´åž‹ï¼ˆæ¯”å¦‚ï¼šç”¨äºŽåˆ‡ç‰‡ç´¢å¼•ç­‰ç­‰ï¼‰ 
+   ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ï¼ 
+   ç»­ 
    
-   ±í 13.4 ¶¨ÖÆÀàµÄÌØÊâ·½·¨£¨Ðø£© 
+   è¡¨ 13.4 å®šåˆ¶ç±»çš„ç‰¹æ®Šæ–¹æ³•ï¼ˆç»­ï¼‰ 
  
-   ÐòÁÐÀàÐÍ 
-   C.__len__(self)               ÐòÁÐÖÐÏîµÄÊýÄ¿ 
-   C.__getitem__(self, ind)      µÃµ½µ¥¸öÐòÁÐÔªËØ 
-   C.__setitem__(self, ind,val)   ÉèÖÃµ¥¸öÐòÁÐÔªËØ 
-   C.__delitem__(self, ind)      É¾³ýµ¥¸öÐòÁÐÔªËØ 
-   ÌØÊâ·½·¨                           ÃèÊö 
-   ÐòÁÐÀàÐÍ 
-   C.__getslice__(self, ind1,ind2)   µÃµ½ÐòÁÐÆ¬¶Ï 
-   C.__setslice__(self, i1, i2,val)  ÉèÖÃÐòÁÐÆ¬¶Ï 
-   C.__delslice__(self, ind1,ind2)   É¾³ýÐòÁÐÆ¬¶Ï 
-   C.__contains__(self, val)         ²âÊÔÐòÁÐ³ÉÔ±£»ÄÚ½¨ in ¹Ø¼ü×Ö 
-   C.__*add__(self,obj)              ´®Á¬£»+²Ù×÷·û 
-   C.__*mul__(self,obj)              ÖØ¸´£»*²Ù×÷·û 
-   C.__iter__(self)                  ´´½¨µü´úÀà£»ÄÚ½¨ iter() 
-   Ó³ÉäÀàÐÍ 
-   C.__len__(self)                   mapping ÖÐµÄÏîµÄÊýÄ¿ 
-   C.__hash__(self)                  É¢ÁÐ(hash)º¯ÊýÖµ 
-   C.__getitem__(self,key)           µÃµ½¸ø¶¨¼ü(key)µÄÖµ 
-   C.__setitem__(self,key,val)       ÉèÖÃ¸ø¶¨¼ü(key)µÄÖµ 
-   C.__delitem__(self,key)           É¾³ý¸ø¶¨¼ü(key)µÄÖµ 
-   C.__missing__(self,key)           ¸ø¶¨¼üÈç¹û²»´æÔÚ×ÖµäÖÐ£¬ÔòÌá¹©Ò»¸öÄ¬ÈÏÖµ 
+   åºåˆ—ç±»åž‹ 
+   C.__len__(self)               åºåˆ—ä¸­é¡¹çš„æ•°ç›® 
+   C.__getitem__(self, ind)      å¾—åˆ°å•ä¸ªåºåˆ—å…ƒç´  
+   C.__setitem__(self, ind,val)   è®¾ç½®å•ä¸ªåºåˆ—å…ƒç´  
+   C.__delitem__(self, ind)      åˆ é™¤å•ä¸ªåºåˆ—å…ƒç´  
+   ç‰¹æ®Šæ–¹æ³•                           æè¿° 
+   åºåˆ—ç±»åž‹ 
+   C.__getslice__(self, ind1,ind2)   å¾—åˆ°åºåˆ—ç‰‡æ–­ 
+   C.__setslice__(self, i1, i2,val)  è®¾ç½®åºåˆ—ç‰‡æ–­ 
+   C.__delslice__(self, ind1,ind2)   åˆ é™¤åºåˆ—ç‰‡æ–­ 
+   C.__contains__(self, val)         æµ‹è¯•åºåˆ—æˆå‘˜ï¼›å†…å»º in å…³é”®å­— 
+   C.__*add__(self,obj)              ä¸²è¿žï¼›+æ“ä½œç¬¦ 
+   C.__*mul__(self,obj)              é‡å¤ï¼›*æ“ä½œç¬¦ 
+   C.__iter__(self)                  åˆ›å»ºè¿­ä»£ç±»ï¼›å†…å»º iter() 
+   æ˜ å°„ç±»åž‹ 
+   C.__len__(self)                   mapping ä¸­çš„é¡¹çš„æ•°ç›® 
+   C.__hash__(self)                  æ•£åˆ—(hash)å‡½æ•°å€¼ 
+   C.__getitem__(self,key)           å¾—åˆ°ç»™å®šé”®(key)çš„å€¼ 
+   C.__setitem__(self,key,val)       è®¾ç½®ç»™å®šé”®(key)çš„å€¼ 
+   C.__delitem__(self,key)           åˆ é™¤ç»™å®šé”®(key)çš„å€¼ 
+   C.__missing__(self,key)           ç»™å®šé”®å¦‚æžœä¸å­˜åœ¨å­—å…¸ä¸­ï¼Œåˆ™æä¾›ä¸€ä¸ªé»˜è®¤å€¼ 
 
    NOTE:
-   ÓÃÐÇºÅÍ¨Åä·û±ê×¢µÄÊýÖµ¶þ½øÖÆ²Ù×÷·ûÔò±íÊ¾ÕâÐ©·½·¨ÓÐ¶à¸ö°æ±¾£¬ÔÚÃû×ÖÉÏÓÐÐ©Ðí²»Í¬¡£ÐÇºÅ¿É´ú±íÔÚ×Ö·û´®ÖÐÃ»ÓÐ¶îÍâµÄ×Ö·û£¬»òÕßÒ»¸ö¼òµ¥µÄ¡°r¡±Ö¸Ã÷ÊÇÒ»¸öÓÒ½áºÏ²Ù×÷£¬»òÕßÊÇÒ»¸ö¡°i¡±Ö¸Ã÷ÊÇÒ»¸ö×Ô²Ù×÷·ûºÅ
-   ÖØÔØÒ»¸ö__i*__()·½·¨µÄÎ¨Ò»ÃØÃÜÊÇËü±ØÐë·µ»Øself¡£
+   ç”¨æ˜Ÿå·é€šé…ç¬¦æ ‡æ³¨çš„æ•°å€¼äºŒè¿›åˆ¶æ“ä½œç¬¦åˆ™è¡¨ç¤ºè¿™äº›æ–¹æ³•æœ‰å¤šä¸ªç‰ˆæœ¬ï¼Œåœ¨åå­—ä¸Šæœ‰äº›è®¸ä¸åŒã€‚æ˜Ÿå·å¯ä»£è¡¨åœ¨å­—ç¬¦ä¸²ä¸­æ²¡æœ‰é¢å¤–çš„å­—ç¬¦ï¼Œæˆ–è€…ä¸€ä¸ªç®€å•çš„â€œrâ€æŒ‡æ˜Žæ˜¯ä¸€ä¸ªå³ç»“åˆæ“ä½œï¼Œæˆ–è€…æ˜¯ä¸€ä¸ªâ€œiâ€æŒ‡æ˜Žæ˜¯ä¸€ä¸ªè‡ªæ“ä½œç¬¦å·
+   é‡è½½ä¸€ä¸ª__i*__()æ–¹æ³•çš„å”¯ä¸€ç§˜å¯†æ˜¯å®ƒå¿…é¡»è¿”å›žselfã€‚
    #+END_EXAMPLE
-** __slots__ÀàÊôÐÔ
-   1. Èç¹ûÄãÓÐÒ»¸öÊôÐÔÊýÁ¿ºÜÉÙµÄÀà£¬µ«ÓÐºÜ¶àÊµÀý£¬ÄÇÃ´Îª½ÚÊ¡ÄÚ´æ£¬¿ÉÒÔÓÃ__slots__ÊôÐÔ´úÌæ__dict__
-   2. __slots__ÊÇÒ»¸öÀà±äÁ¿£¬ÓÉÒ»ÐòÁÐÐÍ¶ÔÏó×é³É£¬ÓÉËùÓÐºÏ·¨±êÊ¶¹¹³ÉµÄÊµÀýÊôÐÔµÄ¼¯ºÏÀ´±íÊ¾¡£Ëü¿ÉÒÔÊÇÒ»¸öÁÐ±í£¬Ôª×é»ò¿Éµü´ú¶ÔÏó¡£Ò²¿ÉÒÔÊÇ±êÊ¶ÊµÀýÄÜÓµÓÐµÄÎ¨Ò»µÄÊôÐÔµÄ¼òµ¥×Ö·û´®¡£ ÈÎºÎÊÔÍ¼´´½¨Ò»¸öÆäÃû²»ÔÚ__slots__ÖÐµÄÃû×ÖµÄÊµÀýÊôÐÔ¶¼½«µ¼ÖÂAttributeErrorÒì³££º
+** __slots__ç±»å±žæ€§
+   1. å¦‚æžœä½ æœ‰ä¸€ä¸ªå±žæ€§æ•°é‡å¾ˆå°‘çš„ç±»ï¼Œä½†æœ‰å¾ˆå¤šå®žä¾‹ï¼Œé‚£ä¹ˆä¸ºèŠ‚çœå†…å­˜ï¼Œå¯ä»¥ç”¨__slots__å±žæ€§ä»£æ›¿__dict__
+   2. __slots__æ˜¯ä¸€ä¸ªç±»å˜é‡ï¼Œç”±ä¸€åºåˆ—åž‹å¯¹è±¡ç»„æˆï¼Œç”±æ‰€æœ‰åˆæ³•æ ‡è¯†æž„æˆçš„å®žä¾‹å±žæ€§çš„é›†åˆæ¥è¡¨ç¤ºã€‚å®ƒå¯ä»¥æ˜¯ä¸€ä¸ªåˆ—è¡¨ï¼Œå…ƒç»„æˆ–å¯è¿­ä»£å¯¹è±¡ã€‚ä¹Ÿå¯ä»¥æ˜¯æ ‡è¯†å®žä¾‹èƒ½æ‹¥æœ‰çš„å”¯ä¸€çš„å±žæ€§çš„ç®€å•å­—ç¬¦ä¸²ã€‚ ä»»ä½•è¯•å›¾åˆ›å»ºä¸€ä¸ªå…¶åä¸åœ¨__slots__ä¸­çš„åå­—çš„å®žä¾‹å±žæ€§éƒ½å°†å¯¼è‡´AttributeErrorå¼‚å¸¸ï¼š
       #+BEGIN_SRC
       class SlottedClass(object): 
-      __slots__ = ('foo', 'bar')             #Ö»ÓÐÓÐfooºÍbarÊôÐÔ
+      __slots__ = ('foo', 'bar')             #åªæœ‰æœ‰fooå’Œbarå±žæ€§
       >>> c = SlottedClass() 
       >>> 
       >>> c.foo = 42 
@@ -1113,10 +1178,10 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
       AttributeError: 'SlottedClass' object has no attribute 
       'xxx' 
       #+END_SRC
-   3. ´ø__slots__ÊôÐÔµÄÀà¶¨Òå²»»á´æÔÚ__dict__ÁË£¨³ý·ÇÄãÔÚ__slots__ÖÐÔö¼Ó'__dict__'ÔªËØ£©
-** TODO ÃèÊö·û
-   1. __get__,__set__,__delete__ÌØÊâ·½·¨
-   ²¹Íê
+   3. å¸¦__slots__å±žæ€§çš„ç±»å®šä¹‰ä¸ä¼šå­˜åœ¨__dict__äº†ï¼ˆé™¤éžä½ åœ¨__slots__ä¸­å¢žåŠ '__dict__'å…ƒç´ ï¼‰
+** TODO æè¿°ç¬¦
+   1. __get__,__set__,__delete__ç‰¹æ®Šæ–¹æ³•
+   è¡¥å®Œ
    #+BEGIN_SRC
    >>> class DevNull(object):
 	def __get__(self,obj,typ=None):
@@ -1135,14 +1200,14 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
    >>> print c1.foo
    None
    #+END_SRC
-** property()º¯Êý
-   1. ¿ÉÒÔÐ´Ò»¸öºÍÊôÐÔÓÐ¹ØµÄº¯ÊýÀ´´¦ÀíÊµÀýÊôÐÔµÄ»ñÈ¡(getting),¸³Öµ(setting),ºÍÉ¾³ý(deleting)²Ù×÷£¬¶ø²»±ØÔÙÊ¹ÓÃÄÇÐ©ÌØÊâµÄ·½·¨ÁË
-   2. property()ÄÚ½¨º¯ÊýÓÐËÄ¸ö²ÎÊý£¬ËüÃÇÊÇ £º 
+** property()å‡½æ•°
+   1. å¯ä»¥å†™ä¸€ä¸ªå’Œå±žæ€§æœ‰å…³çš„å‡½æ•°æ¥å¤„ç†å®žä¾‹å±žæ€§çš„èŽ·å–(getting),èµ‹å€¼(setting),å’Œåˆ é™¤(deleting)æ“ä½œï¼Œè€Œä¸å¿…å†ä½¿ç”¨é‚£äº›ç‰¹æ®Šçš„æ–¹æ³•äº†
+   2. property()å†…å»ºå‡½æ•°æœ‰å››ä¸ªå‚æ•°ï¼Œå®ƒä»¬æ˜¯ ï¼š 
       #+BEGIN_EXAMPLE
       property(fget=None, fset=None, fdel=None, doc=None) 
       #+END_EXAMPLE
-   3. Çë×¢Òâ property()µÄÒ»°ãÓÃ·¨ÊÇ£¬½«ËüÐ´ÔÚÒ»¸öÀà¶¨ÒåÖÐ£¬property()½ÓÊÜÒ»Ð©´«½øÀ´µÄº¯Êý(ÆäÊµÊÇ·½·¨)×÷Îª²ÎÊý¡£Êµ¼ÊÉÏ£¬property()ÊÇÔÚËüËùÔÚµÄÀà±»´´½¨Ê±±»µ÷ÓÃµÄ£¬ÕâÐ©´«½øÀ´µÄ(×÷Îª²ÎÊýµÄ)·½·¨ÊÇ·Ç°ó¶¨µÄ£¬ËùÒÔÕâÐ©·½·¨ÆäÊµ¾ÍÊÇº¯Êý£¡
-   4. Àý×Ó
+   3. è¯·æ³¨æ„ property()çš„ä¸€èˆ¬ç”¨æ³•æ˜¯ï¼Œå°†å®ƒå†™åœ¨ä¸€ä¸ªç±»å®šä¹‰ä¸­ï¼Œproperty()æŽ¥å—ä¸€äº›ä¼ è¿›æ¥çš„å‡½æ•°(å…¶å®žæ˜¯æ–¹æ³•)ä½œä¸ºå‚æ•°ã€‚å®žé™…ä¸Šï¼Œproperty()æ˜¯åœ¨å®ƒæ‰€åœ¨çš„ç±»è¢«åˆ›å»ºæ—¶è¢«è°ƒç”¨çš„ï¼Œè¿™äº›ä¼ è¿›æ¥çš„(ä½œä¸ºå‚æ•°çš„)æ–¹æ³•æ˜¯éžç»‘å®šçš„ï¼Œæ‰€ä»¥è¿™äº›æ–¹æ³•å…¶å®žå°±æ˜¯å‡½æ•°ï¼
+   4. ä¾‹å­
       #+BEGIN_EXAMPLE
       class ProtectAndHideX(object): 
         def __init__(self, x): 
@@ -1156,7 +1221,7 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
         x = property(get_x) 
         #+END_SRC
 
-      ÎÒÃÇÀ´ÔËÐÐÕâ¸öÀý×Ó£¬»á·¢ÏÖËüÖ»±£´æÎÒÃÇµÚÒ»´Î¸ø³öµÄÖµ£¬ ¶ø²»ÔÊÐíÎÒÃÇ¶ÔËü×öµÚ¶þ´ÎÐÞ¸Ä£º 
+      æˆ‘ä»¬æ¥è¿è¡Œè¿™ä¸ªä¾‹å­ï¼Œä¼šå‘çŽ°å®ƒåªä¿å­˜æˆ‘ä»¬ç¬¬ä¸€æ¬¡ç»™å‡ºçš„å€¼ï¼Œ è€Œä¸å…è®¸æˆ‘ä»¬å¯¹å®ƒåšç¬¬äºŒæ¬¡ä¿®æ”¹ï¼š 
 
 	>>> inst = ProtectAndHideX('foo')  
 	Traceback (most recent call last): 
@@ -1173,12 +1238,12 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
 	AttributeError: can't set attribute 
       #+END_EXAMPLE
 
-** Ô­Àà
-   1. ´´½¨µÄÔªÀàÓÃÓÚ¸Ä±äÀàµÄÄ¬ÈÏÐÐÎªºÍ´´½¨·½Ê½
-   2. Äã¿ÉÒÔÍ¨¹ý¶¨ÒåÒ»¸öÔªÀàÀ´ÆÈÊ¹³ÌÐòÔ±°´ÕÕÄ³ÖÖ·½Ê½ÊµÏÖÄ¿±êÀà£¬Õâ¼È¿ÉÒÔ¼ò»¯ËûÃÇµÄ¹¤×÷£¬Ò²¿ÉÒÔÊ¹Ëù±àÐ´µÄ³ÌÐò¸ü·ûºÏÌØ¶¨±ê×¼
-   3. Ô­ÀàÍ¨³£´«µÝÈý¸ö²ÎÊý£¨µ½¹¹ÔìÆ÷£©£ºÀàÃû£¬´Ó»ùÀà¼Ì³ÐÊý¾ÝµÄÔª×é£¬ºÍÀàµÄÊôÐÔ×Öµä
+** åŽŸç±»
+   1. åˆ›å»ºçš„å…ƒç±»ç”¨äºŽæ”¹å˜ç±»çš„é»˜è®¤è¡Œä¸ºå’Œåˆ›å»ºæ–¹å¼
+   2. ä½ å¯ä»¥é€šè¿‡å®šä¹‰ä¸€ä¸ªå…ƒç±»æ¥è¿«ä½¿ç¨‹åºå‘˜æŒ‰ç…§æŸç§æ–¹å¼å®žçŽ°ç›®æ ‡ç±»ï¼Œè¿™æ—¢å¯ä»¥ç®€åŒ–ä»–ä»¬çš„å·¥ä½œï¼Œä¹Ÿå¯ä»¥ä½¿æ‰€ç¼–å†™çš„ç¨‹åºæ›´ç¬¦åˆç‰¹å®šæ ‡å‡†
+   3. åŽŸç±»é€šå¸¸ä¼ é€’ä¸‰ä¸ªå‚æ•°ï¼ˆåˆ°æž„é€ å™¨ï¼‰ï¼šç±»åï¼Œä»ŽåŸºç±»ç»§æ‰¿æ•°æ®çš„å…ƒç»„ï¼Œå’Œç±»çš„å±žæ€§å­—å…¸
       #+BEGIN_EXAMPLE
-      1. ´´½¨Ò»¸öÀàÊ±£¬ÏÔÊ¾Ê±¼ä±êÇ©
+      1. åˆ›å»ºä¸€ä¸ªç±»æ—¶ï¼Œæ˜¾ç¤ºæ—¶é—´æ ‡ç­¾
 
 	 from time import ctime
 	 class MetaC(type): 
@@ -1197,7 +1262,7 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
 	 print '\tClass "Foo" instantiation next.' 
 	 f = Foo() 
 	 print '\tDONE' 
-      2. ´´½¨Ò»¸öÔªÀà£¬ÒªÇó³ÌÐòÔ±ÔÚËûÃÇÐ´µÄÀàÖÐÌá¹©Ò»¸ö__str__·½·¨µÄÊµÏÖ
+      2. åˆ›å»ºä¸€ä¸ªå…ƒç±»ï¼Œè¦æ±‚ç¨‹åºå‘˜åœ¨ä»–ä»¬å†™çš„ç±»ä¸­æä¾›ä¸€ä¸ª__str__æ–¹æ³•çš„å®žçŽ°
 	 from warning import warn
 	 class ReqStrSugRepr(type): 
 	 
@@ -1210,111 +1275,111 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
 	    if '__repr__' not in attrd: 
             warn('Class suggests overriding of __repr__()\n', stacklevel=3) 
       #+END_EXAMPLE
-   4. ´ÓÉÏÃæÀý×Ó¿ÉÒÔ¿´³ö£¬ÔªÀàÔÚÀà´´½¨Ê±±»µ÷ÓÃ£¬¿ÉÒÔÊ¹ÓÃ´«ÈëÔªÀàµÄÐÅÏ¢¶ÔÀà½øÐÐ¹æ·¶ÐÔ¼ì²é
-** º¯ÊýÊôÐÔ
-   1. ÄÚ½¨º¯Êý
-      #+CAPTION:ÄÚ½¨º¯ÊýBIFs
-      | BIFÊôÐÔ      | ÃèÊö                           |
+   4. ä»Žä¸Šé¢ä¾‹å­å¯ä»¥çœ‹å‡ºï¼Œå…ƒç±»åœ¨ç±»åˆ›å»ºæ—¶è¢«è°ƒç”¨ï¼Œå¯ä»¥ä½¿ç”¨ä¼ å…¥å…ƒç±»çš„ä¿¡æ¯å¯¹ç±»è¿›è¡Œè§„èŒƒæ€§æ£€æŸ¥
+** å‡½æ•°å±žæ€§
+   1. å†…å»ºå‡½æ•°
+      #+CAPTION:å†…å»ºå‡½æ•°BIFs
+      | BIFå±žæ€§      | æè¿°                           |
       |--------------+--------------------------------|
-      | bif.__doc__  | ÎÄµµ×Ö·û´®»òNone               |
+      | bif.__doc__  | æ–‡æ¡£å­—ç¬¦ä¸²æˆ–None               |
       |--------------+--------------------------------|
-      | bif.__name__ | ×Ö·û´®ÀàÐÍµÄÎÄµµÃû³Æ           |
+      | bif.__name__ | å­—ç¬¦ä¸²ç±»åž‹çš„æ–‡æ¡£åç§°           |
       |--------------+--------------------------------|
-      | bif.__self__ | ÉèÖÃÎªNone£¬±£Áô¸øbuilt-in·½·¨ |
+      | bif.__self__ | è®¾ç½®ä¸ºNoneï¼Œä¿ç•™ç»™built-inæ–¹æ³• |
       |--------------+--------------------------------|
-      | bif.module__ | ´æ·Åbif¶¨ÒåµÄÄ£¿éÃû×Ö»òNone    |
+      | bif.module__ | å­˜æ”¾bifå®šä¹‰çš„æ¨¡å—åå­—æˆ–None    |
       |--------------+--------------------------------|
-   2. ÓÃ»§×Ô¶¨Òåº¯Êý
-      #+CAPTION:ÓÃ»§¶¨Òåº¯Êý
-      | UDFÊôÐÔ           | ÃèÊö                                                                  |
+   2. ç”¨æˆ·è‡ªå®šä¹‰å‡½æ•°
+      #+CAPTION:ç”¨æˆ·å®šä¹‰å‡½æ•°
+      | UDFå±žæ€§           | æè¿°                                                                  |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.__doc__       | ÎÄµµ×Ö·û´®£¬Ò²¿ÉÒÔÓÃudf.func_doc                                      |
+      | udf.__doc__       | æ–‡æ¡£å­—ç¬¦ä¸²ï¼Œä¹Ÿå¯ä»¥ç”¨udf.func_doc                                      |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.__name__      | ×Ö·û´®ÀàÐÍµÄº¯ÊýÃû³Æ£¬Ò²¿ÉÒÔÓÃudf.func_name                           |
+      | udf.__name__      | å­—ç¬¦ä¸²ç±»åž‹çš„å‡½æ•°åç§°ï¼Œä¹Ÿå¯ä»¥ç”¨udf.func_name                           |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.func_code     | ×Ö½Ú±àÒëµÄ´úÂë¶ÔÏó                                                    |
+      | udf.func_code     | å­—èŠ‚ç¼–è¯‘çš„ä»£ç å¯¹è±¡                                                    |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.func_defaults | Ä¬ÈÏµÄ²ÎÊýÔª×é                                                        |
+      | udf.func_defaults | é»˜è®¤çš„å‚æ•°å…ƒç»„                                                        |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.func_globals  | È«¾ÖÃû×Ö¿Õ¼ä×Öµä:ºÍ´Óº¯ÊýÄÚ²¿µ÷ÓÃglobals(x)Ò»Ñù                       |
+      | udf.func_globals  | å…¨å±€åå­—ç©ºé—´å­—å…¸:å’Œä»Žå‡½æ•°å†…éƒ¨è°ƒç”¨globals(x)ä¸€æ ·                       |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.func_dict     | º¯ÊýÊôÐÔµÄÃû×Ö¿Õ¼ä                                                    |
+      | udf.func_dict     | å‡½æ•°å±žæ€§çš„åå­—ç©ºé—´                                                    |
       |-------------------+-----------------------------------------------------------------------|
-      | udf.func_closure  | °üº¬ÁË×ÔÓÉ±äÁ¿µÄÒýÓÃµÄµ¥Ôª¶ÔÏóÔª×é£¬×ÔÓÃ±äÁ¿ÔÚUDFÖÐÊ¹ÓÃ£¬µ«ÔÚ±ð´¦¶¨Òå |
+      | udf.func_closure  | åŒ…å«äº†è‡ªç”±å˜é‡çš„å¼•ç”¨çš„å•å…ƒå¯¹è±¡å…ƒç»„ï¼Œè‡ªç”¨å˜é‡åœ¨UDFä¸­ä½¿ç”¨ï¼Œä½†åœ¨åˆ«å¤„å®šä¹‰ |
       |-------------------+-----------------------------------------------------------------------|
-   3. ÄÚ½¨·½·¨
-      #+CAPTION:ÄÚ½¨·½·¨ÊôÐÔ
-      | BIMÊôÐÔ      | ÃèÊö                 |
+   3. å†…å»ºæ–¹æ³•
+      #+CAPTION:å†…å»ºæ–¹æ³•å±žæ€§
+      | BIMå±žæ€§      | æè¿°                 |
       |--------------+----------------------|
-      | bim.__doc__  | ÎÄµµ×Ö·û´®           |
+      | bim.__doc__  | æ–‡æ¡£å­—ç¬¦ä¸²           |
       |--------------+----------------------|
-      | bin.__name__ | ×Ö·û´®ÀàÐÍµÄº¯ÊýÃû³Æ |
+      | bin.__name__ | å­—ç¬¦ä¸²ç±»åž‹çš„å‡½æ•°åç§° |
       |--------------+----------------------|
-      | bim.__self__ | °ó¶¨µÄ¶ÔÏó           |
+      | bim.__self__ | ç»‘å®šçš„å¯¹è±¡           |
       |--------------+----------------------|
-   4. ÓÃ»§×Ô¶¨Òå·½·¨
-      #+CAPTION:ÓÃ»§×Ô¶¨Òå·½·¨
-      | UDMÊôÐÔ        | ÃèÊö                                                            |
+   4. ç”¨æˆ·è‡ªå®šä¹‰æ–¹æ³•
+      #+CAPTION:ç”¨æˆ·è‡ªå®šä¹‰æ–¹æ³•
+      | UDMå±žæ€§        | æè¿°                                                            |
       |----------------+-----------------------------------------------------------------|
-      | udm.__doc__    | ÎÄµµ×Ö·û´®                                                      |
+      | udm.__doc__    | æ–‡æ¡£å­—ç¬¦ä¸²                                                      |
       |----------------+-----------------------------------------------------------------|
-      | udm.__name__   | ×Ö·û´®ÀàÐÍµÄ·½·¨Ãû×Ö                                            |
+      | udm.__name__   | å­—ç¬¦ä¸²ç±»åž‹çš„æ–¹æ³•åå­—                                            |
       |----------------+-----------------------------------------------------------------|
-      | udm.__module__ | ¶¨ÒåudmµÄÄ£¿éµÄÃû×Ö»ònone                                       |
+      | udm.__module__ | å®šä¹‰udmçš„æ¨¡å—çš„åå­—æˆ–none                                       |
       |----------------+-----------------------------------------------------------------|
-      | udm.im_class   | ·½·¨Ïà¹ØÁªµÄÀà£¨¶ÔÓÚ°ó¶¨·½·¨£ºÈç¹ûÊÇ·Ç°ó¶¨£¬ÄÇÃ´ÎªÒªÇóudmµÄÀà£© |
+      | udm.im_class   | æ–¹æ³•ç›¸å…³è”çš„ç±»ï¼ˆå¯¹äºŽç»‘å®šæ–¹æ³•ï¼šå¦‚æžœæ˜¯éžç»‘å®šï¼Œé‚£ä¹ˆä¸ºè¦æ±‚udmçš„ç±»ï¼‰ |
       |----------------+-----------------------------------------------------------------|
-      | udm.im_func    | ·½·¨µÄº¯Êý¶ÔÏó                                                  |
+      | udm.im_func    | æ–¹æ³•çš„å‡½æ•°å¯¹è±¡                                                  |
       |----------------+-----------------------------------------------------------------|
-      | udm.im_self    | Èç¹û°ó¶¨µÄ»°ÎªÏà¹ØÁªµÄÊµÀý£¬Èç¹û·Ç°ó¶¨Îªnone                                        |
-   5. º¯Êý¶ÔÏó½öÊÇ´úÂë¶ÔÏóµÄ°ü×°£¬·½·¨ÔòÊÇ¸øº¯Êý¶ÔÏóµÄ°ü×°
+      | udm.im_self    | å¦‚æžœç»‘å®šçš„è¯ä¸ºç›¸å…³è”çš„å®žä¾‹ï¼Œå¦‚æžœéžç»‘å®šä¸ºnone                                        |
+   5. å‡½æ•°å¯¹è±¡ä»…æ˜¯ä»£ç å¯¹è±¡çš„åŒ…è£…ï¼Œæ–¹æ³•åˆ™æ˜¯ç»™å‡½æ•°å¯¹è±¡çš„åŒ…è£…
     
 ** compile()
-   1. compileµÄÈý¸ö²ÎÊý¶¼ÊÇ±ØÐëµÃ£¬
-      1. µÚÒ»¸ö²ÎÊý´ú±íÒª±àÒëµÄpython´úÂë
-      2. µÚ¶þ¸ö×Ö·û´®ËäÈ»±ØÐëµÃ£¬µ«Í¨³£ÉèÖÃÎª¿Õ´®¡£¸Ã²ÎÊý´ú±íÁË´æ·Å´úÂë¶ÔÏóµÄÎÄ¼þµÄÃû×Ö
-      3. ×îºóµÄ²ÎÊýÊÇ¸ö×Ö·û´®£¬ËüÓÃÀ´±íÃ÷´úÂë¶ÔÏóµÄÀàÐÍ¡£ÓÐÈý¸ö¿ÉÄÜµÃÖµ
-	 #+CAPTION:compile()µÚÈý¸ö²ÎÊýµÄ¿ÉÄÜÖµ
-         | 'eval'   | ¿ÉÇóÖµµÄ±í´ïÊ½£¬ºÍeval()Ò»ÆðÊ¹ÓÃ |
+   1. compileçš„ä¸‰ä¸ªå‚æ•°éƒ½æ˜¯å¿…é¡»å¾—ï¼Œ
+      1. ç¬¬ä¸€ä¸ªå‚æ•°ä»£è¡¨è¦ç¼–è¯‘çš„pythonä»£ç 
+      2. ç¬¬äºŒä¸ªå­—ç¬¦ä¸²è™½ç„¶å¿…é¡»å¾—ï¼Œä½†é€šå¸¸è®¾ç½®ä¸ºç©ºä¸²ã€‚è¯¥å‚æ•°ä»£è¡¨äº†å­˜æ”¾ä»£ç å¯¹è±¡çš„æ–‡ä»¶çš„åå­—
+      3. æœ€åŽçš„å‚æ•°æ˜¯ä¸ªå­—ç¬¦ä¸²ï¼Œå®ƒç”¨æ¥è¡¨æ˜Žä»£ç å¯¹è±¡çš„ç±»åž‹ã€‚æœ‰ä¸‰ä¸ªå¯èƒ½å¾—å€¼
+	 #+CAPTION:compile()ç¬¬ä¸‰ä¸ªå‚æ•°çš„å¯èƒ½å€¼
+         | 'eval'   | å¯æ±‚å€¼çš„è¡¨è¾¾å¼ï¼Œå’Œeval()ä¸€èµ·ä½¿ç”¨ |
          |----------+----------------------------------|
-         | 'single' | µ¥Ò»¿ÉÖ´ÐÐÓï¾ä£¬ºÍexecÒ»ÆðÊ¹ÓÃ   |
+         | 'single' | å•ä¸€å¯æ‰§è¡Œè¯­å¥ï¼Œå’Œexecä¸€èµ·ä½¿ç”¨   |
          |----------+----------------------------------|
-         | ¡®exec'  | ¿ÉÖ´ÐÐÓï¾ä×é£¬ÓëexecÒ»ÆðÊ¹ÓÃ     |
+         | â€˜exec'  | å¯æ‰§è¡Œè¯­å¥ç»„ï¼Œä¸Žexecä¸€èµ·ä½¿ç”¨     |
          |----------+----------------------------------|
 
 ** re
-   1. ÕýÔò±í´ïÊ½
-      \bÆ¥ÅäÒ»¸öµ¥´ÊµÄ±ß½ç£¬\BÆ¥ÅäÒ»¸öµ¥´ÊµÄÖÐ¼äÄ£Ê½
-      \dÆ¥ÅäÊ®½øÖÆÊý×é
-      \w±íÊ¾×Ö·ûºÍÊý×éµÄ¼¯ºÏ
-      £¿·ÇÌ°À·²Ù×÷·û£¬¿ÉÒÔÓÃÔÚ*¡¢+¡¢£¿µÄºóÃæ¡£ËüµÄ×÷ÓÃÊÇÒªÇóÕýÔò±í´ïÊ½ÒýÇæÆ¥ÅäµÄ×Ö·ûÔ½ÉÙÔ½ºÃ¡£
-   3. µ±Òª´Ó×Ö·û´®Í·²¿¿ªÊ¼Æ¥ÅäµÄÊ±ºò£¬²»ÒªÓÃre.search('^xxx')µÄ·½Ê½£¬¶øÓÃre.match('xxx')µÄ·½Ê½À´Æ¥Åä
-   4. re.searchÓëre.matchÈç¹ûÆ¥ÅäÊ§°Ü£¬Ôò·µ»ØNone
-   5. subn()ºÍsub()Ò»Ñù£¬µ«Ëü»¹·µ»ØÒ»¸ö±íÊ¾Ìæ»»´ÎÊýµÄÊý×Ö£¬Ìæ»»ºóµÄ×Ö·û´®ºÍ±íÊ¾Ìæ»»´ÎÊýµÄÊý×Ö×÷ÎªÒ»¸öÔª×éµÄÔªËØ·µ»Ø
-   6. reÄ£¿éºÍÕýÔò±í´ïÊ½¶ÔÏóµÄ·½·¨split()Óë×Ö·û´®µÄsplit()·½·¨ÏàËÆ£¬Ç°ÕßÊÇ¸ù¾ÝÕýÔò±í´ïÊ½·Ö¸î×Ö·û´®£¬ºóÕßÊÇ¸ù¾Ý¹Ì¶¨µÄ×Ö·û´®·Ö¸î
-   7. Ðè×¢Òâ£¬\wºÍ\WÕâÁ½¸ö±íÊ¾×ÖÄ¸»òÊý×ÖµÄ×Ö·ûÊÜUnicode±êÖ¾·ûºÅÓ°Ïì
+   1. æ­£åˆ™è¡¨è¾¾å¼
+      \båŒ¹é…ä¸€ä¸ªå•è¯çš„è¾¹ç•Œï¼Œ\BåŒ¹é…ä¸€ä¸ªå•è¯çš„ä¸­é—´æ¨¡å¼
+      \dåŒ¹é…åè¿›åˆ¶æ•°ç»„
+      \wè¡¨ç¤ºå­—ç¬¦å’Œæ•°ç»„çš„é›†åˆ
+      ï¼Ÿéžè´ªå©ªæ“ä½œç¬¦ï¼Œå¯ä»¥ç”¨åœ¨*ã€+ã€ï¼Ÿçš„åŽé¢ã€‚å®ƒçš„ä½œç”¨æ˜¯è¦æ±‚æ­£åˆ™è¡¨è¾¾å¼å¼•æ“ŽåŒ¹é…çš„å­—ç¬¦è¶Šå°‘è¶Šå¥½ã€‚
+   3. å½“è¦ä»Žå­—ç¬¦ä¸²å¤´éƒ¨å¼€å§‹åŒ¹é…çš„æ—¶å€™ï¼Œä¸è¦ç”¨re.search('^xxx')çš„æ–¹å¼ï¼Œè€Œç”¨re.match('xxx')çš„æ–¹å¼æ¥åŒ¹é…
+   4. re.searchä¸Žre.matchå¦‚æžœåŒ¹é…å¤±è´¥ï¼Œåˆ™è¿”å›žNone
+   5. subn()å’Œsub()ä¸€æ ·ï¼Œä½†å®ƒè¿˜è¿”å›žä¸€ä¸ªè¡¨ç¤ºæ›¿æ¢æ¬¡æ•°çš„æ•°å­—ï¼Œæ›¿æ¢åŽçš„å­—ç¬¦ä¸²å’Œè¡¨ç¤ºæ›¿æ¢æ¬¡æ•°çš„æ•°å­—ä½œä¸ºä¸€ä¸ªå…ƒç»„çš„å…ƒç´ è¿”å›ž
+   6. reæ¨¡å—å’Œæ­£åˆ™è¡¨è¾¾å¼å¯¹è±¡çš„æ–¹æ³•split()ä¸Žå­—ç¬¦ä¸²çš„split()æ–¹æ³•ç›¸ä¼¼ï¼Œå‰è€…æ˜¯æ ¹æ®æ­£åˆ™è¡¨è¾¾å¼åˆ†å‰²å­—ç¬¦ä¸²ï¼ŒåŽè€…æ˜¯æ ¹æ®å›ºå®šçš„å­—ç¬¦ä¸²åˆ†å‰²
+   7. éœ€æ³¨æ„ï¼Œ\wå’Œ\Wè¿™ä¸¤ä¸ªè¡¨ç¤ºå­—æ¯æˆ–æ•°å­—çš„å­—ç¬¦å—Unicodeæ ‡å¿—ç¬¦å·å½±å“
    8. 
 
 ** Tkinter
-   1. ¶ÔpackerÃ»ÓÐÆäËûÖ¸ÁîÊ±£¬×é¼þÊ½°´´¹Ö±Ë³Ðò·ÅÖÃµÄ¡£ÒªË®Æ½·ÅÖÃÔòÐèÒª´´½¨Ò»¸ö¿ò¼Ü¶ÔÏó£¬ÔÙÓÃËüÀ´Ìí¼Ó°´Å¥
-   2. ÓÉÓÚÆ«º¯ÊýÒ²ÄÜ×÷ÓÃÓÚÀàÉÏ£¬ËùÒÔ¶ÔÓÚÓÐÐí¶à´ýµ÷¶ÔÏó£¬²¢ÇÒÐí¶àµ÷ÓÃ¶¼·´¸´Ê¹ÓÃÏàÍ¬²ÎÊýµÄÇé¿ö£¬ÓÃÆ«º¯Êý½«Ô¤´æ²¢¶³½áÕâÐ©Ô¤´æ²ÎÊýÊÇ±È½ÏºÃµÄ£¬´ËÊ±¿ÉÒÔ¿´×öÊÇÉú³ÉÁËÐÂÀà
+   1. å¯¹packeræ²¡æœ‰å…¶ä»–æŒ‡ä»¤æ—¶ï¼Œç»„ä»¶å¼æŒ‰åž‚ç›´é¡ºåºæ”¾ç½®çš„ã€‚è¦æ°´å¹³æ”¾ç½®åˆ™éœ€è¦åˆ›å»ºä¸€ä¸ªæ¡†æž¶å¯¹è±¡ï¼Œå†ç”¨å®ƒæ¥æ·»åŠ æŒ‰é’®
+   2. ç”±äºŽåå‡½æ•°ä¹Ÿèƒ½ä½œç”¨äºŽç±»ä¸Šï¼Œæ‰€ä»¥å¯¹äºŽæœ‰è®¸å¤šå¾…è°ƒå¯¹è±¡ï¼Œå¹¶ä¸”è®¸å¤šè°ƒç”¨éƒ½åå¤ä½¿ç”¨ç›¸åŒå‚æ•°çš„æƒ…å†µï¼Œç”¨åå‡½æ•°å°†é¢„å­˜å¹¶å†»ç»“è¿™äº›é¢„å­˜å‚æ•°æ˜¯æ¯”è¾ƒå¥½çš„ï¼Œæ­¤æ—¶å¯ä»¥çœ‹åšæ˜¯ç”Ÿæˆäº†æ–°ç±»
    3. 
-** PythonÀ©Õ¹
-   1. Îªpython´´½¨À©Õ¹ÐèÒªÈý¸öÖ÷Òª²½Öè£º
-      1. ´´½¨Ó¦ÓÃ³ÌÐò´úÂë
-      2. ÀûÓÃÑù°åÀ´°ü×°´úÂë
-      3. ±àÒëÓë²âÊÔ
-   2. ÎÒÃÇµÄÑù°åÖ÷Òª·ÖÎª 4 ²½£º 
-      1. °üº¬ Python µÄÍ·ÎÄ¼þ¡£ 
-      2. ÎªÃ¿¸öÄ£¿éµÄÃ¿Ò»¸öº¯ÊýÔö¼ÓÒ»¸öÐÍÈç Python¶ÔÏóÖ¸Õë Ä£¿éÃû³Æ_º¯ÊýÃû³Æ(PyObject *self,PyObject *args)µÄ°ü×°º¯Êý¡£ 
-	 ÄãÐèÒªÎªËùÓÐÏë±» Python »·¾³·ÃÎÊµÄº¯Êý¶¼Ôö¼ÓÒ»¸ö¾²Ì¬µÄº¯Êý£¬º¯ÊýµÄ·µ»ØÖµÀàÐÍÎª PyObject*£¬º¯ÊýÃûÇ°ÃæÒª¼ÓÉÏÄ£¿éÃûºÍÒ»¸öÏÂ»®Ïß(_)¡£
-	 °ü×°º¯ÊýµÄÓÃ´¦¾ÍÊÇÏÈ°Ñ Python µÄÖµ´«µÝ¸ø C£¬È»ºóµ÷ÓÃÎÒÃÇÏëÒªµ÷ÓÃµÄÏà¹Øº¯Êý¡£µ±Õâ¸öº¯ÊýÍê³ÉÒª·µ»Ø Python µÄÊ±ºò£¬°Ñº¯ÊýµÄ¼ÆËã½á¹û×ª»»³É Python µÄ¶ÔÏó£¬È»ºó·µ»Ø¸ø Python¡£
-	 ÔÚ´Ó Python¶ÔÏó×ª»»µ½C¶ÔÏóµÄ×ª»»¾ÍÓÃPyArg_Parse*ÏµÁÐº¯Êý¡£ÔÚ´Ó C ×ªµ½ Python µÄÊ±ºò£¬¾ÍÓÃ Py_BuildValue()º¯Êý 
-	 PyArg_Parse ÏµÁÐº¯ÊýµÄÓÃ·¨¸ú C µÄ sscanf º¯ÊýºÜÏñ£¬¶¼½ÓÊÜÒ»¸ö×Ö·û´®Á÷£¬²¢¸ù¾ÝÒ»¸öÖ¸¶¨µÄ¸ñÊ½×Ö·û´®½øÐÐ½âÎö£¬°Ñ½á¹û·ÅÈëµ½ÏàÓ¦µÄÖ¸ÕëËùÖ¸µÄ±äÁ¿ÖÐÈ¥¡£ËüÃÇµÄ·µ»ØÖµÎª 1 ±íÊ¾½âÎö³É¹¦£¬·µ»ØÖµÎª 0 ±íÊ¾Ê§°Ü¡£ 
-	 Py_BuildValue µÄÓÃ·¨¸ú sprintf ºÜÏñ£¬°ÑËùÓÐµÄ²ÎÊý°´¸ñÊ½×Ö·û´®ËùÖ¸¶¨µÄ¸ñÊ½×ª»»³ÉÒ»¸öPython µÄ¶ÔÏó¡£ 
+** Pythonæ‰©å±•
+   1. ä¸ºpythonåˆ›å»ºæ‰©å±•éœ€è¦ä¸‰ä¸ªä¸»è¦æ­¥éª¤ï¼š
+      1. åˆ›å»ºåº”ç”¨ç¨‹åºä»£ç 
+      2. åˆ©ç”¨æ ·æ¿æ¥åŒ…è£…ä»£ç 
+      3. ç¼–è¯‘ä¸Žæµ‹è¯•
+   2. æˆ‘ä»¬çš„æ ·æ¿ä¸»è¦åˆ†ä¸º 4 æ­¥ï¼š 
+      1. åŒ…å« Python çš„å¤´æ–‡ä»¶ã€‚ 
+      2. ä¸ºæ¯ä¸ªæ¨¡å—çš„æ¯ä¸€ä¸ªå‡½æ•°å¢žåŠ ä¸€ä¸ªåž‹å¦‚ Pythonå¯¹è±¡æŒ‡é’ˆ æ¨¡å—åç§°_å‡½æ•°åç§°(PyObject *self,PyObject *args)çš„åŒ…è£…å‡½æ•°ã€‚ 
+	 ä½ éœ€è¦ä¸ºæ‰€æœ‰æƒ³è¢« Python çŽ¯å¢ƒè®¿é—®çš„å‡½æ•°éƒ½å¢žåŠ ä¸€ä¸ªé™æ€çš„å‡½æ•°ï¼Œå‡½æ•°çš„è¿”å›žå€¼ç±»åž‹ä¸º PyObject*ï¼Œå‡½æ•°åå‰é¢è¦åŠ ä¸Šæ¨¡å—åå’Œä¸€ä¸ªä¸‹åˆ’çº¿(_)ã€‚
+	 åŒ…è£…å‡½æ•°çš„ç”¨å¤„å°±æ˜¯å…ˆæŠŠ Python çš„å€¼ä¼ é€’ç»™ Cï¼Œç„¶åŽè°ƒç”¨æˆ‘ä»¬æƒ³è¦è°ƒç”¨çš„ç›¸å…³å‡½æ•°ã€‚å½“è¿™ä¸ªå‡½æ•°å®Œæˆè¦è¿”å›ž Python çš„æ—¶å€™ï¼ŒæŠŠå‡½æ•°çš„è®¡ç®—ç»“æžœè½¬æ¢æˆ Python çš„å¯¹è±¡ï¼Œç„¶åŽè¿”å›žç»™ Pythonã€‚
+	 åœ¨ä»Ž Pythonå¯¹è±¡è½¬æ¢åˆ°Cå¯¹è±¡çš„è½¬æ¢å°±ç”¨PyArg_Parse*ç³»åˆ—å‡½æ•°ã€‚åœ¨ä»Ž C è½¬åˆ° Python çš„æ—¶å€™ï¼Œå°±ç”¨ Py_BuildValue()å‡½æ•° 
+	 PyArg_Parse ç³»åˆ—å‡½æ•°çš„ç”¨æ³•è·Ÿ C çš„ sscanf å‡½æ•°å¾ˆåƒï¼Œéƒ½æŽ¥å—ä¸€ä¸ªå­—ç¬¦ä¸²æµï¼Œå¹¶æ ¹æ®ä¸€ä¸ªæŒ‡å®šçš„æ ¼å¼å­—ç¬¦ä¸²è¿›è¡Œè§£æžï¼ŒæŠŠç»“æžœæ”¾å…¥åˆ°ç›¸åº”çš„æŒ‡é’ˆæ‰€æŒ‡çš„å˜é‡ä¸­åŽ»ã€‚å®ƒä»¬çš„è¿”å›žå€¼ä¸º 1 è¡¨ç¤ºè§£æžæˆåŠŸï¼Œè¿”å›žå€¼ä¸º 0 è¡¨ç¤ºå¤±è´¥ã€‚ 
+	 Py_BuildValue çš„ç”¨æ³•è·Ÿ sprintf å¾ˆåƒï¼ŒæŠŠæ‰€æœ‰çš„å‚æ•°æŒ‰æ ¼å¼å­—ç¬¦ä¸²æ‰€æŒ‡å®šçš„æ ¼å¼è½¬æ¢æˆä¸€ä¸ªPython çš„å¯¹è±¡ã€‚ 
  
-      3. ÎªÃ¿¸öÄ£¿éÔö¼ÓÒ»¸öÐÍÈç PyMethodDef Ä£¿éÃûMethods[]µÄÊý×é¡£ 
-	 Õâ¸öÊý×éÓÉ¶à¸öÊý×é×é³É¡£ÆäÖÐµÄÃ¿Ò»¸öÊý×é¶¼°üº¬ÁËÒ»¸öº¯ÊýµÄÐÅÏ¢¡£×îºó·ÅÒ»¸ö NULL Êý×é±íÊ¾ÁÐ±íµÄ½áÊø¡£ÀýÈç:
+      3. ä¸ºæ¯ä¸ªæ¨¡å—å¢žåŠ ä¸€ä¸ªåž‹å¦‚ PyMethodDef æ¨¡å—åMethods[]çš„æ•°ç»„ã€‚ 
+	 è¿™ä¸ªæ•°ç»„ç”±å¤šä¸ªæ•°ç»„ç»„æˆã€‚å…¶ä¸­çš„æ¯ä¸€ä¸ªæ•°ç»„éƒ½åŒ…å«äº†ä¸€ä¸ªå‡½æ•°çš„ä¿¡æ¯ã€‚æœ€åŽæ”¾ä¸€ä¸ª NULL æ•°ç»„è¡¨ç¤ºåˆ—è¡¨çš„ç»“æŸã€‚ä¾‹å¦‚:
 	 #+BEGIN_SRC C
 	 static PyMethodDef 
 	 ExtestMethods[] = { 
@@ -1324,30 +1389,30 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
 	 }; 
 	 #+END_SRC
 	  
-	 Ã¿Ò»¸öÊý×é¶¼°üº¬ÁËº¯ÊýÔÚ Python ÖÐµÄÃû×Ö£¬ÏàÓ¦µÄ°ü×°º¯ÊýµÄÃû×ÖÒÔ¼°Ò»¸ö METH_VARARGS³£Á¿¡£
-	 ÆäÖÐ£¬METH_VARARGS ³£ Á¿ ±í Ê¾ ²Î Êý ÒÔ tuple ÐÎ Ê½ ´« Èë ¡£
-	 Èç¹ûÎÒÃÇÒªÊ¹ÓÃPyArg_ParseTupleAndKeywords()º¯ÊýÀ´·ÖÎöÃüÃû²ÎÊýµÄ»°£¬ÎÒÃÇ»¹ÐèÒªÈÃÕâ¸ö±êÖ¾³£Á¿ÓëMETH_KEYWORDS ³£Á¿½øÐÐÂß¼­ÓëÔËËã³£Á¿¡£
-	 ×îºó£¬ÓÃÁ½¸ö NULL À´½áÊøÎÒÃÇµÄº¯ÊýÐÅÏ¢ÁÐ±í¡£ 
-      4. Ôö¼ÓÄ£¿é³õÊ¼»¯º¯Êý void initÄ£¿éÃû()
-	 ËùÓÐ¹¤×÷µÄ×îºóÒ»²¿·Ö¾ÍÊÇÄ£¿éµÄ³õÊ¼»¯º¯Êý¡£Õâ²¿·Ö´úÂëÔÚÄ£¿é±»µ¼ÈëµÄÊ±ºò±»½âÊÍÆ÷µ÷ÓÃ¡£ÔÚÕâ¶Î´úÂëÖÐ£¬ÎÒÃÇÐèÒªµ÷ÓÃ Py_InitModule()º¯Êý£¬²¢°ÑÄ£¿éÃûºÍ ModuleMethods[]Êý×éµÄÃû×Ö´«µÝ½øÈ¥£¬ÒÔ±ãÓÚ½âÊÍÆ÷ÄÜÕýÈ·µÄµ÷ÓÃÎÒÃÇÄ£¿éÖÐµÄº¯Êý¡£
+	 æ¯ä¸€ä¸ªæ•°ç»„éƒ½åŒ…å«äº†å‡½æ•°åœ¨ Python ä¸­çš„åå­—ï¼Œç›¸åº”çš„åŒ…è£…å‡½æ•°çš„åå­—ä»¥åŠä¸€ä¸ª METH_VARARGSå¸¸é‡ã€‚
+	 å…¶ä¸­ï¼ŒMETH_VARARGS å¸¸ é‡ è¡¨ ç¤º å‚ æ•° ä»¥ tuple å½¢ å¼ ä¼  å…¥ ã€‚
+	 å¦‚æžœæˆ‘ä»¬è¦ä½¿ç”¨PyArg_ParseTupleAndKeywords()å‡½æ•°æ¥åˆ†æžå‘½åå‚æ•°çš„è¯ï¼Œæˆ‘ä»¬è¿˜éœ€è¦è®©è¿™ä¸ªæ ‡å¿—å¸¸é‡ä¸ŽMETH_KEYWORDS å¸¸é‡è¿›è¡Œé€»è¾‘ä¸Žè¿ç®—å¸¸é‡ã€‚
+	 æœ€åŽï¼Œç”¨ä¸¤ä¸ª NULL æ¥ç»“æŸæˆ‘ä»¬çš„å‡½æ•°ä¿¡æ¯åˆ—è¡¨ã€‚ 
+      4. å¢žåŠ æ¨¡å—åˆå§‹åŒ–å‡½æ•° void initæ¨¡å—å()
+	 æ‰€æœ‰å·¥ä½œçš„æœ€åŽä¸€éƒ¨åˆ†å°±æ˜¯æ¨¡å—çš„åˆå§‹åŒ–å‡½æ•°ã€‚è¿™éƒ¨åˆ†ä»£ç åœ¨æ¨¡å—è¢«å¯¼å…¥çš„æ—¶å€™è¢«è§£é‡Šå™¨è°ƒç”¨ã€‚åœ¨è¿™æ®µä»£ç ä¸­ï¼Œæˆ‘ä»¬éœ€è¦è°ƒç”¨ Py_InitModule()å‡½æ•°ï¼Œå¹¶æŠŠæ¨¡å—åå’Œ ModuleMethods[]æ•°ç»„çš„åå­—ä¼ é€’è¿›åŽ»ï¼Œä»¥ä¾¿äºŽè§£é‡Šå™¨èƒ½æ­£ç¡®çš„è°ƒç”¨æˆ‘ä»¬æ¨¡å—ä¸­çš„å‡½æ•°ã€‚
 	 #+BEGIN_SRC C
 	 void initExtest() { 
 	 Py_InitModule("Extest", ExtestMethods); 
 	 } 
 	 #+END_SRC
-   3. ±àÒë
-      Ê¹ÓÃ distutils °üµÄÊ±ºòÎÒÃÇ¿ÉÒÔ·½±ãµÄ°´ÒÔÏÂ²½ÖèÀ´×ö£º 
-      1. ´´½¨ setup.py 
+   3. ç¼–è¯‘
+      ä½¿ç”¨ distutils åŒ…çš„æ—¶å€™æˆ‘ä»¬å¯ä»¥æ–¹ä¾¿çš„æŒ‰ä»¥ä¸‹æ­¥éª¤æ¥åšï¼š 
+      1. åˆ›å»º setup.py 
 	 #+BEGIN_EXAMPLE
-	 ÏÂÒ»²½¾ÍÊÇÒª´´½¨Ò»¸ö setup.py ÎÄ¼þ¡£±àÒë×îÖ÷ÒªµÄ¹¤×÷ÓÉ setup()º¯ÊýÀ´Íê³É¡£ÔÚÕâ¸öº¯Êýµ÷ÓÃÖ®Ç°µÄËùÓÐ´úÂë£¬¶¼ÊÇÒ»Ð©Ô¤±¸¶¯×÷¡£ÎªÁËÄÜ±àÒëÀ©Õ¹£¬ÄãÒªÎªÃ¿Ò»¸öÀ©Õ¹´´½¨Ò»¸ö ExtensionÊµÀý£¬ÔÚÕâÀï£¬ÎÒÃÇÖ»ÓÐÒ»¸öÀ©Õ¹£¬ËùÒÔÖ»Òª´´½¨Ò»¸ö Extension ÊµÀý£º 
+	 ä¸‹ä¸€æ­¥å°±æ˜¯è¦åˆ›å»ºä¸€ä¸ª setup.py æ–‡ä»¶ã€‚ç¼–è¯‘æœ€ä¸»è¦çš„å·¥ä½œç”± setup()å‡½æ•°æ¥å®Œæˆã€‚åœ¨è¿™ä¸ªå‡½æ•°è°ƒç”¨ä¹‹å‰çš„æ‰€æœ‰ä»£ç ï¼Œéƒ½æ˜¯ä¸€äº›é¢„å¤‡åŠ¨ä½œã€‚ä¸ºäº†èƒ½ç¼–è¯‘æ‰©å±•ï¼Œä½ è¦ä¸ºæ¯ä¸€ä¸ªæ‰©å±•åˆ›å»ºä¸€ä¸ª Extensionå®žä¾‹ï¼Œåœ¨è¿™é‡Œï¼Œæˆ‘ä»¬åªæœ‰ä¸€ä¸ªæ‰©å±•ï¼Œæ‰€ä»¥åªè¦åˆ›å»ºä¸€ä¸ª Extension å®žä¾‹ï¼š 
 	 Extension('Extest', sources=['Extest2.c']) 
-	 µÚÒ»¸ö²ÎÊýÊÇ£¨ÍêÕûµÄ£©À©Õ¹µÄÃû×Ö£¬Èç¹ûÄ£¿éÊÇ°üµÄÒ»²¿·ÖµÄ»°£¬»¹Òª¼ÓÉÏÓÃ'.'·Ö¸ôµÄÍêÕûµÄ°üµÄÃû×Ö¡£ÎÒÃÇÕâÀïµÄÀ©Õ¹ÊÇ¶ÀÁ¢µÄ£¬ËùÒÔÃû×ÖÖ»ÒªÐ´"Extest"¾ÍºÃÁË¡£sources ²ÎÊýÊÇËùÓÐÔ´´úÂëµÄÎÄ¼þÁÐ±í¡£Í¬Ñù£¬ÎÒÃÇÒ²Ö»ÓÐÒ»¸öÎÄ¼þ£ºExtest2.c¡£ 
-	 ÏÖÔÚ£¬ÎÒÃÇ¿ÉÒÔµ÷ÓÃ setup()ÁË¡£setup ÐèÒªÁ½¸ö²ÎÊý:Ò»¸öÃû×Ö²ÎÊý±íÊ¾Òª±àÒëÄÄ¸ö¶«Î÷£¬Ò»¸öÁÐ±íÁÐ³öÒª±àÒëµÄ¶ÔÏó¡£ÓÉÓÚÎÒÃÇÒª±àÒëµÄÊÇÒ»¸öÀ©Õ¹£¬ÎÒÃÇ°Ñ ext_modules ²ÎÊýµÄÖµÉèÎªÀ©Õ¹Ä£¿éµÄÁÐ±í¡£Óï·¨ÈçÏÂ£º 
+	 ç¬¬ä¸€ä¸ªå‚æ•°æ˜¯ï¼ˆå®Œæ•´çš„ï¼‰æ‰©å±•çš„åå­—ï¼Œå¦‚æžœæ¨¡å—æ˜¯åŒ…çš„ä¸€éƒ¨åˆ†çš„è¯ï¼Œè¿˜è¦åŠ ä¸Šç”¨'.'åˆ†éš”çš„å®Œæ•´çš„åŒ…çš„åå­—ã€‚æˆ‘ä»¬è¿™é‡Œçš„æ‰©å±•æ˜¯ç‹¬ç«‹çš„ï¼Œæ‰€ä»¥åå­—åªè¦å†™"Extest"å°±å¥½äº†ã€‚sources å‚æ•°æ˜¯æ‰€æœ‰æºä»£ç çš„æ–‡ä»¶åˆ—è¡¨ã€‚åŒæ ·ï¼Œæˆ‘ä»¬ä¹Ÿåªæœ‰ä¸€ä¸ªæ–‡ä»¶ï¼šExtest2.cã€‚ 
+	 çŽ°åœ¨ï¼Œæˆ‘ä»¬å¯ä»¥è°ƒç”¨ setup()äº†ã€‚setup éœ€è¦ä¸¤ä¸ªå‚æ•°:ä¸€ä¸ªåå­—å‚æ•°è¡¨ç¤ºè¦ç¼–è¯‘å“ªä¸ªä¸œè¥¿ï¼Œä¸€ä¸ªåˆ—è¡¨åˆ—å‡ºè¦ç¼–è¯‘çš„å¯¹è±¡ã€‚ç”±äºŽæˆ‘ä»¬è¦ç¼–è¯‘çš„æ˜¯ä¸€ä¸ªæ‰©å±•ï¼Œæˆ‘ä»¬æŠŠ ext_modules å‚æ•°çš„å€¼è®¾ä¸ºæ‰©å±•æ¨¡å—çš„åˆ—è¡¨ã€‚è¯­æ³•å¦‚ä¸‹ï¼š 
 	 setup('Extest', ext_modules=[...]) 
  
-	 Àý 22.2 ±àÒë½Å±¾(setup.py) 
+	 ä¾‹ 22.2 ç¼–è¯‘è„šæœ¬(setup.py) 
 	 
-	 Õâ¸ö½Å±¾»á°ÑÎÒÃÇµÄÀ©Õ¹±àÒëµ½ build/lib.*×ÓÄ¿Â¼ÖÐ¡£ 
+	 è¿™ä¸ªè„šæœ¬ä¼šæŠŠæˆ‘ä»¬çš„æ‰©å±•ç¼–è¯‘åˆ° build/lib.*å­ç›®å½•ä¸­ã€‚ 
 	 
 	 #!/usr/bin/env python 
 	 
@@ -1355,103 +1420,103 @@ doctest.testmodº¯Êý»á´ÓÒ»¸öÄ£¿éÖÐ¶ÁÈ¡ËùÓÐÎÄµµ×Ö·û´®,ÕÒ³öËùÓ´¿´ÆðÀ´ÏñÊÇÔÚ½»»¥½âÊÍ
 	 MOD = 'Extest' 
 	 setup(name=MOD, ext_modules=[Extension(MOD, sources=['Extest2.c'])])
 	 #+END_EXAMPLE
-      2. Í¨¹ýÔËÐÐ setup.py À´±àÒëºÍÁ¬½ÓÄúµÄ´úÂë 
-	 ÏÖÔÚ£¬ÎÒÃÇÒÑ¾­ÓÐÁË setup.py ÎÄ¼þ¡£ÔËÐÐ setup.py build ÃüÁî¾Í¿ÉÒÔ¿ªÊ¼±àÒëÎÒÃÇµÄÀ©Õ¹ÁË
-      3. ´Ó Python ÖÐµ¼ÈëÄúµÄÄ£¿é 
-	 ÄãµÄÀ©Õ¹»á±»´´½¨ÔÚÄãÔËÐÐ setup.py ½Å±¾ËùÔÚÄ¿Â¼ÏÂµÄ build/lib.*Ä¿Â¼ÖÐ¡£Äã¿ÉÒÔÇÐ»»µ½ÄÇ¸öÄ¿Â¼ÖÐÀ´²âÊÔÄãµÄÄ£¿é£¬»òÕßÒ²¿ÉÒÔÓÃÒÔÏÂÃüÁî°ÑËü°²×°µ½ÄãµÄ Python ÖÐ£º
-      4. ²âÊÔ¹¦ÄÜ
-   4. ÒýÓÃ¼ÆÊý
-      µ±´´½¨À©Õ¹Ê±£¬Äã±ØÐè¶ÔÈçºÎ²Ù×÷ Python ¶ÔÏóÒª¸ñÍâµÄÐ¡ÐÄ¡£ÄãÊ±Ê±¿Ì¿Ì¶¼Òª×¢ÒâÊÇ·ñÒª¸Ä±äÄ³¸ö¶ÔÏóµÄÒýÓÃ¼ÆÊý
-      #+CAPTION:ÓÃÓÚPython¶ÔÏóÒýÓÃ¼ÆÊýµÄºê
-      | º¯Êý           | ËµÃ÷                    |
+      2. é€šè¿‡è¿è¡Œ setup.py æ¥ç¼–è¯‘å’Œè¿žæŽ¥æ‚¨çš„ä»£ç  
+	 çŽ°åœ¨ï¼Œæˆ‘ä»¬å·²ç»æœ‰äº† setup.py æ–‡ä»¶ã€‚è¿è¡Œ setup.py build å‘½ä»¤å°±å¯ä»¥å¼€å§‹ç¼–è¯‘æˆ‘ä»¬çš„æ‰©å±•äº†
+      3. ä»Ž Python ä¸­å¯¼å…¥æ‚¨çš„æ¨¡å— 
+	 ä½ çš„æ‰©å±•ä¼šè¢«åˆ›å»ºåœ¨ä½ è¿è¡Œ setup.py è„šæœ¬æ‰€åœ¨ç›®å½•ä¸‹çš„ build/lib.*ç›®å½•ä¸­ã€‚ä½ å¯ä»¥åˆ‡æ¢åˆ°é‚£ä¸ªç›®å½•ä¸­æ¥æµ‹è¯•ä½ çš„æ¨¡å—ï¼Œæˆ–è€…ä¹Ÿå¯ä»¥ç”¨ä»¥ä¸‹å‘½ä»¤æŠŠå®ƒå®‰è£…åˆ°ä½ çš„ Python ä¸­ï¼š
+      4. æµ‹è¯•åŠŸèƒ½
+   4. å¼•ç”¨è®¡æ•°
+      å½“åˆ›å»ºæ‰©å±•æ—¶ï¼Œä½ å¿…éœ€å¯¹å¦‚ä½•æ“ä½œ Python å¯¹è±¡è¦æ ¼å¤–çš„å°å¿ƒã€‚ä½ æ—¶æ—¶åˆ»åˆ»éƒ½è¦æ³¨æ„æ˜¯å¦è¦æ”¹å˜æŸä¸ªå¯¹è±¡çš„å¼•ç”¨è®¡æ•°
+      #+CAPTION:ç”¨äºŽPythonå¯¹è±¡å¼•ç”¨è®¡æ•°çš„å®
+      | å‡½æ•°           | è¯´æ˜Ž                    |
       |----------------+-------------------------|
-      | Py_INCREF(obj) | Ôö¼Ó¶ÔÏó obj µÄÒýÓÃ¼ÆÊý |
+      | Py_INCREF(obj) | å¢žåŠ å¯¹è±¡ obj çš„å¼•ç”¨è®¡æ•° |
       |----------------+-------------------------|
-      | Py_DECREF(obj) | ¼õÉÙ¶ÔÏó obj µÄÒýÓÃ¼ÆÊý |
+      | Py_DECREF(obj) | å‡å°‘å¯¹è±¡ obj çš„å¼•ç”¨è®¡æ•° |
       |----------------+-------------------------|
-   5. Ïß³ÌºÍÈ«¾Ö½âÊÍËø£¨GIL£©
-      ±àÒëÀ©Õ¹µÄÈË±ØÐëÒª×¢Òâ£¬ËûÃÇµÄ´úÂëÓÐ¿ÉÄÜ»á±»ÔËÐÐÔÚÒ»¸ö¶àÏß³ÌµÄ Python »·¾³ÖÐ¡£
-      ÓÉÁ½¸ö C ºêPy_BEGIN_ALLOW_THREADS ºÍ Py_END_ALLOW_THREADS °ü¹üµÄ´úÂë£¬±£Ö¤ÁËÔËÐÐºÍ·ÇÔËÐÐÊ±µÄ°²È«ÐÔ¡£½«»áÔÊÐíÆäËûÏß³ÌµÄÔËÐÐ¡£
+   5. çº¿ç¨‹å’Œå…¨å±€è§£é‡Šé”ï¼ˆGILï¼‰
+      ç¼–è¯‘æ‰©å±•çš„äººå¿…é¡»è¦æ³¨æ„ï¼Œä»–ä»¬çš„ä»£ç æœ‰å¯èƒ½ä¼šè¢«è¿è¡Œåœ¨ä¸€ä¸ªå¤šçº¿ç¨‹çš„ Python çŽ¯å¢ƒä¸­ã€‚
+      ç”±ä¸¤ä¸ª C å®Py_BEGIN_ALLOW_THREADS å’Œ Py_END_ALLOW_THREADS åŒ…è£¹çš„ä»£ç ï¼Œä¿è¯äº†è¿è¡Œå’Œéžè¿è¡Œæ—¶çš„å®‰å…¨æ€§ã€‚å°†ä¼šå…è®¸å…¶ä»–çº¿ç¨‹çš„è¿è¡Œã€‚
  
 
 
-* Ä£¿éËµÃ÷
+* æ¨¡å—è¯´æ˜Ž
 ** cmd
-1. ¼Ì³Ðcmd.CmdÀà
-   * ÒÔdo_xxxÃüÃûµÄ³ÉÔ±º¯ÊýÎªxxxµÄÃüÁîµÄÃüÁîÖ´ÐÐÌå
-   * ÒÔhelp_xxxÃüÃûµÄº¯ÊýÎªxxxÃüÁîµÄ°ïÖúËµÃ÷Ö´ÐÐÌå
-2. ÔËÐÐÊ±
-   * helpÃüÁî»áÏÔÊ¾ËùÓÐÓÐ°ïÖúËµÃ÷µÄxxxÃüÁî
-   * ? xxx»áµ÷ÓÃhelp_xxxÀ´Êä³öxxxÃüÁîµÄ°ïÖú
-   * Ö±½ÓÔËÐÐxxx,»áµ÷ÓÃdo_xxxº¯Êý
-** sysÄ£¿é
-sysÄ£¿éÈÃÄãÄÜ¹»·ÃÎÊÓëpython½âÊÍÆ÷ÁªÏµ½ôÃÜµÄ±äÁ¿ºÍº¯Êý.
+1. ç»§æ‰¿cmd.Cmdç±»
+   * ä»¥do_xxxå‘½åçš„æˆå‘˜å‡½æ•°ä¸ºxxxçš„å‘½ä»¤çš„å‘½ä»¤æ‰§è¡Œä½“
+   * ä»¥help_xxxå‘½åçš„å‡½æ•°ä¸ºxxxå‘½ä»¤çš„å¸®åŠ©è¯´æ˜Žæ‰§è¡Œä½“
+2. è¿è¡Œæ—¶
+   * helpå‘½ä»¤ä¼šæ˜¾ç¤ºæ‰€æœ‰æœ‰å¸®åŠ©è¯´æ˜Žçš„xxxå‘½ä»¤
+   * ? xxxä¼šè°ƒç”¨help_xxxæ¥è¾“å‡ºxxxå‘½ä»¤çš„å¸®åŠ©
+   * ç›´æŽ¥è¿è¡Œxxx,ä¼šè°ƒç”¨do_xxxå‡½æ•°
+** sysæ¨¡å—
+sysæ¨¡å—è®©ä½ èƒ½å¤Ÿè®¿é—®ä¸Žpythonè§£é‡Šå™¨è”ç³»ç´§å¯†çš„å˜é‡å’Œå‡½æ•°.
 
-#+TABLE: sysÄ£¿éÖÐµÄÖØÒªº¯ÊýºÍ±äÁ¿
-| º¯Êý/±äÁ¿   | ÀàÐÍËµÃ÷   | ÃèÊö                                          |
+#+TABLE: sysæ¨¡å—ä¸­çš„é‡è¦å‡½æ•°å’Œå˜é‡
+| å‡½æ•°/å˜é‡   | ç±»åž‹è¯´æ˜Ž   | æè¿°                                          |
 |-------------+------------+-----------------------------------------------|
-| argv        | ×Ö·û´®ÁÐ±í | ´«µÝ¸øÃüÁîÐÐµÄ²ÎÊý,°üÀ¨½Å±¾Ãû³Æ               |
-| exit([arg]) | º¯Êý       | ÍË³öµ±Ç°³ÌÐò,¿ÉÑ¡²ÎÊýÎª¸ø¶¨µÄ·µ»ØÖµ»ò´íÎóÐÅÏ¢ |
-| modules     | ×Öµä       | Ó³ÉäÒÑ¾­ÔØÈëµÄÄ£¿éÃûºÍÔØÈëÄ£¿éµÄ×Öµä          |
-| path        | ÁÐ±í       | ÔÚÄÄÐ©Ä¿Â¼ÖÐ²éÕÒÄ£¿éµÄÁÐ±í                    |
-| platform    | ×Ö·û´®  | ²Ù×÷ÏµÍ³Æ½Ì¨»òÆäËûµÄÆ½Ì¨±êÊ¶·û             |
-| stdin       | ÀàÎÄ¼þ¶ÔÏó | ±ê×¼ÊäÈëÁ÷                           |
-| stdout      | ÀàÎÄ¼þ¶ÔÏó | ±ê×¼Êä³öÁ÷                           |
-| stderr      | ÀàÎÄ¼þ¶ÔÏó | ±ê×¼´íÎóÁ÷                                |
-** osÄ£¿é
-osÄ£¿éÎªÄãÌá¹©ÁË·ÃÎÊ¶à¸ö²Ù×÷ÏµÍ³·þÎñµÄ¹¦ÄÜ. osºÍos.pathÄ£¿é»¹°üÀ¨ÁËÒ»Ð©ÓÃÓÚ¼ì²é,¹¹Ôì,É¾³ýÄ¿Â¼ºÍÎÄ¼þµÄº¯Êý,ÒÔ¼°Ò»Ð©´¦ÀíÂ·¾¶µÄº¯Êý.
+| argv        | å­—ç¬¦ä¸²åˆ—è¡¨ | ä¼ é€’ç»™å‘½ä»¤è¡Œçš„å‚æ•°,åŒ…æ‹¬è„šæœ¬åç§°               |
+| exit([arg]) | å‡½æ•°       | é€€å‡ºå½“å‰ç¨‹åº,å¯é€‰å‚æ•°ä¸ºç»™å®šçš„è¿”å›žå€¼æˆ–é”™è¯¯ä¿¡æ¯ |
+| modules     | å­—å…¸       | æ˜ å°„å·²ç»è½½å…¥çš„æ¨¡å—åå’Œè½½å…¥æ¨¡å—çš„å­—å…¸          |
+| path        | åˆ—è¡¨       | åœ¨å“ªäº›ç›®å½•ä¸­æŸ¥æ‰¾æ¨¡å—çš„åˆ—è¡¨                    |
+| platform    | å­—ç¬¦ä¸²  | æ“ä½œç³»ç»Ÿå¹³å°æˆ–å…¶ä»–çš„å¹³å°æ ‡è¯†ç¬¦             |
+| stdin       | ç±»æ–‡ä»¶å¯¹è±¡ | æ ‡å‡†è¾“å…¥æµ                           |
+| stdout      | ç±»æ–‡ä»¶å¯¹è±¡ | æ ‡å‡†è¾“å‡ºæµ                           |
+| stderr      | ç±»æ–‡ä»¶å¯¹è±¡ | æ ‡å‡†é”™è¯¯æµ                                |
+** osæ¨¡å—
+osæ¨¡å—ä¸ºä½ æä¾›äº†è®¿é—®å¤šä¸ªæ“ä½œç³»ç»ŸæœåŠ¡çš„åŠŸèƒ½. oså’Œos.pathæ¨¡å—è¿˜åŒ…æ‹¬äº†ä¸€äº›ç”¨äºŽæ£€æŸ¥,æž„é€ ,åˆ é™¤ç›®å½•å’Œæ–‡ä»¶çš„å‡½æ•°,ä»¥åŠä¸€äº›å¤„ç†è·¯å¾„çš„å‡½æ•°.
 
-#+CAPTION: osÄ£¿éÖÐÒ»Ð©ÖØÒªº¯ÊýºÍ±äÁ¿
-| º¯Êý/±äÁ¿       | ÀàÐÍ   | ÃèÊö                                       |
+#+CAPTION: osæ¨¡å—ä¸­ä¸€äº›é‡è¦å‡½æ•°å’Œå˜é‡
+| å‡½æ•°/å˜é‡       | ç±»åž‹   | æè¿°                                       |
 |-----------------+--------+--------------------------------------------|
-| environ         | ×Öµä   | ¶Ô»·¾³±äÁ¿½øÐÐÓ³Éä                         |
-| system(command) | º¯Êý | ÔÚ×ÓshellÖÐÖ´ÐÐcommand           |
-| sep             | ×Ö·û´® | Â·¾¶ÖÐµÄ·Ö¸ô·û                             |
-| pathsep         | ×Ö·û´® | PATH»·¾³±äÁ¿ÖÐ¸÷Â·¾¶µÄ·Ö¸ô·û               |
-| linesep         | ×Ö·û´® | ÐÐ·Ö¸ô·û                                   |
-| urandom(n)      | º¯Êý   | ·µ»Øn×Ö½ÚµÄ¼ÓÃÜÇ¿Ëæ»úÊý¾Ý                  |
-|                 |        | ÈôÆ½Ì¨²»Ö§³Ö,»áÅ×³öNotImplementedErrorÒì³£ |
+| environ         | å­—å…¸   | å¯¹çŽ¯å¢ƒå˜é‡è¿›è¡Œæ˜ å°„                         |
+| system(command) | å‡½æ•° | åœ¨å­shellä¸­æ‰§è¡Œcommand           |
+| sep             | å­—ç¬¦ä¸² | è·¯å¾„ä¸­çš„åˆ†éš”ç¬¦                             |
+| pathsep         | å­—ç¬¦ä¸² | PATHçŽ¯å¢ƒå˜é‡ä¸­å„è·¯å¾„çš„åˆ†éš”ç¬¦               |
+| linesep         | å­—ç¬¦ä¸² | è¡Œåˆ†éš”ç¬¦                                   |
+| urandom(n)      | å‡½æ•°   | è¿”å›žnå­—èŠ‚çš„åŠ å¯†å¼ºéšæœºæ•°æ®                  |
+|                 |        | è‹¥å¹³å°ä¸æ”¯æŒ,ä¼šæŠ›å‡ºNotImplementedErrorå¼‚å¸¸ |
 ** fileinput
-fileinputÄ£¿éÈÃÄãÄÜÇáËÉ±ãÀûÎÄ±¾ÎÄ¼þµÄËùÓÐÐÐ. ÆäÖÐ×îÖØÒªµÄÊÇ ~fileinput.input~ º¯Êý,Ëü»á·µ»ØÒ»¸öÓÃÓÚforÑ­»·±éÀúµÄ¶ÔÏó,¿ÉÓÃÓÚ±éÀú¶à¸öÎÄ¼þµÄÐÐ.
+fileinputæ¨¡å—è®©ä½ èƒ½è½»æ¾ä¾¿åˆ©æ–‡æœ¬æ–‡ä»¶çš„æ‰€æœ‰è¡Œ. å…¶ä¸­æœ€é‡è¦çš„æ˜¯ ~fileinput.input~ å‡½æ•°,å®ƒä¼šè¿”å›žä¸€ä¸ªç”¨äºŽforå¾ªçŽ¯éåŽ†çš„å¯¹è±¡,å¯ç”¨äºŽéåŽ†å¤šä¸ªæ–‡ä»¶çš„è¡Œ.
 
 + input(files=None,inplace=0,backup='',bufsize=0,mode='r',openhook=None)
 
-  - filesÖ¸¶¨ÁË±éÀúÄÄÐ©ÎÄ¼þµÄÄÚÈÝ,Ä¬ÈÏÎª±éÀú´«µÝ¸ø³ÌÐòµÄ²ÎÊýÓëstdin
+  - filesæŒ‡å®šäº†éåŽ†å“ªäº›æ–‡ä»¶çš„å†…å®¹,é»˜è®¤ä¸ºéåŽ†ä¼ é€’ç»™ç¨‹åºçš„å‚æ•°ä¸Žstdin
 
-  - inplaceÎªTrueÔò±íÊ¾Ô­µØÐÞ¸ÄÔ­ÄÚÈÝ,ÕâÊ±¶ÔÓÚ·ÃÎÊµÄÃ¿Ò»ÐÐ,ÐèÒª´òÓ¡³öÌæ´úµÄÄÚÈÝ,ÒÔ·µ»Øµ½µ±Ç°µÄÊäÈëÎÄ¼þÖÐ.
+  - inplaceä¸ºTrueåˆ™è¡¨ç¤ºåŽŸåœ°ä¿®æ”¹åŽŸå†…å®¹,è¿™æ—¶å¯¹äºŽè®¿é—®çš„æ¯ä¸€è¡Œ,éœ€è¦æ‰“å°å‡ºæ›¿ä»£çš„å†…å®¹,ä»¥è¿”å›žåˆ°å½“å‰çš„è¾“å…¥æ–‡ä»¶ä¸­.
 
-  - backupÔòÖ¸¶¨ÁËµ±inplaceÎªTrueÊ±,ÊÇ·ñ´´½¨Ô­ÎÄ¼þµÄ±¸·Ý.
+  - backupåˆ™æŒ‡å®šäº†å½“inplaceä¸ºTrueæ—¶,æ˜¯å¦åˆ›å»ºåŽŸæ–‡ä»¶çš„å¤‡ä»½.
 
 + filename()
 
-  ·µ»Øµ±Ç°´¦ÀíµÄÎÄ¼þÂ·¾¶
+  è¿”å›žå½“å‰å¤„ç†çš„æ–‡ä»¶è·¯å¾„
 
 + lineno()
 
-  µ±Ç°ÀÛ¼Æ´¦ÀíµÄÐÐÊý
+  å½“å‰ç´¯è®¡å¤„ç†çš„è¡Œæ•°
 
 + filelinno()
 
-  µ±Ç°´¦ÀíÎÄ¼þµÄµ±Ç°ÐÐÊý
+  å½“å‰å¤„ç†æ–‡ä»¶çš„å½“å‰è¡Œæ•°
 
 + isfirstline()
 
-  ¼ì²é×îºóÐÐÊÇ·ñÎªÎÄ¼þµÄµÚÒ»ÐÐ
+  æ£€æŸ¥æœ€åŽè¡Œæ˜¯å¦ä¸ºæ–‡ä»¶çš„ç¬¬ä¸€è¡Œ
 
 + isstdin()
 
-  ¼ì²éµ±Ç°ÐÐÊÇ·ñÀ´×Ôsys.stdin
+  æ£€æŸ¥å½“å‰è¡Œæ˜¯å¦æ¥è‡ªsys.stdin
 
 + nextfile()
 
-  ¹Ø±Õµ±Ç°ÎÄ¼þ,ÒÆ¶¯µ½ÏÂÒ»¸öÎÄ¼þ
+  å…³é—­å½“å‰æ–‡ä»¶,ç§»åŠ¨åˆ°ä¸‹ä¸€ä¸ªæ–‡ä»¶
 
 + close()
 
-  ¹Ø±ÕÕû¸öÎÄ¼þÁ´,½áÊøµü´ú.
+  å…³é—­æ•´ä¸ªæ–‡ä»¶é“¾,ç»“æŸè¿­ä»£.
 
 #+BEGIN_SRC python
-  # Îªpython½Å±¾Ìí¼ÓÐÐºÅ
+  # ä¸ºpythonè„šæœ¬æ·»åŠ è¡Œå·
 
   import fileinput
 
@@ -1462,91 +1527,152 @@ fileinputÄ£¿éÈÃÄãÄÜÇáËÉ±ãÀûÎÄ±¾ÎÄ¼þµÄËùÓÐÐÐ. ÆäÖÐ×îÖØÒªµÄÊÇ ~fileinput.input~ º¯
 #+END_SRC
 
 ** set
-¼¯ºÏÖÐµÄÃ¿¸öÔªËØ¶¼ÊÇ²»µÈµÄ,ÇÒºÍ×ÖµäÒ»Ñù,¼¯ºÏÔªËØµÄË³ÐòÊÇÎÞÐòµÄ.
+é›†åˆä¸­çš„æ¯ä¸ªå…ƒç´ éƒ½æ˜¯ä¸ç­‰çš„,ä¸”å’Œå­—å…¸ä¸€æ ·,é›†åˆå…ƒç´ çš„é¡ºåºæ˜¯æ— åºçš„.
 
-+ ¼¯ºÏ²Ù×÷
-  | A.union(B) »ò A \vert B          | È¡Á½¸ö¼¯ºÏµÄ²¢¼¯   |
-  | A.intersection(B) »ò A&B         | È¡Á½¸ö¼¯ºÏµÄ½»¼¯   |
-  | A.difference(B)  »ò A-B          | È¥³ýÔÚsetbÖÐµÄÔªËØ |
-  | A.symmetric_difference(B) »ò A^B | Òì»ò²Ù×÷           |
-  | A.issubset(B) »ò A<=B            | AÊÇ·ñÎªBµÄ×Ó¼¯     |
-  | A.issuperset(B) »ò A>=B          | AÊÇ·ñÎªBµÄ³¬¼¯     |
-  | A.copy()                         | ¸´ÖÆ¼¯ºÏ           |
-  | A.add(element)                   | Íù¼¯ºÏÖÐÌí¼ÓÔªËØ |
-  | A.remove(element)                 | ´Ó¼¯ºÏÖÐÉ¾³ýÔªËØ   |
++ é›†åˆæ“ä½œ
+  | A.union(B) æˆ– A \vert B          | å–ä¸¤ä¸ªé›†åˆçš„å¹¶é›†   |
+  | A.intersection(B) æˆ– A&B         | å–ä¸¤ä¸ªé›†åˆçš„äº¤é›†   |
+  | A.difference(B)  æˆ– A-B          | åŽ»é™¤åœ¨setbä¸­çš„å…ƒç´  |
+  | A.symmetric_difference(B) æˆ– A^B | å¼‚æˆ–æ“ä½œ           |
+  | A.issubset(B) æˆ– A<=B            | Aæ˜¯å¦ä¸ºBçš„å­é›†     |
+  | A.issuperset(B) æˆ– A>=B          | Aæ˜¯å¦ä¸ºBçš„è¶…é›†     |
+  | A.copy()                         | å¤åˆ¶é›†åˆ           |
+  | A.add(element)                   | å¾€é›†åˆä¸­æ·»åŠ å…ƒç´  |
+  | A.remove(element)                 | ä»Žé›†åˆä¸­åˆ é™¤å…ƒç´    |
   |                                   |                    |
 
-¼¯ºÏÊÇ *¿É±ä* µÄ,Òò´Ë²»ÄÜ×÷Îª×ÖµäµÄ¼ü, ¶ø¼¯ºÏ±¾ÉíÓÖÖ»ÄÜ°üº¬ *²»¿É±ä* µÄÖµ,Òò´ËÒ²¾Í²»ÄÜ°üº¬ÆäËû¼¯ºÏ. 
-ÕâÊ±¿ÉÒÔÊ¹ÓÃfrozensetÀàÐÍ±íÊ¾²»¿É±äµÄ¼¯ºÏ:
+é›†åˆæ˜¯ *å¯å˜* çš„,å› æ­¤ä¸èƒ½ä½œä¸ºå­—å…¸çš„é”®, è€Œé›†åˆæœ¬èº«åˆåªèƒ½åŒ…å« *ä¸å¯å˜* çš„å€¼,å› æ­¤ä¹Ÿå°±ä¸èƒ½åŒ…å«å…¶ä»–é›†åˆ. 
+è¿™æ—¶å¯ä»¥ä½¿ç”¨frozensetç±»åž‹è¡¨ç¤ºä¸å¯å˜çš„é›†åˆ:
 #+BEGIN_SRC python
   a = set()
   b = set()
-  a.add(b)                        # Å×Òì³£
+  a.add(b)                        # æŠ›å¼‚å¸¸
   a.add(frozenset(b))             # OK
 #+END_SRC
 ** heapq
-¶ÑÊÇÓÃÓÚ±íÊ¾ÓÅÏÈ¶ÓÁÐµÄÒ»ÖÖÊý¾Ý½á¹¹. ËüµÄÌØµãÔÚÓÚ,Î»ÓÚiÎ»ÖÃÉÏµÄÔªËØ×Ü±Èi//2Î»ÖÃ´¦µÄÔªËØ´ó
-#+CAPTION: heapqÄ£¿éÖÐÖØÒªµÄº¯Êý
-| º¯Êý                | ÃèÊö                             |
+å †æ˜¯ç”¨äºŽè¡¨ç¤ºä¼˜å…ˆé˜Ÿåˆ—çš„ä¸€ç§æ•°æ®ç»“æž„. å®ƒçš„ç‰¹ç‚¹åœ¨äºŽ,ä½äºŽiä½ç½®ä¸Šçš„å…ƒç´ æ€»æ¯”i//2ä½ç½®å¤„çš„å…ƒç´ å¤§
+#+CAPTION: heapqæ¨¡å—ä¸­é‡è¦çš„å‡½æ•°
+| å‡½æ•°                | æè¿°                             |
 |---------------------+----------------------------------|
-| heappush(heap,x)    | ½«xÈë¶Ñ                          |
-| heappop(heap)       | ½«¶ÑÖÐ×îÐ¡µÄÔªËØµ¯³ö             |
-| heapify(heap)       | Ê¹ÓÃÈÎÒâÁÐ±í×÷Îª²ÎÊý,²¢Í¨¹ý¾¡¿ÉÄÜÉÙµÄÒÆÎ»²Ù×÷,½«Æä×ª»»ÎªºÏ·¨µÄ¶Ñ |
-| heapreplace(heap,x) | ½«¶ÑÖÐ×îÐ¡µÄÔªËØµ¯³ö,Í¬Ê±½«xÈë¶Ñ |
-| nlargest(n,iter)     | ·µ»ØiterÖÐµÚn´óµÄÔªËØ            |
-| nsmallest(n,iter)     | ·µ»ØiterÖÐµÚnÐ¡µÄÔªËØ                    |
+| heappush(heap,x)    | å°†xå…¥å †                          |
+| heappop(heap)       | å°†å †ä¸­æœ€å°çš„å…ƒç´ å¼¹å‡º             |
+| heapify(heap)       | ä½¿ç”¨ä»»æ„åˆ—è¡¨ä½œä¸ºå‚æ•°,å¹¶é€šè¿‡å°½å¯èƒ½å°‘çš„ç§»ä½æ“ä½œ,å°†å…¶è½¬æ¢ä¸ºåˆæ³•çš„å † |
+| heapreplace(heap,x) | å°†å †ä¸­æœ€å°çš„å…ƒç´ å¼¹å‡º,åŒæ—¶å°†xå…¥å † |
+| nlargest(n,iter)     | è¿”å›žiterä¸­ç¬¬nå¤§çš„å…ƒç´             |
+| nsmallest(n,iter)     | è¿”å›žiterä¸­ç¬¬nå°çš„å…ƒç´                     |
 ** time
-timeÄ£¿éËù°üº¬µÄº¯ÊýÄÜ¹»ÊµÏÖÒÔÏÂ¹¦ÄÜ:
-+ »ñÈ¡µ±Ç°Ê±¼ä
-+ ²Ù×÷Ê±¼äºÍÈÕÆÚ
-+ ´Ó×Ö·û´®¶ÁÈ¡Ê±¼ä
-+ ¸ñÊ½»¯Ê±¼äÎª×Ö·û´®.
+timeæ¨¡å—æ‰€åŒ…å«çš„å‡½æ•°èƒ½å¤Ÿå®žçŽ°ä»¥ä¸‹åŠŸèƒ½:
++ èŽ·å–å½“å‰æ—¶é—´
++ æ“ä½œæ—¶é—´å’Œæ—¥æœŸ
++ ä»Žå­—ç¬¦ä¸²è¯»å–æ—¶é—´
++ æ ¼å¼åŒ–æ—¶é—´ä¸ºå­—ç¬¦ä¸².
 
-pythonÖÐµÄÊ±¼ä¿ÉÒÔÓÃÊµÊý»òÒ»¸ö°üº¬ÊÇ9¸öÕûÊýµÄÔª×é. ÆäÖÐÊµÊý±íÊ¾´ÓÐÂ¼ÍÔª¿ªÊ¼µÄÃëÉ±,Ôª×éµÄÒâÒåÈçÏÂËùÊ¾:
-| Ë÷Òý | ×Ö¶Î         |            Öµ |
+pythonä¸­çš„æ—¶é—´å¯ä»¥ç”¨å®žæ•°æˆ–ä¸€ä¸ªåŒ…å«æ˜¯9ä¸ªæ•´æ•°çš„å…ƒç»„. å…¶ä¸­å®žæ•°è¡¨ç¤ºä»Žæ–°çºªå…ƒå¼€å§‹çš„ç§’æ€,å…ƒç»„çš„æ„ä¹‰å¦‚ä¸‹æ‰€ç¤º:
+| ç´¢å¼• | å­—æ®µ         |            å€¼ |
 |------+--------------+---------------|
-|    0 | Äê           |               |
-|    1 | ÔÂ           |          1-12 |
-|    2 | ÈÕ           |          1-31 |
-|    3 | Ê±           |          0-23 |
-|    4 | ·Ö           |          0-59 |
-|    5 | Ãë           |    0-61(ÈóÃë) |
-|    6 | ÖÜ           |  0-6(ÖÜÒ»Îª0) |
-|    7 | Ò»ÄêÖÐµÄÌìÊý |         1-366 |
-|    8 | ÏÄÁîÊ±       | False,True,-1 |
+|    0 | å¹´           |               |
+|    1 | æœˆ           |          1-12 |
+|    2 | æ—¥           |          1-31 |
+|    3 | æ—¶           |          0-23 |
+|    4 | åˆ†           |          0-59 |
+|    5 | ç§’           |    0-61(æ¶¦ç§’) |
+|    6 | å‘¨           |  0-6(å‘¨ä¸€ä¸º0) |
+|    7 | ä¸€å¹´ä¸­çš„å¤©æ•° |         1-366 |
+|    8 | å¤ä»¤æ—¶       | False,True,-1 |
 |      |              |               |
 
-#+CAPTION: timeÄ£¿éÖÐÖØÒªµÄº¯Êý
-| º¯Êý                      | ÃèÊö                                               |
+#+CAPTION: timeæ¨¡å—ä¸­é‡è¦çš„å‡½æ•°
+| å‡½æ•°                      | æè¿°                                               |
 |---------------------------+----------------------------------------------------|
-| asctime([tuple])          | ½«Ê±¼äÔª×é×ª»»Îª×Ö·û´®,Ä¬ÈÏÎªµ±Ç°Ê±¼ä              |
-| localtime([secs])         | ½«ÊµÊý×ª»»ÎªÊ±¼äÔª×é,Ä¬ÈÏÎªµ±Ç°Ê±¼ä,ÒÔ±¾µØÊ±¼äÎª×¼ |
-| mktime(tuple)             | ½«Ê±¼äÔª×é×ª»»Îª±¾µØÊ±¼ä                           |
-| sleep(secs)               | ÐÝÃßsecsÃë                                         |
-| strptime(string[,format]) | ½«×Ö·û´®½âÎöÎªÊ±¼äÔª×é                             |
-| time()                     | ·µ»Ø±íÊ¾µ±Ç°Ê±¼äµÄÊµÊý                                        |
+| asctime([tuple])          | å°†æ—¶é—´å…ƒç»„è½¬æ¢ä¸ºå­—ç¬¦ä¸²,é»˜è®¤ä¸ºå½“å‰æ—¶é—´              |
+| localtime([secs])         | å°†å®žæ•°è½¬æ¢ä¸ºæ—¶é—´å…ƒç»„,é»˜è®¤ä¸ºå½“å‰æ—¶é—´,ä»¥æœ¬åœ°æ—¶é—´ä¸ºå‡† |
+| mktime(tuple)             | å°†æ—¶é—´å…ƒç»„è½¬æ¢ä¸ºæœ¬åœ°æ—¶é—´                           |
+| sleep(secs)               | ä¼‘çœ secsç§’                                         |
+| strptime(string[,format]) | å°†å­—ç¬¦ä¸²è§£æžä¸ºæ—¶é—´å…ƒç»„                             |
+| time()                     | è¿”å›žè¡¨ç¤ºå½“å‰æ—¶é—´çš„å®žæ•°                                        |
 
 ** random
-#+CAPTION: randomÄ£¿éÖÐµÄÒ»Ð©ÖØÒªº¯Êý
-| º¯Êý                           | ÃèÊö                                 |
+#+CAPTION: randomæ¨¡å—ä¸­çš„ä¸€äº›é‡è¦å‡½æ•°
+| å‡½æ•°                           | æè¿°                                 |
 |--------------------------------+--------------------------------------|
-| random()                       | ·µ»Ø0<=n<1Ö®¼äµÄËæ»úÊµÊýn            |
-| getrandbits(n)                 | ÒÔ³¤ÕûÐÎÐÎÊ½·µ»Øn¸öËæ»úÎ»            |
-| uniform(a,b)                   | ·µ»Øa<=n<bÖ®¼äµÄËæ»úÊµÊý             |
-| randrange([start],stop,[step]) | ·µ»Ørange(start,stop,step)ÖÐµÄËæ»úÊý |
-| choice(seq)                    | ´ÓÐòÁÐseqÖÐ·µ»ØËæÒâÔªËØ              |
-| shuffle(seq[,random])          | Ô­µØ´òÂÒseq                          |
-| sample(seq,n)                  | ´ÓseqÖÐËæ»úÑ¡Ôñn¸öËæ»úÔªËØ                      |
+| random()                       | è¿”å›ž0<=n<1ä¹‹é—´çš„éšæœºå®žæ•°n            |
+| getrandbits(n)                 | ä»¥é•¿æ•´å½¢å½¢å¼è¿”å›žnä¸ªéšæœºä½            |
+| uniform(a,b)                   | è¿”å›ža<=n<bä¹‹é—´çš„éšæœºå®žæ•°             |
+| randrange([start],stop,[step]) | è¿”å›žrange(start,stop,step)ä¸­çš„éšæœºæ•° |
+| choice(seq)                    | ä»Žåºåˆ—seqä¸­è¿”å›žéšæ„å…ƒç´               |
+| shuffle(seq[,random])          | åŽŸåœ°æ‰“ä¹±seq                          |
+| sample(seq,n)                  | ä»Žseqä¸­éšæœºé€‰æ‹©nä¸ªéšæœºå…ƒç´                       |
 
 ** re
-* »ñÈ¡°ïÖú
-** dirº¯Êý
-dirº¯Êý»á½«¶ÔÏó(Ä£°åµÄËùÓÐº¯Êý,Àà,±äÁ¿µÈ)µÄËùÓÐÌØÐÔ¶¼ÁÐ³ö.
 
-1. dir()×÷ÓÃÔÚÊµÀýÉÏ£¨¾­µäÀà»òÐÂÊ½Àà£©Ê±£¬ÏÔÊ¾ÊµÀý±äÁ¿£¬»¹ÓÐÔÚÊµÀýËùÔÚµÄÀà¼°ËùÓÐËüµÄ»ùÀàÖÐ¶¨ÒåµÄ·½·¨ºÍÀàÊôÐÔ¡£ 
-2. dir()×÷ÓÃÔÚÀàÉÏ£¨¾­µäÀà»òÐÂÊ½Àà£©Ê±£¬ÔòÏÔÊ¾ÀàÒÔ¼°ËüµÄËùÓÐ»ùÀàµÄ__dict__ÖÐµÄÄÚÈÝ¡£µ«Ëü²»»áÏÔÊ¾¶¨ÒåÔÚÔªÀà£¨metaclass£©ÖÐµÄÀàÊôÐÔ¡£ 
-3. dir()×÷ÓÃÔÚÄ£¿éÉÏÊ±£¬ÔòÏÔÊ¾Ä£¿éµÄ__dict__µÄÄÚÈÝ¡££¨ÕâÃ»¸Ä¶¯£©¡£ 
-4. dir()²»´ø²ÎÊýÊ±£¬ÔòÏÔÊ¾µ÷ÓÃÕßµÄ¾Ö²¿±äÁ¿¡££¨Ò²Ã»¸Ä¶¯£©¡£ 
-5. ¹ØÓÚ¸ü¶àÏ¸½Ú:¶ÔÓÚÄÇÐ©¸²¸ÇÁË__dict__»ò__class__ÊôÐÔµÄ¶ÔÏó£¬¾ÍÊ¹ÓÃËüÃÇ£»³öÓÚÏòºó¼æÈÝµÄ¿¼ÂÇ£¬Èç¹ûÒÑ¶¨ÒåÁË__members__ºÍ__methods__£¬ÔòÊ¹ÓÃËüÃÇ¡£ 
-** helpº¯Êý
-helpº¯Êý»áÏÔÊ¾¶ÔÏóµÄ__doc__ÄÚÈÝ
+** Collections
+
+*** defaultdict
+
+*** counter
+
+*** deque
+
+*** namedtuple
+
+** enum.Enum
+* èŽ·å–å¸®åŠ©
+** dirå‡½æ•°
+dirå‡½æ•°ä¼šå°†å¯¹è±¡(æ¨¡æ¿çš„æ‰€æœ‰å‡½æ•°,ç±»,å˜é‡ç­‰)çš„æ‰€æœ‰ç‰¹æ€§éƒ½åˆ—å‡º.
+
+1. dir()ä½œç”¨åœ¨å®žä¾‹ä¸Šï¼ˆç»å…¸ç±»æˆ–æ–°å¼ç±»ï¼‰æ—¶ï¼Œæ˜¾ç¤ºå®žä¾‹å˜é‡ï¼Œè¿˜æœ‰åœ¨å®žä¾‹æ‰€åœ¨çš„ç±»åŠæ‰€æœ‰å®ƒçš„åŸºç±»ä¸­å®šä¹‰çš„æ–¹æ³•å’Œç±»å±žæ€§ã€‚ 
+2. dir()ä½œç”¨åœ¨ç±»ä¸Šï¼ˆç»å…¸ç±»æˆ–æ–°å¼ç±»ï¼‰æ—¶ï¼Œåˆ™æ˜¾ç¤ºç±»ä»¥åŠå®ƒçš„æ‰€æœ‰åŸºç±»çš„__dict__ä¸­çš„å†…å®¹ã€‚ä½†å®ƒä¸ä¼šæ˜¾ç¤ºå®šä¹‰åœ¨å…ƒç±»ï¼ˆmetaclassï¼‰ä¸­çš„ç±»å±žæ€§ã€‚ 
+3. dir()ä½œç”¨åœ¨æ¨¡å—ä¸Šæ—¶ï¼Œåˆ™æ˜¾ç¤ºæ¨¡å—çš„__dict__çš„å†…å®¹ã€‚ï¼ˆè¿™æ²¡æ”¹åŠ¨ï¼‰ã€‚ 
+4. dir()ä¸å¸¦å‚æ•°æ—¶ï¼Œåˆ™æ˜¾ç¤ºè°ƒç”¨è€…çš„å±€éƒ¨å˜é‡ã€‚ï¼ˆä¹Ÿæ²¡æ”¹åŠ¨ï¼‰ã€‚ 
+5. å…³äºŽæ›´å¤šç»†èŠ‚:å¯¹äºŽé‚£äº›è¦†ç›–äº†__dict__æˆ–__class__å±žæ€§çš„å¯¹è±¡ï¼Œå°±ä½¿ç”¨å®ƒä»¬ï¼›å‡ºäºŽå‘åŽå…¼å®¹çš„è€ƒè™‘ï¼Œå¦‚æžœå·²å®šä¹‰äº†__members__å’Œ__methods__ï¼Œåˆ™ä½¿ç”¨å®ƒä»¬ã€‚ 
+** helpå‡½æ•°
+helpå‡½æ•°ä¼šæ˜¾ç¤ºå¯¹è±¡çš„__doc__å†…å®¹
+** typeå‡½æ•°
+typeå‡½æ•°è¿”å›žä¸€ä¸ªå¯¹è±¡çš„ç±»åž‹.
+#+BEGIN_SRC python
+  type('')
+  type([])
+  type({})
+  type(dict)
+  type(3)
+#+END_SRC
+
+#+RESULTS:
+: <class 'str'>
+: <class 'list'>
+: <class 'dict'>
+: <class 'type'>
+: <class 'int'>
+
+** idå‡½æ•°
+idå‡½æ•°è¿”å›žä»»æ„ä¸åŒç§ç±»å¯¹è±¡çš„å”¯ä¸€id
+#+BEGIN_SRC python
+  name = "Yasoob"
+  id(name)
+#+END_SRC
+
+#+RESULTS:
+: 
+: 2146216544
+
+** inspectæ¨¡å—
+inspectæ¨¡å—æä¾›äº†è®¸å¤šæœ‰ç”¨çš„å‡½æ•°,æ¥èŽ·å–å¯¹è±¡ä¿¡æ¯.
+
+ä¾‹å¦‚:
+#+BEGIN_SRC python
+  # æŸ¥çœ‹å¯¹è±¡æˆå‘˜
+
+  import inspect
+  print(inspect.getmembers(str))
+#+END_SRC
+
+#+RESULTS:
+: 
+: >>> >>> [('__add__', <slot wrapper '__add__' of 'str' objects>), ('__class__', <class 'type'>), ('__contains__', <slot wrapper '__contains__' of 'str' objects>), ('__delattr__', <slot wrapper '__delattr__' of 'object' objects>), ('__dir__', <method '__dir__' of 'object' objects>), ('__doc__', "str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'."), ('__eq__', <slot wrapper '__eq__' of 'str' objects>), ('__format__', <method '__format__' of 'str' objects>), ('__ge__', <slot wrapper '__ge__' of 'str' objects>), ('__getattribute__', <slot wrapper '__getattribute__' of 'str' objects>), ('__getitem__', <slot wrapper '__getitem__' of 'str' objects>), ('__getnewargs__', <method '__getnewargs__' of 'str' objects>), ('__gt__', <slot wrapper '__gt__' of 'str' objects>), ('__hash__', <slot wrapper '__hash__' of 'str' objects>), ('__init__', <slot wrapper '__init__' of 'object' objects>), ('__iter__', <slot wrapper '__iter__' of 'str' objects>), ('__le__', <slot wrapper '__le__' of 'str' objects>), ('__len__', <slot wrapper '__len__' of 'str' objects>), ('__lt__', <slot wrapper '__lt__' of 'str' objects>), ('__mod__', <slot wrapper '__mod__' of 'str' objects>), ('__mul__', <slot wrapper '__mul__' of 'str' objects>), ('__ne__', <slot wrapper '__ne__' of 'str' objects>), ('__new__', <built-in method __new__ of type object at 0x595dd300>), ('__reduce__', <method '__reduce__' of 'object' objects>), ('__reduce_ex__', <method '__reduce_ex__' of 'object' objects>), ('__repr__', <slot wrapper '__repr__' of 'str' objects>), ('__rmod__', <slot wrapper '__rmod__' of 'str' objects>), ('__rmul__', <slot wrapper '__rmul__' of 'str' objects>), ('__setattr__', <slot wrapper '__setattr__' of 'object' objects>), ('__sizeof__', <method '__sizeof__' of 'str' objects>), ('__str__', <slot wrapper '__str__' of 'str' objects>), ('__subclasshook__', <built-in method __subclasshook__ of type object at 0x595dd300>), ('capitalize', <method 'capitalize' of 'str' objects>), ('casefold', <method 'casefold' of 'str' objects>), ('center', <method 'center' of 'str' objects>), ('count', <method 'count' of 'str' objects>), ('encode', <method 'encode' of 'str' objects>), ('endswith', <method 'endswith' of 'str' objects>), ('expandtabs', <method 'expandtabs' of 'str' objects>), ('find', <method 'find' of 'str' objects>), ('format', <method 'format' of 'str' objects>), ('format_map', <method 'format_map' of 'str' objects>), ('index', <method 'index' of 'str' objects>), ('isalnum', <method 'isalnum' of 'str' objects>), ('isalpha', <method 'isalpha' of 'str' objects>), ('isdecimal', <method 'isdecimal' of 'str' objects>), ('isdigit', <method 'isdigit' of 'str' objects>), ('isidentifier', <method 'isidentifier' of 'str' objects>), ('islower', <method 'islower' of 'str' objects>), ('isnumeric', <method 'isnumeric' of 'str' objects>), ('isprintable', <method 'isprintable' of 'str' objects>), ('isspace', <method 'isspace' of 'str' objects>), ('istitle', <method 'istitle' of 'str' objects>), ('isupper', <method 'isupper' of 'str' objects>), ('join', <method 'join' of 'str' objects>), ('ljust', <method 'ljust' of 'str' objects>), ('lower', <method 'lower' of 'str' objects>), ('lstrip', <method 'lstrip' of 'str' objects>), ('maketrans', <built-in method maketrans of type object at 0x595dd300>), ('partition', <method 'partition' of 'str' objects>), ('replace', <method 'replace' of 'str' objects>), ('rfind', <method 'rfind' of 'str' objects>), ('rindex', <method 'rindex' of 'str' objects>), ('rjust', <method 'rjust' of 'str' objects>), ('rpartition', <method 'rpartition' of 'str' objects>), ('rsplit', <method 'rsplit' of 'str' objects>), ('rstrip', <method 'rstrip' of 'str' objects>), ('split', <method 'split' of 'str' objects>), ('splitlines', <method 'splitlines' of 'str' objects>), ('startswith', <method 'startswith' of 'str' objects>), ('strip', <method 'strip' of 'str' objects>), ('swapcase', <method 'swapcase' of 'str' objects>), ('title', <method 'title' of 'str' objects>), ('translate', <method 'translate' of 'str' objects>), ('upper', <method 'upper' of 'str' objects>), ('zfill', <method 'zfill' of 'str' objects>)]
+
+* Local Variables Setting:
+# Local Variables:
+# org-babel-default-header-args:python: ((:session . "Python") (:results . "output") (:exports . "code") (:cache))
+# org-babel-python-command: "python3"
+# End:
+
