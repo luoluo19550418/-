@@ -58,23 +58,8 @@
    在类的内部定义中,所有以双下划线开始的名称都被翻译成前面加上单下划线和类名称的形式.
 
    如类Secretive中名为 ~__inaccessible~ 的名称被翻译成 ~_Secretive__inaccessible~
-
-5. 所有在类中定义的函数或变量都处于类命名空间内，即为类所属的成员
-   #+BEGIN_SRC python
-     class MemberCounter:
-         members=0
-         def __init__(self):
-             MemberCounter.members += 1
-
-     m1 = MemberCounter()
-     print (MemberCounter.members)
-
-     m2 = MemberCounter()
-     print (MemberCounter.members)
-   #+END_SRC
-   上面的members即为类MemberCounter的成员变量。
-
-6. 类定义之后,可以通过类名动态添加类数据属性. 实例生成之后,也可以动态添加实例的属性.
+*** 实例属性与类属性
+1. 类定义之后,可以通过类名动态添加类数据属性. 实例生成之后,也可以动态添加实例的属性.
    #+BEGIN_SRC python
      class ClsA:
          pass
@@ -90,6 +75,21 @@
      a.obj_attr = "attr"
      print(a.obj_attr)               # attr
    #+END_SRC
+
+2. 所有在类中定义的函数或变量都处于类命名空间内，即为类所属的成员
+   #+BEGIN_SRC python
+     class MemberCounter:
+         members=0
+         def __init__(self):
+             MemberCounter.members += 1
+
+     m1 = MemberCounter()
+     print (MemberCounter.members)
+
+     m2 = MemberCounter()
+     print (MemberCounter.members)
+   #+END_SRC
+   上面的members即为类MemberCounter的成员变量。
 *** 文档字符串
 
 *** 调查继承
@@ -111,13 +111,23 @@
        print (Base.__base__)           # <class 'object'>
      #+END_SRC
 
-   + 使用isinstance方法检查一个对象是否是一个类的实例
+   + 使用 =isinstance= 方法检查一个对象是否是一个类的实例
      #+BEGIN_SRC python
        s = Base()
        print (isinstance(s,object))    # True
        print (isinstance(s,Base))      # True
        print (isinstance(s,Sub))       # False
      #+END_SRC
+
+   + =isinstance= 方法还能检查一个对象是否是 *某些* 类型中的一种
+     #+BEGIN_SRC python
+       isinstance([1,2,3],(list,tuple))
+       isinstance((1,2,3),(list,tuple))
+     #+END_SRC
+
+     #+RESULTS:
+     : True
+     : True
 
    + 如果想知道一个对象是属于哪个类,可以使用对象的 =__class__= 属性
      #+BEGIN_SRC python
