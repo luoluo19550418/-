@@ -90,6 +90,24 @@
      print (MemberCounter.members)
    #+END_SRC
    上面的members即为类MemberCounter的成员变量。
+
+   当然,由于类也是对象,因此你也可以动态修改类成员
+   #+BEGIN_SRC python
+     class Cls(object):
+         attr1 = "a"
+
+     Cls.attr1
+     c = Cls()
+     c.attr1
+     Cls.attr2 = "b"
+     c.attr2
+   #+END_SRC
+
+   #+RESULTS:
+   : >>> 'a'
+   : >>> 'a'
+   : >>> 'b'
+
 *** 文档字符串
 
 *** 调查继承
