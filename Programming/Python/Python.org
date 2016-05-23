@@ -75,6 +75,47 @@
      a.obj_attr = "attr"
      print(a.obj_attr)               # attr
    #+END_SRC
+   
+   借助 =types.MethodType= 甚至可以給实例动态绑定一个方法
+   #+BEGIN_SRC python
+     class People(object):
+         def __init__(self,name,age):
+             self.name = name
+             self.age = age
+
+     p1 = People("p1",20)
+
+     def set_age(self,age):
+         self.age = age
+
+     import types
+     p1.set_age = types.MethodType(set_age,p1)
+
+     print(p1.age)
+     p1.set_age(25)
+     print(p1.age)
+
+   #+END_SRC
+
+   #+RESULTS:
+   : 
+   : 20
+   : 25
+
+   
+   但是,給一个实例绑定的方法,对另一个实例不起作用
+   #+BEGIN_SRC python
+     p2 = People("p2",20)
+     p2.age
+     p2.set_age(25)
+   #+END_SRC
+
+   #+RESULTS:
+   : 
+   : 20
+   : Traceback (most recent call last):
+   :   File "<stdin>", line 1, in <module>
+   : AttributeError: 'People' object has no attribute 'set_age'
 
 2. 所有在类中定义的函数或变量都处于类命名空间内，即为类所属的成员
    #+BEGIN_SRC python
@@ -107,6 +148,66 @@
    : >>> 'a'
    : >>> 'a'
    : >>> 'b'
+
+   当然,若使用 =types.MethodType= 給类绑定方法,则所有对象均可调用
+   #+BEGIN_SRC python
+     def set_name(self,name):
+         self.name = name
+
+     People.set_name = types.MethodType(set_name,People)
+
+     p1.set_name("people1")
+     p1.name
+     p2.set_name("people2")
+     p2.name
+
+   #+END_SRC
+
+   #+RESULTS:
+   : 
+   : ... >>> >>> >>> >>> 'p1'
+   : >>> 'p2'
+
+*** 使用__slots__禁止动态添加属性
+在Python中,每个类都有实例属性. 默认情况下Python用一个字典来保存一个对象的实例属性. 
+*因此它允许我们在运行时去设置任意的新属性*.
+然而,对于有着已知属性的小类来说,它可能是个瓶颈.这个字典浪费了很多内存.
+Python不能在对象创建时直接分配一个固定量的内存来保存所有的属性.
+因此如果你创建许多对象(我指的是成千上万个),它会消耗掉很多内存.
+
+不过还是有一个方法来规避这个问题.这个方法需要使用 =__slots__= 来告诉Python不要使用字典，而只给一个固定集合的属性分配空间. 
+下面是一个例子
+#+BEGIN_SRC python
+  class MyClass(object):
+      __slots__ = ['name']
+      def __init__(self,name):
+          self.name = name
+
+  my_object = MyClass("obj1")
+  my_object.identifier = "identifier1"
+#+END_SRC
+
+#+RESULTS:
+: 
+: ... ... ... >>> >>> Traceback (most recent call last):
+:   File "<stdin>", line 1, in <module>
+: AttributeError: 'MyClass' object has no attribute 'identifier'
+
+使用 =__slots__= 要注意,其只对当前类的实例其作用,而对继承的子类不起作用
+#+BEGIN_SRC python
+  class MySubClass(MyClass):
+      pass
+
+  my_sub_object = MySubClass("name")
+  my_sub_object.id = 1
+  my_sub_object.id
+#+END_SRC
+
+#+RESULTS:
+: 
+: 1
+
+除非在子类也定义 =__slots__= ,这样子类实例允许定义的属性就是自身的 =__slots__= 加上父类的 =__slots__= 
 
 *** 文档字符串
 
@@ -376,6 +477,8 @@ __iter__方法返回一个迭代器,所谓迭代器就是指具有__next__方法
       size = property(getSize,setSize)
 #+END_SRC  
 
+#+RESULTS:
+
 上面的代码使用proerty函数为Rectangle创建了一个并不实际存在的属性:property. 然后可以像处理width,height一样处理size.
 #+BEGIN_SRC python
   r = Rectangle()
@@ -386,6 +489,32 @@ __iter__方法返回一个迭代器,所谓迭代器就是指具有__next__方法
   r.size = 150,100
   r.width                         # 150
 #+END_SRC
+
+#+RESULTS:
+: (10, 5)
+: 10
+
+ =property= 也可以作为装饰器来使用:
+ #+BEGIN_SRC python
+   class Student(object):
+       @property
+       def score(self):
+           return self.__score
+       @score.setter
+       def score(self,value):      # 这个名字还是score!
+           self.__score = value
+
+   s = Student()
+   s.score = 95
+   s.score
+ #+END_SRC
+
+ #+RESULTS:
+ : 
+ : 95
+ 
+=@property= 把一个getter方法变成属性，同时 =@property= 本身又创建了另一个装饰器 =@score.setter= ，负责把一个setter方法变成属性赋值.
+
 
 *** 静态方法和类成员方法
 静态方法与类成员方法不同点在于:
@@ -555,6 +684,107 @@ Python不能在对象创建时直接分配一个固定量的内存来保存所�
    | __class__  | 类对象的类型           |                                                                   |
    | __all__    | 定义了模板的公有接口   | 一般用于模块中,告诉解释器从模块导入所有名字时实际导入了哪些名字   |
    | __file__   | 模块的源代码存放在哪个文件中 | 有些模块并没有源代码,它可能已经融入解释器中了                                           |
+** 特殊方法说明
+*** __str__
+使用 =print= 输出对象时,调用该方法,该方法应该返回一个字符串
+*** __repr__
+返回对象的字面量
+*** __iter__
+如果一个类想被用于for ... in循环，类似list或tuple 那样，就必须实现一个__iter__()方法.该方法返回一个迭代对象.
+然后，Python的for循环就会不断调用该迭代对象的__next__()方法拿到循环的下一个值，直到遇到StopIteration错误时退出循环
+
+例如
+#+BEGIN_SRC python
+  class Fib(object): 
+      def __init__(self): 
+          self.a, self.b = 0, 1 # 初始化两个计数器a，b 
+      def __iter__(self): 
+          return self # 实例本身就是迭代对象，故返回自己 
+      def __next__(self): 
+          self.a, self.b = self.b, self.a + self.b # 计算下一个值 
+          if self.a > 100000: # 退出循环的条件 
+              raise StopIteration(); 
+          return self.a # 返回下一个值
+#+END_SRC
+
+*** __getitem__
+用于根据下标/切片/索引来取得相应的元素
+#+BEGIN_SRC python
+  class Fib(object): 
+      def __getitem__(self, n): 
+          if isinstance(n, int): # n是索引 
+              a, b = 1, 1 
+              for x in range(n): 
+                  a, b = b, a + b 
+              return a 
+          if isinstance(n, slice): # n是切片 
+              start = n.start 
+              stop = n.stop 
+              if start is None: 
+                  start = 0 
+              a, b = 1, 1 
+              L = [] 
+              for x in range(stop): 
+                  if x >= start: 
+                      L.append(a) 
+                  a, b = b, a + b 
+              return L 
+
+  f = Fib()
+  print(f[0:5])
+  print(f[:10])
+  print(f[2])
+#+END_SRC
+
+#+RESULTS:
+: [1, 1, 2, 3, 5]
+: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+: 2
+
+为了简化说明,上面的例子既没有对step参数作处理,也没有对负数作处理
+*** __setitem__
+把对象作为list或dict来对集合赋值
+*** __delitem__
+用于删除某个函数
+*** __getattr__
+调用实例中不存在的属性时会调用该方法
+#+BEGIN_SRC python
+  class Student(object):
+      def __init__(self):
+          self.name = 'DarkSun'
+      def __getattr__(self,attr):
+          if attr == 'score':
+              return 99
+
+  s = Student()
+  print(s.score)
+  print(s.other)
+#+END_SRC
+
+#+RESULTS:
+: 
+: 99
+: None
+
+由于 =__getattr__= 函数默认返回的是None,因此对象的其他属性都是返回None. 若想不处理其他属性,则可以抛出AttributeError的错误
+*** __call__
+任何类，只需要定义一个__call__()方法，就可以把实例当成函数一样,直接进行调用
+#+BEGIN_SRC python
+  class Student(object):
+      def __init__(self, name):
+          self.name = name 
+      def __call__(self): 
+          print('My name is %s.' % self.name)
+
+  s = Student('Dk')
+  s()
+  callable(s)
+#+END_SRC
+
+#+RESULTS:
+: My name is Dk.
+: True
+
 ** 异常处理
 
 *** python中的异常,应该属于Exception的子类
@@ -749,8 +979,7 @@ yield与return语句一样都会返回一个值,所不同的在于它不会退�
 #+END_SRC
 
 #+RESULTS:
-: 
-: ... ... >>> {'a': 17, 'b': 34, 'z': 3}
+: {'a': 17, 'b': 34, 'z': 3}
 *** 生成器推导式
 生成器推导式的工作方式与列表推导式的工作方式类似,只不过返回的不是列表,而是生成器
 
@@ -1030,6 +1259,110 @@ doctest.testmod函数会从一个模块中读取所有文档字符串,找出所�
   print(1/0)
   logging.info('will not be logged')
 #+END_SRC
+* 序列化与反序列化
+** pickle模块
+python提供了 =pickle= 模块来实现序列化. 
+
+使用 =pickle.dumps= 方法可以将任意对象序列化为一个bytes
+#+BEGIN_SRC python
+  import pickle
+  d = dict(id=1,name="DarkSun")
+  s = pickle.dumps(d)
+  s
+#+END_SRC
+
+#+RESULTS:
+: b'\x80\x03}q\x00(X\x04\x00\x00\x00nameq\x01X\x07\x00\x00\x00DarkSunq\x02X\x02\x00\x00\x00idq\x03K\x01u.'
+
+使用 =pickle.dump= 方法可以将任意对象序列化后写入一个file-like object中
+#+BEGIN_SRC python
+  with open("/tmp/dump.txt",'wb') as f:
+      pickle.dump(d,f)
+#+END_SRC
+
+#+RESULTS:
+
+使用 =pickle.loads= 方法可以反序列化比特串为对象
+#+BEGIN_SRC python
+  print(pickle.loads(s))
+#+END_SRC
+
+#+RESULTS:
+: {'name': 'DarkSun', 'id': 1}
+
+使用 =pickle.load= 方法可以从一个file-like object中直接反序列化成对象
+#+BEGIN_SRC python
+  with open("/tmp/dump.txt","rb") as f:
+      pickle.load(f)
+#+END_SRC
+
+#+RESULTS:
+: {'name': 'DarkSun', 'id': 1}
+
+*需要注意的是,反序列化的对象与原对象不是一个对象*
+#+BEGIN_SRC python
+  pickle.loads(s) is d
+#+END_SRC
+
+#+RESULTS:
+: False
+** Json库
+Pickle的问题和所有其他编程语言特有的序列化问题一样，就是它只能用于Python，并且可能不同版本的Python彼此都不兼容.
+因此，只能用Pickle保存那些不重要的数据，不能成功地反序列化也没关系
+
+如果我们要在不同的编程语言之间传递对象，就必须把对象序列化为标准格式,比如xml或json
+
+JSON和Python内置的数据类型对应如下
+| JSON类型   | Python类型 |
+|------------+------------|
+| {}         | dict       |
+| []         | list       |
+| "string"   | str        |
+| 1234.56    | int/float  |
+| true/false | True/False |
+| null       | None       |
+
+使用 =json.dumps= 可以将一个Python类型序列化为Json类型:
+#+BEGIN_SRC python
+  import json
+  s1 = json.dumps(dict(id=1,name="darksun"))
+  print(s1)
+  # 若要序列化非Python的内置类型,则需要为dumps函数的default参数提供一个转换函数,先用这个转换函数将对象转换为可序列化为JSON的类型
+  class Person(object):
+      def __init__(self,id,name):
+          self.id = id
+          self.name=name
+      def __str__(self):
+          return "{}:{}".format(self.id,self.name)
+
+  p = Person(1,"Darksun")
+  s2 = json.dumps(p,default=lambda obj:obj.__dict__)
+  print(s2)
+#+END_SRC
+
+#+RESULTS:
+: 
+: {"name": "darksun", "id": 1}
+: {"name": "Darksun", "id": 1}
+
+类似的使用 =json.dump= 可以将对象序列化后直接存入file-like object中.
+
+使用 =json.loads= 可以将一个Json类型序列化为Python类型:
+#+BEGIN_SRC python
+  json.loads(s1)
+  # 若要转换出一个不直接支持的python对象,则需要給object_hook参数传递一个函数负责将dict转换回对象
+  def dict2person(d):
+      return Person(d['id'],d['name'])
+
+  p = json.loads(s2,object_hook=dict2person)
+  print(p)
+#+END_SRC
+
+#+RESULTS:
+: {'name': 'darksun', 'id': 1}
+: 1:Darksun
+
+
 * Note
 1. 数字、字符串和元组是不可变的；列表和字典是可变的
 2. 可作用于多种类型的通用型操作都是以内置函数或表达式的形式出现的；但是类型特定的操作是以方法调用的形式出现的。
@@ -1184,6 +1517,187 @@ doctest.testmod函数会从一个模块中读取所有文档字符串,找出所�
        >>> cxn.close() 
        #+END_SRC
 ** TODO 对象-关系管理器(ORMs)
+* 多进程与多线程
+** python中的多进程
+*** 使用os.fork产生子进程
+由于 =fork= 系统调用只是在UNIX like操作系统中存在,因此windows是不支持的.
+#+BEGIN_SRC python :session "none"
+  import os
+  print('Process (%s) start...' % os.getpid())
+  # Only works on Unix/Linux/Mac:
+  pid = os.fork()
+  if pid == 0:
+      print('I am child process (%s) and my parent is %s.' % (os.getpid(), os.getppid()))
+  else:
+      print('I (%s) just created a child process (%s).' % (os.getpid(), pid))
+#+END_SRC
+
+#+RESULTS:
+: Process (9692) start...
+: I (9692) just created a child process (1092).
+: Process (9692) start...
+: I am child process (1092) and my parent is 9692.
+*** multiprocessing库
+multiprocessing模块就是跨平台版本的多进程模块。 
+
+multiprocessing模块提供了一个Process类来代表一个进程对象:
+#+BEGIN_SRC python :session "none"
+  from multiprocessing import Process
+  import os
+  # 子进程要执行的代码
+  def run_proc(name):
+      print('Run child process %s (%s)...' % (name, os.getpid()))
+
+  if __name__=='__main__':
+      print('Parent process %s.' % os.getpid())
+      p = Process(target=run_proc, args=('test',))
+      print('Child process will start.')
+      p.start()
+      p.join()
+      print('Child process end.')
+#+END_SRC
+
+#+RESULTS:
+: Parent process 1192.
+: Child process will start.
+: Run child process test (1036)...
+: Child process end.
+
+创建子进程时，只需要传入一个执行函数和函数的参数，创建一个Process实例，
+用start()方法启动该子进程.
+join()方法可以等待子进程结束后再继续往下运行，通常用于进程间的同步。
+
+使用 =multiprocessing.Pool= 可以用进程池的方式批量创建子进程.
+#+BEGIN_SRC python :session "none"
+  from multiprocessing import Pool
+  import os, time, random
+
+  def long_time_task(name):
+      print('Run task %s (%s)...' % (name, os.getpid()))
+      start = time.time()
+      time.sleep(random.random() * 3)
+      end = time.time()
+      print('Task %s runs %0.2f seconds.' % (name, (end - start)))
+
+  if __name__=='__main__':
+      print('Parent process %s.' % os.getpid())
+      p = Pool(4)                 # 表示池中最多同时执行4个进程,默认为CPU的核数
+      for i in range(5):
+          p.apply_async(long_time_task, args=(i,))
+      print('Waiting for all subprocesses done...')
+      p.close()                   # close后就不能再继续添加新的Process了
+      p.join()                    # 等待Pool中所有子进程执行完成,之前需要先调用close方法
+      print('All subprocesses done')
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+Parent process 7732.
+Run task 3 (4736)...
+Task 3 runs 0.87 seconds.
+Run task 2 (9512)...
+Task 2 runs 1.00 seconds.
+Run task 0 (10188)...
+Task 0 runs 0.75 seconds.
+Run task 4 (10188)...
+Task 4 runs 0.83 seconds.
+Run task 1 (2052)...
+Task 1 runs 1.75 seconds.
+Waiting for all subprocesses done...
+All subprocesses done
+#+end_example
+
+multiprocessing模块还提供了Queue,Pipe等多种方式实现IPC
+#+BEGIN_SRC python :session "none"
+  from multiprocessing import Process, Queue
+  import os, time, random
+
+  # 写数据进程执行的代码:
+  def write(q):
+      print('Process to write: %s' % os.getpid())
+      for value in ['A', 'B', 'C']:
+          print('Put %s to queue...' % value)
+          q.put(value)
+          time.sleep(random.random())
+
+  # 读数据进程执行的代码:
+  def read(q):
+      print('Process to read: %s' % os.getpid())
+      while True:
+          value = q.get(True)
+          print('Get %s from queue.' % value)
+
+  if __name__=='__main__':
+      # 父进程创建Queue，并传给各个子进程：
+      q = Queue()
+      pw = Process(target=write, args=(q,))
+      pr = Process(target=read, args=(q,))
+      # 启动子进程pr，读取:
+      pr.start()
+      # 启动子进程pw，写入:
+      pw.start()
+      # 等待pw结束:
+      pw.join()
+      time.sleep(1)
+      # pr进程里是死循环，无法等待其结束，只能强行终止:
+      pr.terminate()
+#+END_SRC
+
+#+RESULTS:
+: Process to write: 6296
+: Put A to queue...
+: Put B to queue...
+: Put C to queue...
+
+*** subprocess
+subprocess模块可以让我们非常方便地启动一个外部程序作为子进程，然后控制其输入和输出
+#+BEGIN_SRC python :session "none"
+  import subprocess
+
+  print('$ ls /')
+  r = subprocess.call(['ls', '/'])
+  print('Exit code:', r)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+bin
+cygdrive
+Cygwin.bat
+Cygwin.ico
+Cygwin-Terminal.ico
+dev
+etc
+home
+lib
+opt
+proc
+pypy-c.exe.stackdump
+sbin
+tmp
+usr
+var
+$ ls /
+Exit code: 0
+#+end_example
+
+也可以先启动一个子进程,然后使用 =communicate= 方法模拟输入
+#+BEGIN_SRC python :session "none"
+  import subprocess
+
+  print('$ cat')
+  p = subprocess.Popen(['cat'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  output, err = p.communicate(b'subprocess test\n')
+  print(output.decode('utf-8'))
+  print('Exit code:', p.returncode)
+#+END_SRC
+
+#+RESULTS:
+: $ cat
+: subprocess test
+: 
+: Exit code: 0
+
 * 高级应用
 ** 偏函数应用
 1. currying 的概念将函数式编程的概念和默认参数以及可变参数结合在一起。一个带 n 个参数， curried 的函数固化第一个参数为固定参数，并返回另一个带 n-1 个参数函数对象，分别类似于 LISP 的原始函数 car 和 cdr 的行为。Currying 能泛化成为偏函数应用（PFA）， 这种函数将任意数量（顺 序）的参数的函数转化成另一个带剩余参数的函数对象。 
@@ -1660,15 +2174,33 @@ sys模块让你能够访问与python解释器联系紧密的变量和函数.
 os模块为你提供了访问多个操作系统服务的功能. os和os.path模块还包括了一些用于检查,构造,删除目录和文件的函数,以及一些处理路径的函数.
 
 #+CAPTION: os模块中一些重要函数和变量
-| 函数/变量       | 类型   | 描述                                       |
-|-----------------+--------+--------------------------------------------|
-| environ         | 字典   | 对环境变量进行映射                         |
-| system(command) | 函数 | 在子shell中执行command           |
-| sep             | 字符串 | 路径中的分隔符                             |
-| pathsep         | 字符串 | PATH环境变量中各路径的分隔符               |
-| linesep         | 字符串 | 行分隔符                                   |
-| urandom(n)      | 函数   | 返回n字节的加密强随机数据                  |
-|                 |        | 若平台不支持,会抛出NotImplementedError异常 |
+| 函数/变量                 | 类型   | 描述                                       |
+|---------------------------+--------+--------------------------------------------|
+| environ                   | 字典   | 对环境变量进行映射                         |
+| system(command)           | 函数   | 在子shell中执行command                     |
+| sep                       | 字符串 | 路径中的分隔符                             |
+| pathsep                   | 字符串 | PATH环境变量中各路径的分隔符               |
+| linesep                   | 字符串 | 行分隔符                                   |
+| urandom(n)                | 函数   | 返回n字节的加密强随机数据                  |
+|                           |        | 若平台不支持,会抛出NotImplementedError异常 |
+| mkdir(dir)                | 函数   | 创建目录                                   |
+| rmdir(dir)                | 函数   | 删除目录                                   |
+| rename(old-name,new-name) | 函数   | 文件重命名                                 |
+| remove(file)              | 函数   | 删除文件                                   |
+| listdir(dir)              | 函数   | 返回DIR中所有文件的列表                    |
+| fork()                    | 函数   | 系统调用fork                                   |
+
+*os模块中没有 =copyfile= 函数,需要使用 =shutil.copyfile= 代替*
+
+#+CAPTION: os.path模块中的一些重要函数与变量
+| 函数/变量      | 类型 | 描述               |
+|----------------+------+--------------------|
+| abspath(path)  | 函数 | 转换PATH为绝对路径 |
+| join(dir,path) | 函数 | 合并DIR与PATH      |
+| split(path)    | 函数 | 分拆path为目录与文件的元组 |
+| splitext(path)  | 函数 | 在文件扩展名处分拆PATH     |
+|                 |      |                            |
+
 ** fileinput
 fileinput模块让你能轻松便利文本文件的所有行. 其中最重要的是 ~fileinput.input~ 函数,它会返回一个用于for循环遍历的对象,可用于遍历多个文件的行.
 
@@ -1924,7 +2456,7 @@ inspect模块提供了许多有用的函数,来获取对象信息.
 
 * Local Variables Setting:
 # Local Variables:
-# org-babel-default-header-args:python: ((:session . "Python") (:results . "output") (:exports . "code") (:cache))
+# org-babel-default-header-args:python: ((:session . "None") (:results . "output") (:exports . "code") (:cache))
 # org-babel-python-command: "python3"
 # End:
 
