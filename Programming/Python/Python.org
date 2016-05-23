@@ -476,6 +476,73 @@ Python不能在对象创建时直接分配一个固定量的内存来保存所�
           self.name = name
           self.identifier = identifier
 #+END_SRC
+** 元类
+*** 使用type函数创建类
+=type= 函数除了可以返回一个对象的类型外,还可以创建出新类型.即类对象.
+要创建一个class对象,需要给 =type= 函数传递3个参数:
+1. class的名称
+2. 继承的父类集合,由于python支持多继承,因此需要写成元组的形式
+3. class的方法名称与函数绑定
+
+下面是一个例子:
+#+BEGIN_SRC python
+  def fn(self, name='world'): # 先定义函数
+      print('Hello, %s.' % name)
+
+  Hello = type('Hello', (object,), dict(hello=fn)) # 创建Hello class
+
+  h = Hello()
+  h.hello()
+  print(type(Hello))
+  print(type(h))
+#+END_SRC
+
+#+RESULTS:
+: 
+: Hello, world.
+: <class 'type'>
+: <class '__main__.Hello'>
+*** metaclass控制类的创建行为
+除了使用 =type= 动态创建类以外，要控制类的创建行为，还可以使用metaclass
+
+元类是创建类对象的类,而由于类的类型为 =type= 因此元类必须继承至 =type=
+#+BEGIN_SRC python
+  # metaclass是类的模板，所以必须从`type`类型派生：
+  class ListMetaclass(type):
+      def __new__(cls, name, bases, attrs):
+          attrs['add'] = lambda self, value: self.append(value)
+          return type.__new__(cls, name, bases, attrs)
+#+END_SRC
+
+#+RESULTS:
+
+这里, =__new__= 方法接收到的参数以此应该为:
+1. 当前准备创建的class对象
+2. 类的名字
+3. 类继承的父类集合
+4. 类的方法集合
+
+有了ListMetaclass，我们在定义类的时候还要指示使用ListMetaclass来定制类，传入关键字参数metaclass：
+#+BEGIN_SRC python
+  class MyList(list, metaclass=ListMetaclass):
+      pass
+
+  # MyList具有了add函数
+  L = MyList()
+  L.add(1)
+  L
+  # 普通list没有add方法
+  L2 = list()
+  L2.add(1)
+#+END_SRC
+
+#+RESULTS:
+: 
+: [1]
+: Traceback (most recent call last):
+:   File "<stdin>", line 1, in <module>
+: AttributeError: 'list' object has no attribute 'add'
+
 ** 特殊属性说明
 
    | 类属性     | 含义                   | 说明                                                              |
@@ -801,9 +868,107 @@ open函数语法为 ~open(name,mode="w",buffer=1)~
 * socket
 
 * 测试
+** unittest进行单元测试
+1. 创建一个测试类,需要从从unittestTestCase继承
+2. 编写test开头的测试方法.，不以test开头的方法不被认为是测试方法，测试的时候不会被执行。
+3. unittest.TestCase提供了很多内置的条件判断，我们只需要调用这些方法就可以断言输出是否是我们所期望的。最常用的断言就是 =assertEqual= 和 =assertRaises=
+4. 可以在单元测试中编写两个特殊的setUp()和tearDown()方法。这两个方法会分别在每调用一个测试方法的前后分别被执行
+   
+下面是一个例子:
+#+BEGIN_SRC python
+  import unittest
 
-** doctest
+  from mydict import Dict
+
+  class TestDict(unittest.TestCase):
+
+      def test_init(self):
+          d = Dict(a=1, b='test')
+          self.assertEqual(d.a, 1)
+          self.assertEqual(d.b, 'test')
+          self.assertTrue(isinstance(d, dict))
+
+      def test_key(self):
+          d = Dict()
+          d['key'] = 'value'
+          self.assertEqual(d.key, 'value')
+
+      def test_attr(self):
+          d = Dict()
+          d.key = 'value'
+          self.assertTrue('key' in d)
+          self.assertEqual(d['key'], 'value')
+
+      def test_keyerror(self):
+          d = Dict()
+          with self.assertRaises(KeyError):
+              value = d['empty']
+
+      def test_attrerror(self):
+          d = Dict()
+          with self.assertRaises(AttributeError):
+              value = d.empty
+#+END_SRC
+
+运行单元测试有两种方式
+1. 在文件最后加上两行代码
+   #+BEGIN_SRC python
+     if __name__ == '__main__':
+         unittest.main()
+   #+END_SRC
+2. 在命令行通过参数 =-m unittest= 直接运行单元测试：
+   #+BEGIN_SRC sh
+     python3 -m unittest mydict_test # 注意后面没有py后缀
+   #+END_SRC
+** doctest进行文档测试
+通过 =doctest= 模块可以直接提取注释中的代码并执行测试。
+
+doctest严格按照Python交互式命令行的输入和输出来判断测试结果是否正确。只有测试异常的时候，可以用...表示中间一大段烦人的输出
+
 doctest.testmod函数会从一个模块中读取所有文档字符串,找出所哟看起来像是在交互解释器中输入的例子的文本,之后检查例子是否符合实际要求.
+
+下面是一个例子
+#+BEGIN_SRC python
+  # mydict2.py
+  class Dict(dict):
+      '''
+      Simple dict but also support access as x.y style.
+
+      >>> d1 = Dict()
+      >>> d1['x'] = 100
+      >>> d1.x
+      100
+      >>> d1.y = 200
+      >>> d1['y']
+      200
+      >>> d2 = Dict(a=1, b=2, c='3')
+      >>> d2.c
+      '3'
+      >>> d2['empty']
+      Traceback (most recent call last):
+          ...
+      KeyError: 'empty'
+      >>> d2.empty
+      Traceback (most recent call last):
+          ...
+      AttributeError: 'Dict' object has no attribute 'empty'
+      '''
+      def __init__(self, **kw):
+          super(Dict, self).__init__(**kw)
+
+      def __getattr__(self, key):
+          try:
+              return self[key]
+          except KeyError:
+              raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+
+      def __setattr__(self, key, value):
+          self[key] = value
+
+  if __name__=='__main__':
+      import doctest
+      doctest.testmod()
+#+END_SRC
 
 * 性能测试
 
@@ -1644,6 +1809,65 @@ python中的时间可以用实数或一个包含是9个整数的元组. 其中�
 *** namedtuple
 
 ** enum.Enum
+枚举类中的每个常量都是class的唯一实例.
+#+BEGIN_SRC python
+  from enum import Enum
+
+  Month = Enum('Month', ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'))
+#+END_SRC
+
+#+RESULTS:
+
+上面的代码定义了一个Month类型的枚举类.其中预定了12个实例. 这些实例的 =value= 属性为一个int常量,且默认从1开始累加.
+
+访问这些枚举类型的方法有很多
+#+BEGIN_SRC python
+  print(Month.Jan)
+  print(Month['Jan'])
+  print(Month(1))
+  print(Month(Month.Jan.value))
+
+  for name,member in Month.__members__.items():
+      print(name,"=>",member)
+
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+Month.Jan
+Month.Jan
+Month.Jan
+Month.Jan
+>>> ... ... Jan => Month.Jan
+Feb => Month.Feb
+Mar => Month.Mar
+Apr => Month.Apr
+May => Month.May
+Jun => Month.Jun
+Jul => Month.Jul
+Aug => Month.Aug
+Sep => Month.Sep
+Oct => Month.Oct
+Nov => Month.Nov
+Dec => Month.Dec
+#+end_example
+
+如果需要更精确地控制枚举类型，可以从Enum派生出自定义类：
+#+BEGIN_SRC python
+  from enum import Enum, unique
+
+  @unique                         # @unique装饰器可以帮助我们检查保证没有重复值。
+  class Weekday(Enum):
+      Sun = 0 # Sun的value被设定为0
+      Mon = 1
+      Tue = 2
+      Wed = 3
+      Thu = 4
+      Fri = 5
+      Sat = 6
+
+#+END_SRC
+
 * 获取帮助
 ** dir函数
 dir函数会将对象(模板的所有函数,类,变量等)的所有特性都列出.
