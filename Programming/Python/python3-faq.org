@@ -1,0 +1,38 @@
+#+TITLE: python3-faq
+#+AUTHOR: lujun9972
+#+CATEGORY: Programming, Python
+#+DATE: [2016-05-12 四 06:30]
+#+OPTIONS: ^:{}
+
+* 如何用base64编码字符串
+base64.b64encode并不支持直接对字符串进行编码.
+#+BEGIN_SRC python
+  import base64
+  base64.b64encode('string')
+#+END_SRC
+
+#+RESULTS:
+: 
+: Traceback (most recent call last):
+:   File "<stdin>", line 1, in <module>
+:   File "/usr/lib/python3.4/base64.py", line 62, in b64encode
+:     encoded = binascii.b2a_base64(s)[:-1]
+: TypeError: 'str' does not support the buffer interface
+
+其原因是base64编码过程时接受一个8bit的二进制字节,并使用字母与数字来表示它. 因此,base64.b64encode只能接受一个由8bit字节组成的字符串. 而python3中,字符串UTF-8格式的,这使得base64模块无法处理它.
+
+解决方法是将UTF-8的字符串转换为ascii
+#+BEGIN_SRC python
+  base64.b64encode('strng'.encode('ascii'))
+  base64.b64encode(b'string')
+#+END_SRC
+
+#+RESULTS:
+: b'c3Rybmc='
+: b'c3RyaW5n'
+
+* Local Variables Setting:
+# Local Variables:
+# org-babel-default-header-args:python: ((:session . "python3-faq") (:results . "output") (:exports . "code") (:cache))
+# org-babel-python-command: "python3"
+# End:
