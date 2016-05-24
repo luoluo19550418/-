@@ -1092,8 +1092,6 @@ open函数语法为 ~open(name,mode="w",buffer=1)~
     with open("/tmp/xxx.txt") as f:
         f.write("somelines\n")
   #+END_SRC
-* 数据库支持
-
 * socket
 
 * 测试
@@ -1698,6 +1696,80 @@ Exit code: 0
 : 
 : Exit code: 0
 
+** python中的多线程
+python的标准库提供了两个模块：_thread和threading，_thread是低级模块，threading是高级模块，对_thread进行了封装
+*** threading
+启动一个线程就是把一个函数传入并创建Thread实例，然后调用start()开始执行
+#+BEGIN_SRC python :session "none"
+  import time,threading
+
+  # 线程执行的代码
+  def loop():
+      print('thread %s is running...' % threading.current_thread().name)
+      n = 0
+      while n < 5:
+          n = n + 1
+          print('thread %s >>> %s' % (threading.current_thread().name, n))
+          time.sleep(1)
+      print('thread %s ended.' % threading.current_thread().name)
+
+  print('thread %s is running...' % threading.current_thread().name) # 主线程名称为mainThread
+  t = threading.Thread(target=loop, name='LoopThread')
+  t.start()
+  t.join()
+  print('thread %s ended.' % threading.current_thread().name)
+#+END_SRC
+
+#+RESULTS:
+: thread MainThread is running...
+: thread LoopThread is running...
+: thread LoopThread >>> 1
+: thread LoopThread >>> 2
+: thread LoopThread >>> 3
+: thread LoopThread >>> 4
+: thread LoopThread >>> 5
+: thread LoopThread ended.
+: thread MainThread ended.
+
+*** threading.Lock
+当多个线程同时修改同一个变量时,需要加锁,而创建一个锁是由threading.Lock()来实现的
+#+BEGIN_SRC python :session "none"
+  import time,threading
+  balance = 0
+  lock = threading.Lock()
+
+  def change_it(n):
+      global balance
+      balance = balance + n
+      balance = balance -n
+
+  def run_thread(n):
+      for i in range(100000):
+          # 先要获取锁:
+          lock.acquire()
+          try:
+              # 放心地改吧:
+              change_it(n)
+          finally: 
+              # 改完了一定要释放锁:
+              lock.release()
+
+  t1 = threading.Thread(target=run_thread, args=(5,))
+  t2 = threading.Thread(target=run_thread, args=(8,))
+  t1.start()
+  t2.start()
+  t1.join()
+  t2.join()
+  print(balance)
+#+END_SRC
+
+#+RESULTS:
+: 0
+*** ThreadLocal
+*使用 =ThreadLocal= 可以方便在各个线程之间传递参数而不会相互影响*
+可以把 =ThreadLocal= 对象看成全局变量，但其每个属性都是线程的局部变量，可以任意读写而互不干扰，也不用管理锁的问题，ThreadLocal内部会处理.
+ThreadLocal最常用的地方就是为每个线程绑定一个数据库连接，HTTP 请求，用户身份信息等，这样一个线程的所有调用到的处理函数都可以 非常方便地访问这些资源。
+
 * 高级应用
 ** 偏函数应用
 1. currying 的概念将函数式编程的概念和默认参数以及可变参数结合在一起。一个带 n 个参数， curried 的函数固化第一个参数为固定参数，并返回另一个带 n-1 个参数函数对象，分别类似于 LISP 的原始函数 car 和 cdr 的行为。Currying 能泛化成为偏函数应用（PFA）， 这种函数将任意数量（顺 序）的参数的函数转化成另一个带剩余参数的函数对象。 
@@ -2054,19 +2126,6 @@ Exit code: 0
          | ‘exec'  | 可执行语句组，与exec一起使用     |
          |----------+----------------------------------|
 
-** re
-   1. 正则表达式
-      \b匹配一个单词的边界，\B匹配一个单词的中间模式
-      \d匹配十进制数组
-      \w表示字符和数组的集合
-      ？非贪婪操作符，可以用在*、+、？的后面。它的作用是要求正则表达式引擎匹配的字符越少越好。
-   3. 当要从字符串头部开始匹配的时候，不要用re.search('^xxx')的方式，而用re.match('xxx')的方式来匹配
-   4. re.search与re.match如果匹配失败，则返回None
-   5. subn()和sub()一样，但它还返回一个表示替换次数的数字，替换后的字符串和表示替换次数的数字作为一个元组的元素返回
-   6. re模块和正则表达式对象的方法split()与字符串的split()方法相似，前者是根据正则表达式分割字符串，后者是根据固定的字符串分割
-   7. 需注意，\w和\W这两个表示字母或数字的字符受Unicode标志符号影响
-   8. 
-
 ** Tkinter
    1. 对packer没有其他指令时，组件式按垂直顺序放置的。要水平放置则需要创建一个框架对象，再用它来添加按钮
    2. 由于偏函数也能作用于类上，所以对于有许多待调对象，并且许多调用都反复使用相同参数的情况，用偏函数将预存并冻结这些预存参数是比较好的，此时可以看做是生成了新类
@@ -2399,6 +2458,30 @@ Dec => Month.Dec
       Sat = 6
 
 #+END_SRC
+
+** re
+*** 正则表达式说明
+1. \b匹配一个单词的边界，\B匹配一个单词的中间模式
+2. \d匹配十进制数组
+3. \w表示字符和数组的集合
+4. ？非贪婪操作符，可以用在*、+、？的后面。它的作用是要求正则表达式引擎匹配的字符越少越好。
+
+强烈建议写正则表达式时使用python的r前缀,这样不用考虑字符串的转义问题.
+*** re.match(正则,字符串)
+match()方法判断是否匹配，如果匹配成功，返回一个Match对象，否则返回None
+   
+当要从字符串头部开始匹配的时候，不要用re.search('^xxx')的方式，而用re.match('xxx')的方式来匹配
+
+re.search与re.match如果匹配失败，则返回None
+
+5. subn()和sub()一样，但它还返回一个表示替换次数的数字，替换后的字符串和表示替换次数的数字作为一个元组的元素返回
+*** re.split(正则,字符串)
+1. re模块和正则表达式对象的方法split()与字符串的split()方法相似，前者是根据正则表达式分割字符串，后者是根据固定的字符串分割
+2. 需注意，\w和\W这两个表示字母或数字的字符受Unicode标志符号影响
+*** re.compile(正则)
+编译正则表达式,返回正则表达式的对象,可以使用该对象的match方法去匹配多个字符.
+*** Match.group(分组) / Match.groups
+获取匹配的分组内容
 
 * 获取帮助
 ** dir函数
