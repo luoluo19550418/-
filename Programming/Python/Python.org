@@ -2440,12 +2440,51 @@ python中的时间可以用实数或一个包含是9个整数的元组. 其中�
 ** Collections
 
 *** defaultdict
+使用dict时，如果引用的Key不存在，就会抛出KeyError。如果希望key不存在时，返回一个默认值，就可以用defaultdict
+#+BEGIN_SRC python :session "none"
+  from collections import defaultdict
+  dd = defaultdict(lambda: 'N/A')
+  print(dd['key'])
+#+END_SRC
 
+#+RESULTS:
+: N/A
+
+注意在创建defaultdict对象时传入的是一个函数,而默认值是调用函数返回的，
 *** counter
 
 *** deque
+deque是为了高效实现插入和删除操作的双向列表，适合用于队列和栈. 他支持 =append=, =pop=, =appendleft=, =popleft= 方法
+#+BEGIN_SRC python :session "none"
+  from collections import deque
+  q = deque([1,2,3,4])
+  q.append(5)
+  q.appendleft(0)
+  print(q)
+#+END_SRC
+
+#+RESULTS:
+: deque([0, 1, 2, 3, 4, 5])
 
 *** namedtuple
+namedtuple是一个函数，它用来创建一个自定义的tuple子类，并且规定了tuple元素的个数，并可以用属性而不是索引来引用tuple的某个元素。
+这样一来，我们用namedtuple可以很方便地定义一种数据类型，它具备tuple的不变性，又可以根据属性来引用，使用十分方便。
+#+BEGIN_SRC python :session "none"
+  from collections import namedtuple
+  Point = namedtuple('Point',['x','y'])
+  p = Point(1,2)
+  print(p.x,",",p.y)
+
+  if issubclass(Point,tuple):
+      print("Point is subclass of tuple")
+  else:
+      print("Point is not subclass of tuple")
+
+#+END_SRC
+
+#+RESULTS:
+: 1 , 2
+: Point is subclass of tuple
 
 ** enum.Enum
 枚举类中的每个常量都是class的唯一实例.
@@ -2648,7 +2687,7 @@ inspect模块提供了许多有用的函数,来获取对象信息.
 
 * Local Variables Setting:
 # Local Variables:
-# org-babel-default-header-args:python: ((:session . "None") (:results . "output") (:exports . "code") (:cache))
+# org-babel-default-header-args:python: ((:session . "none") (:results . "output") (:exports . "code") (:cache))
 # org-babel-python-command: "python3"
 # End:
 
