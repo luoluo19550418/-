@@ -1796,6 +1796,63 @@ python的标准库提供了两个模块：_thread和threading，_thread是低级
 可以把 =ThreadLocal= 对象看成全局变量，但其每个属性都是线程的局部变量，可以任意读写而互不干扰，也不用管理锁的问题，ThreadLocal内部会处理.
 ThreadLocal最常用的地方就是为每个线程绑定一个数据库连接，HTTP 请求，用户身份信息等，这样一个线程的所有调用到的处理函数都可以 非常方便地访问这些资源。
 
+* 协程
+Python对协程的支持是通过generator实现的. 与多线程比较,它具有如下优势:
+1. 最大的优势就是协程极高的执行效率。因为子程序切换不是线程切换，而是由程序自身控制，因此，没有线程切换的开销
+2. 不需要多线程的锁机制，因为只有一个线程，也不存在同时写变量冲突，在协程中控制共享资源不加锁，只需要判断状态就好了，所以执行效率比多线程高很多
+   
+例如,传统的生产者-消费者模型是一个线程写消息，一个线程取消息，通过锁机制控制队列和等待，但一不小心就可能死锁
+如果改用协程，生产者生产消息后，直接通过yield跳转到消费者开始执行，待消费者执行完毕后，切换回生产者继续生产，效率极高：
+#+BEGIN_SRC python
+  def consumer():
+      r = ''
+      while True:
+          n = yield r
+          if not n:
+              return
+          print('[CONSUMER] Consuming %s...' % n)
+          r = '200 OK'
+
+  def produce(c):
+      c.send(None)                # 这一步只是为了启动生成器
+      n = 0
+      while n < 5:
+          n = n + 1
+          print('[PRODUCER] Producing %s...' % n)
+          r = c.send(n)           # 一旦生产了东西,传递并切换到consumer执行
+          print('[PRODUCER] Consumer return: %s' % r)
+      c.close()
+
+  c = consumer()
+  produce(c)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+[PRODUCER] Producing 1...
+[CONSUMER] Consuming 1...
+[PRODUCER] Consumer return: 200 OK
+[PRODUCER] Producing 2...
+[CONSUMER] Consuming 2...
+[PRODUCER] Consumer return: 200 OK
+[PRODUCER] Producing 3...
+[CONSUMER] Consuming 3...
+[PRODUCER] Consumer return: 200 OK
+[PRODUCER] Producing 4...
+[CONSUMER] Consuming 4...
+[PRODUCER] Consumer return: 200 OK
+[PRODUCER] Producing 5...
+[CONSUMER] Consuming 5...
+[PRODUCER] Consumer return: 200 OK
+#+end_example
+
+下面是上面例子的过程说明
+1. 首先调用c.send(None)启动生成器； 
+2. 然后，一旦生产了东西，通过c.send(n)切换到consumer执行； 
+3. consumer通过yield拿到消息，处理，又通过yield把结果传回； 
+4. produce拿到consumer处理的结果，继续生产下一条消息； 
+5. produce决定不生产了，通过c.close()关闭consumer，整个过程结束
+
 * 高级应用
 ** 特殊的类属性
    #+CAPTION:特殊类属性
@@ -2435,8 +2492,32 @@ python中的时间可以用实数或一个包含是9个整数的元组. 其中�
 | shuffle(seq[,random])          | 原地打乱seq                          |
 | sample(seq,n)                  | 从seq中随机选择n个随机元素                      |
 
-** re
+** struct
+struct模块被用来解决bytes和其他二进制数据类型的转换
 
++ =struct.pack= 函数吧任意数据类型转换为bytes
+  #+BEGIN_SRC python
+    import struct
+    b = struct.pack('>I',1024)      
+    print(b)
+  #+END_SRC
+
+  #+RESULTS:
+  : b'\x00\x00\x04\x00'
+
+  其中第一个参数中的 =>= 表示字节顺序是big-endian,即网络序, =I= 表示4字节无符号整数. 后面的参数个数要和处理指令一致.
+
++ =struct.unpack= 函数把bytes变成相应的数据类型
+  #+BEGIN_SRC python
+    import struct
+    a = struct.unpack('>IH',b'\xf0\xf0\xf0\xf0\x80\x80')
+    print(a)
+  #+END_SRC
+
+  #+RESULTS:
+  : (4042322160, 32896)
+
+  根据>IH的说明，后面的bytes依次变为I：4字节无符号整数和H：2字节无符号整数。
 ** Collections
 
 *** defaultdict
@@ -2451,7 +2532,42 @@ python中的时间可以用实数或一个包含是9个整数的元组. 其中�
 : N/A
 
 注意在创建defaultdict对象时传入的是一个函数,而默认值是调用函数返回的，
+
+*** OrderdDict
+按插入顺序排列key的dict.
+#+BEGIN_SRC python
+  from collections import OrderedDict
+
+  od = OrderedDict()
+  od['a'] = 1
+  od['c'] = 2
+  od['b'] = 3
+
+  print(list(od.keys()))
+#+END_SRC
+
+#+RESULTS:
+: ['a', 'c', 'b']
+
 *** counter
+Counter是一个简单的计数器. 它也是dict的一个子类
+#+BEGIN_SRC python
+  from collections import Counter
+  c = Counter()
+  for ch in 'python programming':
+      c[ch] = c[ch] + 1
+
+  print(c)
+
+  if issubclass(Counter,dict):
+      print("Counter是dict的子类")
+  else:
+      print("Counter不是dict的子类")
+#+END_SRC
+
+#+RESULTS:
+: Counter({'p': 2, 'o': 2, 'm': 2, 'g': 2, 'r': 2, 'n': 2, ' ': 1, 'h': 1, 't': 1, 'a': 1, 'y': 1, 'i': 1})
+: Counter是dict的子类
 
 *** deque
 deque是为了高效实现插入和删除操作的双向列表，适合用于队列和栈. 他支持 =append=, =pop=, =appendleft=, =popleft= 方法
@@ -2630,6 +2746,120 @@ re.search与re.match如果匹配失败，则返回None
 编译正则表达式,返回正则表达式的对象,可以使用该对象的match方法去匹配多个字符.
 *** Match.group(分组) / Match.groups
 获取匹配的分组内容
+
+** hashlib
+hashlib提供了常见的摘要算法，如MD5，SHA1等等
+
+** itertools
+内建模块itertools提供了非常有用的用于操作迭代对象的函数.
+
+itertools模块提供的全部是处理迭代功能的函数，它们的返回值不是list，而是Iterator，只有用for循环迭代的时候才真正计算
+
+*** count()产生无限累加迭代器
+#+BEGIN_SRC python
+  import itertools
+  natuals = itertools.count(1)
+  for n in natuals:
+      if n > 10:
+          break 
+      else:
+          print(n)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+#+end_example
+*** cycle()会把传入的循环无限重复下去
+#+BEGIN_SRC python
+  import itertools
+  cs = itertools.cycle('ABC')
+  n = 1
+  for c in cs:
+      if n > 10:
+          break
+      else:
+          print(c)
+          n = n + 1
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+A
+B
+C
+A
+B
+C
+A
+B
+C
+A
+#+end_example
+*** repeat()负责把一个元素无限重复下去，不过如果提供第二个参数就可以限定重复次数
+#+BEGIN_SRC python
+  import itertools
+  ns = itertools.repeat('A',3)
+  print(list(ns))
+#+END_SRC
+
+#+RESULTS:
+: ['A', 'A', 'A']
+*** takewhile()根据条件判断来截取出一个有限的序列
+#+BEGIN_SRC python
+  import itertools
+  natuals = itertools.count(1)
+  ns = itertools.takewhile(lambda x:x<=10,natuals)
+  print(list(ns))
+#+END_SRC
+
+#+RESULTS:
+: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+*** chain()把多个迭代对象串联起来,形成更大的迭代器
+#+BEGIN_SRC python
+  import itertools
+  l = list(itertools.chain('ABC',"123"))
+  print(l)
+#+END_SRC
+
+#+RESULTS:
+: ['A', 'B', 'C', '1', '2', '3']
+*** groupby()把迭代器中相邻的重复元素挑出来放在一起
+#+BEGIN_SRC python
+  import itertools
+  for key, group in itertools.groupby('AAABBBCCAAA'):
+      print(key, list(group))
+#+END_SRC
+
+#+RESULTS:
+: A ['A', 'A', 'A']
+: B ['B', 'B', 'B']
+: C ['C', 'C']
+: A ['A', 'A', 'A']
+
+实际上挑选规则是通过函数完成的，只要作用于函数的两个元素返回的值相等，这两个元素就被认为是在一组的，而函数返回值作为组的key。
+
+如果我们要忽略大小写分组，就可以让元素'A'和'a'都返回相同的key：
+#+BEGIN_SRC python
+  import itertools
+  for key, group in itertools.groupby('AaaBBbcCAAa', lambda c:c.upper()):
+      print(key, list(group))
+#+END_SRC
+
+#+RESULTS:
+: A ['A', 'a', 'a']
+: B ['B', 'B', 'b']
+: C ['c', 'C']
+: A ['A', 'A', 'a']
 
 * 获取帮助
 ** dir函数
