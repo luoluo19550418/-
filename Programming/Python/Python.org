@@ -939,6 +939,9 @@ yield与return语句一样都会返回一个值,所不同的在于它不会退�
 
 实际上,yield函数返回的是一个迭代器,当迭代器被请求一个值时,它会执行生成器中的代码,直到遇到一个yield或return语句.
 + yield语句意味着生成一个新值
+
++ =yield from　生成器= 语法可以让我们方便地调用另一个生成器
+  
 + return语句意味着生成器停止执行.
 
 *** 生成器的其他方法
@@ -1853,6 +1856,10 @@ Python对协程的支持是通过generator实现的. 与多线程比较,它具�
 4. produce拿到consumer处理的结果，继续生产下一条消息； 
 5. produce决定不生产了，通过c.close()关闭consumer，整个过程结束
 
+** async/await语法
+async和await是针对coroutine的新语法，要使用新的语法，只需要做两步简单的替换： 
+1. 把@asyncio.coroutine替换为async； 
+2. 把yield from替换为await。
 * 高级应用
 ** 特殊的类属性
    #+CAPTION:特殊类属性
