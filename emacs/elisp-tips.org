@@ -12,6 +12,20 @@
     ""
     (replace-regexp ".+" label nil (button-start btn) (button-end btn)))
 #+END_SRC
+** 使用button-label时,请一定保证处于button所在的buffer中
+由于button并未保存下来button所在的buffer时哪个,它直接假定当前buffer就是button所在的buffer.
+因此使用 =button-label= 获取button属性时,会直接从当前buffer中截取相应位置的内容. 
+若此时更改了buffer,则结果很可能时错误的.
+
+下面是button-label的定义
+#+BEGIN_SRC emacs-lisp
+  (defun button-label (button)
+    "Return BUTTON's text label."
+    (if (button--area-button-p button)
+        (substring-no-properties (button--area-button-string button))
+      (buffer-substring-no-properties (button-start button)
+                                      (button-end button))))
+#+END_SRC
 * navigate
 ** 使用宏`easy-mmode-define-navigation'可以快速生成导航命令
 (easy-mmode-define-navigation BASE RE &optional NAME ENDFUN NARROWFUN &rest BODY)
