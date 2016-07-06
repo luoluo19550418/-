@@ -13,8 +13,8 @@
     (replace-regexp ".+" label nil (button-start btn) (button-end btn)))
 #+END_SRC
 ** 使用button-label时,请一定保证处于button所在的buffer中
-由于button并未保存下来button所在的buffer时哪个,它直接假定当前buffer就是button所在的buffer.
-因此使用 =button-label= 获取button属性时,会直接从当前buffer中截取相应位置的内容. 
+由于button并未保存下来button所在的buffer是哪个,它直接假定当前buffer就是button所在的buffer.
+因此使用 =button-label= 获取button label时,会直接从当前buffer中截取相应位置的内容. 
 若此时更改了buffer,则结果很可能时错误的.
 
 下面是button-label的定义
