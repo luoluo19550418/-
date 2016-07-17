@@ -1,0 +1,162 @@
+#+TITLE: json必知必会
+#+AUTHOR: lujun9972
+#+CATEGORY: Programming
+#+DATE: [2016-07-17 日 18:02]
+#+OPTIONS: ^:{}
+
+* Json的格式
+
+JSON可以用来表示对象,其格式为 ={"键":值,"键":值...}= 其中:
++ JSON中使用 =:= 来分隔键与值
++ JSON中的键必须被双引号包裹
++ JSON中的值可以时字符串,数字,布尔值(false,true),null,数组或另一个JSON对象
++ JSON中,多个键-值对使用逗号来分隔.
++ JSON中,多个键值对被花括号包裹.
+
+
++ JSON文件使用.json扩展名
++ JSON的媒体类型时application/json
+
+** 读取JSON的指令
+
++ { :: 开始读取对象
++ } :: 结束读取对象
++ [ :: 开始读取数组
++ ] :: 结束读取数组
++ : :: 再键值对中分隔键和值
++ , :: 分隔JSON对象中的键值对,或者分隔数组中的值
+
+** JSON中的数据类型
+JSON中的数据类型包括:
++ 对象
++ 字符串
++ 数字
++ 布尔值
++ null
++ 数组
+
+*** 对象
+JSON本身就是对象,也就是一个被花括号包裹的键值对的列表
+
+*** 字符串
+JSON中的字符串可以由任何Unicode字符构成. 字符串的两边必须被双引号包裹.
+
+字符串中使用反斜杠进行转义,常见的转义字符有:
++ \" :: 双引号
++ \\ :: 反斜杠
++ \/ :: 正斜杠
++ \b :: 退格键
++ \f :: 换页符
++ \t :: 制表符
++ \n :: 换行符
++ \r :: 回车符
++ \u十六进制字符 :: unicode字符
+
+*** 数字
+JSON中的数字支持指数表示法,例如 ={"earthsMass":5.97219e+24}=
+
+*** JSON中的布尔值
+在JSON中,该字面量只使用小写形式: =true=, =false=
+
+*** null类型
+JSON中,必须使用小写的 =null=, 表示没有值
+
+*** 数组类型
+数组应被方括号包裹,里面只有值,且各个值之间用逗号分隔.
+
+JSON中的数组允许混合不同数据类型的值,但是处于可移植性的考虑,最好不要这样. 否则传递给静态语言解析可能会出错.
+
+* Json schema
+
+** JSON Schema的作用
+JSON schema可以位于要接收的数据的第一行,以保证数据符合要求. 它可以回答下面问题:
+
++ 值的类型是否正确? :: 规定值的类型
++ 是否包含所需要的数据? :: 规定哪些数据是需要的,哪些数据时不需要的
++ 值的形式是不是我需要的? :: 可以指定范围,最小值和最大值
+
+** JSON Schema格式简述
+JSON Schema本身也是使用JSON来书写:
+
+1. 首先,需要在JSON第一个键值对中,声明其为一个schema文件.
+   
+   声明的键必须为"$schema",值必须所采用草拟版本的链接
+   #+BEGIN_SRC json
+     {
+         "$schema":"http://json-schema.org/draft-04/schema#"
+     }
+   #+END_SRC
+
+2. 第二个字段应该是这个JSON Schema文件的标题(title)
+   #+BEGIN_SRC json
+     {
+         "$schema":"http://json-schema.org/draft-04/schema#",
+         "title":"Cat"
+     }
+   #+END_SRC
+
+3. 第三个字段要定义JSON中包含的属性(properties)
+
+   在这里可以指定各属性值的类型,值的形式,值的描述
+   #+BEGIN_SRC json
+     {
+         "$schema":"http://json-schema.org/draft-04/schema#",
+         "title":"Cat",
+         "properties":{
+             "name":{
+                 "type":"string",
+                 "minLength":3,
+                 "maxLength":20
+             },
+             "age":{
+                 "type":"number",
+                 "description":"Your cat's age in years",
+                 "minimum":0
+             },
+             "declawed":{
+                 "type":"boolean"
+             },
+             "description":{
+                 "type":"string"
+             }
+         }
+     }
+   #+END_SRC
+
+4. 第四个字段定义JSON中哪些属性是必须的(required)
+   
+   如果JSON Schema中不包括"required"键值对,则表示没有必填项.
+   #+BEGIN_SRC json
+     {
+         "$schema":"http://json-schema.org/draft-04/schema#",
+         "title":"Cat",
+         "properties":{
+             "name":{
+                 "type":"string",
+                 "minLength":3,
+                 "maxLength":20
+             },
+             "age":{
+                 "type":"number",
+                 "description":"Your cat's age in years",
+                 "minimum":0
+             },
+             "declawed":{
+                 "type":"boolean"
+             },
+             "description":{
+                 "type":"string"
+             }
+         },
+         "required":["name","age","declawed"]
+     }
+   #+END_SRC
+
+5. JSON Schema还支持正则表达式,以及枚举类型等其他高级校验.
+
+   要了解相关规范,参见[[http://json-schema.org/]]
+   
+* Json的安全问题
+1. JSON数组可以不包含在花括号内,这种数组叫做 =顶层JSON数组=. 顶层JSON数组同时能作为Javascript执行,因此可能被放入 =<script>= 标签中,从而越过浏览器对不同域名资源分享的限制规则.
+2. 由于 =<script>= 标签中只能通过GET方式来请求URL的数据,因此对于不想公开的资源,限制其仅允许使用HTTP POST方法请求,而不是GET方法.
+3. 当用eval执行JSON中的数据时,可能遭受注入攻击. 因此推荐使用 =JSON.arse()= 函数来解析JSON而不是执行脚本.
