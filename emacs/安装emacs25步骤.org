@@ -11,6 +11,7 @@ sudo apt-get install git
   sudo apt-get install libxpm-dev libgif-dev libjpeg-dev libtiff5-dev libtinfo-dev texinfo
   sudo apt-get install libmagick++-dev
   sudo apt-get install libxml2-dev
+  sudo apt-get install libgnutls-dev
 #+END_SRC
 * 编译Emacs
 #+BEGIN_SRC sh
