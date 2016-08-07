@@ -37,6 +37,11 @@
    * work-dirctory/.git/config文件
 
      这里的配置仅针对当前项目有效,使用git config来设定
+** 删除设置
+可以使用--unset选项来移除设置
+#+BEGIN_SRC sh
+  git config --unset --global ${配置项}
+#+END_SRC
 ** 常用的git配置项
 *** 用户名称和email
     这两条配置很重要,git提交时都会引用这两条信息,说明是谁提交了更新.
@@ -79,38 +84,39 @@
         # 1. 初始化当前目录,为git版本控制作准备
         git init
         git clone $仓库url              # 1. 克隆已有的仓库到本地
-        
+
         ###############版本控制##############
         # 2. 检查当前文件的状态
         git status
-        
+
         # [编辑忽略文件清单]
         # 在名为.gitignore的文件中列出要忽略的文件模式
-        
+
         # 3. 跟踪新文件,此时文件加入跟踪列表,但状态为未修改
         git add $要跟踪的文件路径       # 若文件路径为目录,则递归跟踪目录下的所有文件.
-        
+
         # 4. 修改已跟踪文件
         # 删除已跟踪文件
         git rm
         # 移动已跟踪文件
         git mv $from_file $to_file      # 相当于mv $from_file $to_file;git rm $from_file;git add $to_file
-        
+
         # 5. 将已修改的文件放入暂存区
         git add $要暂存的文件路径       # git add命令会根据目标文件的状态不同而产生不同的效果
         # [查看暂存后那些文件进行了改变]
         git diff                        # 比较的是当前文件和暂存区域快照之间的差异
-        
+
         # 6. 提交暂存区的快照
         git commit                      # 使用-a选项可用跳过暂存这一步,自动把已经跟踪的文件暂存起来并提交
         # [查看已经暂存起来的文件和上次提交时的快照之间的差异]
         git diff --cached
-        
+
         # 7. 修改最后一次提交的说明
         git commit --amend              # 使用当前的暂存快照来替代最后一次提交
         # 7. 取消最后一次暂存/取消对文件的修改
         # 使用git status会提示怎么做
-        
+        git rm --cached ${文件名}       # 将一个文件由已暂存转化为未暂存
+
       #+END_SRC
 ** git commit中注释的格式规范一般为
 + 第一行 :: 用一行文字简述提交的更改内容
@@ -146,8 +152,14 @@
         # 删除远程仓库别名
         git remote rm $远程仓库别名
 
+        # 删除陈旧的远程分支
+        git remote prune ${远程仓库}
+
         # 查看远程仓库信息
         git remote show $remote_name
+
+        # 更改远程仓库的URL
+        git remote set-url ${远程仓库} ${新URL}
       #+END_SRC
 ** tag命令
    git中的标签有两种:轻量级的标签和带附注的标签
@@ -208,6 +220,15 @@
       | %cd  | 提交的绝对日期           |
       | %cr  | 提交的相对日期           |
       | %s   | 提交说明                     |
+   3. --follow选项会让Git在日志中回溯并找到内容相关的整个历史记录
+      #+BEGIN_SRC sh
+        git log --follow ${文件}
+      #+END_SRC
+   4. -Sstring根据给定的string搜索涉及string改变的那些提交
+      #+BEGIN_SRC sh
+        git log -S${字符串} --pretty=online --abbrev-commit ${文件} # 搜索文件中涉及指定字符串的修改记录  
+      #+END_SRC
+
 ** reflog命令
 git log只能查看以当前状态为终点的历史日志. 而使用git reflog命令可以查看所有当前仓库的操作日志.
 ** diff命令
@@ -216,12 +237,28 @@ git log只能查看以当前状态为终点的历史日志. 而使用git reflog�
     git diff  
   #+END_SRC
 
-+ 查看工作树和最新提交的差别
++ 查看工作树和给定提交的差别
   #+BEGIN_SRC sh
-    git diff HEAD
+    git diff ${提交}
+  #+END_SRC
+
++ 显示索引与提交的差别
+  #+BEGIN_SRC sh
+    git diff --cached ${提交}
+  #+END_SRC
+
++ 比较指定两个版本之间的差异
+  #+BEGIN_SRC sh
+    git diff ${提交1} ${提交2}
+  #+END_SRC
+
++ 路径限定的git diff
+  git diff 操作模式会基于从给定树的根对象开始比较整个目录结构，但是你也可以限定之比较指定路径
+  #+BEGIN_SRC sh
+    git diff ${目录/文件}
   #+END_SRC
 ** 分支命令
-   远程分支的格式一般为"远程仓库名/分支名"
+远程分支的格式一般为"远程仓库名/分支名"
    #+BEGIN_SRC sh
      # 新建分支
      git branch $分支名              # 但并未切换到该分支
@@ -253,6 +290,12 @@ git log只能查看以当前状态为终点的历史日志. 而使用git reflog�
      git branch --merge              # 查看那些分支已经合并入当前分支,这些分支可用被del了
      git branch --no-merged          # 查看尚未合并的分支
 
+     # 显示远程分支
+     git branch -r
+
+     # 显示所有分支（包括本地分支和远程分支）
+     git branch -a
+
      # 推送分支
      git push $远程仓库名 $本地分支名 # 推送指定本地分支到远程仓库中
      git push $远程仓库名 $本地分支名:$远程分支名 # 推送指定的本地分支到远程仓库中,并命名为指定的远程分支名
@@ -270,6 +313,184 @@ git log只能查看以当前状态为终点的历史日志. 而使用git reflog�
      git rebase master server client # 找出client分支从它与server分支的祖先相分离之后的改变在master分支上重新做一遍.
      # 注意!!永远不要衍合那些已经推送到公共仓库的更新!!
    #+END_SRC
+** 查看提交
+
++ 查看特定提交的详细信息
+  #+BEGIN_SRC sh
+  git show ${提交码}
+  #+END_SRC
+
++ 若没有显式制定提交码，她将只显示最后一次提交的详细信息
+  #+BEGIN_SRC sh
+    git show
+  #+END_SRC
+
++ 显示指定文件的提交
+  #+BEGIN_SRC sh
+    git show ${文件}
+  #+END_SRC
+
++ 显示指定分支下某文件的提交
+  #+BEGIN_SRC sh
+    git show ${分支}:${文件}
+  #+END_SRC
+
++ 查看当前开发分支的简洁单行摘要
+  #+BEGIN_SRC sh
+    git show-branch --more=10
+  #+END_SRC
+
++ 查看blob对象的内容
+  #+BEGIN_SRC sh
+    git cat-file -p ${blob_hash}
+  #+END_SRC
+
++ 查看对象模型下，暂存文件的SHA1值
+  #+BEGIN_SRC sh
+    git ls-files --stage
+  #+END_SRC
+** git reset命令
++ git --soft
+
+  --soft会将HEAD引用指向给定提交。索引和工作目录的内容保持不变。
+
++ git --mixed
+
+  --mixed会将HEAD指向给定提交。同时索引内容也跟着改变以符合给定提交的树结构，但工作目录不会改变。
+
+  这是git reset的默认模式
+
++ git --hard
+
+  将HEAD引用指向给定提交。 索引内容也跟改变以符合给定提交的树结构。 此外工作目录也恢复到提交表示i的树的状态。
+
+** git stash命令
+
+当你开发到一半要停下手头的工作去优先完成新的任务时，可以使用stash。
+
+stash可以捕获你的工作进度，允许你保存工作进度并且当你方便时再回到该进度
+
+1. 存档
+   #+BEGIN_SRC sh
+     git stash save                  # Git会提供一个默认的日志消息
+     git stash save "${MSG}"         # 也可以提供自己的日志信息
+   #+END_SRC
+
+2. 取档
+   #+BEGIN_SRC sh
+     git stash pop
+   #+END_SRC
+
+3. 查询stash的内容
+   #+BEGIN_SRC sh
+     git show-branch stash
+   #+END_SRC
+
+4. 可以在stash的情况下，再次stash！
+** 生成/应用补丁
++ git format-patch会生成email形式的补丁
+  #+BEGIN_SRC sh
+    git format-patch -${N}             # 为最近N次提交生成补丁，默认每个提交一个补丁
+    git format-patch ${start}..${end}     # 为一个commit范围生成补丁
+    git format-patch ${commit}            # 相当于git format-patch ${commit}..HEAD
+    git format-patch -o ${目录} ${commit} # -o选项指定补丁存放的目录
+    # 如果想要为所有提交生成补丁，且包括初始的根提交，可以使用--root选项
+    git format-patch --root ${end} --commit
+  #+END_SRC
+  注意：合并本身是不会生成补丁的
++ git send-mail会通过SMTP来发送一个Git补丁
+  #+BEGIN_SRC sh
+    git send-email -to ${email_address} ${patch_files} # 发送patch_files到email_address
+    # 你可能还需要设置sendmail.smtpserver和sendmail.smtpserverport 配置项
+  #+END_SRC
++ git am会应用邮件消息中的补丁
+  #+BEGIN_SRC sh
+    git am ${patch_files}
+    # -3/-3way 选项表示使用三路合并的方式：一个文件的当前版本，一个文件的替代版本，一个定位补丁应用到的文件的原始基础版本
+    git am -3 ${patch_files}
+  #+END_SRC
+** .gitignore文件格式
++ 空行会被忽略，以#开头的行可以作为注释。 然而 *如果#跟在其他文本后面就不是注释了*
++ 简单的字面文件名匹配 *任何目录* 中的同名文件
++ 目录名由/标记，则能匹配同名的目录和子目录，但不匹配文件或符号链接
++ 可以使用shell通配符，但不能跨目录匹配
++ 起始的!会对该行剩余部分的模式进行取反（即匹配的文件不被忽略），切取反模式的优先级高于普通规则
+** 相对提交名
++ ~N 表示相对提交名的第N个提交
+  #+BEGIN_SRC sh
+    master~3                        # master的上三个提交
+  #+END_SRC
++ ^ 表示相对提交名的上一个提交
+  #+BEGIN_SRC sh
+    master^                         # master的上一个提交
+    master^^                        # master的上两个提交
+  #+END_SRC
++ ^N 表示第N个父提交
+
+  当一个提交是merge来的，则可能包含N个父提交
+  #+BEGIN_SRC sh
+    C^1                             # 表示地一个父提交
+    C^2                             # 表示地二个父提交
+  #+END_SRC
++ since..until 表示(since,until] 这么一个提交的区间
+
+  即那些包含在until中的提交，但却不在since中的提交。
+  #+BEGIN_SRC sh
+    git log --pretty=short --abbrev-commit master~12..master~10
+  #+END_SRC
++ start...end 表示start或end可达，但是又不是start和end同时可达的提交集合
+** 其他git工具
+*** git bisect
+git bisect用二分法帮你找出引入BUG的那个提交。
+
+你需要在一个 *干净* 的工作目录中启动git bisect. 此过程中会调整你的工作目录来包含版本库的不同版本，并询问你该版本的代码是否正常
+
+1. 启动二分搜索
+   #+BEGIN_SRC sh
+     git bitsect start
+   #+END_SRC
+2. 告诉当前分支是好的还是坏的
+   #+BEGIN_SRC sh
+     git bisect good                 # 当前分支是正常的
+     git bisect goog ${分支}            # 指定分钟是好的
+     git bisect bad                  # 当前分钟是有错的
+   #+END_SRC
+3. 查看搜索日志
+   #+BEGIN_SRC sh
+     git bisect log
+   #+END_SRC
+
+4. 可视化地检查提交范围内的内容
+   #+BEGIN_SRC sh
+     git bisect visualize --pretty=online
+   #+END_SRC
+     
+5. 结束二分搜索
+   #+BEGIN_SRC sh
+     git bisect reset
+   #+END_SRC
+*** git blame
+git blame可以告诉你一个文件中的没一行最后是谁修改的，和哪次提交作出了变更
+#+BEGIN_SRC sh
+  git blame -L ${开始行},${结束行} ${文件}
+#+END_SRC
+*** git cherry-pick
+
+git cherry-pick提交命令会在当前分支上应用给定提交引入的改变
+
++ 引入给定的提交引入的变更
+  #+BEGIN_SRC sh
+    git cherry-pick ${某次提交}
+  #+END_SRC
+
++ 引入某个范围的提交
+  #+BEGIN_SRC sh
+    git cherry-pick start..end
+  #+END_SRC
+
+*** git revert
+
+  git revert语法与git cherry-pick类似，但是引入的是指定提交的逆改变。
 * FAQ
 ** 如何把GIT仓库的子目录独立成仓库
 我有一个名为MyLisp的仓库,里面存放的是一些我自己写的elisp脚本,仓库地址是~/MyLisp. 
