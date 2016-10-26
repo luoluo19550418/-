@@ -3782,9 +3782,9 @@ Common Lisp的header argument支持一个名为 ~:package~ 的header argument,�
 默认情况下tangle的过程只会把源代码的内容插入到外部文件中. 使用 ~:comments~ 参数可以让代码在tangle的过程中插入额外的注释信息
 
 + no :: 默认情况,表示不插入额外的注释
-+ link :: 插入额外的注释,一遍从源代码中能够链接回原org文件
++ link :: 插入额外的注释,以便从源代码中能够链接回原org文件
 + yes :: 与 =link= 一样,只是为了向后兼容
-+ org :: 将一部分org文件中的内容作为注释插入源文件中.The text is picked from the leading context of the tangled code and is limited by the nearest headline or source block as the case may be
++ org :: 将一部分org文件中的内容作为注释插入源文件中. 只有代码块上面到最近的标题之间的内容会作为注释
 + both :: link + org
 + noweb :: 开启link,同时 wraps expanded noweb references in the code block body in link comments.
 
