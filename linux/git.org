@@ -128,39 +128,42 @@
 + #编号 :: 连接到本仓库对应的issue编号
 + 用户名/仓库 #编号 :: 连接到指定仓库对应的issue编号
 ** 远程仓库命令   
-   同他人协作开发某个项目时,需要管理远程仓库,以便推送/拉取数据,分享各自的工作进展. 
-      #+BEGIN_SRC sh
-        ###############远程仓库操作##############
-        # 查看当前的远程仓库
-        git remote                      # 列出每个远程仓库的别名
-        git remote -v                   # 列出每个远程仓库的别名和对应的URL
+同他人协作开发某个项目时,需要管理远程仓库,以便推送/拉取数据,分享各自的工作进展. 
+#+BEGIN_SRC sh
+  ###############远程仓库操作##############
+  # 查看当前的远程仓库
+  git remote                      # 列出每个远程仓库的别名
+  git remote -v                   # 列出每个远程仓库的别名和对应的URL
 
-        # 添加远程仓库
-        git remote add $远程仓库别名 $远程仓库url
+  # 添加远程仓库
+  git remote add $远程仓库别名 $远程仓库url
 
-        # 从远程仓库更新本地数据
-        git fetch $remote_name          # 从远程仓库拉取所有本地仓库没有的数据,但不会自动合并本地仓库的数据
-        git pull                        # 默认将远程仓库origin的master分支合并到当前的master分支
-        # 推送数据到远程仓库
-        git push                        # 默认将本地master分支推送到远程仓库的origin的master分支
-        git push $remote_name $branch_name # 将本地的分支$branch_name推送到远程仓库$remote_name中
-        git push -u $remote_name $branch_name # 在推送时,将$remote_name上的$branch_name分支设为本地仓库当前分支的默认upstream.
+  # 让Git自动对比本地Git仓库与远程Git仓库的分支名称，找出对应的分支，并在本地Git仓库中创建追踪分支
+  git remote update
 
-        # 重命名远程仓库别名
-        git remote rename $old_alias $new_alias
+  # 从远程仓库更新本地数据
+  git fetch $remote_name          # 从远程仓库拉取所有本地仓库没有的数据,但不会自动合并本地仓库的数据
+  git pull                        # 默认将远程仓库origin的master分支合并到当前的master分支
+  # 推送数据到远程仓库
+  git push                        # 默认将本地master分支推送到远程仓库的origin的master分支
+  git push $remote_name $branch_name # 将本地的分支$branch_name推送到远程仓库$remote_name中
+  git push -u $remote_name $branch_name # 在推送时,将$remote_name上的$branch_name分支设为本地仓库当前分支的默认upstream.
 
-        # 删除远程仓库别名
-        git remote rm $远程仓库别名
+  # 重命名远程仓库别名
+  git remote rename $old_alias $new_alias
 
-        # 删除陈旧的远程分支
-        git remote prune ${远程仓库}
+  # 删除远程仓库别名
+  git remote rm $远程仓库别名
 
-        # 查看远程仓库信息
-        git remote show $remote_name
+  # 删除陈旧的远程分支
+  git remote prune ${远程仓库}
 
-        # 更改远程仓库的URL
-        git remote set-url ${远程仓库} ${新URL}
-      #+END_SRC
+  # 查看远程仓库信息
+  git remote show $remote_name
+
+  # 更改远程仓库的URL
+  git remote set-url ${远程仓库} ${新URL}
+#+END_SRC
 ** tag命令
    git中的标签有两种:轻量级的标签和带附注的标签
    #+BEGIN_SRC sh
@@ -262,6 +265,7 @@ git log只能查看以当前状态为终点的历史日志. 而使用git reflog�
    #+BEGIN_SRC sh
      # 新建分支
      git branch $分支名              # 但并未切换到该分支
+     git branch ${分支名} ${commit节点标识符或标签}
 
      # 切换分支
      git checkout $分支名            
@@ -280,10 +284,17 @@ git log只能查看以当前状态为终点的历史日志. 而使用git reflog�
      git branch -d $分支名           # 若指定分支包含当前分支未合并的工作,则删除会失败
      git branch -D $分支名           # 强制删除分支
 
+     # 删除远程Git仓库中的分支
+     git push ${远程Git仓库名称} --delete 分支名
+
+     # 重命名分支
+     git branch -m ${新分支名}
+
      # 冲突的合并
      git status                      # unmerged处显示哪几个文件有冲突
      git mergetool                   # 使用自定义的图形化工具合并文件,当然也可以用vi来手工合并
      git add $合并后的文件           # 将合并后的文件标记为冲突已解决
+     git merge --abort               # 放弃合并
 
      # 显示本地分支
      git branch                      # 显示当前所有分支的清单
@@ -345,10 +356,16 @@ git log只能查看以当前状态为终点的历史日志. 而使用git reflog�
     git cat-file -p ${blob_hash}
   #+END_SRC
 
++ 列出Git文档库中的文件列表
+  #+BEGIN_SRC sh
+    git ls-files
+  #+END_SRC
+
 + 查看对象模型下，暂存文件的SHA1值
   #+BEGIN_SRC sh
     git ls-files --stage
   #+END_SRC
+
 ** git reset命令
 + git --soft
 
@@ -469,6 +486,28 @@ git bisect用二分法帮你找出引入BUG的那个提交。
    #+BEGIN_SRC sh
      git bisect reset
    #+END_SRC
+
+*** git grep
+grep搜索commit节点中所有文件，然后列出包含该字符串的每一行
+#+BEGIN_SRC sh
+  git grep ${要查找的字符串} ${commit节点}
+#+END_SRC
+
+如果要查找的字符串不止一个，可以使用-e选项来分别指定这些字符串
+#+BEGIN_SRC sh
+  git grep -e ${要查找的字符串1} -e ${要查找的字符串2} ${commit节点}
+#+END_SRC
+
+这些字符串默认用or的方式结合，如果要限制所有字符都必须出现才算数，可以用 --and 选项把它们结合起来
+#+BEGIN_SRC sh
+  git grep -e ${要查找的字符串1} --and -e ${要查找的字符串2} ${commit节点}
+#+END_SRC
+
+and 和 or 的结合还可以混用，甚至加上括号
+#+BEGIN_SRC sh
+  git grep -e ${要查找的字符串1} --and \( -e ${要查找的字符串2} -e ${要查找的字符串3} \) ${commit节点}
+#+END_SRC
+
 *** git blame
 git blame可以告诉你一个文件中的没一行最后是谁修改的，和哪次提交作出了变更
 #+BEGIN_SRC sh
@@ -491,6 +530,14 @@ git cherry-pick提交命令会在当前分支上应用给定提交引入的改�
 *** git revert
 
   git revert语法与git cherry-pick类似，但是引入的是指定提交的逆改变。
+
+*** git gc
+=git gc= 会清理Git文档库中无用的数据。 它常与以下选项搭配
+
++ --aggressive :: Git默认情况下会用比较快速的方式检查文档库并完成清理。但这个选项会使Git用仔细的方式检查并清理
++ --auto :: Git会先判断文档库是否有必要清理，如果情况还算良好就不会执行清理操作
++ --no-prune :: 要求Git不真正清除无用的数据，只要整理它们即可
+
 * FAQ
 ** 如何把GIT仓库的子目录独立成仓库
 我有一个名为MyLisp的仓库,里面存放的是一些我自己写的elisp脚本,仓库地址是~/MyLisp. 
@@ -552,3 +599,5 @@ git中可以加入忽略文件权限的配置,具体如下
 #+END_SRC
 
 但若设置该属性之前,权限就混乱了的话,是无法自动修复的.
+** 如何快速架设gitlab
+https://bitnami.com/stack/gitlab/virtual-machine 中可以下载虚拟机，里面包含已经架设好了的gitlab
