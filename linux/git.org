@@ -604,3 +604,63 @@ git中可以加入忽略文件权限的配置,具体如下
 但若设置该属性之前,权限就混乱了的话,是无法自动修复的.
 ** 如何快速架设gitlab
 https://bitnami.com/stack/gitlab/virtual-machine 中可以下载虚拟机，里面包含已经架设好了的gitlab
+** 解决Detached HEAD问题
+要删除或合并这个无名分支，都需要用branch为其起个名字。
+#+BEGIN_SRC sh
+  git branch ${新分支名}
+#+END_SRC
+
+然后就能用 =branch -D= 或 =merge= 来处理这个分支了
+** 执行玩rebase之后要反悔怎么办?
+执行完rebase之后，若要反悔，可以使用git reset指令，但是它需要先找到执行rebase之前HEAD所在的最新的commit节点
+
+方法是使用relog指令来找
+#+BEGIN_SRC sh
+  git relog ${HEAD或其他分支名}
+#+END_SRC
+** 设置Merge Tool解决合并分支时发生的冲突
+#+BEGIN_SRC sh
+  git config --global merge.tool kdiff3
+  git config --global mergetool.kdiff3.cmd "kdiff3 \"$BASE\" \"$LOCAL\" \"$REMOTE\" -o \"MERGED\""
+  git config --global mergetool.prompt false # Git启动外部程序之前不询问
+  git config --global mergetool.kdiff3.trustExitCode true # Git直接使用外部程序返回值来判断合并是否成功
+  git config --global mergetool.keepBackup false          # 是否由Git来备份原冲突文件
+#+END_SRC
+** 使用Git Daemon创建Git Server
+Git Daemon不需要其他程序，只要一般的Git指令就能启动，但缺点是没有授权的管理和控制机制
+
+Git Daemon使用抓闷的git通讯协议(默认9418端口)。其设置步骤如下：
+
+假设在 =GitRemoteRepo= 目录中有 =Repo1=, =Repo2=, =Repo3= 等仓库,那么:
+
+1. 在 =GitRemoteRepo= 目录下运行 =git daemon --exort-all= 会开发当前文件夹下的所有Git仓库
+
+2. 网络其他机器可以通过 =git clone git://远程机器/GitRemoteRepo/Repo1= 来获取远程仓库
+
+3. 如果希望独立控制开发能够哪个Repo,则不要使用 =--export-all= 选项,而是在每个要开放的repo的 =.git= 子文件夹中创建名为 =git-daemon-export-ok= 的空文件.
+
+   如果是bare类型的Git仓库,只需要把 =git-daemon-export-ok= 文件放在第一层目录中就行了.
+
+4. Git Daemon默认只能读取不能被push,要开放写入功能需要加 ~--enable=recv-pack~ 选项
+   #+BEGIN_SRC sh
+     git daemon --export-all --enable=receive-pack
+   #+END_SRC
+
+5. 还有一些常用的选项
+
+   + --base-path=文件夹路径
+
+     简化客户端上读取仓库时的路径,可以使用相对与base-path的路径来代替绝对路径了
+
+   + --port=通讯端口
+
+     指定传输数据的通讯端口.
+
+     客户端连接时,也需要指定相同的通讯端口
+     #+BEGIN_SRC sh
+       git clone git://远程地址:端口/repo路径
+     #+END_SRC
+
+   + --verbose
+
+     显示完整信息
