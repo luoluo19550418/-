@@ -618,6 +618,12 @@ https://bitnami.com/stack/gitlab/virtual-machine 中可以下载虚拟机，里�
 #+BEGIN_SRC sh
   git relog ${HEAD或其他分支名}
 #+END_SRC
+** 设置diff tool
+#+BEGIN_SRC sh
+  git config --global diff.tool kdiff3
+  git config --global difftool.kdiff3.cmd "kdiff3 \"$LOCAL\" \"$REMOTE\""
+  git config --global difftool.prompt false
+#+END_SRC
 ** 设置Merge Tool解决合并分支时发生的冲突
 #+BEGIN_SRC sh
   git config --global merge.tool kdiff3
