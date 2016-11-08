@@ -85,6 +85,7 @@ image-dired的相关操作基本都是在 =*image-dired*= buffer中进行的.
 
 这里需要说明一下的是,为什么我这里用 =emacs -q= 而不是用 =emacsclient= 呢? 是因为两个原因:
 
-1. 当开启了evil插件后,会发现有些 =image-mode= 与 =*image-dired*= buffer中的快捷键会被evil覆盖掉,不太好用.
+1. 当目录中的图片太多时, =image-dired= 消耗大量的时间来生成缩略图,而这期间会造成Emacs卡死. 所以我这里用 =emacs= 新启动一个进程.
 
-2. 当目录中的图片太多时, =image-dired= 消耗大量的时间来生成缩略图,而这期间会造成Emacs卡死.
+2. 当开启了evil插件后,会发现有些 =image-mode= 与 =*image-dired*= buffer中的快捷键会被evil覆盖掉,不太好用. 所以我这里用 =-q= 选项来阻止emacs读取配置文件.
+
