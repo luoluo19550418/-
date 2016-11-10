@@ -2511,6 +2511,7 @@ struct模块被用来解决bytes和其他二进制数据类型的转换
 
   #+RESULTS:
   : b'\x00\x00\x04\x00'
+<<<<<<< HEAD
 
   其中第一个参数中的 =>= 表示字节顺序是big-endian,即网络序, =I= 表示4字节无符号整数. 后面的参数个数要和处理指令一致.
 
@@ -2521,6 +2522,18 @@ struct模块被用来解决bytes和其他二进制数据类型的转换
     print(a)
   #+END_SRC
 
+=======
+
+  其中第一个参数中的 =>= 表示字节顺序是big-endian,即网络序, =I= 表示4字节无符号整数. 后面的参数个数要和处理指令一致.
+
++ =struct.unpack= 函数把bytes变成相应的数据类型
+  #+BEGIN_SRC python
+    import struct
+    a = struct.unpack('>IH',b'\xf0\xf0\xf0\xf0\x80\x80')
+    print(a)
+  #+END_SRC
+
+>>>>>>> b4b22bc5ce04013fdbd3f2a681d6ce1315912e84
   #+RESULTS:
   : (4042322160, 32896)
 
@@ -2669,6 +2682,7 @@ Dec => Month.Dec
 
 #+END_SRC
 
+<<<<<<< HEAD
 ** operator模块
 
 ** itertools模块
@@ -2730,6 +2744,8 @@ lru_cache不仅仅能实现memoization，而且能够限定缓存的条目数，
       return math.sin(x)
 #+END_SRC
 =======
+=======
+>>>>>>> b4b22bc5ce04013fdbd3f2a681d6ce1315912e84
 ** re
 *** 正则表达式说明
 1. \b匹配一个单词的边界，\B匹配一个单词的中间模式

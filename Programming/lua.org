@@ -627,3 +627,110 @@ global variable global
      end
      foreach({1, 2, 3}, print)
      #+END_SRC
+* 标准库
+** math
+*** 三角函数
+所有三角函数都使用弧度单位,但可以用math.deg和math.rad来转换角度和弧度
+
++ sin
+
++ cos
+
++ tan
+
++ asin
+
++ acos
+
+*** 指数和对数函数
+
++ exp
+
++ log
+
++ log10
+
+*** 取整函数
+
++ floor
+
++ ceil
+
+*** 随机数函数
+
++ random() :: 生成[0,1) 区间均匀分布的伪随机数
+
++ random(n) :: 返回一个区间在[1,n]内的伪随机整数
+
++ random(m,n) :: 返回区间[m,n]内的伪随机整数 
+
++ randomseed(数字) :: 设置随机种子
+
+*** 常量
+
++ pi
+
++ huge :: lua可以表示的最大数字
+
+*** 其他
+
++ max
+
++ min
+
+** table库
+table库中的函数将table作为 *数组* 来操作.
+*** 插入和删除
+
++ insert($table,$element) :: 将$element插入到$table的末尾
++ insert($table,$position,$element) :: 将$element插入到$table的指定位置
++ remove($table) :: 删除$table中的最后一个元素
++ remove($table,$position) :: 删除$table在$position位置的元素
+*** 排序
+
++ sort($table) :: 使用小于操作对$table进行排序
++ sort($table,$compare_function) :: 按指定的比较函数来对$table进行排序, 如果希望第一个参参数在第二个参数前,则比较函数应该返回true
+*** 连接
+
++ concat($string_table) :: 返回字符串数组中字符串连接后的结果
++ concat($string_table,$sep) :: 返回字符串数组中字符串连接后的结果,$sep为字符串之间的分隔符
++ concat($string_table,$sep,$start,$end) :: 返回字符串数组中字符串连接后的结果,$sep为字符串之间的分隔符,$start为第一个要连接的字符串索引,$end为最后一个要连接的字符串索引
+** string库
+在Lua5.1中,字符串库中的函数还被导出为string类型的方法,因此 =string.upper(s)= 和 =s:upper()= 是一样的效果.
+
+另外需要注意的是, *字符串的索引是从1开始,且负数的索引会从字符串的尾部开始计数,当函数中的两个参数表示返回时,通常包含了$end位置的字符*
+*** 基础字符串函数
+
++ len($str) :: 字符串$str的长度
++ rep($s,$n) :: 返回字符串$s重复$n次的结果
++ lower($s) :: 返回字符串$s的小写形式
++ upper($s) :: 返回字符串$s的大写形式
++ sub($s,$i) :: 从字符串$s中抽取前$i长度的前缀, *索引是从1开始,负数的索引会从字符串的尾部开始计数*
++ sub($s,$i,$j) :: 从字符串$s中抽取从$i到$j个字符(包括$j位置的字符), *索引是从1开始,负数的索引会从字符串的尾部开始计数*
++ char($num1,$num2...$numN) :: 将数字$num1-$numN转换成字符串
++ byte($str) :: 返回$str中第一个字符的内部数值表示.
++ byte($str,$position) :: 返回$str中$position位置字符的内部数值表示.
++ byte($str,$start,$nd) :: 返回$str中从$start到$end之间字符的内部数值表示.
++ format($fmt,...) :: 格式化字符串,规则与C语言的printf一样
+*** 模式匹配函数
+** IO库
+IO库为文件操作提供了两种不同的模型: 简单模型与完整模型. 其中
+
++ 简单模型假设有一个当前输入文件和一个当前输出文件,所有IO操作均作用于这些文件
++ 完整模型则使用显式的文件句柄. 采用的是面向对象的风格,所有操作定义为文件句柄上的方法
+*** 简单IO模型
+IO库默认将当前输入文件初始化为stdin,将输出文件初始化为stdout.
+
++ read() :: 从当前输入文件读取一行
++ read("*all") :: 读取整个文件
++ read("*line") :: 读取下一行,但不包括换行符,到达文件末尾会返回nil
++ read("*number") :: 读取一个数字,若当前位置无法读取到数字则返回nil
++ read($N) :: 读取N个字符的字符串
++ read(选项1,选项2...选项N) :: read可以指定多个选项,函数会根据每个选项参数返回相应的内容.例如 =read("*number","*number","*number")= 会读取3个数字
++ read(0) :: 用于检查是否达到了文件末尾,若还有数据可读取会返回空字符串,否则返回nil
+
++ write($str1...$strN) :: 将字符串或 *数值* 写入当前输出文件
++ input(filename) :: 以只读模式打开指定文件,并将其设置为当前输入文件
++ output(filename) :: 打开指定文件,并将其设置为当前输出文件
++ lines() :: 返回所有行的迭代器
+*** 完整IO模式

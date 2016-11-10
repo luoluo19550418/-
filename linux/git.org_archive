@@ -1,0 +1,14 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /home/lujun9972/我的笔记/linux/git.org
+
+
+* 快速假设Gitlab
+:PROPERTIES:
+:ARCHIVE_TIME: 2016-11-06 日 22:06
+:ARCHIVE_FILE: ~/我的笔记/linux/git.org
+:ARCHIVE_OLPATH: FAQ
+:ARCHIVE_CATEGORY: git
+:END:
+从https://bitnami.com/stack/gitlab/virtual-machine 中可以下载到已经创建好了的linux虚拟机，里面包含了假设好了的gitlab

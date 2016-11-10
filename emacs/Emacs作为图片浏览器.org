@@ -2,7 +2,8 @@
 #+AUTHOR: lujun9972
 #+TAGS: emacs
 #+DATE: [2016-11-08 二 19:47]
-#+LANGUAGE:  zh-CN#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
 
 * image-mode
 当用Emacs打开一张图片时,Emacs会自动进入image-mode,并显示出图片来. (如果你的操作系统是windows,默认是不支持显示图片的,那么请参考 [[http://www.cnblogs.com/atskyline/archive/2012/05/15/2546969.html][windows版本的Emacs 无法显示图片的解决方法]])
