@@ -95,58 +95,102 @@
      
 ** 定制资源
 *** 文件.Xresources / .Xdefauls
-    X在启动时会读取配置文件中对资源的配置
-    * 资源文件的格式为
-      客户端程序名.构建层级.属性:属性值.
-      这里构建层次可以为父构建.子构建层级这样的层级表达,也可以为*星号表示任意的层级关系.
-      #+BEGIN_QUOTE
-      XTerm*foreground:white
-      Xterm*scrollbar:true
-      myWorld.mainForm.PushButton:blue
-      #+END_QUOTE
-      此外,!为注释符
-      #+BEGIN_QUOTE
-      !This is a comment
-      #+END_QUOTE
-      还能使用CPP预处理器的伪指令#if,#ifdef,#else和#endif
-    * 资源生效
-      在改变.Xresource文件后,不会立刻看到修改的结果,必须使用xrd命令来通知所有的服务有关修改.
-      #+BEGIN_SRC sh
-        xrdb -load .Xresources 
-      #+END_SRC
-      如果想保留以前的设置不改变,则使用-merge参数
-      #+BEGIN_SRC sh
-        xrdb -merge .myOwnResources      
-      #+END_SRC
+X在启动时会读取配置文件中对资源的配置
++ 资源文件的格式为
+  客户端程序名.构建层级.属性:属性值.
+  这里构建层次可以为父构建.子构建层级这样的层级表达,也可以为*星号表示任意的层级关系.
+  #+BEGIN_QUOTE
+  XTerm*foreground:white
+  Xterm*scrollbar:true
+  myWorld.mainForm.PushButton:blue
+  #+END_QUOTE
+  此外,!为注释符
+  #+BEGIN_QUOTE
+  !This is a comment
+  #+END_QUOTE
+  还能使用CPP预处理器的伪指令#if,#ifdef,#else和#endif
++ 资源生效
+  在改变.Xresource文件后,不会立刻看到修改的结果,必须使用xrd命令来通知所有的服务有关修改.
+  #+BEGIN_SRC sh
+    xrdb -load .Xresources 
+  #+END_SRC
+  如果想保留以前的设置不改变,则使用-merge参数
+  #+BEGIN_SRC sh
+    xrdb -merge .myOwnResources      
+  #+END_SRC
 ** 定制X的工具
+*** xprop
+xprop能列出指定窗口的属性.
+
+有几种方式可以指定要探测属性的窗口:
+
++ xprop启动时,光标会编程十字样式,移动光标到你想要探测属性的窗口并按下任何按钮就能探测该窗口的属性了.
+
++ 能用 =-root= 来指定探测根窗口
+
++ 用 =-id ${win-id}= 来指定探测id为${win-id}的窗口
+
+对于每个属性都有一个属性名称,在其后面用小括号括住的为属性的类型或格式,最后是属性的值. 
+
+比较常见的属性有:
+
++ WM_COMMAND :: 启动这个应用程序的命令行
++ WM_CLINET_MACHINE :: 执行这个客户端程序的机器名称
++ WM_CLASS :: 该程序的instant name和class name, instant name可以由命令行中的 =-name= 选项指定
++ WM_ICON_NAME :: 应用程序的图标所要显示出来的名称.
++ WM_NAME :: 这是由命令行中 =-title= 选项指定的窗口标题名称, *而不是应用程序的名称*
+*** xev
+事件或多或少驱动着整个窗口系统. 所有的输入,不论是鼠标或键盘,均由事件来掌握. 事件也被用来驱动窗口的重新配置和显示.
+
+xev程序让你看到当不同的动作发生时,会产生什么事件,以及和事件有关的信息. 
+
 *** xsetroot
-    该工具定制root窗口的特征,一些可使用的选项有
-    * -cursor cursorfile maskfile
-      把光标改为一个显示的值.这里光标文件是指一个用工具bmtoa将位图转换后的ASCII文件.
-    * -fg color foregrond
-      设置root窗口的前景色
-    * -bg color background
-      设置root窗口的背景色
-    * -rv
-      交换前景色和背景色
-    * -solid color
-      把root窗口设置为单一的颜色.    
+该工具定制root窗口的特征,一些可使用的选项有
++ -cursor $cursorfile $maskfile :: 把光标改为一个显示的值.这里光标文件是指一个用工具bmtoa将位图转换后的ASCII文件.
+     其中,maskbitmap决定了cursorbitmap的哪些像素真正被显示出来,光标像素中只有对应到遮盖像素为黑的部分才会用到,而不会显示光标其他的像素. 总的来说,遮盖决定了光标的外形. 反之,光标图形则决定了外形的颜色. 遮盖和光标的图形必须大小相同.
++ -fg color foregrond :: 设置root窗口的前景色
++ -bg color background :: 设置root窗口的背景色
++ -rv :: 交换前景色和背景色
++ -solid color :: 把root窗口设置为单一的颜色.
++ -mod x y :: 设定格子图案,x和y为1到16的整数
++ -bitmap 图形文件 :: 指定图形来当作屏幕的背景
++ -def :: 回复缺省的光标和背景
+
 *** xset
-    xset命令设置X环境的基本选项.
-    * xset -b on /off
-      打开/关闭PC扬声器,产生bell声音
-    * xset -s seconds /off
-      激活屏幕保护,off表示关闭屏幕保护
-    * xset -q
-      查询x的配置信息
-    * xset fp
-      设置字体信息
+xset命令设置X环境的基本选项.
++ xset -b on /off
+  打开/关闭PC扬声器,产生bell声音
++ xset -s seconds /off
+  激活屏幕保护,off表示关闭屏幕保护
++ xset -q
+  查询x的配置信息
++ xset fp
+  设置字体信息
 *** xdpyinfo
-    列出X服务器的信息和预设的参数
+列出X服务器的信息和预设的参数
 *** xmodmap
-    改变X下键盘和鼠标中,物理按键与按钮代码的映射关系
-    * xmodmap -pp
-      显示当前映射
+改变X下键盘和鼠标中,物理按键与按钮代码的映射关系
++ xmodmap -pp
+  显示当前映射
 *** xlsfonts
-    列出系统中的字体,格式为
-    -foundary-family-wt-sl-wd-p-pts-hr-vr-sp-ave-charset-style
+列出系统中的字体,格式为
+-foundary-family-wt-sl-wd-p-pts-hr-vr-sp-ave-charset-style
+
+其中:
+
++ foundary :: 字体的制造厂商
++ faimily :: 字型家族,如times,courier,helvetica,new century schollbook
++ wt :: 粗字体,可选值为bold,light,medimum
++ sl :: 字体,可选值为r(roman),i(italic),o(oblique)
++ p :: 字符的高度,单位为像素
++ pts :: 字体的磅尺寸,为磅的10倍(12磅字体则为120)
++ hr :: 字体在显示设备上水平分辨率
++ vr :: 字体在显示设备上垂直分辨率
++ sp :: 字与字之间的间隙,p表示proportional(成比例),m表示monospaced(固定宽度)
+     
+
+在指定字体时,可以使用通配符, ~*~ 表示0多多个字符, ~?~ 表示任意单一字符.
+
+当由于使用通配符照成设定对应一种以上的可用字体时,服务器程序会随便挑选一种字体来用.
+** 定义应用程序的缺省选项--Resources
+
