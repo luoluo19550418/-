@@ -1,6 +1,6 @@
 #+TITLE: tramp的一般用法
 #+AUTHOR: lujun9972
-#+CATEGORY: emacs
+#+CATEGORY: emacs,tramp
 #+DATE: [2016-11-17 周四 12:38]
 #+OPTIONS: ^:{}
 
@@ -9,7 +9,11 @@
 
 tramp的用法很简单,只要你在 =C-x C-f= 选择文件时使用一种特殊的语法格式来标示文件就行了. 
 
-tramp标示文件的语法为: =/[protocol]:[user@]hostname[#port]:path-to-file=. 
+tramp标示文件的语法为: 
+
+#+BEGIN_EXAMPLE
+  /[protocol]:[user@]hostname[#port]:path-to-file 
+#+END_EXAMPLE
 
 例如 =/ssh:cnaps2@10.8.6.10:~/tmp/t.log= 会通过ssh协议,以cnaps2用户登录10.8.6.10这台机,并访问上面的~/tmp/t.log文件.
 
