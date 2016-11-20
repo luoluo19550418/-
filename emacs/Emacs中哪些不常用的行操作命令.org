@@ -1,5 +1,5 @@
 #+TITLE: Emacs中哪些不常用的行操作命令
-#+AUTHOR: Administrator
+#+AUTHOR: lujun9972
 #+CATEGORY: emacs
 #+DATE: [2016-11-18 周五 09:49]
 #+OPTIONS: ^:{}
