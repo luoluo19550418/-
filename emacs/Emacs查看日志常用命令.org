@@ -492,5 +492,25 @@ tramp标示文件的语法为: =/[protocol]:[user@]hostname[#port]:path-to-file=
 #+END_EXAMPLE
 
 * Highlights
+我们还可以让Emacs依据某种条件高亮显示日志中的某些内容. 常用的高亮命令有以下几个
 
+| 快捷键  | 功能                                 |
+|---------+--------------------------------------|
+| M-s h p | Highlights a phrase                  |
+| M-s h r | Highlights a regular expression      |
+| M-s H . | Highlights symbol at the point       |
+| M-s h u | Removes highlighting under the point |
+
+还是以上面日志为例,假设我想以红色高亮显示日志级别为 =eError= 的内容,则可以这样
+
+1. 调用 =M-x M-s h r=
+2. 输入要高亮显示内容的正则表达式 =.+eError.+= 表示高亮显示包含 =eError= 的整个行内容
+3. 选择要以那种颜色高亮显示, 选择=hi-red-b=
+   
+由于截图他麻烦,这里就不贴出结果了,有兴趣的同学可以自己试试.
 * auto-revert
+在服务不停止的情况下,会不断往日志文件中加入新的内容. 若希望Emacs自动反映出这些改动那么就可以使用 =M-x auto-revert-mode= 与 =M-x auto-revert-tail-mode= 了.
+
+这两个mode就能让Emacs在探测到日志文件更新后自动重新载入整个日志文件,不同点在于 =auto-revert-tail-mode= 类似于 =tail -f=,总是将改动的内容附加到buffer的末尾.
+
+需要注意的是,由于检查远程主机文件比较慢,因此默认情况下,这两个mode对tramp文件是没有效果的. 不过你可以通过配置 =auto-revert-remote-files= 来改变这一行为.
