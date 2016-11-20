@@ -1,4 +1,4 @@
-#+TITLE: Emacs中哪些不常用的行操作命令
+#+TITLE: Emacs中那些不常用的行操作命令
 #+AUTHOR: lujun9972
 #+CATEGORY: emacs
 #+DATE: [2016-11-18 周五 09:49]
