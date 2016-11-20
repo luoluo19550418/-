@@ -149,7 +149,7 @@ KEY-REGEXP为 =\1= 则表示使用RECORD-REGEXP中第1个元组的内容作为ke
 也就是说只有第一列排序了,第二列还是保持原顺序不变.
 
 * 行对齐
-
+** align及align-current
 一般来说,要对代码进行对齐只需要选中一个region,然后运行 =M-x align= 就行了. Emacs会自动根据 =align-rules-list= 中定义的规则自动进行对齐操作.
 
 如果觉得先要选中region太麻烦的话,Emacs提供了一个 =M-x align-current= 命令. 该命令会先看当前行符合哪个重排规则,然后尝试下一行是否符合该重排规则,若符合该重排规则则进行重排然后再检查下一行,一直到某一行不符合该重排规则为止.
@@ -186,3 +186,72 @@ KEY-REGEXP为 =\1= 则表示使用RECORD-REGEXP中第1个元组的内容作为ke
 #+END_SRC
 所有的代码都重排了.
 
+** align-regexp
+align-regexp允许你自定义自己的对齐方式. 它有两种模式,新手模式和复杂模式.
+*** 新手模式
+直接运行 =align-regexp= 会进入新手模式.
+
+在新手模式下,你只需要输入一个表示对齐标识的正则表达式就可以了.
+
+例如下面是一个从"mastering-emacs"中截取的例子:
+
+假设原始文档是这样的
+#+BEGIN_EXAMPLE
+  Cappuccino $2.00
+  Caramel Latte $2.30
+  Americano $3.50
+  Macchiato $4.00
+#+END_EXAMPLE
+
+我们想要让它按照$对齐,那么可以这样,运行 =M-x align-regexp=,然后在"Align regexp:"中输入 =\$=
+
+最终的结果是:
+#+BEGIN_EXAMPLE
+  Cappuccino    $2.00
+  Caramel Latte $2.30
+  Americano     $3.50
+  Macchiato     $4.00
+#+END_EXAMPLE
+
+
+*** 复杂模式
+当你要对多列进行对齐时,就必须要使用复杂模式了,进入的方式是给它一个prefix argument: =C-u M-x align-regexp=
+
+在复杂模式下,Emacs会以此要求你输入一个表示对齐标识的正则表达式,且这个正则表达式中必须包含至少一个分组. 一个常见的分组就是 =\\(\\s-*\\)= 表示任意多个空白字符.
+
+随后Emacs会询问你可以修改第几个分组中的内容来进行对齐.
+
+再然后Emacs问你会询问你要用对齐后两个域之间最少间隔多少个空白,默认是 =align-default-spacing= 中的值. 
+
+最后Emacs会询问你是否重复应用此规则于多列,当需要多列对齐时,往往需要选择 =yes=
+
+下面还是一个从"mastering emacs"中的例子:
+
+假设有这么段文字
+#+BEGIN_EXAMPLE
+  Price,Product,Qty Sold
+  $2.00,Cappuccino,289
+  $2.30,Caramel Latte,109
+  $3.50,Americano,530
+  $4.00,Macchiato,20
+#+END_EXAMPLE
+
+我们想让它按照逗号对齐,由于涉及到多列对齐,因此需要使用 =C-u M-x align-regexp= 进入复杂模式.
+
+我们要根据逗号进行对齐,且空格应该插入到逗号的后面,因此"Complex align using regexp: "的值应该输入",\(\s-*\)" 其中逗号后面的分组就是插入空格的位置.
+
+由于我们要修改的是表达式中第一个分组的位置,因此"Parenthesis group to modify (justify if negative):" 的值我们输入 =1=
+
+我们可以让每个对齐列之间分隔的间距大一点,这里"Amount of spacing (or column if negative): " 我们输入 =5=,表示最少间距是5个空格
+
+最后我们要对齐多个列,因此"Repeat throughout the line: "我们输入 =yes=.
+
+最终的结果是:
+
+#+BEGIN_EXAMPLE
+  Price,     Product,           Qty Sold
+  $2.00,     Cappuccino,        289
+  $2.30,     Caramel Latte,     109
+  $3.50,     Americano,         530
+  $4.00,     Macchiato,         20
+#+END_EXAMPLE
