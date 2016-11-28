@@ -1,0 +1,33 @@
+#+TITLE: bash
+#+AUTHOR: lujun9972
+#+TAGS: Programming
+#+DATE: [2016-11-28 一 23:06]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* set
+set是shell的一个内部命令,它能处理很多事情.
+
+当没有参数时,set给出环境变量的值.
+
+set还能重置基本参数,如$1,$2的值. 如 =set 1 2= 就将$1设置成1,$2设置成2.
+
+* trap
+trap会捕获信号并执行相应的命令序列. 并且trap在执行完相应命令序列后又会回到断点继续执行下面的命令.
+
+trap可以用于保护程序不会由于连接中断造成的挂断信号而中断.
+#+BEGIN_SRC sh
+  (trap '' 1;long-running-command) &
+#+END_SRC
+
+事实上,使用trap能实现我们自己的nohup程序:
+#+BEGIN_SRC sh
+  trap "" 1 15
+  if test -t 2>&1
+  then
+      echo "Sending output to 'nohup.out'"
+      exec nice -5 $* >>nohup.out 2>&1
+  else
+      exec nice -5 $* 2>&1
+  fi
+#+END_SRC
