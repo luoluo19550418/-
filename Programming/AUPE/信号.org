@@ -62,6 +62,32 @@
 + signal的语义与实现有关,所以最好使用sigaction函数代替signal函数
 + 系统预先定义了SIG_IGN和SIG_DEF两个信号处理函数.
 + signal函数的一个缺陷在于,不改变信号的处理方式,就无法确定信号的当前处理方式.
++ 一般来说,会在信号处理函数中再次注册该函数为信号处理函数,这是因为当信号发生时,该信号的处理函数会被自动重置为默认值.
+  #+BEGIN_SRC c
+    #include <signal.h>
+    #include <setjmp.h>
+    #include <stdio.h>
+
+    jmp_buf sjbuf;
+    void onintr()
+    {
+      signal(SIGINT,onintr);        /* 重新注册处理函数 */
+      printf("Interrupt\n");
+      longjmp(sjbuf,0);              /* 跳回保存的位置 */
+    }
+
+    int main()
+    {
+      if (signal(SIGINT,SIG_IGN) != SIG_IGN){
+        signal(SIGINT,onintr);
+      }
+      setjmp(sjbuf);
+
+      while(true){
+        /* 其他操作 */
+      }
+    }
+  #+END_SRC
 * 不可靠的信号
 早期UNIX中的信号是不可靠的,即信号可能会丢失
 + 当发生信号到调用信号处理函数之间又发生另一次中断信号,这时程序会转去执行第二个中断点的处理函数
