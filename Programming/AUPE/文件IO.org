@@ -10,7 +10,42 @@
 ** close函数
 ** lseek函数
 ** read函数
+read函数与C标准库中的读函数所不同在于,read操作即使已经返回0了,但是只要别的写操作将更多数据写入到文件中,那么后续的read操作依然能够读出更多的数据.
+
+而标准函数一旦遇到EOF后,后面的操作会一直报EOF. 
+
+例如下面这段程序可以模拟cat的功能:
+#+BEGIN_SRC c
+  #include <unistd.h>
+  #define SIZE 512
+  int main()
+  {
+    char buf[SIZE];
+    int n;
+    while((n = read(0,buf,sizeof(buf))) > 0){
+      write(1,buf,n);
+    }
+  }
+#+END_SRC
 ** write函数
+* 文件/dev/tty
+无论是否对标准输入进行重定向, =/dev/tty= 永远是代表着用户终端. 因此如果你希望实现像 =ssh= 那样强制用户输入的话,可以这样来实现:
+#+BEGIN_SRC c
+  #include <stdio.h>
+  char* ttyin(char* buf,size_t size)
+  {
+    static FILE* tty=NULL;
+    if (tty == NULL)
+      {
+        tty = fopen("/dev/tty","r");
+      }
+    if (fgets(buf,size,tty) == NULL)
+      {
+        return NULL;
+      }
+    return buf;
+  }
+#+END_SRC
 * 文件共享
 ** 内核是如何表示打开的文件的?
 内核使用三种数据结构表示打开的文件,它们之间的关系决定了在文件共享方面一个进程对另一个进程可能产生的影响.
@@ -80,6 +115,20 @@ XSI扩展还定义了pread和pwrite函数用于将定位搜索和执行IO统一�
   dup2(filedes,filedes2);
   // 类似于
   close(filedes2);fcntl(filedes,F_DUPFD,filedes2);
+#+END_SRC
+
+这两个函数可以用来将程序的标准输入输出连接到文件中去. 例如下面代码就把程序的标准输入连接到文件中去:
+#+BEGIN_SRC c
+  #include <unistd.h>
+  #include <fcntl.h>
+  void redirect_stdin_to(const char* file)
+  {
+    int fd;
+    fd = open(file,0);
+    close(0);                     /* 关闭标准输入 */
+    dup(fd);
+    close(fd);                    /* 将fd连接到标准输入上 */
+  }
 #+END_SRC
 
 * sync,fsync和fdatasync
