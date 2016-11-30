@@ -31,3 +31,135 @@ trap可以用于保护程序不会由于连接中断造成的挂断信号而中�
       exec nice -5 $* 2>&1
   fi
 #+END_SRC
+* getopts
+getopts的使用方法为:
+#+BEGIN_SRC sh
+  getopts option_string variable [args]
+#+END_SRC
++ 其中 =option_string= 中每个字母表示一个选项,选项之前不带 =-=
+
++ getopts查看所有以连字符开头的参数,将其视为选项,如果输入选项,将把这与option_string对比,如果匹配发现,将 =variable= 的值设置为该选项. 如果不匹配发现,则variable的值为 =?=
+
+  假设有这么一个脚本
+  #+BEGIN_SRC sh :exports both :results org
+    cat > /tmp/test.sh <<'EOF'
+    #!/bin/bash
+
+    HELP=false
+    FILE=false
+
+    while getopts hf OPTION
+    do
+        case $OPTION in
+            h)HELP=true
+              echo "HELP is $HELP"
+              ;;
+            f)FILE=true
+              echo "FILE is $FILE"
+              ;;
+            ,*)echo "OPTION is $OPTION"
+        esac
+    done
+    EOF
+
+    chmod +x /tmp/test.sh
+
+    echo "选项分来写"
+    /tmp/test.sh -h -f
+    echo "选项合并起来写"
+    /tmp/test.sh -hf
+    echo "未知的选项"
+    /tmp/test.sh -h -p
+  #+END_SRC
+
+  #+RESULTS:
+  #+BEGIN_SRC org
+  选项分来写
+  HELP is true
+  FILE is true
+  选项合并起来写
+  HELP is true
+  FILE is true
+  未知的选项
+  HELP is true
+  OPTION is ?
+  #+END_SRC
+
++ 如果需要为选项指定一个值,那么需要在 =option_string= 中放一个冒号到选项后面. 此时使用变量OPTARG来保存该参数值.
+
+  例如:
+  #+BEGIN_SRC sh :exports both :results org
+    cat > /tmp/test.sh <<'EOF'
+        #!/bin/bash
+
+        HELP=false
+        FILE=false
+
+        while getopts hf: OPTION
+        do
+            case $OPTION in
+                h)HELP=true
+                  echo "HELP is $HELP"
+                  ;;
+                f)FILE=$OPTARG
+                  echo "FILE is $FILE"
+                  ;;
+            esac
+        done
+    EOF
+
+    chmod +x /tmp/test.sh
+
+    echo "选项f必须取值"
+    /tmp/test.sh -h -f /etc/passwd
+  #+END_SRC
+
+  #+RESULTS:
+  #+BEGIN_SRC org
+  选项f必须取值
+  HELP is true
+  FILE is /etc/passwd
+  #+END_SRC
+
++ 若在 =option_string= 中的某选项后加了 =:=,但实际执行时没有给该选项带参数则会返回一个错误信息.
+
+  但是你可以用自己的反馈信息屏蔽它,方法是
+
+  1. 将冒号放在option_string开始部分
+
+  2. 在case中用?作为匹配捕获错误
+
+  例如:
+  #+BEGIN_SRC sh :exports both :results org
+    cat >/tmp/test.sh <<'EOF'
+    while getopts :af: OPTION
+    do
+        case $OPTION in
+            a)echo "a means ALL"
+              ;;
+            f)echo "FILE is $OPTARG"
+              ;;
+            ?)echo "Usage: $0 [-a] [-f file]"
+               ;;
+        esac
+    done
+    EOF
+
+    chmod +x /tmp/test.sh
+
+    echo "给f带上参数"
+    /tmp/test.sh -a -f /etc/passwd
+
+    echo "f不带参数"
+    /tmp/test.sh -a -f
+  #+END_SRC
+
+  #+RESULTS:
+  #+BEGIN_SRC org
+  给f带上参数
+  a means ALL
+  FILE is /etc/passwd
+  f不带参数
+  a means ALL
+  Usage: /tmp/test.sh [-a] [-f file]
+  #+END_SRC
