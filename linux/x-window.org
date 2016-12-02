@@ -97,18 +97,37 @@
 *** 文件.Xresources / .Xdefauls
 X在启动时会读取配置文件中对资源的配置
 + 资源文件的格式为
+
   客户端程序名.构建层级.属性:属性值.
-  这里构建层次可以为父构建.子构建层级这样的层级表达,也可以为*星号表示任意的层级关系.
+
+  这里构建层次可以为 =父构建.子构建层级= 这样的层级表达,也可以用 =*= 号代替 =.= 来表示任意的层级关系.
   #+BEGIN_QUOTE
   XTerm*foreground:white
   Xterm*scrollbar:true
   myWorld.mainForm.PushButton:blue
   #+END_QUOTE
+
   此外,!为注释符
   #+BEGIN_QUOTE
   !This is a comment
   #+END_QUOTE
+
   还能使用CPP预处理器的伪指令#if,#ifdef,#else和#endif
+
++ 当你在特征中不论何处用到一个应用程序名称、限制或属性名称，你均可用类名称来代替它.
+  传统上，所有的类名称以一个大写的字母开头，其后则为小写字母
+
++ 多种资源规范对应的优先规则
+
+  我们现在有一个非常灵活性的方法来指定应用程序的资源，但正因为它太灵活，以致当一个应用程序查询资源数据库时常常有数种规范与之对应，如何解决呢？
+
+  简单地说，如果同时有超过一个规范对应，则使用最具体的一个，资源管理器有一组优先规则用来决定是否一个规范较另一个具体。
+
+  - 使用句号作为分隔符较使用星号更为具体，例如： =*Command.Foreground= 较 =*Command*Foreground= 更为具体。
+  - 实例名称较类名称更具体，例如: =*foreground= 较 =*Foreground= 更具体。
+  - 指定一个元素较省略它更具体，例如: =xmh*command*foreground= 较 =xmh*foreground= 更具体。
+  - 元素靠近规范左边的星号较靠近右边的更具体，例如: =xmh*foreground= 较 =*command*foreground= 更具体
+
 + 资源生效
   在改变.Xresource文件后,不会立刻看到修改的结果,必须使用xrd命令来通知所有的服务有关修改.
   #+BEGIN_SRC sh
