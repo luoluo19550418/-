@@ -163,3 +163,42 @@ getopts的使用方法为:
   a means ALL
   Usage: /tmp/test.sh [-a] [-f file]
   #+END_SRC
+
+* --
+对于linux来说, =--= 是一个特殊字符,用于表示选项列表的结束,后面的命令行参数都被认为是普通参数.
+
+* 用exec进行永久重定向 
+如果脚本中有大量数据需要重定向,那么重定向每条语句会显得很麻烦. 
+这种情况可以用 =exec= 命令告诉shell在命令执行期间重定向某个特定符号描述符.
+
+例如
+#+BEGIN_SRC sh
+  exec 1>testout                  # 把stdout重定向到testout文件中
+  exec 2>testerr                  # 把stderr重定向到testerr文件中
+  exec 0<testin                   # 把stdin重定向到testin文件
+#+END_SRC
+
+在shell中不仅仅局限于这3个默认的文件描述符.
+shell最多可以又9个打开的文件描述符. 其他6个3~8的文件描述符均可用作输入或输出重定向
+
+例如
+#+BEGIN_SRC sh
+  exec 3>test3                    # 创建一个输出文件描述符
+  echo "should be in test3" >&3   # 将stdout重定向到3这个描述符,也就是test3文件中
+#+END_SRC
+
+如果要恢复已经重定向的文件描述符,你需要分配另一个文件描述符来保存原文件描述符的指向. 像这样:
+#+BEGIN_SRC sh
+  exec 3>&1                       # 用文件描述符3指向屏幕
+  exec 1>test                     # 将stdout指向test文件
+  echo "should be in test"
+  exec 1>&3                       # 将stdout又指向屏幕
+#+END_SRC
+
+如果需要关闭文件描述符,则将它重定向特殊符号 =&-= 即可
+#+BEGIN_SRC sh
+  exec 3> test
+  echo "should in test" >&3
+  exec 3>&-                       # 关闭文件描述符3
+  echo "will cause an error" >&3  # 将会提示3 Bad file descriptor
+#+END_SRC
