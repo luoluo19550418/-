@@ -128,7 +128,25 @@ X在启动时会读取配置文件中对资源的配置
   - 指定一个元素较省略它更具体，例如: =xmh*command*foreground= 较 =xmh*foreground= 更具体。
   - 元素靠近规范左边的星号较靠近右边的更具体，例如: =xmh*foreground= 较 =*command*foreground= 更具体
 
-+ 资源生效
+** xrdb
+为了简单起见,我们假设所有资源说明都是存在一个"数据库"中的,那么使用xrdb可以有如下功能:
+
++ 设定新的数据库
+  
+  #+BEGIN_SRC sh
+    xrdb filename
+    # 或者
+    xrdb < filename
+  #+END_SRC
+
++ 看目前有那些资源在数据库中
+  
+  #+BEGIN_SRC sh
+    xrdb -query                     #xrdb将以纯文本格式输出数据库的内容
+  #+END_SRC
+
++ 在现存的数据库加入一个新的资源
+  
   在改变.Xresource文件后,不会立刻看到修改的结果,必须使用xrd命令来通知所有的服务有关修改.
   #+BEGIN_SRC sh
     xrdb -load .Xresources 
@@ -137,6 +155,13 @@ X在启动时会读取配置文件中对资源的配置
   #+BEGIN_SRC sh
     xrdb -merge .myOwnResources      
   #+END_SRC
+
++ 完全去除数据库
+
+  #+BEGIN_SRC sh
+    xrdb -remove
+  #+END_SRC
+
 ** 定制X的工具
 *** xprop
 xprop能列出指定窗口的属性.
@@ -213,3 +238,23 @@ xset命令设置X环境的基本选项.
 当由于使用通配符照成设定对应一种以上的可用字体时,服务器程序会随便挑选一种字体来用.
 ** 定义应用程序的缺省选项--Resources
 
+** 工具箱标准选项-xrm
+大多数一般的资源均能被命令行选项明确地设定，例如你可以用 =-bg colour= 设定窗口背景颜色.但无论如何,有一些资源并没有符合的选项.
+为了克服这点,工具箱提供一个“捕捉遗漏”的选项 =-xrm= (X 资源管理器的缩写).
+=-xrm= 以一个参数当做资源规范,就如同你在XResource文件中输入的一样. 
+
+例如:
+#+BEGIN_SRC sh
+  xclock -xrm "*update:30"
+#+END_SRC
+等价于
+#+BEGIN_SRC sh
+  xclock -update 30
+#+END_SRC
+
+在同一命令行你可以使用数次 =-xrm=,但每一次只能包含一个资源规范, 例如:
+#+BEGIN_SRC sh
+  xclock -xrm "*update:30" -xrm "*chime:on"
+#+END_SRC
+
+请记住, =-xrm= 只有在程序有用到工具箱才可应用
