@@ -70,3 +70,71 @@ shell最多可以又9个打开的文件描述符. 其他6个3~8的文件描述�
   exec 3>&-                       # 关闭文件描述符3
   echo "will cause an error" >&3  # 将会提示3 Bad file descriptor
 #+END_SRC
+* 执行数学运算
+** expr命令
+expr能够识别少量的数字和字符串操作符.
+
+#+TABLE: expr命令操作符
+| 操作符                   | 描述                                                        |
+|--------------------------+-------------------------------------------------------------|
+| ARG1   \vert ARG2        | 如果ARG1既不是null也不是0,则返回ARG1,否则返回ARG2           |
+| ARG1 & ARG2              | 如果没有参数是null或0,返回ARG1,否则返回0                    |
+| ARG1 < ARG2              | 如果ARG1小于ARG2,返回1,否则返回0                            |
+| ARG1 <= ARG2             | 如果ARG1小于或等于ARG2,返回1,否则返回0                      |
+| ARG1 = ARG2              | 如果ARG1等于ARG2,返回1,否则返回0                            |
+| ARG1 != ARG2             | 如果ARG1不等于ARG2,返回1,否则返回0                          |
+| ARG1 >= ARG2             | 如果ARG1大于等于ARG2,返回1,否则返回0                        |
+| ARG1 > ARG2              | 如果ARG1大于ARG2,返回1,否则返回0                            |
+| ARG1 + ARG2              | 和运算                                                      |
+| ARG1 - ARG2              | 减运算                                                      |
+| ARG1 * ARG2              | 乘运算                                                      |
+| ARG1 / ARG2              | 除运算                                                      |
+| ARG1 % ARG2              | 求余运算                                                    |
+| STRING : REGEXP          | 如果REGEXP匹配到了STRING中的某个模式,返回该模式匹配         |
+| match STRING REGEP       | 如果REGEXP匹配到了STRING中的某个模式,返回该模式匹配         |
+| substr STRING POS LENGTH | 返回起始位置为POS(1开始计算),长度为STRING个字符串的子字符串 |
+| index STRING CHARS       | 返回STRING中找到CHARS字符串的位置,否则返回0                 |
+| length STRING            | 返回字符串STRING的字符长度                                  |
+| + TOKEN                  | 将TOKEN解释成字符串,即使TOKEN为关键字                       |
+| (EXPRESSION)             | 返回计算式EXPRESSION的值                                           |
+** 使用方括号
+在bash中,将一个数学运算结果赋值给某个变量可以使用 =var = $[EXPRESSION]= 来进行.
+
+#+BEGIN_SRC sh :exports both :results org :shebang "#!/bin/bash"
+  for op in + - \* /
+  do
+      echo $[3 ${op} 2]
+  done
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+5
+1
+6
+1
+#+END_SRC
+
+从上面结果中可以看出, 这种方式只能支持整数运算.
+** 浮点运算
+最常见的方案是使用bc进行运算. 其基本格式为 =var = $(echo "设置;计算表达式" | bc)=
+
+bc实际上是一种编程语言,它允许在命令行中输入浮点表达式,然后解释并计算该表达式,最后返回结果. bc能识别:
++ 数字,包括整数和浮点数
++ 变量,支持标量和数组
++ 注释,以 =#= 或 =/*...*/=
++ 表达式
++ 流程控制语句
++ 函数
+
+bc浮点运算的的精度由内建变量 =scale= 来决定,其默认值为0.
+
+#+BEGIN_SRC sh :exports both :results org
+  echo $(echo "scale=4; 3.15 / 5" |bc)
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+.6300
+#+END_SRC
+
