@@ -232,8 +232,97 @@ xset命令设置X环境的基本选项.
 列出X服务器的信息和预设的参数
 *** xmodmap
 改变X下键盘和鼠标中,物理按键与按钮代码的映射关系
-+ xmodmap -pp
-  显示当前映射
+
+每一个键,有一个单独的码映射它,称之为键码. 键和键码之间的关系是绝对固定的!
+
+连接到每一个键码(或键)的是一个keysym的列表. 一个keysym是一个代表印在键盘符号上的数字常数. 在缺省的情况,大多数的键只有一个keysym与之映射,但也有两个keysym的键,例如 =7= 和 =&=.
+
+对一个键附属的keysym列表中,第一个keysym是未按下修饰键的状况下的键. 第二个keysym是指当Shift(或Lock)已被同时按下时的键. 如果在列表中只有一项,且为字母,则系统自动假设第二项为相对的大写字母. 
+超过两项的keysym并没有特别的意义,键盘和keysym之间的关系被称之为键盘映射.
+
+X提供八个修饰键:Shift、Lock(caps-lock)、Control、Mod1到Mod5. 习惯上, Mod1被解释为Meta, Mod5为Win.
+
+最后,对鼠标按钮有一个类似的鼠标指针的映射. 对每一个实际的按钮,你可以对它们指定一个相关的逻辑按钮数字.
+
++ 查看现有的映射
+
+  #+BEGIN_SRC sh
+    xmodmap                         # 列出现有修饰键的映射
+    xmodmap -pm                     # 列出现有修饰键的映射
+    xmodmap -pp                     # 列出现有鼠标指针(按钮)的映射
+    xmodmap -pk                     # 列出现有键的映射
+    xmodmap -pm -pk -pp             # 将所有映射键一起输出
+  #+END_SRC
+
++ 用xmodmap用来改变或设定映射.
+
+  #+BEGIN_SRC sh
+    # 从myfile中读取设置
+    xmodmap myfile
+    xmodmap - <myfile
+
+    # 执行设置
+    xmodmap -e expression
+    xmodmap -e expression-1  -e expression-2
+  #+END_SRC
+
++ 普通键映射
+
+  每一个表达式的语法并不相同,但一般性的格式为:
+  #+BEGIN_EXAMPLE
+    keyword target = value(s)    (等号的两边均需为空白)
+  #+END_EXAMPLE
+    
+  有两种主要的表达式
+  #+BEGIN_EXAMPLE
+    keycode $keycode = $keysym-1 [$keysym-2...]
+  #+END_EXAMPLE
+  与
+  #+BEGIN_EXAMPLE
+    keysm $target-keysym = $keysym-1 [$keysym-2...]
+  #+END_EXAMPLE
+    
+  例如,假设你要将F6键重定义当没有修饰键按下时为“9”，当Shift按下时为“(”,则你可以用
+  #+BEGIN_SRC sh
+    xmodmap -e "keycode 21 = 9 parenleft"
+  #+END_SRC
+  或者
+  #+BEGIN_SRC sh
+    xmodmap -e "keysym F6 = 9 parenleft"
+  #+END_SRC
+
++ 修饰键映射
+
+  每个修饰键对应一个列表. 在列表中包含了所有当此修饰键被按下时会有意义的键(键码).
+
+  xmodmap允许你在一个表中增加项目，去除项目，或完全清除一个表。对此三个操作的格式为：
+  #+BEGIN_EXAMPLE
+    add $modifier = $list-of-keysyms
+    remove $modifier = $list-of-keysyms
+    clear $modifier
+  #+END_EXAMPLE
+    
+  例如,我要将右边的Meta键映射成Control,那么可以这样:
+  #+BEGIN_SRC sh
+    remove Mod1 = Meta_r
+    add Control = Meta_r
+    keysym Meta_r = Control_r
+  #+END_SRC
+    
+
+  keysym 和keycode 表达式对修饰键映射绝对没有影响.
+  一个常见的错误是执行下面这个命令:
+  #+BEGIN_SRC sh
+    xmodmap -e "keysym F1 = Contrl_R"
+  #+END_SRC
+  并期望F1键能像一个control键般作用,但它不会. 因为你相当于告诉系统“我已经把这个符号印在F1键上面”而已。
+  
+  你应该这样作:
+  #+BEGIN_SRC sh
+    xmodmap -e "add Control = F1"
+  #+END_SRC
+
+
 *** xlsfonts
 列出系统中的字体,格式为
 -foundary-family-wt-sl-wd-p-pts-hr-vr-sp-ave-charset-style
