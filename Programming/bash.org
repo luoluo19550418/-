@@ -270,3 +270,29 @@ bc浮点运算的的精度由内建变量 =scale= 来决定,其默认值为0.
 .6300
 #+END_SRC
 
+* seq
+seq可以用来产生一个范围的数字列表. 它有三种用法:
+#+BEGIN_SRC sh
+  seq [OPTION]... LAST
+  seq [OPTION]... FIRST LAST
+  seq [OPTION]... FIRST INCREMENT LAST
+#+END_SRC
+
+其中常用的OPTION有:
+
++ -f / --format=FORMAT :: 使用printf风格的浮点式格式字符串
++ -s / --separator=STRING :: 使用STRING作为分隔符,默认为"\n"
++ -w / --equal-width :: 通过在前面添加0的方式,让每个数字等宽.
+
+例如:
+#+BEGIN_SRC sh
+  echo "results of seq 10 is:"
+  echo $(seq 10)
+
+  echo "results of seq 5 10 is:"
+  echo $(seq 5 10)
+
+  echo "results of seq 5 2 10 is:"
+  echo $(seq 5 2 10)
+#+END_SRC
+
