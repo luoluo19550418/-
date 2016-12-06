@@ -220,14 +220,45 @@ xev程序让你看到当不同的动作发生时,会产生什么事件,以及和
 
 *** xset
 xset命令设置X环境的基本选项.
-+ xset -b on /off
-  打开/关闭PC扬声器,产生bell声音
-+ xset -s seconds /off
-  激活屏幕保护,off表示关闭屏幕保护
-+ xset -q
-  查询x的配置信息
-+ xset fp
-  设置字体信息
+
+1. 控制终端机响铃
+
+用xset你可以让铃声响或不响,设定它的音调和它持续的时间:
+
++ xset -b / xset b off :: 关闭PC扬声器
++ xset b / xset b on :: 打开PC扬声器,产生bell声音
++ xset b $vol :: 设定音量为最大音量的$vol%
++ xset b $vol $p :: 设定音量和音调(Hz)
++ xset b $vol $p $d :: 设定音量,音调,和持续时间(单位为百万分之一秒)
++ xset -c / xset c off :: 禁止键的滴答声
++ xset c / xset c on :: 启用键的滴答声
++ xset c $vol :: 设定滴答声的音量为最大音量的$vol%
++ xset -r / xset r off :: 禁用键的自动重复
++ xset r / xset r on :: 启用键的自动重复
+
+2. 设置鼠标参数
+
+加速值是应用在鼠标指针移动上的一个乘数,例如如果加速值是4,当你移动鼠标时,鼠标指针将以正常4倍的速度移动.
+
+服务程序提供了一个阈值,如果当鼠标指针一次移动超过阈值个像素,加速值也会被带进来执行:
+
++ xset m $a :: 设定鼠标加速值为$a
++ xset m $a $t :: 设定阀值为$t,当移动超过该阀值个像素,则启用加速值为$a
+
+3. 控制屏幕保护
+
++ xset s :: 启用屏幕保护
++ xset s off :: 禁用屏幕保护
++ xset s blank :: 屏幕保护时屏幕闪动
++ xset s noexpose :: 只有在noexpose事件(??)下才启动屏幕保护
++ xset s expose :: 允许expose事件下,仍然可以启动屏幕保护
++ xset -s $seconds  :: $seconds秒后激活屏幕保护
++ xset -s $t $p :: $t秒后激活屏幕保护,每过$p秒改变一次图案.
+
+4. 其他
+
++ xset -q :: 查询x的配置信息
++ xset fp :: 设置字体信息
 *** xdpyinfo
 列出X服务器的信息和预设的参数
 *** xmodmap
