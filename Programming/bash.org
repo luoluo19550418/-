@@ -285,7 +285,7 @@ seq可以用来产生一个范围的数字列表. 它有三种用法:
 + -w / --equal-width :: 通过在前面添加0的方式,让每个数字等宽.
 
 例如:
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell :results org
   echo "results of seq 10 is:"
   echo $(seq 10)
 
@@ -294,5 +294,15 @@ seq可以用来产生一个范围的数字列表. 它有三种用法:
 
   echo "results of seq 5 2 10 is:"
   echo $(seq 5 2 10)
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+results of seq 10 is:
+1 2 3 4 5 6 7 8 9 10
+results of seq 5 10 is:
+5 6 7 8 9 10
+results of seq 5 2 10 is:
+5 7 9
 #+END_SRC
 
