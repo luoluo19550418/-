@@ -319,3 +319,7 @@ results of seq 5 2 10 is:
 
 + ${var?err_msg} :: 若var被 *声明* 了,则使用var的值,否则打印err_msg错误消息
 + ${var:?err_msg} :: 若var被 *设置* 了,则使用var的值,否则打印err_msg错误消息
+
++ ${#var} :: 若var为字符串,则返回字符串的长度;若var为数组,则返回数组中第一个元素的长度
++ ${var#Pattern} :: 从变量var的 *开头* 删除最短匹配Pattern的字符串
++ ${var##Pattern} :: 从变量var的 *开头* 删除最长匹配Pattern的字符串
