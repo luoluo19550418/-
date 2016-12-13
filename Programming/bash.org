@@ -306,3 +306,16 @@ results of seq 5 2 10 is:
 5 7 9
 #+END_SRC
 
+* 变量替换
+
++ ${var-default} :: 若var没有被 *声明*,则使用default值
++ ${var:-default} :: 若var没有被 *设置*,则使用default值
+
++ ${var=default} :: 若var没有被 *声明*,则设置var的值为default
++ ${var:=default} :: 若var没有被 *设置*,则设置var的值为default
+
++ ${var+default} :: 若var被 *声明* 了,则使用default值
++ ${var:+default} :: 若var被 *设置* 了,则使用default值
+
++ ${var?err_msg} :: 若var被 *声明* 了,则使用var的值,否则打印err_msg错误消息
++ ${var:?err_msg} :: 若var被 *设置* 了,则使用var的值,否则打印err_msg错误消息
