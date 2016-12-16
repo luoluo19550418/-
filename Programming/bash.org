@@ -248,6 +248,23 @@ expr能够识别少量的数字和字符串操作符.
 #+END_SRC
 
 从上面结果中可以看出, 这种方式只能支持整数运算.
+** shell内部的数学计算
+bash中还支持使用双括号进行数学计算,类似这样 =var=$((EXPRESSION))=:
+#+BEGIN_SRC shell  :exports both :results org :shebang "#!/bin/bash"
+  for op in + - \* /
+  do
+      echo $((3 ${op} 2))
+  done
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+5
+1
+6
+1
+#+END_SRC
+
 ** 浮点运算
 最常见的方案是使用bc进行运算. 其基本格式为 =var = $(echo "设置;计算表达式" | bc)=
 
@@ -327,3 +344,51 @@ results of seq 5 2 10 is:
 + ${var%%Pattern} :: 从变量var的 *末尾* 删除最长匹配Pattern的字符串
 + ${var/旧字符串/新字符串} :: 若变量内容符合“旧字符串”，则将第一个字符串用新字符串代替
 + ${var//旧字符串/新字符串} :: 若变量内容符合“旧字符串”，则全部用新字符串去代替旧字符串
+
+* 其他技巧
++ 一般将库文件的shebang写成 =#! /bin/echo This file should be sourced!=. 以防止把库文件当普通shell脚本来运行.
++ bash中有一个PROMPT_COMMAND变量,该变量的值可以设置成一条执行命令. bash会在每次输出prompt之前执行该命令.
++ 给命令加上花括号可以组成复合命令. 这样的组合可以包括任意数量的语句:
+  #+BEGIN_SRC shell :var debug=1
+    test $debug -eq 1 && {
+        echo some_debug_output
+        echo more_debug_output
+    }
+  #+END_SRC
+
+  #+RESULTS:
+  | some_debug_output |
+  | more_debug_output |
++ 若希望重定向时防止不小心要覆盖已有文件的内容,可以设置shell的noclobber选项,设置该选项使用 =>= 重定向不会覆盖原文件内容,但若有必要,可以使用 =>|= 强制覆盖源文件.
++ 在bash中,管道的最后一个命令是在 *子shell* 中执行的,而在ksh中,管道的最后一个命令是在原始shell中执行的.
+  #+BEGIN_SRC shell :results raw
+    all="ALL:"
+    cat /etc/passwd |while read line
+    do
+        all="$all $line"
+    done
+    echo $all
+  #+END_SRC
+
+  #+RESULTS:
+  ALL:
+
+  不过你可以用下面方式代替
+
+  #+BEGIN_SRC shell :results raw
+    all="ALL:"
+    while read line
+    do
+        all="$all $line"
+    done <<EOF
+    $(cat /etc/passwd)
+    EOF
+    echo $all
+  #+END_SRC
+
+  #+RESULTS:
+  ALL: SYSTEM:*:18:544:,S-1-5-18:: LocalService:*:19:544:U-NT AUTHORITYLocalService,S-1-5-19:: NetworkService:*:20:544:U-NT AUTHORITYNetworkService,S-1-5-20:: Administrators:*:544:544:,S-1-5-32-544:: TrustedInstaller:*:4294967294:4294967294:U-NT SERVICETrustedInstaller,S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464:: Administrator:unused:500:513:U-DarkSun-PCAdministrator,S-1-5-21-2186750898-2041272665-2908275747-500:/home/Administrator:/bin/bash DarkSun:unused:1000:513:U-DarkSun-PCDarkSun,S-1-5-21-2186750898-2041272665-2908275747-1000:/home/DarkSun:/bin/bash Guest:unused:501:513:U-DarkSun-PCGuest,S-1-5-21-2186750898-2041272665-2908275747-501:/home/Guest:/bin/bash
+
++ while的条件部分,也是在一个子shell中执行的
+
+  
