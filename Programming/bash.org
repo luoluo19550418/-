@@ -251,7 +251,7 @@ expr能够识别少量的数字和字符串操作符.
 ** shell内部的数学计算
 bash中还支持使用双括号进行数学计算,类似这样 =var=$((EXPRESSION))=:
 #+BEGIN_SRC shell  :exports both :results org :shebang "#!/bin/bash"
-  for op in + - \* /
+  for op in + - \* / % \*\*
   do
       echo $((3 ${op} 2))
   done
@@ -263,6 +263,8 @@ bash中还支持使用双括号进行数学计算,类似这样 =var=$((EXPRESSIO
 1
 6
 1
+1
+9
 #+END_SRC
 
 ** 浮点运算
