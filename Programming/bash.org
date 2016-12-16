@@ -267,6 +267,14 @@ bash中还支持使用双括号进行数学计算,类似这样 =var=$((EXPRESSIO
 3 ** 2 = 9
 #+END_SRC
 
+你还可以用括号改变默认的运算顺序:
+#+BEGIN_SRC shell
+  echo $(((1+2)*3))
+#+END_SRC
+
+#+RESULTS:
+: 9
+
 ** 浮点运算
 最常见的方案是使用bc进行运算. 其基本格式为 =var = $(echo "设置;计算表达式" | bc)=
 
