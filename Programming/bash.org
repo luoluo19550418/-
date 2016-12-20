@@ -355,6 +355,34 @@ results of seq 5 2 10 is:
 + ${var/旧字符串/新字符串} :: 若变量内容符合“旧字符串”，则将第一个字符串用新字符串代替
 + ${var//旧字符串/新字符串} :: 若变量内容符合“旧字符串”，则全部用新字符串去代替旧字符串
 
+* 命名管道文件
+命名管道文件是一种特殊的文件,它保证输入和读取的数据遵守FIFO
+
+可以使用 =mknod= 或 =mkfifo= 命令创建管道文件. 管道文件的在 =ls= 中的指示字符为 =p=:
+#+BEGIN_SRC shell
+  mkfifo /tmp/dapipe
+  ls -l /tmp/dapipe
+#+END_SRC
+
+#+RESULTS:
+: prw-rw-rw- 1 Administrator None 0 十二 20 14:56 /tmp/dapipe
+
+管道文件的权限与传统文件一样,只不过当单方面读取或写入该文件时,操作会挂起,直到有另一个进程写入或读取该文件.
+
+#+BEGIN_SRC shell
+  mkfifo /tmp/dapipe
+  date > /tmp/dapipe &
+  sleep 10
+  date
+  cat /tmp/dapipe
+#+END_SRC
+
+#+RESULTS:
+| 2016年12月20日 | 15:16:07 |
+| 2016年12月20日 | 15:16:07 |
+
+你会发现, =date > /tmp/dapipe= 这条语句一直挂起,直到 =cat /tmp/dapipe= 时才开始执行,因此两次 =date= 的输出是一样的.
+
 * 其他技巧
 + 一般将库文件的shebang写成 =#! /bin/echo This file should be sourced!=. 以防止把库文件当普通shell脚本来运行.
 + bash中有一个PROMPT_COMMAND变量,该变量的值可以设置成一条执行命令. bash会在每次输出prompt之前执行该命令.
@@ -401,4 +429,5 @@ results of seq 5 2 10 is:
 
 + while的条件部分,也是在一个子shell中执行的
 
+* 
   
