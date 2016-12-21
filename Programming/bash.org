@@ -383,6 +383,79 @@ results of seq 5 2 10 is:
 
 你会发现, =date > /tmp/dapipe= 这条语句一直挂起,直到 =cat /tmp/dapipe= 时才开始执行,因此两次 =date= 的输出是一样的.
 
+* 设置用户输入超时
+有时需要实现这么一种功能:程序接受用户输入并运行程序,但若一段时间内用户没有任何输入,则程序使用一个默认值作为输入值
+
+** 手动实现超时
+需要额外的两个脚本来实现这一点.
+
+1. 脚本 =readit= 用于读取用户输入并输出用户的输入
+   #+BEGIN_SRC shell
+     read ans
+     echo $ans
+   #+END_SRC
+2. 脚本 =killit= 用于超时的时候杀死 =readit=, 脚本被杀死后会返回一个非0的返回值,在bash中,返回值为128+终止脚本的信号值.
+   #+BEGIN_SRC shell
+     pid=$1
+     timeout=$2
+     sleep $timeout
+     kill $pid
+   #+END_SRC
+
+主脚本中这样操作
+#+BEGIN_SRC shell
+  readit &
+  killit $! 60
+  fg
+#+END_SRC
+
+*** timeout函数
+根据上面的原理,可以写成一个timeout函数
+#+BEGIN_SRC shell
+  function timeout()
+  {
+      waitfor=$1
+      shift
+      command=$*
+      $command &
+      commandpid=$!
+      (sleep $waifor;kill -9 $commandpid >/dev/null 2>&1 ) &
+      watchdogpid=$!
+      wait $commandpid
+      kill $watchdogpid > /dev/null 2>&1
+  }
+#+END_SRC
+** 用stty实现超时
+stty命令的 =min= 设置用户输入读取的最小字符数, 把这个值设置为0就可以使得没有任何用户输入也能完成一次读取.
+
+stty命令的 =time= 则用于设置超时时限,以十分之一秒为单位.
+
+=min= 和 =time= 这两个设置都必须与 =icanon= 选项结合,用于禁止标准模式的用户输入处理方式.
+
+设置了stty后,需要用 =dd= 命令从用户那获取输入
+
+例如:
+#+BEGIN_SRC shell
+  echo "Input a letter or wait 3 seconds:"
+  stty -icanon min 0 time 30
+  ANS=$(dd bs=1 count=1 2>/dev/null)
+  stty icanon
+  echo $ANSWER
+#+END_SRC
+
+上面的例子中,会从用户那接受一个字符,如果用户输入超过一个字符,则需要增加stty的min值和dd的count值,以匹配所需输入.
+
+** read自带的功能
+在ksh和bash的当前版本中,内置的read命令有一个超时选项 =-t=
+
+* 即时键盘响应
+
+* 使用tar替代cp进行复制
+#+BEGIN_SRC shell
+  tar cvf - * | (cd /dest/dir && tar xvfp -)
+#+END_SRC
+
+使用这种方式的好处是,可以保持文件的硬连接,创建时间和修改时间.
 * 其他技巧
 + 一般将库文件的shebang写成 =#! /bin/echo This file should be sourced!=. 以防止把库文件当普通shell脚本来运行.
 + bash中有一个PROMPT_COMMAND变量,该变量的值可以设置成一条执行命令. bash会在每次输出prompt之前执行该命令.
