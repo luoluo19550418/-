@@ -455,7 +455,15 @@ stty命令的 =time= 则用于设置超时时限,以十分之一秒为单位.
   tar cvf - * | (cd /dest/dir && tar xvfp -)
 #+END_SRC
 
-使用这种方式的好处是,可以保持文件的硬连接,创建时间和修改时间.
+使用这种方式的好处是,可以保持文件的硬连接,创建时间,修改时间,所有权以及可以 *通过ssh复制到远程服务器上*!
+#+BEGIN_SRC shell
+  tar -cvf - * | ssh remote_host 'cd /dest;tar xvfp -'
+#+END_SRC
+
+当然,这种技巧也可以与find命令相结合
+#+BEGIN_SRC shell
+  find . -depth |xargs tar cvf - | (cd ../tar_cp/ && tar xvfp -)
+#+END_SRC
 * 其他技巧
 + 一般将库文件的shebang写成 =#! /bin/echo This file should be sourced!=. 以防止把库文件当普通shell脚本来运行.
 + bash中有一个PROMPT_COMMAND变量,该变量的值可以设置成一条执行命令. bash会在每次输出prompt之前执行该命令.
