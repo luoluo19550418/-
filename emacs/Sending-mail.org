@@ -1,0 +1,62 @@
+#+TITLE: Sending-mail
+#+AUTHOR: Administrator
+#+TAGS: emacs
+#+DATE: [2016-12-26 周一 16:55]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+按下 =C-x m= 会打开一个名为 =*unsent mail*= 的buffer,在这个buffer中填入邮件内容和邮件头信息,然后按下 =C-c C-s= 或 =C-c C-c= 来发送邮件.
+
++ C-x m (compose-mail) :: 创建一封mail
++ C-x 4 m (compose-mail-other-window) :: 在另一个window中创建一封mail
++ C-x 5 m (compose-mail-other-frame) :: 在另一个frame中创建一封mail
++ C-c C-s (message-send) :: 发送当前mail
++ C-c C-c (message-send-and-exit) :: 发送当前mail,并退出当前mail buffer.
+
+你还可以通过多次执行 =C-x m= 来打开多个mail buffer,每个buffer都会有不同的数字作后缀.
+
+若你按下的是 =C-u M-x m=, 则Emacs会切换到上一次编辑的mail buffer,并询问你是否清空该邮件内容. 你可以选择 =no= 不清理,通过这种方法可以快速跳转回上一次编辑的mail.
+
+* mail的格式
+一个mail buffer大致看起来是如下所示:
+#+BEGIN_SRC mail
+  To: subotai@example.org
+  CC: mongol.soldier@example.net, rms@gnu.org
+  Subject: Re: What is best in life?
+  From: conan@example.org
+  --text follows this line--
+  To crush your enemies, see them driven before you, and to
+  hear the lamentation of their women.
+#+END_SRC
+
+在buffer的最上方是一系列的header域,用于指明电子邮件的接受人,标题等信息. 
+
+=--text follows this lines--= 这一行用于分割mail的header和body. 在其上的是header,在其下的是body.
+
+你可以像编辑普通buffer那样编辑header的内容,但Emacs也提供了一些独有的命令用来编辑header.
+
+而像 =Date= , =Message-Id= 这样的header,一般不会显示出来,这些header的值是在发送邮件时由emacs自动填写的.
+
+* mail header说明
+
+header域的格式是这样的: 行首以header的域名(不区分大小写)开头,后面接着一个冒号,再后面是一个可选的空格,最后是这个域的值.
+
+理论上,你可以随意创建header域,但某些header域有其约定俗成的意义:
+
++ From :: 该域指定了邮件发送者是谁. 它的默认值与 =user-full-name= 或 =user-mail-address= 的值有关. 而它的格式由变量 =mail-from-style= 决定.
++ To :: 邮件要发送给谁,可以指定多个地址,每个地址之间用逗号隔开
++ Subject :: 邮件的标题
++ CC :: 抄送人
++ BCC :: 密送人,这部分的地址不会在邮件的haader中被记录
++ FCC :: 该域指定的是一个文件路径. Emacs会将邮件内容以mbox的格式(或babyl格式)添加到该文件中. 若需要指定多个文件,则需要有多个FCC域,每个域一个文件
++ Reply-to :: 指定对方回复的地址,当你的 =From= 地址无法接受回复时特别有用
++ Mail-reply-to :: 与 =Reply-to= 的作用相同,但优先级更高. 之所以有这个header域是因为某些mailing list会自动设置 =Reply-to= 域
++ Mail-followup-to :: 
+
+* mail address的别名
+
+* 编辑mail时的命令
+
+* 为每个邮件添加签名
+
+* 发送mail的各种method
