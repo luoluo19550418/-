@@ -117,7 +117,7 @@ header域的格式是这样的: 行首以header的域名(不区分大小写)开�
 
 当发送邮件时,同时会触发 =message-send-hook=.
 
-而变量 =send-amil-function= 决定了邮件的发送方式,它可以有以下几个值:
+而变量 =send-mail-function= 决定了邮件的发送方式,它可以有以下几个值:
 
 + sendmail-query-once :: 第一次发送邮件时咨询你要选择哪种发送方式,之后就用这种方式发送后面的邮件.
 + smtpmail-send-it :: 使用外部邮件服务商提供的SMTP邮件服务器来发送邮件. smtp的信息可以存入变量 =smtpmail-smtp-server= 和文件 =~/.authinfo= 中. 详情可以查看 =Emacs SMTP Library= 的说明
