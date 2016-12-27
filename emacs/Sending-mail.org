@@ -17,6 +17,13 @@
 
 若你按下的是 =C-u M-x m=, 则Emacs会切换到上一次编辑的mail buffer,并询问你是否清空该邮件内容. 你可以选择 =no= 不清理,通过这种方法可以快速跳转回上一次编辑的mail.
 
+在创建邮件时会根据 =mail-user-agent= 的值而使用不同的package来编写邮件. 目前可选的值有下面这几个:
+
++ message-user-agent :: 使用Message-mode编辑邮件
++ sendmail-user-agent :: 使用mail-mode编辑邮件
++ mh-e-user-agent :: 使用Emacs为MH mail提供的界面来编辑邮件
++ gnus-user-agent :: 类似 =message-user-agent=, 但若Gnus正在运行的话,还提供了Gnus的一些功能.
+
 * mail的格式
 一个mail buffer大致看起来是如下所示:
 #+BEGIN_SRC mail
@@ -133,8 +140,64 @@ header域的格式是这样的: 行首以header的域名(不区分大小写)开�
 + <TAB> (message-table) :: 尝试补全当前邮件地址,在 =To=, =CC= 或 =BCC= 域中有用.
 
 ** 引用邮件
+‘C-c C-y’
+     Yank the selected message from the mail reader, as a citation
+     (‘message-yank-original’).
+‘C-c C-q’
+     Fill each paragraph cited from another message
+     (‘message-fill-yanked-message’).
+
+   You can use the command ‘C-c C-y’ (‘message-yank-original’) to “cite”
+a message that you are replying to.  This inserts the text of that
+message into the mail buffer.  This command works only if the mail
+buffer is invoked from a mail reader running in Emacs, such as Rmail.
+
+   By default, Emacs inserts the string ‘>’ in front of each line of the
+cited text; this prefix string is specified by the variable
+‘message-yank-prefix’.  If you call ‘message-yank-original’ with a
+prefix argument, the citation prefix is not inserted.
+
+   After using ‘C-c C-y’, you can type ‘C-c C-q’
+(‘message-fill-yanked-message’) to fill the paragraphs of the cited
+message.  One use of ‘C-c C-q’ fills all such paragraphs, each one
+individually.  To fill a single paragraph of the quoted message, use
+‘M-q’.  If filling does not automatically handle the type of citation
+prefix you use, try setting the fill prefix explicitly.  *Note
+Filling::.
+
+   You can customize mail citation through the hook
+‘mail-citation-hook’.  For example, you can use the Supercite package,
+which provides more flexible citation (*note (sc)Introduction::).
+
 
 ** 其他命令
-* 为每个邮件添加签名
 
-* 发送mail的各种method
++ C-c C-a (mml-attach-file) :: 为邮件添加附件. 该命令只在message mode下有效,它会依次提示输入附件路径,类型,描述以及整合方式.
++ mail-add-attachment :: 为邮件添加附件. 该命令在mail mode下有效, 它会提示你输入附件路径,并自动判断附件类型及整合方式. 但需要你手工输入附件描述.
++ ispell-message :: 作拼写检查,它会很智能地不检查邮件引用部分的内容
++ C-c C-w (message-insert-signature) :: 插入邮件签名
+
+
+* 为每个邮件添加签名
+变量 =message-signature= 的值决定了Emacs如何处理你的邮件签名, 它支持以下几种值:
+
++ t :: 会从 =message-signature-file= 指定的文件中读取并插入邮件签名,默认该文件为 =~/.signature=
++ 字符串 :: 该字符串就是邮件签名,直接插入
++ nil :: Emacs不会帮你自动插入邮件签名,需要手工执行 =C-c C-w= 才能插入
+     
+不过如果你是在mail mode下写邮件的话,则需要使用 =mail-signature= 和 =mail-signature-file= 代替
+
+按惯例,签名一般是以 =--= 开头的,因此若你设置的签名没有该前缀的话, Emacs会自动昂你添加该前缀.
+
+使用函数 =(fortune-file &optional FILE)= 可以使用fortune程序为你声称一个签名, 你可以为每个邮件插入不同的fortune cookie message:
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'mail-setup-hook 'fortune-to-signature)
+#+END_SRC
+
+* Hooks说明
+
+当你运行 =C-x m= 时,首先会进入message-mode并因此触发 =text-mode-hook= 和 =message-mode-hook=.
+
+随后Emacs调用 =message-setup= 函数来插入默认的内容,并在插入默认内容后触发 =message-setup-hook=.
+
+而当发送邮件时,同时会触发 =message-send-hook=.
