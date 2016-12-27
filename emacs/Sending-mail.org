@@ -177,6 +177,11 @@ which provides more flexible citation (*note (sc)Introduction::).
 + ispell-message :: 作拼写检查,它会很智能地不检查邮件引用部分的内容
 + C-c C-w (message-insert-signature) :: 插入邮件签名
 
+** 调试
+#+BEGIN_SRC emacs-lisp
+  (setq smtpmail-debug-info t)
+  (setq smtpmail-debug-verb t)
+#+END_SRC
 
 * 为每个邮件添加签名
 变量 =message-signature= 的值决定了Emacs如何处理你的邮件签名, 它支持以下几种值:
