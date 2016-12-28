@@ -1,0 +1,86 @@
+#+TITLE: rmail
+#+AUTHOR: Administrator
+#+TAGS: emacs
+#+DATE: [2016-12-27 周二 15:07]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 基础概念说明
+我们称呼那些存放邮件的本地文件为 =inbox=.
+
+当执行 =M-x rmail= 时,rmail会使用 =movemail= 程序从各个inbox中获取新邮件并合并到一个所谓的 =primary Rmail file= 中,然后读取其中的第一个未读邮件.
+
+这个 =primary Rmail file= 由变量 =rmail-file-name= 指定,一般是 =~/RMAIL= 这个文件.
+
+Rmail一次只显示一条邮件,该邮件被称为 =current message=. 
+
+每个邮件都有一个唯一的标识符,该标识符就是各邮件的 =message number=. =current message= 的 =message number= 会显示在Rmail的mode-line上.
+
+* 获取邮件
+
+变量 =rmail-primary-inbox-list= 指定了从哪些inbox文件中获取邮件合并到 =primary Rmail file= 中去.
+若该变量的值为nil,则使用环境变量 =MAIL= 的值代替.
+若 =MAIL= 环境变量也没有设置,则使用 =rmail-spool-directory= 目录下的 =(user-login-name)= 文件作为inbox.
+
+默认情况下,Rmail将inbox中的邮件拷贝到 =primary Rmail file= 后,会清空这些inbox文件. 但你可以通过设置 =rmail-preserve-inbox= 为非nil来保留这些inbox文件的内容.
+
+若你想临时只在本session中修改inbox,可以使用命令 =set-rmail-inbox-list= 命令.
+
+在rmail界面中,可以通过按 =g (rmail-get-new-mail)= 来让rmail再次尝试获取新邮件. 若你想要从指定的inbox中获取新邮件,则可以使用 =C-u g FILE <RET>=.
+
+事实上,除了 =primary Rmail file= 外,Rmail还支持在多个Rmail文件之间相互切换,每个Rmail都可以有自己的inbox源. 切换的命令为 =i FILE <RET> (rmail-input)=.
+
+当然,如果你想在启动rmail时就直接指定读取的Rmail文件,则可以为 =rmail= 命令添加一个prefix argument,像这样 =C-u M-x rmail=.
+
+由于没有Rmail文件都有自己的inbox来源,因此当切换了其他Rmail文件后,其inbox来源就可能与变量 =rmail-primary-inbox-list= 不同了,这时你可以通过变量 =rmail-inbox-list= 变量来查看对应的inbox来源,该变量是一个buffer-local变量.
+
+* 阅读邮件
+
+在阅读邮件时,可以使用:
+
++ <SPC> (scroll-up-command) :: 向下翻一页
++ <DEL> / S-<SPC> (scroll-down-command) :: 向上翻一页
++ . (rmail-beginning-of-message) :: 翻到邮件的起始位置
++ / (rmail-end-of-message) :: 翻到邮件的结尾
+     
+若想阅读其他邮件,可以使用这些命令:
+
++ n (rmail-next-undeleted-message) :: 阅读下一个没有被删除的邮件
++ p (rmail-previous-undeleted-message) :: 阅读上一个没有被删除的邮件
++ M-n (rmail-next-message) :: 阅读下一个邮件,即时该邮件已经被标记为已删除,被删除的邮件会在mode-line上显示 =deleted= 字样.
++ M-p (rmail-previous-message) :: 阅读上一个邮件,即时该邮件已经被标记为已删除,被删除的邮件会在mode-line上显示 =deleted= 字样.
++ C-c C-n (rmail-next-same-subject) :: 阅读下一个同标题的邮件
++ C-c C-p (rmail-previous-same-subject) :: 阅读上一个同标题的邮件
++ j (rmail-show-message) :: 阅读指定 =message number= 的邮件,默认是第一封邮件
++ > (rmail-last-message) :: 阅读最后一封邮件
++ < (rmail-first-message) :: 阅读第一封邮件
++ M-s REGEXP <RET> :: 往下搜索匹配正则的邮件
++ - M-s REGEXP <RET> :: 往上搜索匹配正则的邮件
+
+* 删除邮件
+
+有两种删除邮件的方法:
+
++ =delete= 表示将邮件标记为可忽略的,这样Rmail会将这些邮件当成是已经被删除掉的邮件,然而在物理上这些文件依然保存在 Rmail文件中.
++ =Expunging= 则表示真正的将邮件从Rmail文件中物理删除掉.
+  
+Rmail提供了如下命令来删除邮件:
+
++ d (rmail-delete-forward) :: 将当前邮件标记为已删除,并阅读下一个未删除的邮件
++ C-d (rmail-delete-backward) :: 将当前邮件标记为已删除,并阅读上一个未删除的邮件
++ u (rmail-undelete-previous-message) :: 取消当前邮件的已删除标记,如果当前邮件本来就是未删除的,则会跳到上一个被删除的邮件并回复它
++ x (rmail-expunge) :: 将那些标记为已删除的邮件,真正的从文件中删除掉.
+     
+在delete邮件时,Rmail会触发 =rmail-delete-message-hook=, 触发的时机为,当前邮件并未被改变,但已经被加上了被删除标记了.
+
+* 保存邮件
+
+* 邮件分类
+
+* 邮件属性
+
+* 回复邮件
+
+* 邮件排序
+
+* 编辑邮件
