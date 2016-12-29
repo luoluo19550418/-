@@ -1,0 +1,235 @@
+#+TITLE: rmail
+#+AUTHOR: Administrator
+#+TAGS: emacs
+#+DATE: [2016-12-27 周二 15:07]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 基础概念说明
+我们称呼那些存放邮件的本地文件为 =inbox=.
+
+当执行 =M-x rmail= 时,rmail会使用 =movemail= 程序从各个inbox中获取新邮件并合并到一个所谓的 =primary Rmail file= 中,然后读取其中的第一个未读邮件.
+
+这个 =primary Rmail file= 由变量 =rmail-file-name= 指定,一般是 =~/RMAIL= 这个文件.
+
+Rmail一次只显示一条邮件,该邮件被称为 =current message=. 
+
+每个邮件都有一个唯一的标识符,该标识符就是各邮件的 =message number=. =current message= 的 =message number= 会显示在Rmail的mode-line上.
+
+* 获取邮件
+
+变量 =rmail-primary-inbox-list= 指定了从哪些inbox文件中获取邮件合并到 =primary Rmail file= 中去.
+若该变量的值为nil,则使用环境变量 =MAIL= 的值代替.
+若 =MAIL= 环境变量也没有设置,则使用 =rmail-spool-directory= 目录下的 =(user-login-name)= 文件作为inbox.
+
+默认情况下,Rmail将inbox中的邮件拷贝到 =primary Rmail file= 后,会清空这些inbox文件. 但你可以通过设置 =rmail-preserve-inbox= 为非nil来保留这些inbox文件的内容.
+
+若你想临时只在本session中修改inbox,可以使用命令 =set-rmail-inbox-list= 命令.
+
+在rmail界面中,可以通过按 =g (rmail-get-new-mail)= 来让rmail再次尝试获取新邮件. 若你想要从指定的inbox中获取新邮件,则可以使用 =C-u g FILE <RET>=.
+
+事实上,除了 =primary Rmail file= 外,Rmail还支持在多个Rmail文件之间相互切换,每个Rmail都可以有自己的inbox源. 切换的命令为 =i FILE <RET> (rmail-input)=.
+
+当然,如果你想在启动rmail时就直接指定读取的Rmail文件,则可以为 =rmail= 命令添加一个prefix argument,像这样 =C-u M-x rmail=.
+
+由于没有Rmail文件都有自己的inbox来源,因此当切换了其他Rmail文件后,其inbox来源就可能与变量 =rmail-primary-inbox-list= 不同了,这时你可以通过变量 =rmail-inbox-list= 变量来查看对应的inbox来源,该变量是一个buffer-local变量.
+
+** 远程inbox
+Rmail使用一个名为 =movemail= 来将inbox中的邮件移动到Rmail文件中,而movemail甚至还支持远程的inbox! 方法是使用如下的URL各式指定远程inbox:
+#+BEGIN_EXAMPLE
+     PROTO://[USER[:PASSWORD]@]HOST-OR-FILE-NAME
+#+END_EXAMPLE
+
+其中PROTO可以是:
+
++ mbox :: 常用的Unix mailbox各式
++ mh :: MH各式的本地mailbox
++ maildir :: maildir的本地mailbox
++ file :: 本地的mailbox,但具体什么各式由rmail自动探测. 这种情况下可以省略PROTO部分,例如  =/var/spool/mail/USER= ≡ =file://var/spool/mail/USER=
++ pop :: pop3协议
++ imap :: imap协议
+
+     
+需要注意的是,一共存在两个版本的movemail程序,一个是Emacs版的movemail,一个时mailutil版本的movemail. 其中Emacs版的movemail功能很受限,不支持imap协议,也不支持TLS加密.
+
+要指定使用哪个movemail,可以设置变量 =rmail-movemail-program=, 否则Rmail会依次从 =rmail-movemail-search-path=, =exec-path=,和 =exec-directory= 目录中搜索movemail程序.
+
+另外,参数 =rmail-movemail-flags= 中可以传递额外的命令行参数给movemail程序, 例如要反转下载邮件的顺序可以添加 =-r= 选项,要支持TLS加密,可以添加 =--tls= 参数.
+不过 *如果想让movemail下载邮件后依然让服务器保持原邮件,不要向 =rmail-movemail-flags= 添加 =-p= 参数,而应该配置 =rmail-preserve-inbox= 参数*
+
+* 阅读邮件
+** 阅读邮件
+在阅读邮件时,可以使用:
+
++ <SPC> (scroll-up-command) :: 向下翻一页
++ <DEL> / S-<SPC> (scroll-down-command) :: 向上翻一页
++ . (rmail-beginning-of-message) :: 翻到邮件的起始位置
++ / (rmail-end-of-message) :: 翻到邮件的结尾
++ t (rmail-toggle-header) :: 是否显示隐藏起来的那些邮件header. 具体哪些header会被隐藏起来由变量 =rmail-ignored-headers= , =rmail-nonignored-headers= 与 =rmail-displayed-headers= 共同决定.
+ 
+Rmail会高亮显示哪些特别重要的header,比如 =From= 和 =Subject= 域,变量 =rmail-highlighted-headers= 决定了哪些header域可以被高亮显示.    
+
+** MIME部分的处理
+若邮件中包含有附件,则每个附件都会显示成一行 =tagline=, 每个 =tagline= 都显示了附件的索引,大小,类型以及可以进行的操作. 对附件可以进行如下操作:
+
++ <RET> (rmail-mime-toggle-hidden) :: 是否显示光标所在的附件
++ <TAB> (rmail-mime-next-item) :: 跳到下一个附件的 =tagline= 处
++ S-<TAB> (rmail-mime-previous-item) :: 跳到上一个附件的 =tagline= 处
++ v (rmail-mime) :: 是否显示所有附件的原始内容. 若带了prefix argument,则表示只显示当前附件的原始内容.
+
+若邮件中包含 HTML MIME部分,Rmail默认会尝试渲染该HTML,要禁止渲染HTML可以将变量 =rmail-mime-prefer-html= 设置为 =nil=.
+
+类似的,要禁止Rmail支持MIME邮件,可以将变量 =rmail-enable-mime= 设置成 =nil=.
+
+** 加密邮件处理
+若收到的邮件是经过加密的,则可以执行 =M-x rmail-epa-decrypt= 来使用EasyPG库进行解密.
+
+类似的,若收到的邮件是经过rot13转换过的,则可以执行 =M-x rot13-other-window= 将之转换回来.
+
+** 邮件编码设置
+若邮件内容出现乱码,很可能是rmail猜测编码错误了, 这时可以执行 =M-x rmail-redecode-body= 来指定邮件内容的编码各式.
+ 
+** 跳转到其他邮件
+若想阅读其他邮件,可以使用这些命令:
+
++ n (rmail-next-undeleted-message) :: 阅读下一个没有被删除的邮件
++ p (rmail-previous-undeleted-message) :: 阅读上一个没有被删除的邮件
++ M-n (rmail-next-message) :: 阅读下一个邮件,即时该邮件已经被标记为已删除,被删除的邮件会在mode-line上显示 =deleted= 字样.
++ M-p (rmail-previous-message) :: 阅读上一个邮件,即时该邮件已经被标记为已删除,被删除的邮件会在mode-line上显示 =deleted= 字样.
++ C-c C-n (rmail-next-same-subject) :: 阅读下一个同标题的邮件
++ C-c C-p (rmail-previous-same-subject) :: 阅读上一个同标题的邮件
++ j (rmail-show-message) :: 阅读指定 =message number= 的邮件,默认是第一封邮件
++ > (rmail-last-message) :: 阅读最后一封邮件
++ < (rmail-first-message) :: 阅读第一封邮件
++ M-s REGEXP <RET> :: 往下搜索匹配正则的邮件
++ - M-s REGEXP <RET> :: 往上搜索匹配正则的邮件
+
+* 修改邮件
+默认情况下Rmail阅读邮件时是只读的. 但是你可以通过 =e (rmail-edit-current-message)= 编辑当前邮件.
+
+修改好邮件后,按下 =C-c C-c= 表示保存修改的内容, 按下 =C-c C-j= 表示取消修改.
+
+在进入Rmail Edit Mode时会先触发 =text-mode-hook=, 然后再触发 =rmail-edit-mode-hook=.
+* 删除邮件
+
+有两种删除邮件的方法:
+
++ =delete= 表示将邮件标记为可忽略的,这样Rmail会将这些邮件当成是已经被删除掉的邮件,然而在物理上这些文件依然保存在 Rmail文件中.
++ =Expunging= 则表示真正的将邮件从Rmail文件中物理删除掉.
+  
+Rmail提供了如下命令来删除邮件:
+
++ d (rmail-delete-forward) :: 将当前邮件标记为已删除,并阅读下一个未删除的邮件
++ C-d (rmail-delete-backward) :: 将当前邮件标记为已删除,并阅读上一个未删除的邮件
++ u (rmail-undelete-previous-message) :: 取消当前邮件的已删除标记,如果当前邮件本来就是未删除的,则会跳到上一个被删除的邮件并回复它
++ x (rmail-expunge) :: 将那些标记为已删除的邮件,真正的从文件中删除掉.
+     
+在delete邮件时,Rmail会触发 =rmail-delete-message-hook=, 触发的时机为,当前邮件并未被改变,但已经被加上了被删除标记了.
+
+* 保存邮件
+以下命令可以将邮件保存到其他文件:
+
++ o FILE <RET> (rmail-output) :: 将当前邮件的所有内容添加到FILE中
++ C-o FILE <RET> (rmail-output-as-seen) :: 将当前邮件的可见部分的内容添加到FILE中
++ w FILE <RET> :: 保存邮件body到FILE中,默认的文件名为邮件的标题
+     
+若你希望保存邮件后自动删除该邮件,则可以设置变量 =rmail-delete-after-output= 为 =t=.
+
+通过配置 =rmail-output-file-alist=,你还可以做到让rmail自动根据邮件内容来推测要写入文件的名称.
+该变量是一个由 =(REGEXP . NAME-EXP)= 组成的list,若邮件内容匹配 =REGEXP=,则保存的文件名为 =NAME-EXP=. 其中 =NAME-EXP= 既可以是一个字符串,也可以是一个返回字符串的函数.
+
+Rmail甚至还能自动帮你保存 =primary Rmail file= 中的邮件,方法是配置变量 =rmail-automatic-folder-directive=.
+该变量是一个由所谓 =directives= 组成的list, 每个 =directives= 都是一个由 =output-file= 后面跟着一系列的 =(header-name . regexp)= 组成的list.
+它的意思是,只要一封邮件里的 =header-name= 的值匹配对应的 =regexp=,则将这封邮件保存到 =output-file= 中去, 若一个 =output-file= 后有多个 =header-name= 的条件,则表示所有的条件都必须匹配. 
+=output-file= 还可以是 =nil= 值,这时候表示的是删除该邮件.
+
+你可以使用这项功能来保存某个发件人或某个主题的邮件,很有用.
+
+* 邮件标签
+你可以为邮件添加各式的标签并以此作为邮件分类的一种方法:
+
++ a LABEL <RET> (rmail-add-label) :: 为当前邮件添加标签
++ k LABEL <RET> (rmail-kill-label) :: 从当前邮件中删除指定标签
++ C-M-n LABELS <RET> :: 跳转到下一个有 =LABELS= 中某个标签的邮件,其中 =LABELS= 中的标签之前用逗号分隔.
++ C-M-p LABELS <RET> :: 跳转到上一个有 =LABELS= 中某个标签的邮件
++ l LABELS <RET> / C-M-l LABELS <RET> (rmail-summary-by-labels) :: 列出所有包含 =LABELS= 中任意标签的所有邮件的概览信息
+
+
+** 邮件属性
+某些特定的标签有其特定的意义,这些标签被称之为属性,一般由Rmail自己维护:
+
++ unseen :: 未读
++ deleted :: 已删
++ filed :: 已经保存到其他文件中了.
++ answered :: 已回复过了
++ forwarded :: 已转发过了
++ edited :: 该邮件被修改过了
++ resent :: 该邮件被重发过
++ retried :: 该邮件曾经发送失败,后来又尝试重发过
+
+* 回复邮件
+除了 =C-x m= 之外,Rmail还提供了以下快捷键帮你发送邮件:
+
++ m (rmail-mail) :: 创建一封新邮件
++ c (rmail-continue) :: 继续编辑已经发送过的那封邮件
++ r (rmail-reply) :: 回复当前邮件(会同时回复给原邮件发送者以及抄送者,若不希望回复的邮件发给 =CC= 的那些人,则可以使用 =C-u r=,则表示只回复给发送该邮件的人.)
++ f (rmail-forward) :: 转发当前邮件给别人
++ C-u f (rmail-resend) :: 重发当前邮件给别人
++ M-m (rmail-retry-failure) :: 重发之前发送失败的邮件,但是变量 =rmail-retry-ignored-headers= 控制了header复核哪些条件的邮件将不会被重发.
+
+在回复邮件时,你可以直接使用 =C-c C-y= 来粘贴原邮件的内容.
+
+此外,若变量 =rmail-mail-new-frame= 设置为非nil,则回复邮件时会新开一个frame,同时该frame会在发送该邮件后被删除掉.
+
+* 邮件概览
+你可以以概览的方式浏览所有的邮件,这时buffer中的每一行都代表一个邮件,并列出了该邮件的编号,日期,发送者,行数,标签以及标题.
+若觉得邮件的总行数显示了也没有意义,可以设置变量 =rmail-summary-line-count-flag= 为 =nil=. 这样在概览信息中就不会显示邮件的总行数了.
+
+而随着光标在不同行之间跳转,Rmail buffer中会同步显示光标所在行的邮件内容.
+
+一个Rmail文件对应着一个概览buffer,不过你可以同时打开多个Rmail文件,因此你可以同时拥有多个概览buffer.
+
+** 进入Summary buffer
+概览buffer中的信息会随着Rmail文件的改变而自动更新.
+
++ h / C-M-h (rmail-summary) :: 显示所有邮件的概览
++ l LABLES <RET> C-M-l LABELS <RET> (rmail-summary-by-labels) :: 显示那些拥有指定标签的邮件概览
++ C-M-r RECIPIENTS <RET> (rmail-summary-by-recipients) :: 显示那些匹配指定接受者的邮件概览
++ C-M-t TOPIC <RET> (rmail-summary-by-topic) :: 显示标题匹配某正则表达式的邮件概览
++ C-M-s REGEXP <RET> (rmail-summary-by-regexp) :: 所有header匹配指定表达式的邮件概览
++ C-M-f SENDERS <RET> (rmail-summary-by-sender) :: 显示所有指定发送者的邮件概览
+
+** Summary buffer的操作
+在概览buffer中,可以使用几乎所有的Rmail命令,这些命令会作用于光标所在行的邮件上. 例如
+
++ d :: 给邮件加上删除标记
++ u :: 去掉邮件的删除标记
++ x :: 物理删除该邮件
++ o / C-o :: 将邮件保存到文件中
++ r :: 回复该邮件
++ n ::跳到下一封未删除邮件的位置
++ p ::跳到上一封未删除邮件的位置
++ M-n / M-p :: 跳到下一封/上一封邮件的位置
++ < / > :: 跳到第一封/最后一封邮件的位置
++ j :: 跳到指定编号邮件的位置.
+
+不过概览buffer中也有特有的命令:
+
++ M-u (rmail-summary-undelete-many) :: 取消summary buffer中所有邮件的删除标记.
+
+
+
+* 邮件排序
++ C-c C-s C-d (rmail-sort-by-date) :: 按日期排序
++ C-c C-s C-s (rmail-sort-by-subject) :: 按标题排序
++ C-c C-s C-a (rmail-sort-by-author) :: 按邮件发送者名称排序
++ C-c C-s C-r (rmail-sort-by-recipient) :: 按邮件接受者名称排序
++ C-c C-s C-c (rmail-sort-by-correspondent) :: 按抄送,密送接受者的名称排序
++ C-c C-s C-l (rmail-sort-by-lines) :: 按邮件内容的行数排序
++ C-c C-s C-k <RET> LABELS <RET> (rmail-sort-by-labels) :: 按标签排序,其中 =LABELS= 为用逗号分隔的标签列表, 且排在前面的label优先级高于排在后面的label
+
+Rmail在排序时使用的是stable排序算法,即是说,两个邮件排序条件相等的话,并不会改变两个邮件的相对顺序. 因此你可以做到按多个条件进行排序.
+例如,要先按日期再按标题排序,则可以先执行 =rmail-sort-by-date=, 在执行 =rmail-sort-by-subject=.
+
+所有的排序命令都可以带一个prefix argument,表示逆向排序.
+
