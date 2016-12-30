@@ -1,0 +1,112 @@
+#+TITLE: smtp
+#+AUTHOR: Administrator
+#+TAGS: emacs
+#+DATE: [2016-12-30 周五 14:35]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 服务器设置
+** smtpmail-smtp-server
+
+邮件服务器的地址,默认情况下它的值是环境变量 =SMTPSERVER= 的值. 但若没有设置这个环境变量,则它的值为 =smtpmail-default-smtp-server= 的值
+
+** smtpmail-default-smtp-server
+
+该变量控制了 =smtpmail-smtp-server= 的默认值是哪个,它必须在smtp库加载前被设置,否则就没有效果了.
+
+** smtpmail-smtp-service
+
+该变量指定了要连接邮件服务器的哪个端口. 它的值应该是一个整数,或者表示整数的字符串.
+
+* 认证设置
+
+大多数SMTP服务器都需要先验证你的身份. Emacs会在你第一次发送邮件时提示你输入登录SMTP服务器的用户和密码,并将之写入 =~/.authinfo= 文件.
+
+** .authinfo文件
+
+=~/.authinfo= 文件中的每一行都表示一个认证关系,它的格式是这样的:
+
+#+BEGIN_EXAMPLE
+  machine mail.example.org port 25 login myuser password mypassword
+#+END_EXAMPLE
+
+它的意思是: 当连接 =mail.example.org= 上的 =25= 端口时, Emacs会发送用户名 =myuser= 和密码 =mypassword= 去验证.
+
+当然,login和password的值可以为空,这个时候Emacs会提示你手工输入.
+
+但有时候SMTP服务器也可能不实用用户名和密码进行校验,而是需要你发送你的证数以及密钥去校验,这时 =~/.authinfo= 的内容应该是这样的:
+
+#+BEGIN_EXAMPLE
+  machine mail.example.org port 25 key "~/.my_smtp_tls.key" cert "~/.my_smtp_tls.cert"
+#+END_EXAMPLE
+
+** smtpmail-smtp-user
+
+设置登录smtp服务器的用户名.
+
+* 加密
+SMTP库本身支持TLS,SSL以及STARTTLS加密机制.
+
+连接SMTP服务器时使用哪种加密方式由 =smtpmail-stream-type= 变量控制:
+
++ nil :: 使用明文连接,然后若服务器支持的话,转成使用starttls加密
++ starttls :: 使用starttls加密
++ ssl :: 使用TLS/SSL加密
++ plain :: 使用明文连接
+
+不过要使用机密的方式连接SMTP服务器的前提条件是Emacs本身也支持GnuTLS.
+
+可以使用 =gnutls-available-p= 来判断Emacs编译时是否启用了GnuTLS支持,若没有启用,则需要借助 =starttls.el= 库来获得支持.
+
+* Queued delivery
+若你的电脑不是一直连接到互联网上的,则你可以先写好邮件,将这些邮件暂存到一个队列中,然后等到连接到互联网上之后再一次性发送出去.
+
+** smtpmail-queue-mail
+该变量设置了是否暂存要发送的邮件. 若该变量的值为非nil,则待发送的邮件并不会真正发送出去,而是先暂存到 =smtpmail-queue-dir= 中,然后等待人工调用 =M-x smtpmail-send-queue-mail= 命令时才真正发送出去.
+
+** smtpmail-queue-dir
+该变量指定了邮件暂存到哪个目录中,默认为 =!/Mail/queued-mail=
+
+** M-x smtpmail-send-queued-mail
+人工发送暂存的邮件.
+
+* 调试
+当投递邮件失败时,通常只会显示一个 =Sending failed; SMTP protocol error= 的消息,难以定位错误的原因.
+
+通过设置 =smtpmail-debug-info= 和 =smtpmail-debug-verb= 为 =t= 可以追踪投递的整个过程.
+
++ smtpmail-debug-info
+  
+  该变量控制了是否将SMTP协议交互的过程输出到minibuffer中. 
+
+  同时还会记录整个交互过程到一个名为 =*trace of SMTP session to SERVER*= 的buffer中. 其中SERVER为邮件服务器的名称.
+
++ smtpmail-debug-verb
+
+  该变量控制是否向邮件服务器发送 =VERB= 命令. 它使得服务器显示详细的回应信息.
+
+* Server workarounds
+
+Some SMTP servers have special requirements.  The following variables implement support for common requirements.
+
++ ‘smtpmail-local-domain’
+     The variable ‘smtpmail-local-domain’ controls the hostname sent in
+     the first ‘EHLO’ or ‘HELO’ command sent to the server.  It should
+     be set only if the ‘system-name’ function returns a name that isn’t
+     accepted by the server.  Do not set this variable unless your
+     server complains.
+
++ ‘smtpmail-sendto-domain’
+     The variable ‘smtpmail-sendto-domain’ makes the SMTP library add
+     ‘@’ and the specified value to recipients specified in the message
+     when they are sent using the ‘RCPT TO’ command.  Some
+     configurations of sendmail requires this behavior.  Don’t bother to
+     set this unless you have get an error like:
+
+                  Sending failed; SMTP protocol error
+
+     when sending mail, and the debug buffer (*note Debugging::))
+     contains an error such as:
+
+                  RCPT TO: SOMEONE
+                  501 SOMEONE: recipient address must contain a domain
