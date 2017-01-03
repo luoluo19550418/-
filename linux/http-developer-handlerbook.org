@@ -1,0 +1,145 @@
+#+TITLE: http-developer-handlerbook
+#+AUTHOR: Administrator
+#+TAGS: linux
+#+DATE: [2017-01-01 周日 11:16]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* HTTP Definition
+
+** HTTP Requests
+
+*** Request语法
+一个http request由三个基础部分组成:
+
++ Request行
++ HTTP头部
++ 请求内容
+
+HTTP请求的第一行一定是"request"说明行,这一行指明了请求的方法,请求的资源以及使用的HTTP版本号. 
+这三个部分使用空格分隔, 像这样:
+#+BEGIN_EXAMPLE
+GET /index.html HTTP/1.1
+#+END_EXAMPLE
+
+HTTP请求的第二部分是HTTP的头部. 它提供了很多关于request的信息. 一般将HTTP header分成三种:
+
++ General headers :: 那些即可以用于response也可以用于request的头信息.
++ Request headers :: 那些只可以用于request的头信息.
++ Entity headers :: 关于content本身的相关信息.
+
+*** Request Methods
+HTTP/1.1总共定义了8种request method,分别是:
+
++ GET
++ POST
++ PUT :: 用于发送要保存到server上的内容,此时request line中请求的resource表示要修改/保存内容的地址. 
+     若成功保存了内容,则服务器会返回 =201 Created=, 若请求的地址已经存在,则返回 =200 OK= 或 =204 No Content=.
++ DELETE :: 删除request line中的resource
++ HEAD :: 与GET类似,但是不要求server返回content
++ TRACE :: 用于诊断客户端与服务器之间经过多少个中间代理,每个中间代理都会把自己添加到 =Via= header中. 而server回应的content,则就是其接收到的request.
++ OPTIONS :: 用于探测web server有哪些能力. 此时request line中的resource并不重要,可以使用 =*= 代替.
++ CONNECT :: 该method保留给中间人服务器来创建与目标服务器之间的通道. 通道对于客户端和服务器来说都是透明的.
+
+*** Request Headers
+Request headers只是那些只于请求相关的header,也就是说这些header既不能用于response,也跟content毫无关系.
+
+HTTP/1.1 定义了19种request header,除此之外还有一个很常见的request header: =Cookie=
+
+**** Accpet
+=Accept= 主要是通知Web服务器客户端可以接受哪些类型的内容,以及各种内容类型的优先级.
+
+一个 =Accept= header看起来是这样的:
+#+BEGIN_EXAMPLE
+  Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9, 
+          text/plain;q=0.8, video/x-mng,image/png,image/jpeg,image/gif;q=0.2, 
+          text/css,*/*;q=0.1 
+#+END_EXAMPLE
+
+其中 =q= 后面的值表示优先级,范围从1到0.
+
+=q= 前面的值是content type列表. 每个content type都分成type和subtype两个部分,每个部分都能用 =*= 表示通配.
+
+若服务器不能满足 =Accept= 的要求,那么它应该返回 =406 Not Acceptable=
+
+*所有的Accept家族语法都很类似*
+
+**** Accept-Charset
+=Accept-Charset= 通知server,client支持哪些字符编码格式,以及各种编码格式的优先级:
+
+#+BEGIN_EXAMPLE
+  Accept-Charset: ISO-8859-1, utf-8;q=0.66, *;q=0.66 
+#+END_EXAMPLE
+
+这里 =*= 表示允许任意的编码格式. 虽然 =*= 与 =ISO-8859-1和utf-8= 的优先级一样,不过由于它们被明确指定了,因此它们的优先级还是要高一点.
+
+另外, *不管内容的编码格式会是什么,但是HTTP消息本身是用 =ISO-8859-1= 来编码的*.
+
+**** Accept-Encoding
+=Accept-Encoding= 指明了client支持对内容进行何种编码转换的方式.比如用gzip进行压缩.
+
+*它与 =Accept-Charset= 是完全不同的*
+
+**** Accept-Language
+=Accept-Language= 指明了用户偏好哪种语言.
+
+#+BEGIN_EXAMPLE
+  Accept-Language: en 
+#+END_EXAMPLE
+
+**** Authorization
+=Authorization= 提供了一种客户端认证的方法.
+
+当client不带 =Authorization= header访问敏感信息时,server会返回一个 =401 Unauthorized= 回应给浏览器,浏览器就会提示用户输入用户名和密码.
+
+由于HTTP本身是无状态的,因此浏览器在之后的每次访问,都需要附上正确的 =Authorization= header.
+
+**** Cookie
+Cookie是实现HTTP状态管理至关重要的一种方法. 
+
+Client通过 =Cookie= headr将保存到cookie中的信息传递回server. 一个Cookie header看起来是这样的:
+
+#+BEGIN_EXAMPLE
+  Cookie: fname=chris; lname=shiflett 
+#+END_EXAMPLE
+
+**** Expect
+=Expect= header告诉server需要符合哪些预期,若server无法满足这些预期则需要返回 =417 Expectation Failed= 回应.
+
+此外,中间代理也需要检查自己是否满足这些预期,否则也需要返回 =417 Expectation Failed=
+
+**** From
+=From= 告诉server用户的email地址是什么,这个基本没什么用.
+
+#+BEGIN_EXAMPLE
+  From: chris@http.org 
+#+END_EXAMPLE
+
+**** Host
+
+在同一个IP上有多个hosts的情况下, =Host= 指明要访问的是哪个host上的资源.
+
+#+BEGIN_EXAMPLE
+  Host: www.google.com:8080 
+#+END_EXAMPLE
+
+**** If-Match
+判断request line中请求的资源是否与 =If-Match= header中指定的签名一致. 
+
+=If-Match= 中使用的签名来自于server response 的 =ETag= (即entity tag的缩写) header.
+
+=If-Match= 常用来判断资源自上次请求以来是否发生了改变. 因此在判断cache是否失效和解决多client修改server时同步问题时非常有用.
+
+若 =If-Match= 中的签名与资源不匹配了,则server返回 =412,Precondition Failed=
+
+**** If-Modified-Since
+=If-Modified-Since= 咨询server请求的资源自某个时间以来是否发生了改变.
+
+若请求的资源美誉发生改变,则server返回 =304 Not Modified=
+
+需要注意的时, *由于时间的比较是在sever端发生的,因此这个时间必须使用 =Last-Modified= response header中的值*.
+
+**** If-None-Match
+=If-None-Match= 正好与 =If-Match= 相反,
+
+当 =If-None-Match= 应用于 =GET= 和 =HEAD= method时,server返回 =304 Not Modified=,否则server返回 =412 Precondition Failed=.
