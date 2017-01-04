@@ -236,3 +236,17 @@ Response的状态码被分成以下几个组:
 + Server error(500-599)
 
 *** Response headers
+
+**** Accept-Ranges
+=Accept-Range= 告诉client,server能够处理client发起的range请求.
+
+=Accept-Range= 只有两种合法的格式,分别用于表示是/否接受range请求
+#+BEGIN_EXAMPLE
+  Accept-Ranges: bytes 
+  Accept-Ranges: none 
+#+END_EXAMPLE
+
+**** Age
+=Age= 说明了所请求的资源自上次请求以来至今经过了多少秒.
+
+由于网络延时能够显著影响 =Age= 的值,因此每经过一个代理可能都需要重新计算依次 =age= 的值.
