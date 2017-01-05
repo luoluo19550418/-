@@ -250,3 +250,111 @@ Response的状态码被分成以下几个组:
 =Age= 说明了所请求的资源自上次请求以来至今经过了多少秒.
 
 由于网络延时能够显著影响 =Age= 的值,因此每经过一个代理可能都需要重新计算依次 =age= 的值.
+
+**** Authentication-Info
+=Authentication-Info= 是HTTP数字验证的最后一步. 该header能让client验证Web server的身份.
+
+=Authentication-Info= 的值是一个由逗号分隔的键值对列表:
+#+BEGIN_EXAMPLE
+  Authentication-Info: qop="auth-int", rspauth="5913ebca817739aebd2655bcfb952d52",
+                       cnonce="f5e2d7c0b6a7f2e3d2c4b5a4f7e4d8c8b7a", nc="00000001"
+#+END_EXAMPLE
+
+其中各参数的意义如下:
+
++ cnonce :: 这个值与client请求中 =Authorization= header中 =cnonce= 参数的值相等.
++ nc :: 这个值与client请求中 =Authorization= header中 =nc= 参数的值相等.
++ qop :: 这个值与client请求中 =Authorization= header中 =qop= 参数的值相等.
++ nextnonce :: server要求client在以后的HTTP请求中用这个参数指定的值作为 =Authorizatioin= 中 =nonce= 的值
++ rspauth :: server的数字签名,用于验证server身份.
+
+**** Content-Disposition
+=Content-DIsposition= 用于建议client保存文件时使用的用户名.
+
+#+BEGIN_EXAMPLE
+  Content-Disposition: attachment; filename="example.pdf"
+#+END_EXAMPLE
+
+**** ETag
+=Etag= 用于标示某资源某一版本的签名. 它常用于决定缓冲中的资源副本是否已经过时.
+
+ETag headr有两种格式:
+
+1. strong entity tag:
+   #+BEGIN_EXAMPLE
+     ETag: "xxxxxx"
+   #+END_EXAMPLE
+     
+   这种格式表示ETag保证对该资源的每个存在过的版本都有唯一的一个标示.
+
+2. week entity tag:
+   #+BEGIN_EXAMPLE
+     ETag: W/"xxxxxxx"
+   #+END_EXAMPLE
+     
+   这种格式比较少见,它不保证每个版本都会有一个唯一标示, 它只说当版本间存在巨大改变时会有不同的标示.
+
+**** Location
+=Location= 告诉客户端需要访问哪个地址才能获取需要的资源. 常用于redirection
+#+BEGIN_EXAMPLE
+  Location: http://httphandbook.org/
+#+END_EXAMPLE
+
+要注意: 根据HTTP说明,这里的地址必须是 *绝对路径* 的
+
+**** Proxy-Authenticate
+=Proxy-Authenticate= 与 =WWW-Authenticate= 很类似,不过是给代理用的. 它常与 =407 Proxy Authentication Required= 状态码联用
+
+**** Refresh
+等待一段时间后跳转到其他页面
+
+#+BEGIN_EXAMPLE
+  Refresh: 3; url=http://httphandbook.org/ 
+#+END_EXAMPLE
+
+它与下面的HTML是等价的:
+#+BEGIN_SRC html
+  <meta http-equiv="refresh" content="3; url=http://httphandbook.org/"> 
+#+END_SRC
+
+**** Retry-After
+=Retry-After= 经常与3xx重定向状态码联用,表示让client至少等待一段时间后才开始下一个请求.
+
+=Retry-After= 有以下两种格式:
+#+BEGIN_EXAMPLE
+  Retry-After: Tue, 21 May 2002 12:34:56 GMT 
+  Retry-After: 600 
+#+END_EXAMPLE
+
+**** Server
+=Server= header提供给client关于server使用软件的一些信息.
+#+BEGIN_EXAMPLE
+  Server: Apache/1.3.22 (Unix)  (Red-Hat/Linux) mod_python/2.7.8 Python/1.5.2 mod_ssl/ 
+  This document was created by an unregistered ChmMagic, please go to http://www.bisenter.com to register it. Thanks .
+  2.8.5 OpenSSL/0.9.6b DAV/1.0.2 PHP/4.0.6 mod_perl/1.26 mod_throttle/3.1.2 
+#+END_EXAMPLE
+
+**** Set-Cookie
+告诉client设置cookie值
+#+BEGIN_EXAMPLE
+  Set-Cookie: fname=chris; domain=.httphandbook.org; path=/; expires=Tue, 21 May 2002 12:34:56 GMT; secure
+#+END_EXAMPLE
+
+每个 =Set-Cookie= header只设置一个cookie键值对. 
+
+上例中虽然出现了多个键值对,但只有第一个键值对是真正要设置的键值对.
+
++ domain属性设置了该cookie生效的域名
++ path属性设定个了该cookie生效的路径
++ expires属性设置了该cookie什么时候失效, 若没有该属性则说明client关闭后即失效
++ secure属性说明该cookie只有在通过安全连接发送的HTTP请求时才发送.
+
+**** Vary
+The Vary header  indicates to an intermediate proxy the request headers for which the proxy is not allowed to tolerate fluctuation.
+
+#+BEGIN_EXAMPLE
+  Vary: Accept-Language, User-Agent 
+#+END_EXAMPLE
+
+**** WWW-Authenticate
+=WWW-authenticate= 常与 =401 Unauthorized= 状态码联用,表示所请求的资源需要进行验证.
