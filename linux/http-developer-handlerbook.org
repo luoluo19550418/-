@@ -358,3 +358,84 @@ The Vary header  indicates to an intermediate proxy the request headers for whic
 
 **** WWW-Authenticate
 =WWW-authenticate= 常与 =401 Unauthorized= 状态码联用,表示所请求的资源需要进行验证.
+
+** General Headers
+
+*** Cache-Control
+=Cache-Control= header 用于控制缓存系统的行为,缓存系统一般就是架设在client和server之间的缓存代理.
+
+一个 =Cache-Control= header可以指定多个参数,参数之间用逗号分隔:
+#+BEGIN_EXAMPLE
+  Cache-Control: max-age=600, no-cache="Set-Cookie"
+#+END_EXAMPLE
+
+=Cache-Control= 常用的参数有:
+
++ no-cache
+
+  =no-cache= 并不是让缓存系统不要保留缓存副本(这是no-store的工作),而是说让它们在吧副本发送给client之前先要验证一下这些副本内容.
+
+  =no-cache= 可以不带参数也可以带参数,其带参数的形式为: ~no-cahe="header名称1,header名称2..."~
+  其表示缓存系统保留的缓存副本中不要包括这些header信息.
+
++ no-store
+  
+  =no-store= 指明了该交易的所有信息都不要保留缓存副本.
+
++ max-age
+  
+  =max-age= 指明了缓存副本在多少秒后过期
+
+  #+BEGIN_EXAMPLE
+    max-age=600
+  #+END_EXAMPLE
+
++ max-stale
+  
+  该参数可以接参数也可以不接参数:
+  
+  1. 接参数的情况下,表示即时缓存副本已经过期了,但是在多少秒呢,缓存系统依然可以发送缓存副本给客户端而无需重新验证.
+     #+BEGIN_EXAMPLE
+       max-stale=600
+     #+END_EXAMPLE
+
+  2. 在不接参数的情况下,表示即时缓存副本已经过期了,但是缓存系统依然可以发送缓存副本给客户端而无需重新验证.
+
++ min-fresh
+  
+  #+BEGIN_EXAMPLE
+    min-fresh: 600 
+  #+END_EXAMPLE
+  =min-fresh= indicates that the caching system can only send a cached copy of the resource to the Web client if the resource is not within 10 minutes (in this example) of being expired
+
++ no-transform
+  
+  =no-transform= 明确告诉缓存系统不要修改HTTP respons的内容
+
++ only-if-cached
+  
+  告诉缓存系统不要联系server,而是使用自己的缓存副本回复client
+
++ cache-extension
+
++ public
+
++ private
+
++ no-cache
+
++ no-store
+
++ no-transform
+
++ must-revalidate
+
++ proxy-revalidate
+
++ max-age
+
++ s-maxage
+
++ cache-extension
+
++ 
