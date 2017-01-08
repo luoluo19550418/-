@@ -229,6 +229,22 @@ expr能够识别少量的数字和字符串操作符.
 | length STRING            | 返回字符串STRING的字符长度                                  |
 | + TOKEN                  | 将TOKEN解释成字符串,即使TOKEN为关键字                       |
 | (EXPRESSION)             | 返回计算式EXPRESSION的值                                           |
+** let命令
+let命令与expr命令有点类似,但不需要在变量前加上 =$= 符号,且变量与元算符之间无需空格分隔.
+#+BEGIN_SRC shell :exports both :results org
+  x=200
+  let x=x+5
+  echo "x=$x"
+  let y=x-3
+  echo "y=$y"
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+x=205
+y=202
+#+END_SRC
+
 ** 使用方括号
 在bash中,将一个数学运算结果赋值给某个变量可以使用 =var = $[EXPRESSION]= 来进行.
 
