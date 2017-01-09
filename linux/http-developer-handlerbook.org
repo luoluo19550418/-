@@ -416,26 +416,188 @@ The Vary header  indicates to an intermediate proxy the request headers for whic
   
   告诉缓存系统不要联系server,而是使用自己的缓存副本回复client
 
-+ cache-extension
++ cache的其他自定义指定
+
+  若代理不清楚这些自定义指令的意义,那么就忽略这些指令.
 
 + public
+  
+  允许任何缓存系统缓存任何东西
 
 + private
+  
+  The =private= directive  allows caching, but not on shared caches.
 
 + no-cache
+  
+  =no-cache= 并不是说让缓存系统不保存缓存了,而是说它需要在发送缓存副本回client之前需要先校验一下缓存是否可用.
 
 + no-store
+  
+  让缓存系统不要缓存该交易
 
 + no-transform
+  
+  明确要求缓存系统不能修改HTTP回应的content部分.
 
 + must-revalidate
+  
+  要求缓存总是去验证它的有效性,以防过期
 
 + proxy-revalidate
-
-+ max-age
+  
+  与 =must-revalidate= 一样,只不过不需要校验 private cache的有效性.
 
 + s-maxage
 
-+ cache-extension
+  与 =max-age= 一样,只不过对private cache无效.
 
-+ 
+*** Connection
+HTTP中的连接管理主要靠 =Connection= header来实现. 该header通常有两种值:
+
+#+BEGIN_EXAMPLE
+  Connection: Keep-Alive 
+  Connection: Close 
+  Connection: Upgrade
+#+END_EXAMPLE
+
+在HTTP/1.1中,持久化连接是默认的行为,因此 =Connection: Keep-Alive= 很少用.
+
+一般只是在完成当前交易后用 =Connection: Close= 来关闭该持久连接.
+
+而 =Connection: Upgrade= 用于升级协议时的请求和回复中.
+
+*** Date
+=Date= header指明了产生该HTTP消息时的系统时间.
+
+#+BEGIN_EXAMPLE
+  Date: Tue, 21 May 2002 12:34:56 GMT 
+#+END_EXAMPLE
+
+*** Pragma
+Pragma在HTTP/1.0时常用于控制缓存行为,但是在HTTP/1.1时引入了更灵活的 =Cache-Control=,因此现在 =Pragma= 已经不太常用了.
+
+*** Keep-Alive
+=Keep-Alive= 基本上也被废弃不用了. 
+
+有些浏览器会接受类似 =Keep-Alive: 300= 这样的写法,表示TCP连接最多保持300秒
+
+*** Trailer
+使用 =Trailer= header允许HTTP消息在content之后再添加一些额外的header. 即
+
+HTTP消息原本格式应该是:
+#+BEGIN_EXAMPLE
+  Request line (HTTP requests)/Status line (HTTP responses)
+  HTTP headers
+  Content
+#+END_EXAMPLE
+
+使用了 =Trailer= header之后可以是这样的:
+#+BEGIN_EXAMPLE
+  Request line (HTTP requests)/Status line (HTTP responses)
+  HTTP headers
+  Content
+  HTTP headers
+#+END_EXAMPLE
+
+使用 =Trailer= header需要注意两点:
+
+1. 必须与 =Transfer-Encoding: chunked= 联用
+2. 哪些header能在content后,由 =Trailer= header的值决定.
+
+下面是一个使用了 =Trailer= header的例子
+#+BEGIN_SRC html
+  HTTP/1.1 200 OK 
+  Content-Type: text/html 
+  Transfer-Encoding: chunked 
+  Trailer: Date 
+  7f 
+  <html> 
+  <head> 
+  <title>Transfer-Encoding Example</title> 
+  </head> 
+  <body> 
+  <p>Please wait while we complete your transaction ...</p> 
+  2c 
+  This document was created by an unregistered ChmMagic, please go to http://www.bisenter.com to register it. Thanks .
+  <p>Transaction complete!</p> 
+  </body> 
+  </html> 
+  0 
+  Date: Tue, 21 May 2002 12:34:56 GMT
+#+END_SRC
+
+*** Transfer-Encoding
+在没有持久连接的情况下,Web client可以认为当TCP连接断了就说明Server已经发送完了所有的回复内容.
+
+但是在开启了持久连接的情况下,Web Server就需要有一种方式告诉Web client是否已经发送完了所有的回复内容,这种方式就是告诉client要发送的content的长度是多少.
+
+而者带来的一个缺点就是,若server回复的内容是动态生成的话,server就不得不等待所有内容都生成后才开始回应.
+
+为了解决这个缺陷,于是引入了 =Transfer-Encoding= header,实际使用中,它只有一种使用形式: 
+#+BEGIN_EXAMPLE
+  Transfer-Encoding: chunked
+#+END_EXAMPLE
+
+它允许server将一个response切成几片来回复. 下面是一个例子:
+#+BEGIN_SRC html
+  HTTP/1.1 200 OK 
+  Date: Tue, 21 May 2002 12:34:56 GMT 
+  Content-Type: text/html 
+  Transfer-Encoding: chunked 
+  7f 
+  <html> 
+  <head> 
+  <title>Transfer-Encoding Example</title> 
+  </head> 
+  <body> 
+  <p>Please wait while we complete your transaction ...</p> 
+  2c 
+  <p>Transaction complete!</p> 
+  </body> 
+  </html> 
+  0
+#+END_SRC
+
+可以看到,回复中无需 =Content-Length= header. 另外当出现大小为0的切片时,表示回复结束了.
+
+*** Upgrade
+=Upgrade= header提供了一种web server与web client之间协商更改协议的途径.
+
+一般来说协商都会由client发起的:
+#+BEGIN_EXAMPLE
+  GET / HTTP/1.1 
+  Host: 127.0.0.1 
+  Upgrade: TLS/1.0 
+  Connection: Upgrade
+#+END_EXAMPLE
+
+随后Server会回复一个 =101 Switching Protocols= 的状态码,以及同样的 =Upgrade= header与 =Connection= header
+#+BEGIN_EXAMPLE
+  HTTP/1.1 101 Switching Protocols 
+  Upgrade: TLS/1.0, HTTP/1.1 
+  Connection: Upgrade 
+#+END_EXAMPLE
+
+随后,所有client发送的消息都需通过新协议来进行了.
+
+*** Via
+常与 =TRACE= header联用, 中间代里将自己作为节点添加到 =Via= header中
+
+*** Warning
+在回复中提供潜在问题的警告. 一般常用于缓存代理回复client时
+
+一个warning的格式一般是这样的:
+#+BEGIN_EXAMPLE
+  Warning: 警告代号 HOST 警告描述
+#+END_EXAMPLE
+
+常见的警告代号有:
+
++ 110 :: Response is stale
++ 110 :: Revalidation failed
++ 112 :: Disconnected operation
++ 113 :: Heuristic expiration
++ 199 :: Miscellaneous warning
++ 214 :: Transformation applied
++ 299 :: MIscellaneous persistent warning
