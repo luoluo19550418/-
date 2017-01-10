@@ -601,3 +601,95 @@ HTTP消息原本格式应该是:
 + 199 :: Miscellaneous warning
 + 214 :: Transformation applied
 + 299 :: MIscellaneous persistent warning
+
+** Entity Headers
+entity headers一般用于描述关于content的信息,原则上它既可以在request也可以在response中使用,然而由于request很少会有带content的情况,所以一般在request中比较少见.
+
+*** Allow
+
+=Allow= header常用于以下两种情况中:
+
++ 在 =PUT= request中指明Web server应该允许以哪些method访问指定资源
+
++ 在 =405 Method Not Allowed= 的response中指明实际上只能允许哪些method访问指定资源
+
+=Allow= header的值为一列以逗号分隔的request method,例如:
+#+BEGIN_EXAMPLE
+  Allow: GET, HEAD, POST
+#+END_EXAMPLE
+
+*** Content-Encoding
+
+指明content部分经过哪种编码方式的处理,一般常见的编码方式有以下三种:
+
++ compress :: 使用与 =compress= 同名的UNIX程序的压缩算法
++ deflate :: 使用zlib格式化content,然后用deflate进行压缩
++ gzip :: 使用gzip进行压缩
+
+若在request中对content使用了某种编码方式,而server无法识别,则server需要回复 =415 Unsupported Media Type= response
+
+但这种错误应该很少见,因为client可以先用 =Accept-Encoding= 来探测server支持哪些编码方式.
+
+*** Content-Language
+
+指明了content中使用的是哪个语种. 
+
+client可以使用 =Accept-Language= 来探测server支持哪些语种
+
+*** Content-Length
+
+指明content的字节长度
+
+*** Content-Location
+
+若由于某种原因返回资源的URL与请求的URL不相符,这种情况下就会用 =Content-Location= 来说明实际的URL了
+
+比如,若request中使用 =Accept-Language= 指定了某种语言,那么server可能会回复指定语言的替代版本的资源给client.
+
+*** Content-MD5
+
+content的签名,但不是直接的MD5的值,而是需要将MD5的值再转换成BASE64格式,因为MD5的128位结果可能不能完全用16个可输出的ASCII字符来表示.
+
+接收方消息后,也需要作相同的动作,然后对比一下签名是否正确.
+
+*** Content-Range
+
+当Web server只返回请求资源的某一部分内容时会使用 =Content-Range= header
+
+一个Content-Range的格式可能是这样的:
+#+BEGIN_EXAMPLE
+  Content-Range: 600-900/1234
+#+END_EXAMPLE
+
+这表示返回的内容是第600字节-900字节之间的内容,而总资源长度是1234字节.
+
+另外需要注意的是,资源字节的索引是从0开始的,因此实际总资源的范围是0字节-1234字节
+
+当然还有其他的Content-Range格式:
+#+BEGIN_EXAMPLE
+  Content-Range: 600-900
+  Content-Range: 500-
+  Content-Range: -1000
+#+END_EXAMPLE
+
+值得注意的是,虽然 =Range= header在请求资源时可以一次性请求多个片段(例如 =Range: bytes 100-200,600-900=),但 =Content-Range= header一次只能指定一个范围范围,因此这些片段会被拆成多个消息返回,但会将 =Content-Type= 设置为 =multipart/byteranges=
+
+若server能支持只返回部分内容,则使用 =206 Partial Content= 作为返回码,否则使用 =416 Reuqested Range Not Satisfiable= 返回码,且 =Content-Range= 是这样的" =Content-Range: */1234=
+
+*** Content-Type
+
+指明Content的类型
+
+*** Expire
+
+指明资源可能在什么时候失效,同时也暗示着在那个事件之前,资源的内容不太可能发生改变.
+#+BEGIN_EXAMPLE
+  Expires: Tue, 21 May 2002 12:34:56 GMT 
+#+END_EXAMPLE
+
+*** Last-Modified
+
+指明资源最后一次修改时间是什么时候
+#+BEGIN_EXAMPLE
+  Last-Modified: Tue, 21 May 2002 12:34:56 GMT 
+#+END_EXAMPLE
