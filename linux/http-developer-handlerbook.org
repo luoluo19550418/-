@@ -777,3 +777,44 @@ URL的要求是不能出现以下字符集的:
   为了表示哪些不可用的字符,就需要对URL进行转义. 转义的方法是将这些字符用 =%XXXX= 的格式进行表示,其中 =XXXX= 表示字符查到16进制编码
 
   因此 =http://www.httphandbook.org/= 就会被编码成 =http%3a%2f%2fwww.httphandbook.org%2f=,其中的 =:= 编码成了 =%3a=, =/= 编码成了 =%2f=
+
+** Media Type
+Media types一般用在 =Accept= request header 和 =Content-Type= entity header中.
+
+*** Media Type的格式
+
+Media type有type和subtype组成,它可能有三种格式:
+#+BEGIN_EXAMPLE
+  ,*/*
+  type/*
+  type/subtype
+#+END_EXAMPLE
+
+*** Media Type的分类
+
+目前IANA定义了8中type:
+
++ [[http://www.iana.org/assignments/media-types/application/][application]]
++ [[http://www.iana.org/assignments/media-types/audio/][audio]]
++ [[http://www.iana.org/assignments/media-types/image/][image]]
++ [[http://www.iana.org/assignments/media-types/message/][message]]
++ [[http://www.iana.org/assignments/media-types/model/][model]]
++ [[http://www.iana.org/assignments/media-types/multipart][multipart]]
++ [[http://www.iana.org/assignments/media-types/text/][text]]
++ [[http://www.iana.org/assignments/media-types/video/][video]]
+
+* Mantaining State
+
+** 使用Cookies管理HTTP状态
+
+*** 认证,识别与用户数据
+
+用户通过服务端的认证后,服务端应该会分配一个识别码给客户端,然后在数据库中使用该识别码作为主键与其他用户数据相关联.
+
+由于该识别码是client向server表明身份的唯一数据,因此它必须唯一,且难以伪造.
+
+识别过程不一定发生在认证之后,有些服务器也会在认证之前就为client分配一个识别码,这样可以让server识别各个匿名用户.
+
+** 其他管理状态的方式
+
+** 维护客户端数据
