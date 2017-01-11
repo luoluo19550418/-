@@ -693,3 +693,87 @@ content的签名,但不是直接的MD5的值,而是需要将MD5的值再转换�
 #+BEGIN_EXAMPLE
   Last-Modified: Tue, 21 May 2002 12:34:56 GMT 
 #+END_EXAMPLE
+
+** 关于HTTP报文格式的详细说明
+
+*** 行结束符
+HTTP报文中的行结束符原则上应该使用 =CRLF(\r\n)=,但也有直接使用 =\n= 的.
+
+在header与content之间是由一个空行来进行分隔的.
+
+*** Header的格式
+所有HTTP header的格式都是这样的:
+#+BEGIN_EXAMPLE
+  Header-Name: value
+#+END_EXAMPLE
+这里若 =Header-Name= 是由多个单词组成的那么单词之间使用 =-= 来连接,且每个单词的首字母都是大写的. 
+
+不过也有一些实现是只有第一个单词的首字母大写,其实严格来说是不符合定义的.
+
+=value= 的格式倒是五花八门,由每个Header自己来决定.
+
+*** 日期的格式
+日期的格式一般是这样的:
+#+BEGIN_EXAMPLE
+  Tue, 21 May 2002 12:34:56 GMT
+#+END_EXAMPLE
+
++ 前三个字符表示星期几,后面跟着逗号和空格
++ 然后是2个数字的日,接上一个空格
++ 然后是3个字符的月,接上一个空格
++ 然后是4个数字的年,接上一个空格
++ 然后是2个数字的时,接上一个 =:=
++ 然后是2个数字的分,接上一个 =:=
++ 然后是2个数字的秒,接上一个空格以及一个 =GMT=
+  
+但是在某些HTTP消息中还可能会出现两种格式的日期:
+#+BEGIN_EXAMPLE
+  Tuesday, 21-May-02 12:34:56 GMT
+  Tue May 21 12:34:56 2002
+#+END_EXAMPLE
+但是不推荐使用这种非标准的格式
+
+*** URL Encoding
+URL的要求是不能出现以下字符集的:
+
++ 非ASCII字符
+
++ 不可输出的ASCII字符
+
++ 保留字符
+
+  | 字符编码 | 意义                  |
+  |----------+-----------------------|
+  |       32 | Space ( )             |
+  |       33 | Exclamation (!)       |
+  |       34 | Quotation marks (")   |
+  |       35 | Pound sign (#)        |
+  |       36 | Dollar sign ($)       |
+  |       37 | Percent sign (%)      |
+  |       38 | Ampersand (&)         |
+  |       39 | Apostrophe (')        |
+  |       40 | Left parenthesis (()  |
+  |       41 | Right parenthesis ()) |
+  |       43 | Plus sign (+)         |
+  |       44 | Comma (,)             |
+  |       47 | Slash (/)             |
+  |       58 | Colon (:)             |
+  |       59 | Semicolon (;)         |
+  |       60 | Less than sign (<)    |
+  |       61 | Equals sign (=)       |
+  |       62 | Greater than sign (>) |
+  |       63 | Question mark (?)     |
+  |       64 | At symbol (@)         |
+  |       91 | Left bracket ([)      |
+  |       92 | Backslash (\)         |
+  |       93 | Right bracket (])     |
+  |       94 | Caret (^)             |
+  |       96 | Backtick (`)          |
+  |      123 | Left brace ({)        |
+  |      124 | Pipe (\vert)          |
+  |      125 | Right brace (})       |
+  |      126 | Tilde (~)             |
+  
+  为了表示哪些不可用的字符,就需要对URL进行转义. 转义的方法是将这些字符用 =%XXXX= 的格式进行表示,其中 =XXXX= 表示字符查到16进制编码
+
+  因此 =http://www.httphandbook.org/= 就会被编码成 =http%3a%2f%2fwww.httphandbook.org%2f=,其中的 =:= 编码成了 =%3a=, =/= 编码成了 =%2f=
