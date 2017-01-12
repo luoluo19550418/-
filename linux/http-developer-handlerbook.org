@@ -815,6 +815,48 @@ Media type有type和subtype组成,它可能有三种格式:
 
 识别过程不一定发生在认证之后,有些服务器也会在认证之前就为client分配一个识别码,这样可以让server识别各个匿名用户.
 
+*** 使用Cookie来识别用户
+
+server通过 =Set-Cookie= 为用户分配一个识别码,然后该用户在后面的请求中在 =Cookie= header中使用该识别码,这样server就能知道哪些请求是这个用户发起的了.
+
+当server用 =Set-Cookie= 为client设置cookie时,server并不能确定client是否接受了这个cookie,它必须查看client在后续请求中是否在 =Cookie= header中发送了设置的cookie值才能确定client是否支持cookie机制.
+因此,有些开发者会同时使用 =Location= header让client重定向访问另一个URL,当client访问另一个URL时它就会使用新cookie的值设置 =Cookie= header了,这样server就能判断出来client是否支持cookie机制了.
+
+*** 使用Cookie属性来限制访问
+
+当server使用 =Set-Cookie= 来设置cookie时,还可以包含一些额外的信息来约束该cookie的有效性.
+例如:
+#+BEGIN_EXAMPLE
+  Set-Cookie: first_name=chris; domain=.httphandbook.org; 
+              expires=Tue, 21 May 2002 12:34:56 GMT; path=/; secure
+#+END_EXAMPLE
+
++ domain=.httphanbook.org :: 该Cookie只有在访问httphandbook.org的 *子域名* 时才发送过来. 默认表示当前资源的域名.
++ expires=Tue, 21 May 2002 12:34:56 :: 该Cookie只保留到指定的过期时间. 默认表示只将cookie保存在内存中,因此浏览器关闭后就失效了.
++ path=/ :: 只有在访问指定路径下的资源时才发送该cookie. 默认为根路径.
++ secure :: 只有request是在类似SSL或TLS这一类安全协议上发起时才发送该cookie
+
+除了这几个属性外,还有一些规范中定义了但是实际上没多少人用的属性:
+
++ comment :: 说明这个cookie用来做什么的
++ max-age :: 定义这个cookie的生存期,以秒为单位
++ version :: 该cookie状态管理的版本号
+     
+虽然 =Set-Cookie= 有很多属性,但他们只是用于告诉浏览器什么情况下可以发送该cookie, 在 =Cookie= header中仅仅只包含cookie名称和cookie值而已.
+
+*** Cookie的私隐和安全性问题
+
++ Cookie可能被滥用来收集一些客户的隐私数据
++ 若基于非secure的协议传递HTTP,Cookie的值可能能被嗅探到
++ 浏览器的漏洞也可能造成其他域名读写到本不属于它的cookie
+
+因此,当用Cookie保存用户识别码时,还常常会保存一个验证码,用于验证这个识别码是否被篡改,例如:
+#+BEGIN_EXAMPLE
+  unique_id=123456789 
+  cv=af6128fb91cc4d4e411863cb119466c6
+#+END_EXAMPLE
+其中 =unique_id= 为识别码, =cv= 为验证信息,它是 =SECRET123456789SECRET= 的MD5码.
+
 ** 其他管理状态的方式
 
 ** 维护客户端数据
