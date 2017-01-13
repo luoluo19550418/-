@@ -871,5 +871,36 @@ server通过 =Set-Cookie= 为用户分配一个识别码,然后该用户在后�
 
 * 性能
 
+** HTTP对性能的影响
 
+*** Cache
 
+对于web开发来说,一般存在三种类型的cache:
+
++ server端的cache :: 将动态生成的内容保存下来防止下一次重新生成的开销
++ client端的cache :: 将网页保存下来,这样不用再去向server请求了
++ proxy端的cache :: 可以直接使用cache中的副本回复client的request,而不用再去server重新取一次资源.
+
+使用cache至少能带来三大好处:
+
++ 减少用户等待的时间
++ 减少网络负载
++ 减少服务器的负载
+
+但cache也可能带来一些问题:
+
++ 用户看到的是过期的内容
++ 用户看到了其他用户的内容
++ 敏感信息被缓存
+
+HTTP定义了一些与cache相关的header可以控制cache的行为:
+
++ Cache-Control :: 控制cache的有效期(max-age),哪些header不能被cache(no-cache),
++ 
+*** 管理连接
+
+*** 压缩
+
+*** 只请求部分内容
+
+*** 分片传输
