@@ -1,0 +1,61 @@
+#+TITLE: 系统管理工具
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2017-01-14 Sat 22:20]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 内存
+** free命令:内存详细信息查询
+free命令用于显示系统使用和空闲的内存情况,设计的内存包括物理内存,交换分区,内核缓冲区内存以及高速缓存.
+
+free的语法为
+#+BEGIN_EXAMPLE
+  free [-b] [-k] [-m] [-g] [-o] [-t] [-s delay] [-c count] [-V]
+#+END_EXAMPLE
+
+其中:
+| 选项     | 说明                                        |
+|----------+---------------------------------------------|
+| -b       | 显示内存单位为字节                          |
+| -k       | 显示内存单位为kb                            |
+| -m       | 显示内存单位为mb                            |
+| -g       | 显示内存单位为gb                            |
+| -o       | 按旧格式进行显示,即不显示-/+buffers/cache行 |
+| -t       | 显示RAM以及swap的总和                       |
+| -s delay | 没间隔一段时间刷新一次,单位为秒             |
+| -c count | 设定刷新的次数                              |
+| -V       | 显示版本并退出                                     |
+
+#+BEGIN_SRC shell :exports both :results org
+  free -t -c 3
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+              total        used        free      shared  buff/cache   available
+Mem:        1019220      174272      603136         644      241812      693196
+Swap:       2097148           0     2097148
+Total:      3116368      174272     2700284
+
+              total        used        free      shared  buff/cache   available
+Mem:        1019220      174392      603012         648      241816      693072
+Swap:       2097148           0     2097148
+Total:      3116368      174392     2700160
+
+              total        used        free      shared  buff/cache   available
+Mem:        1019220      174392      603012         648      241816      693072
+Swap:       2097148           0     2097148
+Total:      3116368      174392     2700160
+#+END_SRC
+
+* CPU
+** uname -m 命令:显示CPU架构
+=uname -m=,用于查询并显示主机的体系结构
+#+BEGIN_SRC shell
+  uname -m
+#+END_SRC
+
+#+RESULTS:
+: i686
+
