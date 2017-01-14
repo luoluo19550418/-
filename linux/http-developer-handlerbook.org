@@ -416,26 +416,491 @@ The Vary header  indicates to an intermediate proxy the request headers for whic
   
   告诉缓存系统不要联系server,而是使用自己的缓存副本回复client
 
-+ cache-extension
++ cache的其他自定义指定
+
+  若代理不清楚这些自定义指令的意义,那么就忽略这些指令.
 
 + public
+  
+  允许任何缓存系统缓存任何东西
 
 + private
+  
+  The =private= directive  allows caching, but not on shared caches.
 
 + no-cache
+  
+  =no-cache= 并不是说让缓存系统不保存缓存了,而是说它需要在发送缓存副本回client之前需要先校验一下缓存是否可用.
 
 + no-store
+  
+  让缓存系统不要缓存该交易
 
 + no-transform
+  
+  明确要求缓存系统不能修改HTTP回应的content部分.
 
 + must-revalidate
+  
+  要求缓存总是去验证它的有效性,以防过期
 
 + proxy-revalidate
-
-+ max-age
+  
+  与 =must-revalidate= 一样,只不过不需要校验 private cache的有效性.
 
 + s-maxage
 
-+ cache-extension
+  与 =max-age= 一样,只不过对private cache无效.
 
+*** Connection
+HTTP中的连接管理主要靠 =Connection= header来实现. 该header通常有两种值:
+
+#+BEGIN_EXAMPLE
+  Connection: Keep-Alive 
+  Connection: Close 
+  Connection: Upgrade
+#+END_EXAMPLE
+
+在HTTP/1.1中,持久化连接是默认的行为,因此 =Connection: Keep-Alive= 很少用.
+
+一般只是在完成当前交易后用 =Connection: Close= 来关闭该持久连接.
+
+而 =Connection: Upgrade= 用于升级协议时的请求和回复中.
+
+*** Date
+=Date= header指明了产生该HTTP消息时的系统时间.
+
+#+BEGIN_EXAMPLE
+  Date: Tue, 21 May 2002 12:34:56 GMT 
+#+END_EXAMPLE
+
+*** Pragma
+Pragma在HTTP/1.0时常用于控制缓存行为,但是在HTTP/1.1时引入了更灵活的 =Cache-Control=,因此现在 =Pragma= 已经不太常用了.
+
+*** Keep-Alive
+=Keep-Alive= 基本上也被废弃不用了. 
+
+有些浏览器会接受类似 =Keep-Alive: 300= 这样的写法,表示TCP连接最多保持300秒
+
+*** Trailer
+使用 =Trailer= header允许HTTP消息在content之后再添加一些额外的header. 即
+
+HTTP消息原本格式应该是:
+#+BEGIN_EXAMPLE
+  Request line (HTTP requests)/Status line (HTTP responses)
+  HTTP headers
+  Content
+#+END_EXAMPLE
+
+使用了 =Trailer= header之后可以是这样的:
+#+BEGIN_EXAMPLE
+  Request line (HTTP requests)/Status line (HTTP responses)
+  HTTP headers
+  Content
+  HTTP headers
+#+END_EXAMPLE
+
+使用 =Trailer= header需要注意两点:
+
+1. 必须与 =Transfer-Encoding: chunked= 联用
+2. 哪些header能在content后,由 =Trailer= header的值决定.
+
+下面是一个使用了 =Trailer= header的例子
+#+BEGIN_SRC html
+  HTTP/1.1 200 OK 
+  Content-Type: text/html 
+  Transfer-Encoding: chunked 
+  Trailer: Date 
+  7f 
+  <html> 
+  <head> 
+  <title>Transfer-Encoding Example</title> 
+  </head> 
+  <body> 
+  <p>Please wait while we complete your transaction ...</p> 
+  2c 
+  This document was created by an unregistered ChmMagic, please go to http://www.bisenter.com to register it. Thanks .
+  <p>Transaction complete!</p> 
+  </body> 
+  </html> 
+  0 
+  Date: Tue, 21 May 2002 12:34:56 GMT
+#+END_SRC
+
+*** Transfer-Encoding
+在没有持久连接的情况下,Web client可以认为当TCP连接断了就说明Server已经发送完了所有的回复内容.
+
+但是在开启了持久连接的情况下,Web Server就需要有一种方式告诉Web client是否已经发送完了所有的回复内容,这种方式就是告诉client要发送的content的长度是多少.
+
+而者带来的一个缺点就是,若server回复的内容是动态生成的话,server就不得不等待所有内容都生成后才开始回应.
+
+为了解决这个缺陷,于是引入了 =Transfer-Encoding= header,实际使用中,它只有一种使用形式: 
+#+BEGIN_EXAMPLE
+  Transfer-Encoding: chunked
+#+END_EXAMPLE
+
+它允许server将一个response切成几片来回复. 下面是一个例子:
+#+BEGIN_SRC html
+  HTTP/1.1 200 OK 
+  Date: Tue, 21 May 2002 12:34:56 GMT 
+  Content-Type: text/html 
+  Transfer-Encoding: chunked 
+  7f 
+  <html> 
+  <head> 
+  <title>Transfer-Encoding Example</title> 
+  </head> 
+  <body> 
+  <p>Please wait while we complete your transaction ...</p> 
+  2c 
+  <p>Transaction complete!</p> 
+  </body> 
+  </html> 
+  0
+#+END_SRC
+
+可以看到,回复中无需 =Content-Length= header. 另外当出现大小为0的切片时,表示回复结束了.
+
+*** Upgrade
+=Upgrade= header提供了一种web server与web client之间协商更改协议的途径.
+
+一般来说协商都会由client发起的:
+#+BEGIN_EXAMPLE
+  GET / HTTP/1.1 
+  Host: 127.0.0.1 
+  Upgrade: TLS/1.0 
+  Connection: Upgrade
+#+END_EXAMPLE
+
+随后Server会回复一个 =101 Switching Protocols= 的状态码,以及同样的 =Upgrade= header与 =Connection= header
+#+BEGIN_EXAMPLE
+  HTTP/1.1 101 Switching Protocols 
+  Upgrade: TLS/1.0, HTTP/1.1 
+  Connection: Upgrade 
+#+END_EXAMPLE
+
+随后,所有client发送的消息都需通过新协议来进行了.
+
+*** Via
+常与 =TRACE= header联用, 中间代里将自己作为节点添加到 =Via= header中
+
+*** Warning
+在回复中提供潜在问题的警告. 一般常用于缓存代理回复client时
+
+一个warning的格式一般是这样的:
+#+BEGIN_EXAMPLE
+  Warning: 警告代号 HOST 警告描述
+#+END_EXAMPLE
+
+常见的警告代号有:
+
++ 110 :: Response is stale
++ 110 :: Revalidation failed
++ 112 :: Disconnected operation
++ 113 :: Heuristic expiration
++ 199 :: Miscellaneous warning
++ 214 :: Transformation applied
++ 299 :: MIscellaneous persistent warning
+
+** Entity Headers
+entity headers一般用于描述关于content的信息,原则上它既可以在request也可以在response中使用,然而由于request很少会有带content的情况,所以一般在request中比较少见.
+
+*** Allow
+
+=Allow= header常用于以下两种情况中:
+
++ 在 =PUT= request中指明Web server应该允许以哪些method访问指定资源
+
++ 在 =405 Method Not Allowed= 的response中指明实际上只能允许哪些method访问指定资源
+
+=Allow= header的值为一列以逗号分隔的request method,例如:
+#+BEGIN_EXAMPLE
+  Allow: GET, HEAD, POST
+#+END_EXAMPLE
+
+*** Content-Encoding
+
+指明content部分经过哪种编码方式的处理,一般常见的编码方式有以下三种:
+
++ compress :: 使用与 =compress= 同名的UNIX程序的压缩算法
++ deflate :: 使用zlib格式化content,然后用deflate进行压缩
++ gzip :: 使用gzip进行压缩
+
+若在request中对content使用了某种编码方式,而server无法识别,则server需要回复 =415 Unsupported Media Type= response
+
+但这种错误应该很少见,因为client可以先用 =Accept-Encoding= 来探测server支持哪些编码方式.
+
+*** Content-Language
+
+指明了content中使用的是哪个语种. 
+
+client可以使用 =Accept-Language= 来探测server支持哪些语种
+
+*** Content-Length
+
+指明content的字节长度
+
+*** Content-Location
+
+若由于某种原因返回资源的URL与请求的URL不相符,这种情况下就会用 =Content-Location= 来说明实际的URL了
+
+比如,若request中使用 =Accept-Language= 指定了某种语言,那么server可能会回复指定语言的替代版本的资源给client.
+
+*** Content-MD5
+
+content的签名,但不是直接的MD5的值,而是需要将MD5的值再转换成BASE64格式,因为MD5的128位结果可能不能完全用16个可输出的ASCII字符来表示.
+
+接收方消息后,也需要作相同的动作,然后对比一下签名是否正确.
+
+*** Content-Range
+
+当Web server只返回请求资源的某一部分内容时会使用 =Content-Range= header
+
+一个Content-Range的格式可能是这样的:
+#+BEGIN_EXAMPLE
+  Content-Range: 600-900/1234
+#+END_EXAMPLE
+
+这表示返回的内容是第600字节-900字节之间的内容,而总资源长度是1234字节.
+
+另外需要注意的是,资源字节的索引是从0开始的,因此实际总资源的范围是0字节-1234字节
+
+当然还有其他的Content-Range格式:
+#+BEGIN_EXAMPLE
+  Content-Range: 600-900
+  Content-Range: 500-
+  Content-Range: -1000
+#+END_EXAMPLE
+
+值得注意的是,虽然 =Range= header在请求资源时可以一次性请求多个片段(例如 =Range: bytes 100-200,600-900=),但 =Content-Range= header一次只能指定一个范围范围,因此这些片段会被拆成多个消息返回,但会将 =Content-Type= 设置为 =multipart/byteranges=
+
+若server能支持只返回部分内容,则使用 =206 Partial Content= 作为返回码,否则使用 =416 Reuqested Range Not Satisfiable= 返回码,且 =Content-Range= 是这样的" =Content-Range: */1234=
+
+*** Content-Type
+
+指明Content的类型
+
+*** Expire
+
+指明资源可能在什么时候失效,同时也暗示着在那个事件之前,资源的内容不太可能发生改变.
+#+BEGIN_EXAMPLE
+  Expires: Tue, 21 May 2002 12:34:56 GMT 
+#+END_EXAMPLE
+
+*** Last-Modified
+
+指明资源最后一次修改时间是什么时候
+#+BEGIN_EXAMPLE
+  Last-Modified: Tue, 21 May 2002 12:34:56 GMT 
+#+END_EXAMPLE
+
+** 关于HTTP报文格式的详细说明
+
+*** 行结束符
+HTTP报文中的行结束符原则上应该使用 =CRLF(\r\n)=,但也有直接使用 =\n= 的.
+
+在header与content之间是由一个空行来进行分隔的.
+
+*** Header的格式
+所有HTTP header的格式都是这样的:
+#+BEGIN_EXAMPLE
+  Header-Name: value
+#+END_EXAMPLE
+这里若 =Header-Name= 是由多个单词组成的那么单词之间使用 =-= 来连接,且每个单词的首字母都是大写的. 
+
+不过也有一些实现是只有第一个单词的首字母大写,其实严格来说是不符合定义的.
+
+=value= 的格式倒是五花八门,由每个Header自己来决定.
+
+*** 日期的格式
+日期的格式一般是这样的:
+#+BEGIN_EXAMPLE
+  Tue, 21 May 2002 12:34:56 GMT
+#+END_EXAMPLE
+
++ 前三个字符表示星期几,后面跟着逗号和空格
++ 然后是2个数字的日,接上一个空格
++ 然后是3个字符的月,接上一个空格
++ 然后是4个数字的年,接上一个空格
++ 然后是2个数字的时,接上一个 =:=
++ 然后是2个数字的分,接上一个 =:=
++ 然后是2个数字的秒,接上一个空格以及一个 =GMT=
+  
+但是在某些HTTP消息中还可能会出现两种格式的日期:
+#+BEGIN_EXAMPLE
+  Tuesday, 21-May-02 12:34:56 GMT
+  Tue May 21 12:34:56 2002
+#+END_EXAMPLE
+但是不推荐使用这种非标准的格式
+
+*** URL Encoding
+URL的要求是不能出现以下字符集的:
+
++ 非ASCII字符
+
++ 不可输出的ASCII字符
+
++ 保留字符
+
+  | 字符编码 | 意义                  |
+  |----------+-----------------------|
+  |       32 | Space ( )             |
+  |       33 | Exclamation (!)       |
+  |       34 | Quotation marks (")   |
+  |       35 | Pound sign (#)        |
+  |       36 | Dollar sign ($)       |
+  |       37 | Percent sign (%)      |
+  |       38 | Ampersand (&)         |
+  |       39 | Apostrophe (')        |
+  |       40 | Left parenthesis (()  |
+  |       41 | Right parenthesis ()) |
+  |       43 | Plus sign (+)         |
+  |       44 | Comma (,)             |
+  |       47 | Slash (/)             |
+  |       58 | Colon (:)             |
+  |       59 | Semicolon (;)         |
+  |       60 | Less than sign (<)    |
+  |       61 | Equals sign (=)       |
+  |       62 | Greater than sign (>) |
+  |       63 | Question mark (?)     |
+  |       64 | At symbol (@)         |
+  |       91 | Left bracket ([)      |
+  |       92 | Backslash (\)         |
+  |       93 | Right bracket (])     |
+  |       94 | Caret (^)             |
+  |       96 | Backtick (`)          |
+  |      123 | Left brace ({)        |
+  |      124 | Pipe (\vert)          |
+  |      125 | Right brace (})       |
+  |      126 | Tilde (~)             |
+  
+  为了表示哪些不可用的字符,就需要对URL进行转义. 转义的方法是将这些字符用 =%XXXX= 的格式进行表示,其中 =XXXX= 表示字符查到16进制编码
+
+  因此 =http://www.httphandbook.org/= 就会被编码成 =http%3a%2f%2fwww.httphandbook.org%2f=,其中的 =:= 编码成了 =%3a=, =/= 编码成了 =%2f=
+
+** Media Type
+Media types一般用在 =Accept= request header 和 =Content-Type= entity header中.
+
+*** Media Type的格式
+
+Media type有type和subtype组成,它可能有三种格式:
+#+BEGIN_EXAMPLE
+  ,*/*
+  type/*
+  type/subtype
+#+END_EXAMPLE
+
+*** Media Type的分类
+
+目前IANA定义了8中type:
+
++ [[http://www.iana.org/assignments/media-types/application/][application]]
++ [[http://www.iana.org/assignments/media-types/audio/][audio]]
++ [[http://www.iana.org/assignments/media-types/image/][image]]
++ [[http://www.iana.org/assignments/media-types/message/][message]]
++ [[http://www.iana.org/assignments/media-types/model/][model]]
++ [[http://www.iana.org/assignments/media-types/multipart][multipart]]
++ [[http://www.iana.org/assignments/media-types/text/][text]]
++ [[http://www.iana.org/assignments/media-types/video/][video]]
+
+* Mantaining State
+
+** 使用Cookies管理HTTP状态
+
+*** 认证,识别与用户数据
+
+用户通过服务端的认证后,服务端应该会分配一个识别码给客户端,然后在数据库中使用该识别码作为主键与其他用户数据相关联.
+
+由于该识别码是client向server表明身份的唯一数据,因此它必须唯一,且难以伪造.
+
+识别过程不一定发生在认证之后,有些服务器也会在认证之前就为client分配一个识别码,这样可以让server识别各个匿名用户.
+
+*** 使用Cookie来识别用户
+
+server通过 =Set-Cookie= 为用户分配一个识别码,然后该用户在后面的请求中在 =Cookie= header中使用该识别码,这样server就能知道哪些请求是这个用户发起的了.
+
+当server用 =Set-Cookie= 为client设置cookie时,server并不能确定client是否接受了这个cookie,它必须查看client在后续请求中是否在 =Cookie= header中发送了设置的cookie值才能确定client是否支持cookie机制.
+因此,有些开发者会同时使用 =Location= header让client重定向访问另一个URL,当client访问另一个URL时它就会使用新cookie的值设置 =Cookie= header了,这样server就能判断出来client是否支持cookie机制了.
+
+*** 使用Cookie属性来限制访问
+
+当server使用 =Set-Cookie= 来设置cookie时,还可以包含一些额外的信息来约束该cookie的有效性.
+例如:
+#+BEGIN_EXAMPLE
+  Set-Cookie: first_name=chris; domain=.httphandbook.org; 
+              expires=Tue, 21 May 2002 12:34:56 GMT; path=/; secure
+#+END_EXAMPLE
+
++ domain=.httphanbook.org :: 该Cookie只有在访问httphandbook.org的 *子域名* 时才发送过来. 默认表示当前资源的域名.
++ expires=Tue, 21 May 2002 12:34:56 :: 该Cookie只保留到指定的过期时间. 默认表示只将cookie保存在内存中,因此浏览器关闭后就失效了.
++ path=/ :: 只有在访问指定路径下的资源时才发送该cookie. 默认为根路径.
++ secure :: 只有request是在类似SSL或TLS这一类安全协议上发起时才发送该cookie
+
+除了这几个属性外,还有一些规范中定义了但是实际上没多少人用的属性:
+
++ comment :: 说明这个cookie用来做什么的
++ max-age :: 定义这个cookie的生存期,以秒为单位
++ version :: 该cookie状态管理的版本号
+     
+虽然 =Set-Cookie= 有很多属性,但他们只是用于告诉浏览器什么情况下可以发送该cookie, 在 =Cookie= header中仅仅只包含cookie名称和cookie值而已.
+
+*** Cookie的私隐和安全性问题
+
++ Cookie可能被滥用来收集一些客户的隐私数据
++ 若基于非secure的协议传递HTTP,Cookie的值可能能被嗅探到
++ 浏览器的漏洞也可能造成其他域名读写到本不属于它的cookie
+
+因此,当用Cookie保存用户识别码时,还常常会保存一个验证码,用于验证这个识别码是否被篡改,例如:
+#+BEGIN_EXAMPLE
+  unique_id=123456789 
+  cv=af6128fb91cc4d4e411863cb119466c6
+#+END_EXAMPLE
+其中 =unique_id= 为识别码, =cv= 为验证信息,它是 =SECRET123456789SECRET= 的MD5码.
+
+** 其他管理状态的方式
+
++ 通过URL传递识别码
++ 通过post form传递识别码
+
+** 维护客户端数据
+首先你需要分清哪些信息是只在当前session生效的,哪些信息是要永久保存的.
+
+然后你需要考虑该信息是否是敏感信息,由于通过互联网传递信息总是存在泄漏的风险,因此敏感信息最好还是保存在server端,对于非敏感信息则可以保存在client端.
+
+在决定要将信息保存到client端后,下一步就是考虑用什么方式报保存了. 常用的方法是用Cookie,但也可以用URL或FORM变量来在session中传递信息.
+
+* 性能
+
+** HTTP对性能的影响
+
+*** Cache
+
+对于web开发来说,一般存在三种类型的cache:
+
++ server端的cache :: 将动态生成的内容保存下来防止下一次重新生成的开销
++ client端的cache :: 将网页保存下来,这样不用再去向server请求了
++ proxy端的cache :: 可以直接使用cache中的副本回复client的request,而不用再去server重新取一次资源.
+
+使用cache至少能带来三大好处:
+
++ 减少用户等待的时间
++ 减少网络负载
++ 减少服务器的负载
+
+但cache也可能带来一些问题:
+
++ 用户看到的是过期的内容
++ 用户看到了其他用户的内容
++ 敏感信息被缓存
+
+HTTP定义了一些与cache相关的header可以控制cache的行为:
+
++ Cache-Control :: 控制cache的有效期(max-age),哪些header不能被cache(no-cache),
 + 
+*** 管理连接
+
+*** 压缩
+
+*** 只请求部分内容
+
+*** 分片传输
