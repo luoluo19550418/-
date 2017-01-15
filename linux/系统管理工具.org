@@ -4,6 +4,7 @@
 #+DATE: [2017-01-14 Sat 22:20]
 #+LANGUAGE:  zh-CN
 #+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+#+PROPERTY: header-args:shell :exports both :results org
 
 * 内存
 ** free命令:内存详细信息查询
@@ -57,7 +58,9 @@ Total:      3116368      174392     2700160
 #+END_SRC
 
 #+RESULTS:
-: i686
+#+BEGIN_SRC org
+i686
+#+END_SRC
 ** /proc/cpuinfo: 显示处理器CPU信息
 #+BEGIN_SRC shell :exports both :results org
   cat  /proc/cpuinfo
