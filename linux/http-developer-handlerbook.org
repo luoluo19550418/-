@@ -895,9 +895,28 @@ server通过 =Set-Cookie= 为用户分配一个识别码,然后该用户在后�
 
 HTTP定义了一些与cache相关的header可以控制cache的行为:
 
-+ Cache-Control :: 控制cache的有效期(max-age),哪些header不能被cache(no-cache),
-+ 
++ Cache-Control :: 控制cache的有效期(max-age),哪些header不能被cache(no-cache),哪些response不能被缓存(no-store)
++ Last-Modified :: 判断缓存是否过期
++ ETag :: 判断缓存是否过期
++ If-Modified_Since :: 常用于当浏览器请求之前缓存过的资源时
+     
 *** 管理连接
+
+HTTP/1.1 之前的链接是默认每发起一次HTTP交易就请求一个新的TCP/IP连接,然后在收到HTTP回应后就关闭该连接.
+不过你可以使用 =Connection: Keep-Alive= 来保持该TCP/IP连接,以此实现持久化
+
+而HTTP/1.1协议则改成了默认使用一个持久化的TCP/IP连接来传输多个HTTP交易的.
+这种情况下就需要主动发起 =Connection: close= 来关闭该连接了.
+
+在HTTP/1.1协议中,client可以在接受到response之前就并发地发起多个request,例如当request一个包含三个image的html页面时,一个browser可能会经过一下步骤
+
+1. browser request html页面
+2. browser等待html页面的response,然后解析该html发现有三张图片要显示
+3. browser可以并行地request这三张图片
+4. browser并行地显示这三张图片.
+
+
+
 
 *** 压缩
 
