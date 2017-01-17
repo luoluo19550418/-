@@ -947,3 +947,19 @@ server使用 =Transfer-Encoding: chunked= 来指明某个response是采用分片
 需要注意的是,分片的长度使用 *16进制* 来标示的!
 
 ** Cache代理常用协议
+当某个cache代理中的cache过期了,它不一定要去server端获取原始内容,事实上它可以从其他cache代理请求更新的cache. 这种代理间的协作实际上很常见.
+
+多个cache代理间的协作关系主要有以下两种关系:
+
++ 继承关系(Hierarchical)
+
++ 对等关系(Peer)
+
+使用HTTP协议可以满足代理间的沟通,但是效率不佳,为此有一些专门用于cache代理间通讯的协议被发明出来了,这些协议被称为 =caching protocols=,常见的缓存协议有:
+
++ Internet Cache Protocol
++ Cache Digest Protocol
++ Cache Array Resolution Protocol
++ Web Cache Coordination Protocol
+
+
