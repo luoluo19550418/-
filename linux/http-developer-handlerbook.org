@@ -915,11 +915,35 @@ HTTP/1.1 之前的链接是默认每发起一次HTTP交易就请求一个新的T
 3. browser可以并行地request这三张图片
 4. browser并行地显示这三张图片.
 
-
-
-
 *** 压缩
+
+通过对content进行压缩,可以极大地减少带宽消耗.
+
+client首先用 =Accept-Encoding= header告诉server它支持哪些压缩方式.
+server随后选用其中一种压缩方式对content进行压缩,并在 =Content-ENcoding= header中指明压缩方式
+
+目前最常用的压缩方式有这么几种:
+
++ gzip
++ deflat
++ compress
 
 *** 只请求部分内容
 
+通过 =Range= header允许client只获取资源的部分内容. 
+
+对于这类请求,server用 =Content-Range= 和 =multi-part/byteranges= 来进行回应. 并以 =206 Partial Content= 作为返回码
+
+不过若server不能满足被请求的范围,则使用返回码 =416 Requested Range Not Satisfiable=.
+
 *** 分片传输
+
+为了增强用户体验,可以将资源内容分片传输给client,这样浏览器可以在获取到整个内容之前就开始渲染部分内容了.
+
+server使用 =Transfer-Encoding: chunked= 来指明某个response是采用分片传输的方式进行传输的.
+
+当采用分片传输时, =Content-Length= header不见了,取而代之的是在content中为每一片的内容指示长度,当资源传输完成后,使用长度0来标示没有后续分片了.
+
+需要注意的是,分片的长度使用 *16进制* 来标示的!
+
+** Cache代理常用协议
