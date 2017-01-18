@@ -962,4 +962,14 @@ server使用 =Transfer-Encoding: chunked= 来指明某个response是采用分片
 + Cache Array Resolution Protocol
 + Web Cache Coordination Protocol
 
+** Load Distribution
+Web应用通常遇到的负载分两种情况,一种为 =Transactional load=,由流量引起的. 还有一种为 =Computational load=,由计算量引起的.
+
+为了解决 =Transaction load=,就需要将整个HTTP请求分发到多个Web服务器处理. 主要通过两种方法来实现:
+
+1. 为一个域名分配多个IP,通过DNS将同一个域名解析成随机IP
+2. 使用网关进行负载均衡
+
+* 安全
+
 
