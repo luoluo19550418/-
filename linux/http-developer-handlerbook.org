@@ -972,4 +972,36 @@ Web应用通常遇到的负载分两种情况,一种为 =Transactional load=,由
 
 * 安全
 
+** 使用HTTP进行认证
+
+HTTP本身就提供了认证机制,可以为静态资源也提供认证服务.
+
+存在有两种HTTP的认证方式:
+
++ Basic authentication (基础认证) :: 这种方法简单但存在安全风险
++ Digest authentication (摘要认证) :: 这种方法安全但复杂
+
+*** Basic Authentication
+
+1. client无法预先判断其请求的资源是否需要认证,因此一开始client会尝试用普通的方法请求资源.
+2. server以 =401 Unauthorized= 状态码+ =WWW-Authenticate= header返回回应
+3. client提示用户输入用户名和密码后,在 =Authorization= header中存放认证信息(username:password的BASE64编码)再次请求资源
+4. server返回请求的资源
+
+由于会在HTTP的 =Authorization= 中存放认证信息,因此存在暴露的风险
+
+*** Digest Authentication
+
+Digest Authentication的认证步骤与Basic Authentication的步骤很接近:
+
+1. client无法预先判断其请求的资源是否需要认证,因此一开始client会尝试用普通的方法请求资源.
+2. server以 =401 Unauthorized= 状态码+ =WWW-Authenticate= header返回回应
+3. client提示用户输入用户名和密码后,在 =Authorization= header中存放认证信息(username:password的BASE64编码)再次请求资源
+4. server返回请求的资源
+
+
+
+
+
+
 
