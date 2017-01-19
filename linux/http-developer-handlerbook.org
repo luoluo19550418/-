@@ -996,12 +996,106 @@ Digest Authentication的认证步骤与Basic Authentication的步骤很接近:
 
 1. client无法预先判断其请求的资源是否需要认证,因此一开始client会尝试用普通的方法请求资源.
 2. server以 =401 Unauthorized= 状态码+ =WWW-Authenticate= header返回回应
-3. client提示用户输入用户名和密码后,在 =Authorization= header中存放认证信息(username:password的BASE64编码)再次请求资源
-4. server返回请求的资源
+3. client提示用户输入用户名和密码后,在 =Authorization= header中存放认证信息(包含消息签名以及其他关于认证的信息)再次请求资源
+4. server返回请求的资源 + =Authentication-Info= header
 
+第二步中的 =WWW-Authenticate= header指明了client需要在 =Authorization= header中提供哪些认证信息
 
+下面是一个 =WWW-Authenticate= 的例子:
+#+BEGIN_EXAMPLE
+  HTTP/1.1 401 Unauthorized 
+  WWW-Authenticate: Digest realm="HTTP Developer's Handbook", 
+                    nonce="a4b8c8d7e0f6a7b2c3d2e4f5a4b7c5d2e7f"
+#+END_EXAMPLE
 
+其中 =Digest= 表示使用签名进行认证, =nonce= 表示消息的签名是什么.
 
+此外, =WWW-Authenticate= 还包括了其他一些指令:
 
++ algorithm :: 用于生成签名的算法
++ domain :: 该认证方式对哪些URL起作用
++ opaque :: 指明client请求的 =Authorization= header也需要带上这个值
++ qop :: 保护级别,以及废弃不用
++ stale :: true表示浏览器可以使用之前的用户名和密码生成新的nonce,而false表示用户名和密码都不可用
+
+第三步中的 =Authorization= header除了包含认证信息外还有其他附加内容
+
+以下是一个 =Authorization= header的例子
+#+BEGIN_EXAMPLE
+  GET / HTTP/1.1 
+  Host: httphandbook.org 
+  Authorization: Digest username="myuser", 
+                 realm="HTTP Developer's Handbook", 
+                 uri="/", 
+                 nonce="a4b8c8d7e0f6a7b2c3d2e4f5a4b7c5d2e7f", 
+                 response="47d5aaf1b20e5b3483901267a3944737"
+#+END_EXAMPLE
+
+其中, =realm= 和 =nonce= 就是之前response中 =WWW-Authoriztion= header中对应指令的值
+
+=useername= 为认证的用户名称
+
+=response= 为消息签名,该消息签名一般会包含username,realm,password的信息,但具体的运算根据认证选项的不同而不同.
+
+=uri= 指定了请求的URL
+
+上面这些指令都是必须的,除此之外, =Authorization= 还支持其他的说明"
+
++ algorithm :: 计算消息签名的算法
++ cnonce :: 类似server认证中的 =nonce=,用于指示server回复中的序号
++ nc :: 16进制数,指明了client使用当前 =nonce= 的值发送了多少次请求l
++ opaque :: 就是上一次server response中 =opaque= 的值
++ qop :: 若server response的 =qop= 指定了多个候选项,则该属性为其中的一个选项
+
+最后一步中,server不仅仅回应第一步client所请求的资源,而且还包含一个 =Authentication-Info= header,用于完成整个认证过程.
+
+这个 =Authentication-Info= 的作用在于确认server的身份. 它的认证原理跟上一步中的 =Authentication= 的认证原理一致. 一个 =Authentication-Info= 的例子如下:
+#+BEGIN_EXAMPLE
+  HTTP/1.1 200 OK 
+  Authentication-Info: qop="auth-int", 
+                       rspauth="5913ebca817739aebd2655bcfb952d52", 
+                       cnonce="f5e2d7c0b6a7f2e3d2c4b5a4f7e4d8c8b7a", 
+                       nc="00000001"
+#+END_EXAMPLE
+
+=Authentiation-Info= header可能包含以下属性:
+
++ cnonce :: 等于client 中 =Authentiation= 的 =conce= 的值
++ nc :: 等于client 中 =Authentiation= 的 =nc= 的值
++ qop :: 等于client 中 =Authentiation= 的 =qop= 的值
++ nextnonce :: 表示client下一步的 =nonce= 应该用这个值
++ rspauth :: server端的消息签名
+
+*** SSL与TLS
+SSL是在TCP与HTTP之间搭建的一个安全层. 而TLS可以看成是SSL的一种标准化版本,TLS与SSL3.0之间的差别非常之小.
+
+在HTTP协议中,可以使用 =Upgrade= header来将HTTP升级成HTTPS. 这样一来client甚至无需更改连接的端口就能享受到SSL的好处.
+
+=Upgrade= 协议的步骤大概如下:
+
+1. client发起 =Upgrade= 申请
+   #+BEGIN_EXAMPLE
+     GET / HTTP/1.1 
+     Host: 127.0.0.1 
+     Upgrade: TLS/1.0 
+     Connection: Upgrade
+   #+END_EXAMPLE
+2. server认可升级就会发送一个回应:
+   #+BEGIN_EXAMPLE
+     HTTP/1.1 101 Switching Protocols 
+     Upgrade: TLS/1.0, HTTP/1.1 
+     Connection: Upgrade
+   #+END_EXAMPLE
+3. 基于当前的TCP连接进行SSL握手
+
+当然,server也可以主动发起 =Upgrade= 过程,强制client升级协议
+
+1. server发起 =Upgrade= 要求
+   #+BEGIN_EXAMPLE
+     HTTP/1.1 426 Upgrade Required 
+     Upgrade: TLS/1.0, HTTP/1.1 
+     Connection: Upgrade
+   #+END_EXAMPLE
+2. client收到请求后,立即升级它使用的协议,并开始SSL握手
 
 
