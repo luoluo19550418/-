@@ -1098,4 +1098,28 @@ SSL是在TCP与HTTP之间搭建的一个安全层. 而TLS可以看成是SSL的�
    #+END_EXAMPLE
 2. client收到请求后,立即升级它使用的协议,并开始SSL握手
 
+** Secure HTTP
 
+Secure HTTP的链接以 =shttp://= 开头,并且需要大量的关于加密的属性.
+
+Secure HTTP Request跟普通的HTTP request很类似,只不过它使用一种特殊的名为 =Secure= 的method来提交请求,并且它的内容就是原始的HTTP Request加密后的内容.
+
+下面是一个例子:
+#+BEGIN_EXAMPLE
+  Secure * Secure-HTTP/1.4 
+  Content-Type: message/http 
+  Content-Privacy-Domain: CMS 
+
+  加密后的http请求
+#+END_EXAMPLE
+
+Secure HTTP Response使用类似的方法来保护response的内容
+
+下面是一个例子
+#+BEGIN_EXAMPLE
+  Secure-HTTP/1.4 200 OK 
+  Content-Type: message/http 
+  Content-Privacy-Domain: CMS 
+
+  (content is encrypted) 
+#+END_EXAMPLE
