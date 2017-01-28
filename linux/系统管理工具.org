@@ -61,6 +61,49 @@ Total:      3116368      174392     2700160
 #+BEGIN_SRC org
 i686
 #+END_SRC
+* 内核模块
+** dmesg: 启动信息查询
+dmesg命令可以用来检测和控制内核的缓存,通常用来显示输出系统最后一次启动时的内核内部缓存信息. 它的语法为
+#+BEGIN_SRC shell
+  dmesg [-c] [-n level] [-s bufsize]
+#+END_SRC
+| -c         | 显示信息后清空缓存区中的信息                               |
+| -n level   | 设置将日志信息进行输出的级别. -n 1 表示输出panic级别的信息 |
+| -s bufsize | 设置查询所需要的缓存区大小,默认为16392字节                 |
+
+** modinfo命令:内核模块信息
+modinfo会检测与内核相关的模块文件,并显示检测的结果. 它的语法格式为
+#+BEGIN_SRC shell
+  modinfo -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Usage:
+	modinfo [options] filename [args]
+Options:
+	-a, --author                Print only 'author'
+	-d, --description           Print only 'description'
+	-l, --license               Print only 'license'
+	-p, --parameters            Print only 'parm'
+	-n, --filename              Print only 'filename'
+	-0, --null                  Use \0 instead of \n
+	-F, --field=FIELD           Print only provided FIELD
+	-k, --set-version=VERSION   Use VERSION instead of `uname -r`
+	-b, --basedir=DIR           Use DIR as filesystem root for /lib/modules
+	-V, --version               Show version
+	-h, --help                  Show this help
+#+END_SRC
+
+例如,要显示模块sg的相关信息,执行
+#+BEGIN_SRC shell
+  modinfo sg
+#+END_SRC
+
+* /proc 信息
+用户和程序可以通过查看/proc目录中的相关文件得到系统的运行信息,并可以更改内核的某些参数
+
+在 =/proc= 目录下有很多个以数字命名的目录,对应系统中运行的一个进程的进程号.
 ** /proc/cpuinfo: 显示处理器CPU信息
 #+BEGIN_SRC shell :exports both :results org
   cat  /proc/cpuinfo
@@ -97,6 +140,193 @@ clflush size	: 64
 cache_alignment	: 64
 address sizes	: 32 bits physical, 32 bits virtual
 power management:
+
+#+END_SRC
+** /proc/modules: 显示当前系统被加载的模块
+/proc/modules 保存了当前系统中被加载模块的相关信息:
+#+BEGIN_SRC shell 
+  cat /proc/modules
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+michael_mic 16384 0 - Live 0xf84d4000
+arc4 16384 0 - Live 0xf84cf000
+lib80211_crypt_tkip 20480 0 - Live 0xf8560000
+lib80211_crypt_ccmp 16384 2 - Live 0xf8428000
+mousedev 20480 0 - Live 0xf84c9000
+iTCO_wdt 16384 0 - Live 0xf84b3000
+iTCO_vendor_support 16384 1 iTCO_wdt, Live 0xf83a7000
+ppdev 20480 0 - Live 0xf84d9000
+pcmcia 49152 0 - Live 0xf83b1000
+psmouse 126976 0 - Live 0xf8404000
+gpio_ich 16384 0 - Live 0xf8384000
+pcspkr 16384 0 - Live 0xf837f000
+thinkpad_acpi 69632 0 - Live 0xf84a1000
+nvram 16384 1 thinkpad_acpi, Live 0xf83ff000
+snd_intel8x0 32768 0 - Live 0xf835e000
+snd_intel8x0m 20480 0 - Live 0xf8379000
+ipw2200 135168 0 - Live 0xf842d000
+snd_ac97_codec 98304 2 snd_intel8x0,snd_intel8x0m, Live 0xf8816000
+i915 1187840 2 - Live 0xf8951000
+ac97_bus 16384 1 snd_ac97_codec, Live 0xf832b000
+snd_pcm 81920 3 snd_intel8x0,snd_intel8x0m,snd_ac97_codec, Live 0xf838b000
+snd_timer 28672 1 snd_pcm, Live 0xf8371000
+drm_kms_helper 114688 1 i915, Live 0xf87b1000
+evdev 20480 5 - Live 0xf83a1000
+tg3 155648 0 - Live 0xf876e000
+input_leds 16384 0 - Live 0xf831e000
+libipw 32768 1 ipw2200, Live 0xf8368000
+drm 249856 3 i915,drm_kms_helper, Live 0xf83c1000
+lib80211 16384 3 lib80211_crypt_tkip,lib80211_crypt_ccmp,libipw, Live 0xf828f000
+ptp 20480 1 tg3, Live 0xf8325000
+pps_core 20480 1 ptp, Live 0xf8358000
+yenta_socket 40960 0 - Live 0xf834d000
+pcmcia_rsrc 20480 1 yenta_socket, Live 0xf830f000
+pcmcia_core 20480 3 pcmcia,yenta_socket,pcmcia_rsrc, Live 0xf8318000
+snd 57344 6 thinkpad_acpi,snd_intel8x0,snd_intel8x0m,snd_ac97_codec,snd_pcm,snd_timer, Live 0xf833e000
+mac_hid 16384 0 - Live 0xf828a000
+cfg80211 442368 2 ipw2200,libipw, Live 0xf8701000
+libphy 40960 1 tg3, Live 0xf8333000
+soundcore 16384 1 snd, Live 0xf8285000
+syscopyarea 16384 1 drm_kms_helper, Live 0xf8275000
+i2c_i801 24576 0 - Live 0xf827e000
+sysfillrect 16384 1 drm_kms_helper, Live 0xf8270000
+i2c_smbus 16384 1 i2c_i801, Live 0xf826b000
+sysimgblt 16384 1 drm_kms_helper, Live 0xf821f000
+fb_sys_fops 16384 1 drm_kms_helper, Live 0xf8115000
+i2c_algo_bit 16384 1 i915, Live 0xf81aa000
+rfkill 20480 4 thinkpad_acpi,cfg80211, Live 0xf8219000
+lpc_ich 20480 0 - Live 0xf8265000
+fjes 28672 0 - Live 0xf825d000
+rng_core 16384 0 - Live 0xf8214000
+intel_agp 20480 0 - Live 0xf81f9000
+intel_gtt 20480 2 i915,intel_agp, Live 0xf81c2000
+agpgart 32768 3 drm,intel_agp,intel_gtt, Live 0xf8254000
+thermal 20480 0 - Live 0xf824a000
+battery 16384 0 - Live 0xf81b3000
+ac 16384 0 - Live 0xf8188000
+shpchp 32768 0 - Live 0xf8207000
+parport_pc 28672 0 - Live 0xf81ff000
+parport 40960 2 ppdev,parport_pc, Live 0xf81e6000
+nsc_ircc 24576 0 - Live 0xf81f2000
+irda 151552 1 nsc_ircc, Live 0xf8224000
+video 32768 2 thinkpad_acpi,i915, Live 0xf81b9000
+button 16384 1 i915, Live 0xf818d000
+acpi_cpufreq 20480 1 - Live 0xf81a4000
+tpm_tis 16384 0 - Live 0xf8137000
+tpm_tis_core 20480 1 tpm_tis, Live 0xf8182000
+tpm 36864 2 tpm_tis,tpm_tis_core, Live 0xf819a000
+sch_fq_codel 20480 3 - Live 0xf8176000
+ip_tables 20480 0 - Live 0xf811a000
+x_tables 20480 1 ip_tables, Live 0xf8194000
+ext4 495616 3 - Live 0xf8295000
+crc16 16384 1 ext4, Live 0xf8023000
+jbd2 81920 1 ext4, Live 0xf813c000
+fscrypto 24576 1 ext4, Live 0xf8130000
+mbcache 16384 4 ext4, Live 0xf80d4000
+sd_mod 36864 5 - Live 0xf8121000
+ata_generic 16384 0 - Live 0xf80c6000
+pata_acpi 16384 0 - Live 0xf80ba000
+serio_raw 16384 0 - Live 0xf80b5000
+atkbd 24576 0 - Live 0xf80bf000
+libps2 16384 2 psmouse,atkbd, Live 0xf812b000
+ata_piix 32768 4 - Live 0xf80cb000
+ahci 36864 0 - Live 0xf807d000
+libahci 28672 1 ahci, Live 0xf8098000
+uhci_hcd 40960 0 - Live 0xf8033000
+libata 188416 5 ata_generic,pata_acpi,ata_piix,ahci,libahci, Live 0xf804e000
+scsi_mod 139264 2 sd_mod,libata, Live 0xf8153000
+sdhci_pci 24576 0 - Live 0xf803f000
+sdhci 40960 1 sdhci_pci, Live 0xf8108000
+led_class 16384 3 thinkpad_acpi,input_leds,sdhci, Live 0xf802e000
+mmc_core 118784 2 sdhci_pci,sdhci, Live 0xf81c8000
+ehci_pci 16384 0 - Live 0xf808d000
+ehci_hcd 65536 1 ehci_pci, Live 0xf80a4000
+usbcore 184320 3 uhci_hcd,ehci_pci,ehci_hcd, Live 0xf80da000
+usb_common 16384 1 usbcore, Live 0xf8088000
+i8042 28672 0 - Live 0xf8046000
+serio 20480 6 psmouse,serio_raw,atkbd,i8042, Live 0xf8028000
+#+END_SRC
+
+** /proc/version: 查看系统内核当前版本
+#+BEGIN_SRC shell
+  cat /proc/version
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Linux version 4.8.13-1-ARCH (builduser@tobias) (gcc version 6.2.1 20160830 (GCC) ) #1 SMP PREEMPT Fri Dec 9 07:43:17 CET 2016
+#+END_SRC
+
+** /proc/partitions: 系统分区情况
+#+BEGIN_SRC shell
+  cat /proc/partitions
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+major minor  #blocks  name
+
+   8        0   19535040 sda
+   8        1     102400 sda1
+   8        2    2097152 sda2
+   8        3    5242880 sda3
+   8        4   12091584 sda4
+#+END_SRC
+
+** /proc/interrupts: 显示中断信息
+#+BEGIN_SRC shell
+  cat /proc/interrupts
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+           CPU0       
+  0:     146721   IO-APIC   2-edge      timer
+  1:      15493   IO-APIC   1-edge      i8042
+  8:          1   IO-APIC   8-edge      rtc0
+  9:        188   IO-APIC   9-fasteoi   acpi
+ 12:      33192   IO-APIC  12-edge      i8042
+ 14:      30695   IO-APIC  14-edge      ata_piix
+ 15:          0   IO-APIC  15-edge      ata_piix
+ 16:        213   IO-APIC  16-fasteoi   uhci_hcd:usb2, yenta, i915, enp2s0
+ 17:          0   IO-APIC  17-fasteoi   mmc0, uhci_hcd:usb3
+ 18:          0   IO-APIC  18-fasteoi   uhci_hcd:usb4
+ 19:          0   IO-APIC  19-fasteoi   ehci_hcd:usb1, uhci_hcd:usb5
+ 21:     220663   IO-APIC  21-fasteoi   ipw2200
+ 22:          0   IO-APIC  22-fasteoi   snd_intel8x0
+ 23:          0   IO-APIC  23-fasteoi   i801_smbus, snd_intel8x0m
+NMI:        402   Non-maskable interrupts
+LOC:     208137   Local timer interrupts
+SPU:          0   Spurious interrupts
+PMI:        402   Performance monitoring interrupts
+IWI:     115501   IRQ work interrupts
+RTR:          0   APIC ICR read retries
+RES:          0   Rescheduling interrupts
+CAL:          0   Function call interrupts
+TLB:          0   TLB shootdowns
+TRM:          0   Thermal event interrupts
+THR:          0   Threshold APIC interrupts
+DFR:          0   Deferred Error APIC interrupts
+MCE:          0   Machine check exceptions
+MCP:         17   Machine check polls
+ERR:          0
+MIS:          0
+PIN:          0   Posted-interrupt notification event
+PIW:          0   Posted-interrupt wakeup event
+#+END_SRC
+
+* 系统其他信息
+** /etc/issue : 系统的当前发行版本
+#+BEGIN_SRC shell
+  cat /etc/issue
+#+END_SRC
+
+
+#+RESULTS:
+#+BEGIN_SRC org
+Arch Linux \r (\l)
 
 #+END_SRC
 
