@@ -100,6 +100,150 @@ Options:
   modinfo sg
 #+END_SRC
 
+** sysctl命令: 系统核心参数的设置
+#+BEGIN_SRC shell
+  sysctl -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:
+ sysctl [options] [variable[=value] ...]
+
+Options:
+  -a, --all            display all variables
+  -A                   alias of -a
+  -X                   alias of -a
+      --deprecated     include deprecated parameters to listing
+  -b, --binary         print value without new line
+  -e, --ignore         ignore unknown variables errors
+  -N, --names          print variable names without values
+  -n, --values         print only values of a variables
+  -p, --load[=<file>]  read values from file
+  -f                   alias of -p
+      --system         read values from all system directories
+  -r, --pattern <expression>
+                       select setting that match expression
+  -q, --quiet          do not echo variable set
+  -w, --write          enable writing a value to variable
+  -o                   does nothing
+  -x                   does nothing
+  -d                   alias of -h
+
+ -h, --help     display this help and exit
+ -V, --version  output version information and exit
+
+For more details see sysctl(8).
+#+END_SRC
+
+各选项说明如下:
+| 选项            | 说明                                  |
+|-----------------+---------------------------------------|
+| -a              | 显示当前所有设置                      |
+| -A              | 以表格的形式显示当前所有设置          |
+| -e              | 模糊模式,忽略由于未知关键字引起的错误 |
+| -n              | 显示输出时忽略关键词名                |
+| -w variable=key | 设置变量                              |
+| -p              | 指定配置文件,默认为/etc/sysctl.conf   |
+| -h              | 显示帮助                                  |
+
+例如
+#+BEGIN_SRC shell 
+  sysctl -a |grep dev
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+dev.hpet.max-user-freq = 64
+dev.mac_hid.mouse_button2_keycode = 97
+dev.mac_hid.mouse_button3_keycode = 100
+dev.mac_hid.mouse_button_emulation = 0
+dev.parport.default.spintime = 500
+dev.parport.default.timeslice = 200
+dev.scsi.logging_level = 0
+kernel.printk_devkmsg = ratelimit
+kernel.real-root-dev = 0
+net.core.dev_weight = 64
+net.core.netdev_budget = 300
+net.core.netdev_max_backlog = 1000
+net.core.netdev_rss_key = 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+net.core.netdev_tstamp_prequeue = 1
+net.ipv4.tcp_l3mdev_accept = 0
+net.irda.devname = Linux
+#+END_SRC
+
+* 时钟设置
+** hwclock: 硬件时钟显示和设置
+#+BEGIN_SRC shell
+  hwclock --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:
+ hwclock [function] [option...]
+
+Query or set the hardware clock.
+
+Functions:
+ -h, --help           show this help text and exit
+ -r, --show           read hardware clock and print result
+     --get            read hardware clock and print drift corrected result
+     --set            set the RTC to the time given with --date
+ -s, --hctosys        set the system time from the hardware clock
+ -w, --systohc        set the hardware clock from the current system time
+     --systz          set the system time based on the current timezone
+     --adjust         adjust the RTC to account for systematic drift since
+                        the clock was last set or adjusted
+ -c, --compare        periodically compare the system clock with the CMOS clock
+     --getepoch       print out the kernel's hardware clock epoch value
+     --setepoch       set the kernel's hardware clock epoch value to the 
+                        value given with --epoch
+     --predict        predict RTC reading at time given with --date
+ -V, --version        display version information and exit
+
+Options:
+ -u, --utc            the hardware clock is kept in UTC
+     --localtime      the hardware clock is kept in local time
+ -f, --rtc <file>     special /dev/... file to use instead of default
+     --directisa      access the ISA bus directly instead of /dev/rtc
+     --badyear        ignore RTC's year because the BIOS is broken
+     --date <time>    specifies the time to which to set the hardware clock
+     --epoch <year>   specifies the year which is the beginning of the
+                        hardware clock's epoch value
+     --update-drift   update drift factor in /etc/adjtime (requires
+                        --set or --systohc)
+     --noadjfile      do not access /etc/adjtime; this requires the use of
+                        either --utc or --localtime
+     --adjfile <file> specifies the path to the adjust file;
+                        the default is /etc/adjtime
+     --test           do not update anything, just show what would happen
+ -D, --debug          debugging mode
+
+#+END_SRC
+
+例如:获取当前硬件时间,默认采取本地时间
+#+BEGIN_SRC shell :dir /sudo::
+  hwclock
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+2017-01-30 22:17:09.374395+0800
+#+END_SRC
+
+获取硬件时间,使用UTC时间
+#+BEGIN_SRC shell :dir /sudo::
+  hwclock --utc
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+2017-01-30 22:17:41.155697+0800
+#+END_SRC
+
 * /proc 信息
 用户和程序可以通过查看/proc目录中的相关文件得到系统的运行信息,并可以更改内核的某些参数
 
@@ -329,4 +473,19 @@ PIW:          0   Posted-interrupt wakeup event
 Arch Linux \r (\l)
 
 #+END_SRC
+
+** hash: 显示,添加和清除hash表
+在shell中执行过的命令,其路径都会被存到一个hash表中,这样下次再运行该命令时,就可以直接获取到执行命令的路径,而无需再从 =$PATH= 中搜索一次路径了.
+#+BEGIN_SRC shell
+  hash [-l] [-r] [-p path name] [-d name] [-t command]
+#+END_SRC
+
+各选项说明如下:
+| 选项         | 说明                    |
+|--------------+-------------------------|
+| -l           | 显示hash表内容,包括路径 |
+| -r           | 清空hash表              |
+| -p path name | 向hash表中增加内容      |
+| -t command   | 显示指定命令的完整路径  |
+
 
