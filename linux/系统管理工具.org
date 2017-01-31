@@ -1410,3 +1410,158 @@ fbset使用自己的视频模式数据库(通常为/etc/fb.modes),可以在该�
 #+END_SRC
 
 
+** logger命令: 模拟各类消息:
+logger命令可以模拟各类消息,从而可以对syslog.conf文件的配置进行测试
+#+BEGIN_SRC shell
+  logger -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:
+ logger [options] [<message>]
+
+Enter messages into the system log.
+
+Options:
+ -i                       log the logger command's PID
+     --id[=<id>]          log the given <id>, or otherwise the PID
+ -f, --file <file>        log the contents of this file
+ -e, --skip-empty         do not log empty lines when processing files
+     --no-act             do everything except the write the log
+ -p, --priority <prio>    mark given message with this priority
+     --octet-count        use rfc6587 octet counting
+     --prio-prefix        look for a prefix on every line read from stdin
+ -s, --stderr             output message to standard error as well
+ -S, --size <size>        maximum size for a single message
+ -t, --tag <tag>          mark every line with this tag
+ -n, --server <name>      write to this remote syslog server
+ -P, --port <port>        use this port for UDP or TCP connection
+ -T, --tcp                use TCP only
+ -d, --udp                use UDP only
+     --rfc3164            use the obsolete BSD syslog protocol
+     --rfc5424[=<snip>]   use the syslog protocol (the default for remote);
+                            <snip> can be notime, or notq, and/or nohost
+     --sd-id <id>         rfc5424 structured data ID
+     --sd-param <data>    rfc5424 structured data name=value
+     --msgid <msgid>      set rfc5424 message id field
+ -u, --socket <socket>    write to this Unix socket
+     --socket-errors[=<on|off|auto>]
+                          print connection errors when using Unix sockets
+     --journald[=<file>]  write journald entry
+
+ -h, --help     display this help and exit
+ -V, --version  output version information and exit
+
+For more details see logger(1).
+#+END_SRC
+
+** swapoff命令: 卸载交换分区
+#+BEGIN_SRC shell
+  swapoff -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   swapoff [options] [<spec>]
+
+  Disable devices and files for paging and swapping.
+
+  Options:
+   -a, --all              卸载所有加载的交换分区(/proc/swaps)
+   -v, --verbose
+   verbose mode
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  The <spec> parameter:
+   -L <label>             LABEL of device to be used
+   -U <uuid>              UUID of device to be used
+   LABEL=<label>          LABEL of device to be used
+   UUID=<uuid>            UUID of device to be used
+   <device>               name of device to be used
+   <file>                 name of file to be used
+
+  For more details see swapoff(8).
+#+END_SRC
+** swapon命令: 加载交换分区
+#+BEGIN_SRC shell
+  swapon -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   swapon [options] [<spec>]
+
+  Enable devices and files for paging and swapping.
+
+  Options:
+   -a, --all                加载所有 /etc/fstab 中标识为交换分区的分区
+   -d, --discard[=<policy>] enable swap discards, if supported by device
+   -e, --ifexists           跳过不存在的设备,常与-a连用
+   -f, --fixpgsz            reinitialize the swap space if necessary
+   -o, --options <list>     comma-separated list of swap options
+   -p, --priority <prio>    定义优先级,介于0到32767之间
+   -s, --summary            显示交换分区使用信息 (DEPRECATED)
+       --show[=<columns>]   display summary in definable table
+       --noheadings         don't print table heading (with --show)
+       --raw                use the raw output format (with --show)
+       --bytes              display swap size in bytes in --show output
+   -v, --verbose            verbose mode
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  The <spec> parameter:
+   -L <label>             synonym for LABEL=<label>
+   -U <uuid>              synonym for UUID=<uuid>
+   LABEL=<label>          specifies device by swap area label
+   UUID=<uuid>            specifies device by swap area UUID
+   PARTLABEL=<label>      specifies device by partition label
+   PARTUUID=<uuid>        specifies device by partition UUID
+   <device>               name of device to be used
+   <file>                 name of file to be used
+
+  Available discard policy types (for --discard):
+   once    : only single-time area discards are issued
+   pages   : freed pages are discarded before they are reused
+  If no policy is selected, both discard types are enabled (default).
+
+  Available columns (for --show):
+   NAME   device file or partition path
+   TYPE   type of the device
+   SIZE   size of the swap area
+   USED   bytes in use
+   PRIO   swap priority
+   UUID   swap uuid
+   LABEL  swap label
+
+  For more details see swapon(8).
+#+END_SRC
+
+#+BEGIN_SRC shell
+  swapon -s
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Filename				Type		Size	Used	Priority
+/dev/sda2                              	partition	2097148	0	-1
+#+END_SRC
+** resize命令: 调整终端屏幕显示大小
+#+BEGIN_SRC shell
+  resize [-v] [-u] [-c] [-s [rows cols]]
+#+END_SRC
+
+resize命令选项说明:
+| 选项         | 说明                                 |
+|--------------+--------------------------------------|
+| -c           | 采用C shell命令格式返回设置命令      |
+| -u           | 采用Bourne shell命令格式返回设置命令 |
+| -s [row col] | 设置屏幕大小                               |
