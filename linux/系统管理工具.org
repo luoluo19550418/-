@@ -800,6 +800,43 @@ vlock命令可以用来锁定虚拟终端,以避免别人使用. 被锁定的终
   -h or --help: Print this help message and exit.
 #+END_SRC
 
+** bind命令: 设置按键组合
+bind命令可以显示按键组合代表的功能,也可以对按键组合进行设置,使得某些按键组合代表某些特殊功能
+#+BEGIN_SRC shell
+  bind [-v] [-P] [-m keymap] [-f filename] [-q function] [-u name] [-r keyseq] [-x keyseq:shell-command] [keyseq:readline-function or readline-command] [-l] [-p]
+#+END_SRC
+
+bind命令的选项说明
+| 选项                    | 说明                                                                                                     |
+|-------------------------+----------------------------------------------------------------------------------------------------------|
+| -r keyseq               | 删除keysq的绑定                                                                                          |
+| -l                      | 列出所有功能函数的名称                                                                                   |
+| -P                      | 以可重复读入方式列出所有功能函数及其绑定                                                                 |
+| -p                      | 列出所有功能函数及其绑定                                                                                 |
+| -v                      | 以可重复读入方式列出当前设置的按键组合的名称及值                                                         |
+| -V                      | 列出当前设置的按键组合的名称及值                                                                         |
+| -u name                 | 取消对指定功能的所有绑定                                                                                 |
+| -f filename             | 从filename中读入指定的键盘绑定                                                                           |
+| -m keymap               | 设置特殊的按键组合,可以接受的keymap包括:emacs,emacs-stand,emacs-meta,emacs-ctrls,vi,vi-command,vi-insert |
+| -q function             | 列出指定功能的按键或者按键组合                                                                           |
+| -x keyseq:shell-command | 当输入keyseq时,同时执行shell-command命令                                                                           |
+
+** enable命令: 开启或者关闭shell内置的命令
+#+BEGIN_SRC shell
+  enable [-p] [-n name] [-d] [-s] [-a] [-f filename] [name]
+#+END_SRC
+
+enable命令的选项说明
+| 选项        | 说明                                          |
+|-------------+-----------------------------------------------|
+| -a          | 显示所有的内置命令,同时显示该命令是否已经加载 |
+| name        | 指定加载的命令                                |
+| -n name     | 关闭指定的命令                                |
+| -f filename | 从指定的文件加载内置命令                      |
+| -d          | 删除采用-f命令加载的内置命令                  |
+| -p          | 显示已加载的内置命令列表                      |
+| -s          | 仅显示POSIX定义的内置命令                               |
+
 * 编程相关
 ** gcov命令: coverage测试工具
 gcov命令通常配合gcc使用,用于分析优化代码. gcov可以给出以下方面的测试结果
@@ -1204,4 +1241,99 @@ zh_TW.utf8
     -s, --sort                    依据UID对/etc/passwd或/etc/shadow排序
 
 #+END_SRC
+
+** watch命令: 重复执行命令
+#+BEGIN_SRC shell
+  watch -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   watch [options] command
+
+  Options:
+    -b, --beep             beep if command has a non-zero exit
+    -c, --color            interpret ANSI color and style sequences
+    -d, --differences[=<permanent>]
+                           高亮显示每次执行结果的差异
+    -e, --errexit          exit if command has a non-zero exit
+    -g, --chgexit          exit when output from command changes
+    -n, --interval <secs>  设定重复的间隔时间
+    -p, --precise          attempt run command in precise intervals
+    -t, --no-title         turn off header
+    -x, --exec             pass command to exec instead of "sh -c"
+
+   -h, --help     display this help and exit
+   -v, --version  output version information and exit
+
+  For more details see watch(1).
+#+END_SRC
+
+** fbset命令: 帧缓存设备设置
+帧缓存设备提供一个相对简单的接口,用来实现不同种类的图像显示. 帧缓存设备通过/dev目录下指定的设备节点来访问.
+
+fbset使用自己的视频模式数据库(通常为/etc/fb.modes),可以在该数据库中定义视频模式
+#+BEGIN_SRC org
+  Usage: fbset [options] [mode]
+
+  Valid options:
+    General options:
+      -h, --help         : display this usage information
+      --test             : don't change, just test whether the mode is valid
+      -s, --show         : display video mode settings
+      -i, --info         : display all frame buffer information
+      -v, --verbose      : verbose mode
+      -V, --version      : print version information
+      -x, --xfree86      : XFree86 compatibility mode
+
+      -a, --all          : change all virtual consoles on this device
+    Frame buffer special device nodes:
+      -fb <device>       : processed frame buffer device
+                           (default is /dev/fb0)
+    Video mode database:
+      -db <file>         : video mode database file
+                           (default is /etc/fb.modes)
+    Display geometry:
+      -xres <value>      : horizontal resolution (in pixels)
+      -yres <value>      : vertical resolution (in pixels)
+      -vxres <value>     : virtual horizontal resolution (in pixels)
+      -vyres <value>     : virtual vertical resolution (in pixels)
+      -depth <value>     : display depth (in bits per pixel)
+      -nonstd <value>    : select nonstandard video mode
+      -g, --geometry ... : set all geometry parameters at once
+      -match             : set virtual vertical resolution by virtual resolution
+    Display timings:
+      -pixclock <value>  : pixel clock (in picoseconds)
+      -left <value>      : left margin (in pixels)
+      -right <value>     : right margin (in pixels)
+      -upper <value>     : upper margin (in pixel lines)
+      -lower <value>     : lower margin (in pixel lines)
+      -hslen <value>     : horizontal sync length (in pixels)
+      -vslen <value>     : vertical sync length (in pixel lines)
+      -t, --timings ...  : set all timing parameters at once
+    Display flags:
+      -accel <value>     : hardware text acceleration enable (false or true)
+      -hsync <value>     : horizontal sync polarity (low or high)
+      -vsync <value>     : vertical sync polarity (low or high)
+      -csync <value>     : composite sync polarity (low or high)
+      -gsync <value>     : synch on green (false or true)
+      -extsync <value>   : external sync enable (false or true)
+      -bcast <value>     : broadcast enable (false or true)
+      -laced <value>     : interlace enable (false or true)
+      -double <value>    : doublescan enable (false or true)
+      -rgba <r,g,b,a>    : recommended length of color entries
+      -grayscale <value> : grayscale enable (false or true)
+    Display positioning:
+      -move <direction>  : move the visible part (left, right, up or down)
+      -step <value>      : step increment (in pixels or pixel lines)
+                           (default is 8 horizontal, 2 vertical)
+
+#+END_SRC
+例如,设置画面额分辨率为88*720,桌面的分辨率为1024*768:
+#+BEGIN_SRC shell
+  fbset -g 800 720 1024 768
+#+END_SRC
+
 
