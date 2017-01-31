@@ -264,6 +264,60 @@ Options:
 | i8042               |   28672 |    0 |                                                                           |
 | serio               |   20480 |    6 | serio_raw,atkbd,psmouse,i8042                                             |
 
+** depmod命令: 显示模块依赖关系
+#+BEGIN_SRC shell
+  depmod -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage:
+    depmod -[aA] [options] [forced_version]
+
+  If no arguments (except options) are given, "depmod -a" is assumed
+
+  depmod will output a dependency list suitable for the modprobe utility.
+
+  Options:
+    -a, --all            Probe all modules
+    -A, --quick          Only does the work if there's a new module
+    -e, --errsyms        Report not supplied symbols
+    -n, --show           将依赖信息写入标准输出
+    -P, --symbol-prefix  Architecture symbol prefix
+    -C, --config=PATH    Read configuration from PATH
+    -v, --verbose        Enable verbose mode
+    -w, --warn           Warn on duplicates
+    -V, --version        show version
+    -h, --help           show this help
+
+  The following options are useful for people managing distributions:
+    -b, --basedir=DIR    Use an image of a module tree.
+    -F, --filesyms=FILE  Use the file instead of the
+                         current kernel symbols.
+    -E, --symvers=FILE   Use Module.symvers file to check
+                         symbol versions.
+#+END_SRC
+
+** rmmod命令: 删除已加载的模块
+该命令从当前内核中卸载可加载的模块,但这些模块必须没有被使用
+#+BEGIN_SRC shell
+  rmmod -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage:
+    rmmod [options] modulename ...
+  Options:
+    -f, --force       forces a module unload and may crash your
+                      machine. This requires Forced Module Removal
+                      option in your kernel. DANGEROUS
+    -s, --syslog      使用syslog来记录错误信息,而不是输出到stderr上
+    -v, --verbose     显示详细处理信息
+    -V, --version     show version
+    -h, --help        show this help
+#+END_SRC
+
 ** sysctl命令: 系统核心参数的设置
 #+BEGIN_SRC shell
   sysctl -h
@@ -423,6 +477,36 @@ ipcs命令显示调用进程可以访问的IPC设备信息
   For more details see ipcs(1).
 #+END_SRC
 
+
+** ipcrm命令: 删除消息队列,信号量或共享内存段
+#+BEGIN_SRC shell
+  ipcrm -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   ipcrm [options]
+   ipcrm shm|msg|sem <id>...
+
+  Remove certain IPC resources.
+
+  Options:
+   -m, --shmem-id <id>        remove shared memory segment by id
+   -M, --shmem-key <key>      remove shared memory segment by key
+   -q, --queue-id <id>        remove message queue by id
+   -Q, --queue-key <key>      remove message queue by key
+   -s, --semaphore-id <id>    remove semaphore by id
+   -S, --semaphore-key <key>  remove semaphore by key
+   -a, --all[=shm|msg|sem]    remove all (in the specified category)
+   -v, --verbose              explain what is being done
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  For more details see ipcrm(1).
+#+END_SRC
 
 ** pmap命令: 显示指定程序占用内存的情况
 #+BEGIN_SRC shell
