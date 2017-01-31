@@ -318,6 +318,79 @@ Options:
     -h, --help        show this help
 #+END_SRC
 
+** insmod命令: 向内核加载模块
+*与insmod命令相比,modprobe命令使用起来更方便一些* 
+#+BEGIN_SRC shell
+  insmod [-f] [-k] [-m] [-p] [-s] [-v] [-o module_name] [-L] [-O blob_name] [-q] [-N]
+#+END_SRC
+
+| 选项           | 说明                                                          |
+|----------------+---------------------------------------------------------------|
+| -f             | 强制加载模块                                                  |
+| -k             | 设置模块自动卸载                                              |
+| -m             | 显示模块加载信息                                              |
+| -p             | 检测模块是否成功加载                                          |
+| -s             | 将信息记入日志                                                |
+| -v             | 显示详细信息                                                  |
+| -o module_name | 明确地指定模块名称,而不是从源文件的主文件名获得名称           |
+| -L             | 通过使用flock阻止同时加载相同的模块                           |
+| -O blob_name   | 在blob_name中保存二进制对象. 该文件中保存了加载模块的准备信息 |
+| -q             | 静默模式,不显示未解析的内容,不对版本是否匹配进行提示          |
+| -N             | 仅对模块版本号和内核版本号的数字部分进行检测                                        |
+
+** modprobe命令: 自动安装依赖模块
+modprobe命令会根据模块内部的依赖关系自动安装所依赖的模块. 如果安装过程中发生错误,也将卸载所有相关模块.
+
+#+BEGIN_SRC shell
+  modprobe -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Usage:
+	modprobe [options] [-i] [-b] modulename
+	modprobe [options] -a [-i] [-b] modulename [modulename...]
+	modprobe [options] -r [-i] modulename
+	modprobe [options] -r -a [-i] modulename [modulename...]
+	modprobe [options] -c
+	modprobe [options] --dump-modversions filename
+Management Options:
+	-a, --all                   Consider every non-argument to
+	                            be a module name to be inserted
+	                            or removed (-r)
+	-r, --remove                Remove modules instead of inserting
+	    --remove-dependencies   Also remove modules depending on it
+	-R, --resolve-alias         Only lookup and print alias and exit
+	    --first-time            Fail if module already inserted or removed
+	-i, --ignore-install        Ignore install commands
+	-i, --ignore-remove         Ignore remove commands
+	-b, --use-blacklist         Apply blacklist to resolved alias.
+	-f, --force                 Force module insertion or removal.
+	                            implies --force-modversions and
+	                            --force-vermagic
+	    --force-modversion      Ignore module's version
+	    --force-vermagic        Ignore module's version magic
+
+Query Options:
+	-D, --show-depends          Only print module dependencies and exit
+	-c, --showconfig            Print out known configuration and exit
+	-c, --show-config           Same as --showconfig
+	    --show-modversions      Dump module symbol version and exit
+	    --dump-modversions      Same as --show-modversions
+
+General Options:
+	-n, --dry-run               Do not execute operations, just print out
+	-n, --show                  Same as --dry-run
+	-C, --config=FILE           Use FILE instead of default search paths
+	-d, --dirname=DIR           Use DIR as filesystem root for /lib/modules
+	-S, --set-version=VERSION   Use VERSION instead of `uname -r`
+	-s, --syslog                print to syslog, not stderr
+	-q, --quiet                 disable messages
+	-v, --verbose               enables more messages
+	-V, --version               show version
+	-h, --help                  show this help
+#+END_SRC
+
 ** sysctl命令: 系统核心参数的设置
 #+BEGIN_SRC shell
   sysctl -h
