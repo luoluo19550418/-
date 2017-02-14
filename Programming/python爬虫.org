@@ -1,0 +1,32 @@
+#+TITLE: python爬虫
+#+AUTHOR: lujun9972
+#+TAGS: Programming
+#+DATE: [2017-02-14 Tue 22:12]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+* 探测网站信息
++ 估算网站大小的一个简便方法是在google中用site关键字进行搜索
+  
++ 使用buildwith模块可以检查网站构建的技术类型
+
++ 使用python-whois通过WHOIS协议查询域名的注册者
+
++ 使用自带的robotparser模块可以解析robots.txt文件
+* 抓取内容
++ 使用正则表达式来抓取
+
++ 使用BeautifulSoup模块
+
++ 使用lxml模块
+
+* 验证码处理
++ pytesseract
+
++ 使用9kw之类的验证码处理服务
+* 框架
++ scrapy
+
++ portia
+
++ scrapely
+
