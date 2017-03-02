@@ -6,6 +6,39 @@
 #+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
 #+PROPERTY: header-args:shell :exports both :results org
 
+* 系统负载信息
+** uptime命令: 显示系统时间,系统运行时间,用户登录数以及过去1分钟,5分钟,15分钟内的系统平均负债
+#+BEGIN_SRC shell
+  uptime
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+ 06:54:44 up 36 min,  1 user,  load average: 0.07, 0.09, 0.12
+#+END_SRC
+** tload命令: 以图形化的方式显示系统负载
+#+BEGIN_SRC shell
+  tload --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   tload [options] [tty]
+
+  Options:
+   -d, --delay <secs>  设置刷新间隔时间
+   -s, --scale <num>   指定垂直方向的刻度,刻度越小,垂直方向的刻度越大
+   tty                 指定显示终端
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  For more details see tload(1).
+#+END_SRC
+
+
 * 内存
 ** free命令:内存详细信息查询
 free命令用于显示系统使用和空闲的内存情况,设计的内存包括物理内存,交换分区,内核缓冲区内存以及高速缓存.
@@ -50,6 +83,33 @@ Swap:       2097148           0     2097148
 Total:      3116368      174392     2700160
 #+END_SRC
 
+** vmstat命令: 显示虚拟内存的统计信息
+#+BEGIN_SRC shell
+  vmstat [-n] [-a] [delay] [count]
+#+END_SRC
+
+| 选项  | 说明                                |
+|-------+-------------------------------------|
+| -n    | 字段头只显示一次,而不是周期性地显示 |
+| -a    | 显示所有虚拟内存的信息              |
+| delay | 刷新的间隔时间                      |
+| count | 刷新的总次数                              |
+
+#+BEGIN_SRC shell
+  vmstat -a -n 2 5
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free  inact active   si   so    bi    bo   in   cs us sy id wa st
+ 0  0      0 534056 110096 293696    0    0   112    17   73  195  7  1 86  6  0
+ 0  0      0 533584 110100 293768    0    0     0     6   63  220  6  2 92  0  0
+ 0  0      0 533584 110100 293768    0    0     0     2   30   37  0  0 100  0  0
+ 0  0      0 533584 110100 293768    0    0     0     0   26   36  0  0 100  0  0
+ 0  0      0 533584 110100 293768    0    0     0    18   29   36  0  0 94  7  0
+#+END_SRC
+
 * CPU
 ** uname -m 命令:显示CPU架构
 =uname -m=,用于查询并显示主机的体系结构
@@ -61,6 +121,840 @@ Total:      3116368      174392     2700160
 #+BEGIN_SRC org
 i686
 #+END_SRC
+* 内核模块
+** dmesg: 启动信息查询
+dmesg命令可以用来检测和控制内核的缓存,通常用来显示输出系统最后一次启动时的内核内部缓存信息. 它的语法为
+#+BEGIN_SRC shell
+  dmesg [-c] [-n level] [-s bufsize]
+#+END_SRC
+| -c         | 显示信息后清空缓存区中的信息                               |
+| -n level   | 设置将日志信息进行输出的级别. -n 1 表示输出panic级别的信息 |
+| -s bufsize | 设置查询所需要的缓存区大小,默认为16392字节                 |
+
+** modinfo命令:内核模块信息
+modinfo会检测与内核相关的模块文件,并显示检测的结果. 它的语法格式为
+#+BEGIN_SRC shell
+  modinfo -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Usage:
+	modinfo [options] filename [args]
+Options:
+	-a, --author                Print only 'author'
+	-d, --description           Print only 'description'
+	-l, --license               Print only 'license'
+	-p, --parameters            Print only 'parm'
+	-n, --filename              Print only 'filename'
+	-0, --null                  Use \0 instead of \n
+	-F, --field=FIELD           Print only provided FIELD
+	-k, --set-version=VERSION   Use VERSION instead of `uname -r`
+	-b, --basedir=DIR           Use DIR as filesystem root for /lib/modules
+	-V, --version               Show version
+	-h, --help                  Show this help
+#+END_SRC
+
+例如,要显示模块sg的相关信息,执行
+#+BEGIN_SRC shell
+  modinfo sg
+#+END_SRC
+
+** lsmod命令: 显示所有已加载模块信息
+其显示的信息与 =/proc/modules= 的内容相同
+
+#+BEGIN_SRC sh
+  lsmod
+#+END_SRC
+
+#+RESULTS:
+| Module              |    Size | Used | by                                                                        |
+| lib80211_crypt_ccmp |   16384 |    2 |                                                                           |
+| mousedev            |   20480 |    0 |                                                                           |
+| ipw2200             |  135168 |    0 |                                                                           |
+| libipw              |   32768 |    1 | ipw2200                                                                   |
+| gpio_ich            |   16384 |    0 |                                                                           |
+| iTCO_wdt            |   16384 |    0 |                                                                           |
+| iTCO_vendor_support |   16384 |    1 | iTCO_wdt                                                                  |
+| pcmcia              |   49152 |    0 |                                                                           |
+| i915                | 1163264 |    2 |                                                                           |
+| ppdev               |   20480 |    0 |                                                                           |
+| lib80211            |   16384 |    2 | libipw,lib80211_crypt_ccmp                                                |
+| evdev               |   20480 |    5 |                                                                           |
+| yenta_socket        |   40960 |    0 |                                                                           |
+| snd_intel8x0        |   32768 |    0 |                                                                           |
+| pcmcia_rsrc         |   20480 |    1 | yenta_socket                                                              |
+| pcspkr              |   16384 |    0 |                                                                           |
+| input_leds          |   16384 |    0 |                                                                           |
+| cfg80211            |  458752 |    2 | ipw2200,libipw                                                            |
+| drm_kms_helper      |  114688 |    1 | i915                                                                      |
+| mac_hid             |   16384 |    0 |                                                                           |
+| i2c_i801            |   24576 |    0 |                                                                           |
+| drm                 |  249856 |    3 | i915,drm_kms_helper                                                       |
+| i2c_smbus           |   16384 |    1 | i2c_i801                                                                  |
+| snd_intel8x0m       |   20480 |    0 |                                                                           |
+| pcmcia_core         |   20480 |    3 | yenta_socket,pcmcia,pcmcia_rsrc                                           |
+| snd_ac97_codec      |   98304 |    2 | snd_intel8x0m,snd_intel8x0                                                |
+| psmouse             |  126976 |    0 |                                                                           |
+| lpc_ich             |   20480 |    0 |                                                                           |
+| rng_core            |   16384 |    0 |                                                                           |
+| syscopyarea         |   16384 |    1 | drm_kms_helper                                                            |
+| thinkpad_acpi       |   69632 |    0 |                                                                           |
+| tg3                 |  155648 |    0 |                                                                           |
+| ptp                 |   20480 |    1 | tg3                                                                       |
+| pps_core            |   20480 |    1 | ptp                                                                       |
+| libphy              |   40960 |    1 | tg3                                                                       |
+| snd_pcm             |   81920 |    3 | snd_intel8x0m,snd_ac97_codec,snd_intel8x0                                 |
+| snd_timer           |   28672 |    1 | snd_pcm                                                                   |
+| sysfillrect         |   16384 |    1 | drm_kms_helper                                                            |
+| ac97_bus            |   16384 |    1 | snd_ac97_codec                                                            |
+| nvram               |   16384 |    1 | thinkpad_acpi                                                             |
+| parport_pc          |   28672 |    0 |                                                                           |
+| parport             |   40960 |    2 | parport_pc,ppdev                                                          |
+| intel_agp           |   20480 |    0 |                                                                           |
+| intel_gtt           |   20480 |    2 | intel_agp,i915                                                            |
+| sysimgblt           |   16384 |    1 | drm_kms_helper                                                            |
+| snd                 |   57344 |    6 | snd_intel8x0m,snd_ac97_codec,snd_timer,thinkpad_acpi,snd_intel8x0,snd_pcm |
+| thermal             |   20480 |    0 |                                                                           |
+| agpgart             |   32768 |    3 | intel_agp,intel_gtt,drm                                                   |
+| fb_sys_fops         |   16384 |    1 | drm_kms_helper                                                            |
+| i2c_algo_bit        |   16384 |    1 | i915                                                                      |
+| soundcore           |   16384 |    1 | snd                                                                       |
+| rfkill              |   20480 |    4 | thinkpad_acpi,cfg80211                                                    |
+| battery             |   16384 |    0 |                                                                           |
+| fjes                |   28672 |    0 |                                                                           |
+| ac                  |   16384 |    0 |                                                                           |
+| shpchp              |   32768 |    0 |                                                                           |
+| nsc_ircc            |   24576 |    0 |                                                                           |
+| irda                |  151552 |    1 | nsc_ircc                                                                  |
+| video               |   32768 |    2 | thinkpad_acpi,i915                                                        |
+| button              |   16384 |    1 | i915                                                                      |
+| acpi_cpufreq        |   20480 |    1 |                                                                           |
+| tpm_tis             |   16384 |    0 |                                                                           |
+| tpm_tis_core        |   20480 |    1 | tpm_tis                                                                   |
+| tpm                 |   36864 |    2 | tpm_tis,tpm_tis_core                                                      |
+| sch_fq_codel        |   20480 |    3 |                                                                           |
+| ip_tables           |   20480 |    0 |                                                                           |
+| x_tables            |   20480 |    1 | ip_tables                                                                 |
+| ext4                |  495616 |    3 |                                                                           |
+| crc16               |   16384 |    1 | ext4                                                                      |
+| jbd2                |   81920 |    1 | ext4                                                                      |
+| fscrypto            |   24576 |    1 | ext4                                                                      |
+| mbcache             |   16384 |    4 | ext4                                                                      |
+| sd_mod              |   36864 |    5 |                                                                           |
+| ata_generic         |   16384 |    0 |                                                                           |
+| pata_acpi           |   16384 |    0 |                                                                           |
+| serio_raw           |   16384 |    0 |                                                                           |
+| atkbd               |   24576 |    0 |                                                                           |
+| libps2              |   16384 |    2 | atkbd,psmouse                                                             |
+| ata_piix            |   32768 |    4 |                                                                           |
+| ahci                |   36864 |    0 |                                                                           |
+| libahci             |   28672 |    1 | ahci                                                                      |
+| libata              |  192512 |    5 | ahci,ata_piix,libahci,ata_generic,pata_acpi                               |
+| uhci_hcd            |   40960 |    0 |                                                                           |
+| scsi_mod            |  139264 |    2 | sd_mod,libata                                                             |
+| sdhci_pci           |   28672 |    0 |                                                                           |
+| ehci_pci            |   16384 |    0 |                                                                           |
+| ehci_hcd            |   65536 |    1 | ehci_pci                                                                  |
+| sdhci               |   40960 |    1 | sdhci_pci                                                                 |
+| led_class           |   16384 |    3 | sdhci,input_leds,thinkpad_acpi                                            |
+| mmc_core            |  118784 |    2 | sdhci,sdhci_pci                                                           |
+| usbcore             |  184320 |    3 | ehci_hcd,uhci_hcd,ehci_pci                                                |
+| usb_common          |   16384 |    1 | usbcore                                                                   |
+| i8042               |   28672 |    0 |                                                                           |
+| serio               |   20480 |    6 | serio_raw,atkbd,psmouse,i8042                                             |
+
+** depmod命令: 显示模块依赖关系
+#+BEGIN_SRC shell
+  depmod -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage:
+    depmod -[aA] [options] [forced_version]
+
+  If no arguments (except options) are given, "depmod -a" is assumed
+
+  depmod will output a dependency list suitable for the modprobe utility.
+
+  Options:
+    -a, --all            Probe all modules
+    -A, --quick          Only does the work if there's a new module
+    -e, --errsyms        Report not supplied symbols
+    -n, --show           将依赖信息写入标准输出
+    -P, --symbol-prefix  Architecture symbol prefix
+    -C, --config=PATH    Read configuration from PATH
+    -v, --verbose        Enable verbose mode
+    -w, --warn           Warn on duplicates
+    -V, --version        show version
+    -h, --help           show this help
+
+  The following options are useful for people managing distributions:
+    -b, --basedir=DIR    Use an image of a module tree.
+    -F, --filesyms=FILE  Use the file instead of the
+                         current kernel symbols.
+    -E, --symvers=FILE   Use Module.symvers file to check
+                         symbol versions.
+#+END_SRC
+
+** rmmod命令: 删除已加载的模块
+该命令从当前内核中卸载可加载的模块,但这些模块必须没有被使用
+#+BEGIN_SRC shell
+  rmmod -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage:
+    rmmod [options] modulename ...
+  Options:
+    -f, --force       forces a module unload and may crash your
+                      machine. This requires Forced Module Removal
+                      option in your kernel. DANGEROUS
+    -s, --syslog      使用syslog来记录错误信息,而不是输出到stderr上
+    -v, --verbose     显示详细处理信息
+    -V, --version     show version
+    -h, --help        show this help
+#+END_SRC
+
+** insmod命令: 向内核加载模块
+*与insmod命令相比,modprobe命令使用起来更方便一些* 
+#+BEGIN_SRC shell
+  insmod [-f] [-k] [-m] [-p] [-s] [-v] [-o module_name] [-L] [-O blob_name] [-q] [-N]
+#+END_SRC
+
+| 选项           | 说明                                                          |
+|----------------+---------------------------------------------------------------|
+| -f             | 强制加载模块                                                  |
+| -k             | 设置模块自动卸载                                              |
+| -m             | 显示模块加载信息                                              |
+| -p             | 检测模块是否成功加载                                          |
+| -s             | 将信息记入日志                                                |
+| -v             | 显示详细信息                                                  |
+| -o module_name | 明确地指定模块名称,而不是从源文件的主文件名获得名称           |
+| -L             | 通过使用flock阻止同时加载相同的模块                           |
+| -O blob_name   | 在blob_name中保存二进制对象. 该文件中保存了加载模块的准备信息 |
+| -q             | 静默模式,不显示未解析的内容,不对版本是否匹配进行提示          |
+| -N             | 仅对模块版本号和内核版本号的数字部分进行检测                                        |
+
+** modprobe命令: 自动安装依赖模块
+modprobe命令会根据模块内部的依赖关系自动安装所依赖的模块. 如果安装过程中发生错误,也将卸载所有相关模块.
+
+#+BEGIN_SRC shell
+  modprobe -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Usage:
+	modprobe [options] [-i] [-b] modulename
+	modprobe [options] -a [-i] [-b] modulename [modulename...]
+	modprobe [options] -r [-i] modulename
+	modprobe [options] -r -a [-i] modulename [modulename...]
+	modprobe [options] -c
+	modprobe [options] --dump-modversions filename
+Management Options:
+	-a, --all                   Consider every non-argument to
+	                            be a module name to be inserted
+	                            or removed (-r)
+	-r, --remove                Remove modules instead of inserting
+	    --remove-dependencies   Also remove modules depending on it
+	-R, --resolve-alias         Only lookup and print alias and exit
+	    --first-time            Fail if module already inserted or removed
+	-i, --ignore-install        Ignore install commands
+	-i, --ignore-remove         Ignore remove commands
+	-b, --use-blacklist         Apply blacklist to resolved alias.
+	-f, --force                 Force module insertion or removal.
+	                            implies --force-modversions and
+	                            --force-vermagic
+	    --force-modversion      Ignore module's version
+	    --force-vermagic        Ignore module's version magic
+
+Query Options:
+	-D, --show-depends          Only print module dependencies and exit
+	-c, --showconfig            Print out known configuration and exit
+	-c, --show-config           Same as --showconfig
+	    --show-modversions      Dump module symbol version and exit
+	    --dump-modversions      Same as --show-modversions
+
+General Options:
+	-n, --dry-run               Do not execute operations, just print out
+	-n, --show                  Same as --dry-run
+	-C, --config=FILE           Use FILE instead of default search paths
+	-d, --dirname=DIR           Use DIR as filesystem root for /lib/modules
+	-S, --set-version=VERSION   Use VERSION instead of `uname -r`
+	-s, --syslog                print to syslog, not stderr
+	-q, --quiet                 disable messages
+	-v, --verbose               enables more messages
+	-V, --version               show version
+	-h, --help                  show this help
+#+END_SRC
+
+** sysctl命令: 系统核心参数的设置
+#+BEGIN_SRC shell
+  sysctl -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:
+ sysctl [options] [variable[=value] ...]
+
+Options:
+  -a, --all            display all variables
+  -A                   alias of -a
+  -X                   alias of -a
+      --deprecated     include deprecated parameters to listing
+  -b, --binary         print value without new line
+  -e, --ignore         ignore unknown variables errors
+  -N, --names          print variable names without values
+  -n, --values         print only values of a variables
+  -p, --load[=<file>]  read values from file
+  -f                   alias of -p
+      --system         read values from all system directories
+  -r, --pattern <expression>
+                       select setting that match expression
+  -q, --quiet          do not echo variable set
+  -w, --write          enable writing a value to variable
+  -o                   does nothing
+  -x                   does nothing
+  -d                   alias of -h
+
+ -h, --help     display this help and exit
+ -V, --version  output version information and exit
+
+For more details see sysctl(8).
+#+END_SRC
+
+各选项说明如下:
+| 选项            | 说明                                  |
+|-----------------+---------------------------------------|
+| -a              | 显示当前所有设置                      |
+| -A              | 以表格的形式显示当前所有设置          |
+| -e              | 模糊模式,忽略由于未知关键字引起的错误 |
+| -n              | 显示输出时忽略关键词名                |
+| -w variable=key | 设置变量                              |
+| -p              | 指定配置文件,默认为/etc/sysctl.conf   |
+| -h              | 显示帮助                                  |
+
+例如
+#+BEGIN_SRC shell 
+  sysctl -a |grep dev
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+dev.hpet.max-user-freq = 64
+dev.mac_hid.mouse_button2_keycode = 97
+dev.mac_hid.mouse_button3_keycode = 100
+dev.mac_hid.mouse_button_emulation = 0
+dev.parport.default.spintime = 500
+dev.parport.default.timeslice = 200
+dev.scsi.logging_level = 0
+kernel.printk_devkmsg = ratelimit
+kernel.real-root-dev = 0
+net.core.dev_weight = 64
+net.core.netdev_budget = 300
+net.core.netdev_max_backlog = 1000
+net.core.netdev_rss_key = 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
+net.core.netdev_tstamp_prequeue = 1
+net.ipv4.tcp_l3mdev_accept = 0
+net.irda.devname = Linux
+#+END_SRC
+
+** uname -s: 显示内核名称
+#+BEGIN_SRC shell
+  uname -s
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Linux
+#+END_SRC
+
+** uname -r: 显示内核版本
+#+BEGIN_SRC shell
+  uname -r
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+4.9.6-1-ARCH
+#+END_SRC
+
+* 文件系统信息
+** isosize命令: 显示输出iso9660文件系统大小
+isosize命令用于显示输出iso9660文件系统的大小. 该文件可以是普通的文件,也可以是一个块设备. 如果没有指定相关选项,默认以字节方式显示大小.
+
+#+BEGIN_SRC shell
+  isosize [-x] [-d num] iso9660_image_file
+#+END_SRC
+
+其中:
+| 选项   | 说明           |
+|--------+----------------|
+| -x     | 显示有多少扇区 |
+| -d num | 指定一个块有num个字节,一共有多少个块 |
+
+** stat命令: 显示文件/文件系统的详细信息
+#+BEGIN_SRC shell
+  stat [-L] [-f] [-t] [-c FMT] filename
+#+END_SRC
+
+命令stat的选项说明:
+| 选项   | 说明                                                   |
+|--------+--------------------------------------------------------|
+| -f     | 显示文件在文件系统中的信息,默认显示的是文件inode的信息 |
+| -L     | 显示符号链接指向文件的信息                             |
+| -t     | 简洁模式,只显示摘要信息                                |
+| -c FMT | 按指定格式显示信息,使用 =stat --help= 来查看具体格式   |
+
+* 进程信息
+** ipcs命令: 显示IPC设备信息
+ipcs命令显示调用进程可以访问的IPC设备信息
+#+BEGIN_SRC shell
+  ipcs --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   ipcs [resource-option...] [output-option]
+   ipcs -m|-q|-s -i <id>
+
+  Show information on IPC facilities.
+
+  Options:
+   -i, --id <id>  print details on resource identified by <id>
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  Resource options:
+   -m, --shmems      显示共享内存
+   -q, --queues      显示消息队列
+   -s, --semaphores  显示信号队列
+   -a, --all         显示全部信息 (default)
+
+  Output options:
+   -t, --time        显示 attach, detach and change的时间
+   -p, --pid         显示创建者以及最后操作的进程PID
+   -c, --creator     显示创建者以及所有者信息
+   -l, --limits      显示限制信息,如最大队列长度,段最小尺寸等
+   -u, --summary     显示统计信息
+       --human       show sizes in human-readable format
+   -b, --bytes       show sizes in bytes
+
+  For more details see ipcs(1).
+#+END_SRC
+
+
+** ipcrm命令: 删除消息队列,信号量或共享内存段
+#+BEGIN_SRC shell
+  ipcrm -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   ipcrm [options]
+   ipcrm shm|msg|sem <id>...
+
+  Remove certain IPC resources.
+
+  Options:
+   -m, --shmem-id <id>        remove shared memory segment by id
+   -M, --shmem-key <key>      remove shared memory segment by key
+   -q, --queue-id <id>        remove message queue by id
+   -Q, --queue-key <key>      remove message queue by key
+   -s, --semaphore-id <id>    remove semaphore by id
+   -S, --semaphore-key <key>  remove semaphore by key
+   -a, --all[=shm|msg|sem]    remove all (in the specified category)
+   -v, --verbose              explain what is being done
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  For more details see ipcrm(1).
+#+END_SRC
+
+** pmap命令: 显示指定程序占用内存的情况
+#+BEGIN_SRC shell
+  pmap -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   pmap [options] PID [PID ...]
+
+  Options:
+   -x, --extended              show details
+   -X                          show even more details
+              WARNING: format changes according to /proc/PID/smaps
+   -XX                         show everything the kernel provides
+   -c, --read-rc               read the default rc
+   -C, --read-rc-from=<file>   read the rc from file
+   -n, --create-rc             create new default rc
+   -N, --create-rc-to=<file>   create new rc to file
+              NOTE: pid arguments are not allowed with -n, -N
+   -d, --device                show the device format
+   -q, --quiet                 do not display header and footer
+   -p, --show-path             show path in the mapping
+   -A, --range=<low>[,<high>]  limit results to the given range
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  For more details see pmap(1).
+#+END_SRC
+
+#+BEGIN_SRC shell
+  pmap $$
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+3612:   sh
+08048000    864K r-x-- bash
+08120000      4K r---- bash
+08121000      8K rw--- bash
+08123000     44K rw---   [ anon ]
+099dd000    132K rw---   [ anon ]
+b7340000   2048K r---- locale-archive
+b7540000      8K rw---   [ anon ]
+b7542000    416K r-x-- libncursesw.so.6.0
+b75aa000      4K ----- libncursesw.so.6.0
+b75ab000      8K r---- libncursesw.so.6.0
+b75ad000      4K rw--- libncursesw.so.6.0
+b75ae000      4K rw---   [ anon ]
+b75af000   1736K r-x-- libc-2.24.so
+b7761000      4K ----- libc-2.24.so
+b7762000      8K r---- libc-2.24.so
+b7764000      4K rw--- libc-2.24.so
+b7765000     12K rw---   [ anon ]
+b7768000     12K r-x-- libdl-2.24.so
+b776b000      4K r---- libdl-2.24.so
+b776c000      4K rw--- libdl-2.24.so
+b776d000    268K r-x-- libreadline.so.7.0
+b77b0000      4K ----- libreadline.so.7.0
+b77b1000      4K r---- libreadline.so.7.0
+b77b2000     16K rw--- libreadline.so.7.0
+b77b6000      4K rw---   [ anon ]
+b77d5000      8K rw---   [ anon ]
+b77d7000      8K r----   [ anon ]
+b77d9000      8K r-x--   [ anon ]
+b77db000    136K r-x-- ld-2.24.so
+b77fd000      4K r---- ld-2.24.so
+b77fe000      4K rw--- ld-2.24.so
+bf855000    132K rw---   [ stack ]
+ total     5924K
+#+END_SRC
+
+** fuser: 找出那些进程占用了套接字或文件
+#+BEGIN_SRC shell
+  Usage: fuser [-fMuvw] [-a|-s] [-4|-6] [-c|-m|-n SPACE] [-k [-i] [-SIGNAL]] NAME...
+         fuser -l
+         fuser -V
+  Show which processes use the named files, sockets, or filesystems.
+
+    -a,--all              display unused files too
+    -i,--interactive      杀死进程前先确认 (ignored without -k)
+    -k,--kill             杀死访问文件的进程
+    -l,--list-signals     显示信号列表
+    -m,--mount            show all processes using the named filesystems or block device
+    -M,--ismountpoint     fulfill request only if NAME is a mount point
+    -n,--namespace SPACE  search in this name space (file, udp, or tcp)
+    -s,--silent           silent operation
+    -SIGNAL               往访问文件的进程从发送指定信号
+    -u,--user             显示用户id
+    -v,--verbose          verbose o
+    utput
+    -w,--writeonly        kill only processes with write access
+    -V,--version          display version information
+    -4,--ipv4             search IPv4 sockets only
+    -6,--ipv6             search IPv6 sockets only
+    -                     reset options
+
+    udp/tcp names: [local_port][,[rmt_host][,[rmt_port]]]
+#+END_SRC
+
+#+BEGIN_SRC shell
+  fuser -u  /usr/bin/sh 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+/usr/bin/bash:         569e(lujun9972)   613e(lujun9972)   666e(lujun9972)  1289e(lujun9972)  3938e(lujun9972)
+#+END_SRC
+
+#+BEGIN_SRC shell
+  for pid in $(fuser /usr/bin/sh)
+  do
+      ps -elf |grep $pid |grep -v grep
+  done
+
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+4 S lujun99+   569   322  0  80   0 -  1584 wait   06:19 tty1     00:00:00 -bash
+0 S lujun99+   613   569  0  80   0 -  1515 wait   06:19 tty1     00:00:00 /bin/bash /usr/bin/fcitx-fbterm-helper -l
+0 S lujun99+   613   569  0  80   0 -  1515 wait   06:19 tty1     00:00:00 /bin/bash /usr/bin/fcitx-fbterm-helper -l
+0 S lujun99+   618   613  0  80   0 -  8821 poll_s 06:19 tty1     00:00:18 fcitx -D
+4 S lujun99+   619   613  0  80   0 -  5772 -      06:19 tty1     00:00:13 fbterm -i fcitx-fbterm
+0 S lujun99+   666   619  0  80   0 -  1613 wait   06:19 pts/0    00:00:00 /bin/bash
+0 S lujun99+   666   619  0  80   0 -  1613 wait   06:19 pts/0    00:00:00 /bin/bash
+0 S lujun99+  1046   666  0  80   0 -   558 unix_s 06:22 pts/0    00:00:00 emacsclient -a  -t 系统管理工具.org
+0 S lujun99+  1289   619  0  80   0 -  1646 poll_s 06:28 pts/2    00:00:00 /bin/bash
+0 S lujun99+  4044   733  2  80   0 -  1482 wait   07:37 ?        00:00:00 sh
+0 R lujun99+  4058  4044  0  80   0 -  1993 -      07:37 ?        00:00:00 ps -elf
+#+END_SRC
+** pidof命令: 显示指定程序正在运行的进程id
+#+BEGIN_SRC shell
+  pidof -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   pidof [options] [program [...]]
+
+  Options:
+   -s, --single-shot         只显示一个pid
+   -c, --check-root          omit processes with different root
+   -x                        同时返回命令运行的脚本
+   -o, --omit-pid <PID,...>  omit processes with PID
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  For more details see pidof(1).
+#+END_SRC
+
+例如:
+#+BEGIN_SRC shell
+  for pid in $(pidof  emacsclient)
+  do
+      ps -elf |grep $pid |grep -v grep
+  done
+
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+0 S lujun99+  1046   666  0  80   0 -   558 unix_s 06:22 pts/0    00:00:00 emacsclient -a  -t 系统管理工具.org
+#+END_SRC
+
+* 时钟设置
+** hwclock: 硬件时钟显示和设置
+#+BEGIN_SRC shell
+  hwclock --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:
+ hwclock [function] [option...]
+
+Query or set the hardware clock.
+
+Functions:
+ -h, --help           show this help text and exit
+ -r, --show           read hardware clock and print result
+     --get            read hardware clock and print drift corrected result
+     --set            set the RTC to the time given with --date
+ -s, --hctosys        set the system time from the hardware clock
+ -w, --systohc        set the hardware clock from the current system time
+     --systz          set the system time based on the current timezone
+     --adjust         adjust the RTC to account for systematic drift since
+                        the clock was last set or adjusted
+ -c, --compare        periodically compare the system clock with the CMOS clock
+     --getepoch       print out the kernel's hardware clock epoch value
+     --setepoch       set the kernel's hardware clock epoch value to the 
+                        value given with --epoch
+     --predict        predict RTC reading at time given with --date
+ -V, --version        display version information and exit
+
+Options:
+ -u, --utc            the hardware clock is kept in UTC
+     --localtime      the hardware clock is kept in local time
+ -f, --rtc <file>     special /dev/... file to use instead of default
+     --directisa      access the ISA bus directly instead of /dev/rtc
+     --badyear        ignore RTC's year because the BIOS is broken
+     --date <time>    specifies the time to which to set the hardware clock
+     --epoch <year>   specifies the year which is the beginning of the
+                        hardware clock's epoch value
+     --update-drift   update drift factor in /etc/adjtime (requires
+                        --set or --systohc)
+     --noadjfile      do not access /etc/adjtime; this requires the use of
+                        either --utc or --localtime
+     --adjfile <file> specifies the path to the adjust file;
+                        the default is /etc/adjtime
+     --test           do not update anything, just show what would happen
+ -D, --debug          debugging mode
+
+#+END_SRC
+
+例如:获取当前硬件时间,默认采取本地时间
+#+BEGIN_SRC shell :dir /sudo::
+  hwclock
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+2017-01-30 22:17:09.374395+0800
+#+END_SRC
+
+获取硬件时间,使用UTC时间
+#+BEGIN_SRC shell :dir /sudo::
+  hwclock --utc
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+2017-01-30 22:17:41.155697+0800
+#+END_SRC
+
+* 终端命令
+** fgconsole
+fgconsole可以用来显示活动的虚拟终端(VT)
+#+BEGIN_SRC shell
+  fgconsole [-n]
+#+END_SRC
+
+-n 用来显示下一个未分配的虚拟终端号
+** openvt命令: 开启虚拟终端并执行指定命令
+#+BEGIN_SRC shell
+  openvt -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage: openvt [OPTIONS] -- command
+
+  This utility help you to start a program on a new virtual terminal (VT).
+
+  Options:
+    -c, --console=NUM   指定打开的终端号
+    -e, --exec          execute the command, without forking;
+    -f, --force         force opening a VT without checking;
+    -l, --login         make the command a login shell;
+    -u, --user          查看当前终端登录用户,然后以相同的用户名登录到新终端
+    -s, --switch        执行命令时,切换到新的虚拟终端,命令将在新的终端中执行
+    -w, --wait          等待命令结束,与 -s 同时使用时,open会在命令结束后切换回原来的终端
+    -v, --verbose       显示详细的处理过程
+    -V, --version       print program ve
+    rsion and exit;
+    -h, --help          output a brief help message.
+
+#+END_SRC
+
+** vlock命令: 锁定终端
+vlock命令可以用来锁定虚拟终端,以避免别人使用. 被锁定的终端需要输入用户命令才能解锁.
+#+BEGIN_SRC shell
+  vlock -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  vlock: locks virtual consoles, saving your current session.
+  Usage: vlock [options]
+         Where [options] are any of:
+  -c or --current: 只锁定当前虚拟终端,允许用户切换到其他虚拟终端中去,此为默认项
+  -a or --all: 锁定所有的虚拟终端,即使切换到其他虚拟终端,也会要求输入密码
+  -v or --version: Print the version number of vlock and exit.
+  -h or --help: Print this help message and exit.
+#+END_SRC
+
+** bind命令: 设置按键组合
+bind命令可以显示按键组合代表的功能,也可以对按键组合进行设置,使得某些按键组合代表某些特殊功能
+#+BEGIN_SRC shell
+  bind [-v] [-P] [-m keymap] [-f filename] [-q function] [-u name] [-r keyseq] [-x keyseq:shell-command] [keyseq:readline-function or readline-command] [-l] [-p]
+#+END_SRC
+
+bind命令的选项说明
+| 选项                    | 说明                                                                                                     |
+|-------------------------+----------------------------------------------------------------------------------------------------------|
+| -r keyseq               | 删除keysq的绑定                                                                                          |
+| -l                      | 列出所有功能函数的名称                                                                                   |
+| -P                      | 以可重复读入方式列出所有功能函数及其绑定                                                                 |
+| -p                      | 列出所有功能函数及其绑定                                                                                 |
+| -v                      | 以可重复读入方式列出当前设置的按键组合的名称及值                                                         |
+| -V                      | 列出当前设置的按键组合的名称及值                                                                         |
+| -u name                 | 取消对指定功能的所有绑定                                                                                 |
+| -f filename             | 从filename中读入指定的键盘绑定                                                                           |
+| -m keymap               | 设置特殊的按键组合,可以接受的keymap包括:emacs,emacs-stand,emacs-meta,emacs-ctrls,vi,vi-command,vi-insert |
+| -q function             | 列出指定功能的按键或者按键组合                                                                           |
+| -x keyseq:shell-command | 当输入keyseq时,同时执行shell-command命令                                                                           |
+
+** enable命令: 开启或者关闭shell内置的命令
+#+BEGIN_SRC shell
+  enable [-p] [-n name] [-d] [-s] [-a] [-f filename] [name]
+#+END_SRC
+
+enable命令的选项说明
+| 选项        | 说明                                          |
+|-------------+-----------------------------------------------|
+| -a          | 显示所有的内置命令,同时显示该命令是否已经加载 |
+| name        | 指定加载的命令                                |
+| -n name     | 关闭指定的命令                                |
+| -f filename | 从指定的文件加载内置命令                      |
+| -d          | 删除采用-f命令加载的内置命令                  |
+| -p          | 显示已加载的内置命令列表                      |
+| -s          | 仅显示POSIX定义的内置命令                               |
+
+* 编程相关
+** gcov命令: coverage测试工具
+gcov命令通常配合gcc使用,用于分析优化代码. gcov可以给出以下方面的测试结果
+
++ 每行代码被执行的频率
++ 哪些代码实际被执行了
++ 代码的每一部分占用了多少CPU时间
+
+#+BEGIN_SRC shell
+  gcov --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Usage: gcov [OPTION]... SOURCE|OBJ...
+
+Print code coverage information.
+
+  -h, --help                      Print this help, then exit
+  -a, --all-blocks                Show information for every basic block
+  -b, --branch-probabilities      Include branch probabilities in output
+  -c, --branch-counts             Output counts of branches taken
+                                    rather than percentages
+  -d, --display-progress          Display progress information
+  -f, --function-summaries        Output summaries for each function
+  -i, --intermediate-format       Output .gcov file in intermediate text format
+  -l, --long-file-names           Use long output file names for included
+                                    source files
+  -m, --demangled-names           Output demangled function names
+  -n, --no-output                 Do not create an output file
+  -o, --object-directory DIR|FILE Search for object files in DIR or called FILE
+  -p, --preserve-paths            Preserve all pathname components
+  -r, --relative-only             Only show data for relative sources
+  -s, --source-prefix DIR         Source prefix to elide
+  -u, --unconditional-branches    Show unconditional branch counts too
+  -v, --version                   Print version number, then exit
+
+For bug reporting instructions, please see:
+<https://bugs.archlinux.org/>.
+#+END_SRC
+
+* /proc 信息
+用户和程序可以通过查看/proc目录中的相关文件得到系统的运行信息,并可以更改内核的某些参数
+
+在 =/proc= 目录下有很多个以数字命名的目录,对应系统中运行的一个进程的进程号.
 ** /proc/cpuinfo: 显示处理器CPU信息
 #+BEGIN_SRC shell :exports both :results org
   cat  /proc/cpuinfo
@@ -99,4 +993,575 @@ address sizes	: 32 bits physical, 32 bits virtual
 power management:
 
 #+END_SRC
+** /proc/modules: 显示当前系统被加载的模块
+/proc/modules 保存了当前系统中被加载模块的相关信息:
+#+BEGIN_SRC shell 
+  cat /proc/modules
+#+END_SRC
 
+#+RESULTS:
+#+BEGIN_SRC org
+michael_mic 16384 0 - Live 0xf84d4000
+arc4 16384 0 - Live 0xf84cf000
+lib80211_crypt_tkip 20480 0 - Live 0xf8560000
+lib80211_crypt_ccmp 16384 2 - Live 0xf8428000
+mousedev 20480 0 - Live 0xf84c9000
+iTCO_wdt 16384 0 - Live 0xf84b3000
+iTCO_vendor_support 16384 1 iTCO_wdt, Live 0xf83a7000
+ppdev 20480 0 - Live 0xf84d9000
+pcmcia 49152 0 - Live 0xf83b1000
+psmouse 126976 0 - Live 0xf8404000
+gpio_ich 16384 0 - Live 0xf8384000
+pcspkr 16384 0 - Live 0xf837f000
+thinkpad_acpi 69632 0 - Live 0xf84a1000
+nvram 16384 1 thinkpad_acpi, Live 0xf83ff000
+snd_intel8x0 32768 0 - Live 0xf835e000
+snd_intel8x0m 20480 0 - Live 0xf8379000
+ipw2200 135168 0 - Live 0xf842d000
+snd_ac97_codec 98304 2 snd_intel8x0,snd_intel8x0m, Live 0xf8816000
+i915 1187840 2 - Live 0xf8951000
+ac97_bus 16384 1 snd_ac97_codec, Live 0xf832b000
+snd_pcm 81920 3 snd_intel8x0,snd_intel8x0m,snd_ac97_codec, Live 0xf838b000
+snd_timer 28672 1 snd_pcm, Live 0xf8371000
+drm_kms_helper 114688 1 i915, Live 0xf87b1000
+evdev 20480 5 - Live 0xf83a1000
+tg3 155648 0 - Live 0xf876e000
+input_leds 16384 0 - Live 0xf831e000
+libipw 32768 1 ipw2200, Live 0xf8368000
+drm 249856 3 i915,drm_kms_helper, Live 0xf83c1000
+lib80211 16384 3 lib80211_crypt_tkip,lib80211_crypt_ccmp,libipw, Live 0xf828f000
+ptp 20480 1 tg3, Live 0xf8325000
+pps_core 20480 1 ptp, Live 0xf8358000
+yenta_socket 40960 0 - Live 0xf834d000
+pcmcia_rsrc 20480 1 yenta_socket, Live 0xf830f000
+pcmcia_core 20480 3 pcmcia,yenta_socket,pcmcia_rsrc, Live 0xf8318000
+snd 57344 6 thinkpad_acpi,snd_intel8x0,snd_intel8x0m,snd_ac97_codec,snd_pcm,snd_timer, Live 0xf833e000
+mac_hid 16384 0 - Live 0xf828a000
+cfg80211 442368 2 ipw2200,libipw, Live 0xf8701000
+libphy 40960 1 tg3, Live 0xf8333000
+soundcore 16384 1 snd, Live 0xf8285000
+syscopyarea 16384 1 drm_kms_helper, Live 0xf8275000
+i2c_i801 24576 0 - Live 0xf827e000
+sysfillrect 16384 1 drm_kms_helper, Live 0xf8270000
+i2c_smbus 16384 1 i2c_i801, Live 0xf826b000
+sysimgblt 16384 1 drm_kms_helper, Live 0xf821f000
+fb_sys_fops 16384 1 drm_kms_helper, Live 0xf8115000
+i2c_algo_bit 16384 1 i915, Live 0xf81aa000
+rfkill 20480 4 thinkpad_acpi,cfg80211, Live 0xf8219000
+lpc_ich 20480 0 - Live 0xf8265000
+fjes 28672 0 - Live 0xf825d000
+rng_core 16384 0 - Live 0xf8214000
+intel_agp 20480 0 - Live 0xf81f9000
+intel_gtt 20480 2 i915,intel_agp, Live 0xf81c2000
+agpgart 32768 3 drm,intel_agp,intel_gtt, Live 0xf8254000
+thermal 20480 0 - Live 0xf824a000
+battery 16384 0 - Live 0xf81b3000
+ac 16384 0 - Live 0xf8188000
+shpchp 32768 0 - Live 0xf8207000
+parport_pc 28672 0 - Live 0xf81ff000
+parport 40960 2 ppdev,parport_pc, Live 0xf81e6000
+nsc_ircc 24576 0 - Live 0xf81f2000
+irda 151552 1 nsc_ircc, Live 0xf8224000
+video 32768 2 thinkpad_acpi,i915, Live 0xf81b9000
+button 16384 1 i915, Live 0xf818d000
+acpi_cpufreq 20480 1 - Live 0xf81a4000
+tpm_tis 16384 0 - Live 0xf8137000
+tpm_tis_core 20480 1 tpm_tis, Live 0xf8182000
+tpm 36864 2 tpm_tis,tpm_tis_core, Live 0xf819a000
+sch_fq_codel 20480 3 - Live 0xf8176000
+ip_tables 20480 0 - Live 0xf811a000
+x_tables 20480 1 ip_tables, Live 0xf8194000
+ext4 495616 3 - Live 0xf8295000
+crc16 16384 1 ext4, Live 0xf8023000
+jbd2 81920 1 ext4, Live 0xf813c000
+fscrypto 24576 1 ext4, Live 0xf8130000
+mbcache 16384 4 ext4, Live 0xf80d4000
+sd_mod 36864 5 - Live 0xf8121000
+ata_generic 16384 0 - Live 0xf80c6000
+pata_acpi 16384 0 - Live 0xf80ba000
+serio_raw 16384 0 - Live 0xf80b5000
+atkbd 24576 0 - Live 0xf80bf000
+libps2 16384 2 psmouse,atkbd, Live 0xf812b000
+ata_piix 32768 4 - Live 0xf80cb000
+ahci 36864 0 - Live 0xf807d000
+libahci 28672 1 ahci, Live 0xf8098000
+uhci_hcd 40960 0 - Live 0xf8033000
+libata 188416 5 ata_generic,pata_acpi,ata_piix,ahci,libahci, Live 0xf804e000
+scsi_mod 139264 2 sd_mod,libata, Live 0xf8153000
+sdhci_pci 24576 0 - Live 0xf803f000
+sdhci 40960 1 sdhci_pci, Live 0xf8108000
+led_class 16384 3 thinkpad_acpi,input_leds,sdhci, Live 0xf802e000
+mmc_core 118784 2 sdhci_pci,sdhci, Live 0xf81c8000
+ehci_pci 16384 0 - Live 0xf808d000
+ehci_hcd 65536 1 ehci_pci, Live 0xf80a4000
+usbcore 184320 3 uhci_hcd,ehci_pci,ehci_hcd, Live 0xf80da000
+usb_common 16384 1 usbcore, Live 0xf8088000
+i8042 28672 0 - Live 0xf8046000
+serio 20480 6 psmouse,serio_raw,atkbd,i8042, Live 0xf8028000
+#+END_SRC
+
+** /proc/version: 查看系统内核当前版本
+#+BEGIN_SRC shell
+  cat /proc/version
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Linux version 4.8.13-1-ARCH (builduser@tobias) (gcc version 6.2.1 20160830 (GCC) ) #1 SMP PREEMPT Fri Dec 9 07:43:17 CET 2016
+#+END_SRC
+
+** /proc/partitions: 系统分区情况
+#+BEGIN_SRC shell
+  cat /proc/partitions
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+major minor  #blocks  name
+
+   8        0   19535040 sda
+   8        1     102400 sda1
+   8        2    2097152 sda2
+   8        3    5242880 sda3
+   8        4   12091584 sda4
+#+END_SRC
+
+** /proc/interrupts: 显示中断信息
+#+BEGIN_SRC shell
+  cat /proc/interrupts
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+           CPU0       
+  0:     146721   IO-APIC   2-edge      timer
+  1:      15493   IO-APIC   1-edge      i8042
+  8:          1   IO-APIC   8-edge      rtc0
+  9:        188   IO-APIC   9-fasteoi   acpi
+ 12:      33192   IO-APIC  12-edge      i8042
+ 14:      30695   IO-APIC  14-edge      ata_piix
+ 15:          0   IO-APIC  15-edge      ata_piix
+ 16:        213   IO-APIC  16-fasteoi   uhci_hcd:usb2, yenta, i915, enp2s0
+ 17:          0   IO-APIC  17-fasteoi   mmc0, uhci_hcd:usb3
+ 18:          0   IO-APIC  18-fasteoi   uhci_hcd:usb4
+ 19:          0   IO-APIC  19-fasteoi   ehci_hcd:usb1, uhci_hcd:usb5
+ 21:     220663   IO-APIC  21-fasteoi   ipw2200
+ 22:          0   IO-APIC  22-fasteoi   snd_intel8x0
+ 23:          0   IO-APIC  23-fasteoi   i801_smbus, snd_intel8x0m
+NMI:        402   Non-maskable interrupts
+LOC:     208137   Local timer interrupts
+SPU:          0   Spurious interrupts
+PMI:        402   Performance monitoring interrupts
+IWI:     115501   IRQ work interrupts
+RTR:          0   APIC ICR read retries
+RES:          0   Rescheduling interrupts
+CAL:          0   Function call interrupts
+TLB:          0   TLB shootdowns
+TRM:          0   Thermal event interrupts
+THR:          0   Threshold APIC interrupts
+DFR:          0   Deferred Error APIC interrupts
+MCE:          0   Machine check exceptions
+MCP:         17   Machine check polls
+ERR:          0
+MIS:          0
+PIN:          0   Posted-interrupt notification event
+PIW:          0   Posted-interrupt wakeup event
+#+END_SRC
+
+Intel架构中的中断定义如下:
+|         通道 | 说明                           |
+|--------------+--------------------------------|
+|            0 | 计时器通道0                    |
+|            1 | 键盘                           |
+|            2 | 控制器2的级联(用于控制IRQ8-15) |
+|            3 | 串口2                          |
+|            4 | 串口1                          |
+|            5 | 并口2                          |
+|            6 | 软磁盘控制器                   |
+|            7 | 并口1                          |
+|            8 | 实时时钟                       |
+|            9 | 重定向到IRQ2                   |
+|           10 | 未定义                         |
+|           11 | 未定义                         |
+|           12 | 未定义                         |
+|           13 | 数字协处理器                   |
+|           14 | 硬盘控制器                     |
+|           15 | 未定义12                       |
+|       未定义 | 13                             |
+| 数字协处理器 | 14                             |
+|   硬盘控制器 | 15                             |
+|     未定义12 | 未定义                         |
+|           13 | 数字协处理器                   |
+|           14 | 硬盘控制器                     |
+|           15 | 未定义12                       |
+|       未定义 | 13                             |
+| 数字协处理器 | 14                             |
+|   硬盘控制器 | 15                             |
+|     未定义12 | 未定义                         |
+|           13 | 数字协处理器                   |
+|           14 | 硬盘控制器                     |
+|           15 | 未定义12                       |
+|       未定义 | 13                             |
+| 数字协处理器 | 14                             |
+|   硬盘控制器 | 15                             |
+|     未定义12 | 未定义                         |
+|           13 | 数字协处理器                   |
+|           14 | 硬盘控制器                     |
+|           15 | 未定义12                       |
+|       未定义 | 13                             |
+| 数字协处理器 | 14                             |
+|   硬盘控制器 | 15                             |
+|     未定义12 | 未定义                         |
+|           13 | 数字协处理器                   |
+|           14 | 硬盘控制器                     |
+|           15 | 未定义12                       |
+|       未定义 | 13                             |
+| 数字协处理器 | 14                             |
+|   硬盘控制器 | 15                             |
+|     未定义12 | 未定义                         |
+|           13 | 数字协处理器                   |
+|           14 | 硬盘控制器                     |
+|           15 | 未定义12                       |
+|       未定义 | 13                             |
+| 数字协处理器 | 14                             |
+|   硬盘控制器 | 15                             |
+| 未定义          |                                |
+
+* 系统其他信息
+** /etc/issue : 系统的当前发行版本
+#+BEGIN_SRC shell
+  cat /etc/issue
+#+END_SRC
+
+
+#+RESULTS:
+#+BEGIN_SRC org
+Arch Linux \r (\l)
+
+#+END_SRC
+
+** hash: 显示,添加和清除hash表
+在shell中执行过的命令,其路径都会被存到一个hash表中,这样下次再运行该命令时,就可以直接获取到执行命令的路径,而无需再从 =$PATH= 中搜索一次路径了.
+#+BEGIN_SRC shell
+  hash [-l] [-r] [-p path name] [-d name] [-t command]
+#+END_SRC
+
+各选项说明如下:
+| 选项         | 说明                    |
+|--------------+-------------------------|
+| -l           | 显示hash表内容,包括路径 |
+| -r           | 清空hash表              |
+| -p path name | 向hash表中增加内容      |
+| -t command   | 显示指定命令的完整路径  |
+
+
+** locale命令: 显示当前系统的语言设置
+#+BEGIN_SRC shell
+  locale -?
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage: locale [OPTION...] NAME
+    or:  locale [OPTION...] [-a|-m]
+  Get locale-specific information.
+
+   System information:
+    -a, --all-locales          输出所有可用的语言名称
+    -m, --charmaps             输出所有可用的字符集
+
+   Modify output format:
+    -c, --category-name        按指定的类别输出
+    -k, --keyword-name         按指定的关键字输出
+    -v, --verbose              输出详细信
+    息
+
+    -?, --help                 Give this help list
+        --usage                Give a short usage message
+    -V, --version              Print program version
+
+  For bug reporting instructions, please see:
+  <https://bugs.archlinux.org/>.
+#+END_SRC
+
+#+BEGIN_SRC shell
+  locale -a
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+C
+en_US.utf8
+POSIX
+zh_CN.utf8
+zh_TW.utf8
+#+END_SRC
+
+** pwck命令: 检查密码文件的正确性
+#+BEGIN_SRC shell
+  pwck --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  Usage: pwck [options] [passwd [shadow]]
+
+  Options:
+    -h, --help                    display this help message and exit
+    -q, --quiet                   report errors only
+    -r, --read-only               只读模式,只显示错误与警告,并不实际更改文件
+    -R, --root CHROOT_DIR         directory to chroot into
+    -s, --sort                    依据UID对/etc/passwd或/etc/shadow排序
+
+#+END_SRC
+
+** watch命令: 重复执行命令
+#+BEGIN_SRC shell
+  watch -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   watch [options] command
+
+  Options:
+    -b, --beep             beep if command has a non-zero exit
+    -c, --color            interpret ANSI color and style sequences
+    -d, --differences[=<permanent>]
+                           高亮显示每次执行结果的差异
+    -e, --errexit          exit if command has a non-zero exit
+    -g, --chgexit          exit when output from command changes
+    -n, --interval <secs>  设定重复的间隔时间
+    -p, --precise          attempt run command in precise intervals
+    -t, --no-title         turn off header
+    -x, --exec             pass command to exec instead of "sh -c"
+
+   -h, --help     display this help and exit
+   -v, --version  output version information and exit
+
+  For more details see watch(1).
+#+END_SRC
+
+** fbset命令: 帧缓存设备设置
+帧缓存设备提供一个相对简单的接口,用来实现不同种类的图像显示. 帧缓存设备通过/dev目录下指定的设备节点来访问.
+
+fbset使用自己的视频模式数据库(通常为/etc/fb.modes),可以在该数据库中定义视频模式
+#+BEGIN_SRC org
+  Usage: fbset [options] [mode]
+
+  Valid options:
+    General options:
+      -h, --help         : display this usage information
+      --test             : don't change, just test whether the mode is valid
+      -s, --show         : display video mode settings
+      -i, --info         : display all frame buffer information
+      -v, --verbose      : verbose mode
+      -V, --version      : print version information
+      -x, --xfree86      : XFree86 compatibility mode
+
+      -a, --all          : change all virtual consoles on this device
+    Frame buffer special device nodes:
+      -fb <device>       : processed frame buffer device
+                           (default is /dev/fb0)
+    Video mode database:
+      -db <file>         : video mode database file
+                           (default is /etc/fb.modes)
+    Display geometry:
+      -xres <value>      : horizontal resolution (in pixels)
+      -yres <value>      : vertical resolution (in pixels)
+      -vxres <value>     : virtual horizontal resolution (in pixels)
+      -vyres <value>     : virtual vertical resolution (in pixels)
+      -depth <value>     : display depth (in bits per pixel)
+      -nonstd <value>    : select nonstandard video mode
+      -g, --geometry ... : set all geometry parameters at once
+      -match             : set virtual vertical resolution by virtual resolution
+    Display timings:
+      -pixclock <value>  : pixel clock (in picoseconds)
+      -left <value>      : left margin (in pixels)
+      -right <value>     : right margin (in pixels)
+      -upper <value>     : upper margin (in pixel lines)
+      -lower <value>     : lower margin (in pixel lines)
+      -hslen <value>     : horizontal sync length (in pixels)
+      -vslen <value>     : vertical sync length (in pixel lines)
+      -t, --timings ...  : set all timing parameters at once
+    Display flags:
+      -accel <value>     : hardware text acceleration enable (false or true)
+      -hsync <value>     : horizontal sync polarity (low or high)
+      -vsync <value>     : vertical sync polarity (low or high)
+      -csync <value>     : composite sync polarity (low or high)
+      -gsync <value>     : synch on green (false or true)
+      -extsync <value>   : external sync enable (false or true)
+      -bcast <value>     : broadcast enable (false or true)
+      -laced <value>     : interlace enable (false or true)
+      -double <value>    : doublescan enable (false or true)
+      -rgba <r,g,b,a>    : recommended length of color entries
+      -grayscale <value> : grayscale enable (false or true)
+    Display positioning:
+      -move <direction>  : move the visible part (left, right, up or down)
+      -step <value>      : step increment (in pixels or pixel lines)
+                           (default is 8 horizontal, 2 vertical)
+
+#+END_SRC
+例如,设置画面额分辨率为88*720,桌面的分辨率为1024*768:
+#+BEGIN_SRC shell
+  fbset -g 800 720 1024 768
+#+END_SRC
+
+
+** logger命令: 模拟各类消息:
+logger命令可以模拟各类消息,从而可以对syslog.conf文件的配置进行测试
+#+BEGIN_SRC shell
+  logger -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:
+ logger [options] [<message>]
+
+Enter messages into the system log.
+
+Options:
+ -i                       log the logger command's PID
+     --id[=<id>]          log the given <id>, or otherwise the PID
+ -f, --file <file>        log the contents of this file
+ -e, --skip-empty         do not log empty lines when processing files
+     --no-act             do everything except the write the log
+ -p, --priority <prio>    mark given message with this priority
+     --octet-count        use rfc6587 octet counting
+     --prio-prefix        look for a prefix on every line read from stdin
+ -s, --stderr             output message to standard error as well
+ -S, --size <size>        maximum size for a single message
+ -t, --tag <tag>          mark every line with this tag
+ -n, --server <name>      write to this remote syslog server
+ -P, --port <port>        use this port for UDP or TCP connection
+ -T, --tcp                use TCP only
+ -d, --udp                use UDP only
+     --rfc3164            use the obsolete BSD syslog protocol
+     --rfc5424[=<snip>]   use the syslog protocol (the default for remote);
+                            <snip> can be notime, or notq, and/or nohost
+     --sd-id <id>         rfc5424 structured data ID
+     --sd-param <data>    rfc5424 structured data name=value
+     --msgid <msgid>      set rfc5424 message id field
+ -u, --socket <socket>    write to this Unix socket
+     --socket-errors[=<on|off|auto>]
+                          print connection errors when using Unix sockets
+     --journald[=<file>]  write journald entry
+
+ -h, --help     display this help and exit
+ -V, --version  output version information and exit
+
+For more details see logger(1).
+#+END_SRC
+
+** swapoff命令: 卸载交换分区
+#+BEGIN_SRC shell
+  swapoff -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   swapoff [options] [<spec>]
+
+  Disable devices and files for paging and swapping.
+
+  Options:
+   -a, --all              卸载所有加载的交换分区(/proc/swaps)
+   -v, --verbose
+   verbose mode
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  The <spec> parameter:
+   -L <label>             LABEL of device to be used
+   -U <uuid>              UUID of device to be used
+   LABEL=<label>          LABEL of device to be used
+   UUID=<uuid>            UUID of device to be used
+   <device>               name of device to be used
+   <file>                 name of file to be used
+
+  For more details see swapoff(8).
+#+END_SRC
+** swapon命令: 加载交换分区
+#+BEGIN_SRC shell
+  swapon -h
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+  Usage:
+   swapon [options] [<spec>]
+
+  Enable devices and files for paging and swapping.
+
+  Options:
+   -a, --all                加载所有 /etc/fstab 中标识为交换分区的分区
+   -d, --discard[=<policy>] enable swap discards, if supported by device
+   -e, --ifexists           跳过不存在的设备,常与-a连用
+   -f, --fixpgsz            reinitialize the swap space if necessary
+   -o, --options <list>     comma-separated list of swap options
+   -p, --priority <prio>    定义优先级,介于0到32767之间
+   -s, --summary            显示交换分区使用信息 (DEPRECATED)
+       --show[=<columns>]   display summary in definable table
+       --noheadings         don't print table heading (with --show)
+       --raw                use the raw output format (with --show)
+       --bytes              display swap size in bytes in --show output
+   -v, --verbose            verbose mode
+
+   -h, --help     display this help and exit
+   -V, --version  output version information and exit
+
+  The <spec> parameter:
+   -L <label>             synonym for LABEL=<label>
+   -U <uuid>              synonym for UUID=<uuid>
+   LABEL=<label>          specifies device by swap area label
+   UUID=<uuid>            specifies device by swap area UUID
+   PARTLABEL=<label>      specifies device by partition label
+   PARTUUID=<uuid>        specifies device by partition UUID
+   <device>               name of device to be used
+   <file>                 name of file to be used
+
+  Available discard policy types (for --discard):
+   once    : only single-time area discards are issued
+   pages   : freed pages are discarded before they are reused
+  If no policy is selected, both discard types are enabled (default).
+
+  Available columns (for --show):
+   NAME   device file or partition path
+   TYPE   type of the device
+   SIZE   size of the swap area
+   USED   bytes in use
+   PRIO   swap priority
+   UUID   swap uuid
+   LABEL  swap label
+
+  For more details see swapon(8).
+#+END_SRC
+
+#+BEGIN_SRC shell
+  swapon -s
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Filename				Type		Size	Used	Priority
+/dev/sda2                              	partition	2097148	0	-1
+#+END_SRC
+** resize命令: 调整终端屏幕显示大小
+#+BEGIN_SRC shell
+  resize [-v] [-u] [-c] [-s [rows cols]]
+#+END_SRC
+
+resize命令选项说明:
+| 选项         | 说明                                 |
+|--------------+--------------------------------------|
+| -c           | 采用C shell命令格式返回设置命令      |
+| -u           | 采用Bourne shell命令格式返回设置命令 |
+| -s [row col] | 设置屏幕大小                               |
