@@ -1,0 +1,276 @@
+#+TITLE: elasticsearch
+#+AUTHOR: lujun9972
+#+TAGS: .
+#+DATE: [2017-05-25 四 15:10]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* analyze API
+#+BEGIN_EXAMPLE
+  GET /my_index/_analyze
+  {
+    "field": "productID",
+    "text": "XHDK-A-1293-#fJ3"
+  }
+#+END_EXAMPLE
+
+* 搜索
+
+** 精确搜索
+当进行精确值查找时， 我们会使用过滤器（filters）。过滤器很重要，因为它们执行速度非常快，不会计算相关度（直接跳过了整个评分阶段）而且很容易被缓存。
+
+*** term查询
+我们首先来看最为常用的 term 查询， 可以用它处理数字（numbers）、布尔值（Booleans）、日期（dates）以及文本（text）。
+erm 查询会查找我们指定的精确值。作为其本身， term 查询是简单的。它接受一个字段名以及我们希望查找的数值：
+
+#+BEGIN_EXAMPLE
+  {
+      "term" : {
+          "price" : 20
+      }
+  }
+#+END_EXAMPLE
+
+通常当查找一个精确值的时候，我们不希望对查询进行评分计算。只希望对文档进行包括或排除的计算，所以我们会使用 constant_score 查询以非评分模式来执行 term 查询并以一作为统一评分。
+
+例如：
+#+BEGIN_EXAMPLE
+  GET /my_store/products/_search
+  {
+      "query" : {
+          "constant_score" : { 
+              "filter" : {
+                  "term" : { 
+                      "price" : 20
+                  }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+相当于
+
+#+BEGIN_SRC sql
+  SELECT *
+  FROM   products
+  WHERE  price = 20
+#+END_SRC
+
+*** terms查询
+terms查询可以一次查找多个精确指，它几乎与 term 的使用方式一模一样，与指定单个价格不同，我们只要将 term 字段的值改为数组即可：
+
+#+BEGIN_EXAMPLE
+  {
+      "terms" : {
+          "price" : [20, 30]
+      }
+  }
+#+END_EXAMPLE
+
+例如
+#+BEGIN_EXAMPLE
+  GET /my_store/products/_search
+  {
+      "query" : {
+          "constant_score" : {
+              "filter" : {
+                  "terms" : { 
+                      "price" : [20, 30]
+                  }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+类似于
+
+#+BEGIN_SRC sql
+  SELECT *
+  FROM   products
+  WHERE  price = in (20,30)
+#+END_SRC
+
+*term 和 terms 是 必须包含（must contain） 操作，而不是 必须精确相等（must equal exactly）*
+
+如果我们有一个 term（词项）过滤器 { "term" : { "tags" : "search" } } ，它会与以下两个文档 同时 匹配：
+
+#+BEGIN_EXAMPLE
+  { "tags" : ["search"] }
+  { "tags" : ["search", "open_source"] } 
+#+END_EXAMPLE
+
+尽管第二个文档包含除 search 以外的其他词，它还是被匹配并作为结果返回。 
+
+*** range查询
+可以用它来查找处于某个范围内的文档：
+
+**** 数字范围
+#+BEGIN_EXAMPLE
+  "range" : {
+      "price" : {
+          "gte" : 20,
+          "lte" : 40
+      }
+  }
+#+END_EXAMPLE
+
++ gt :: > 大于（greater than）
++ lt :: < 小于（less than）
++ gte :: >= 大于或等于（greater than or equal to）
++ lte :: <= 小于或等于（less than or equal to） 
+         
+例如
+#+BEGIN_EXAMPLE
+  GET /my_store/products/_search
+  {
+      "query" : {
+          "constant_score" : {
+              "filter" : {
+                  "range" : {
+                      "price" : {
+                          "gte" : 20,
+                          "lt"  : 40
+                      }
+                  }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+相当于
+
+#+BEGIN_SRC sql
+  select * from products where price >=20 and price<40
+#+END_SRC
+
+**** 日期范围
+ange 查询同样可以应用在日期字段上：
+
+#+BEGIN_EXAMPLE
+  "range" : {
+      "timestamp" : {
+          "gt" : "2014-01-01 00:00:00",
+          "lt" : "2014-01-07 00:00:00"
+      }
+  }
+#+END_EXAMPLE
+
+当使用它处理日期字段时， range 查询支持对 日期计算（date math） 进行操作，比方说，如果我们想查找时间戳在过去一小时内的所有文档：
+
+#+BEGIN_EXAMPLE
+  "range" : {
+      "timestamp" : {
+          "gt" : "now-1h"
+      }
+  }
+#+END_EXAMPLE
+日期计算还可以被应用到某个具体的时间，并非只能是一个像 now 这样的占位符。只要在某个日期后加上一个双管符号 (||) 并紧跟一个日期数学表达式就能做到：
+
+#+BEGIN_EXAMPLE
+  "range" : {
+      "timestamp" : {
+          "gt" : "2014-01-01 00:00:00",
+          "lt" : "2014-01-01 00:00:00||+1M" 
+      }
+  }
+#+END_EXAMPLE
+
+**** 字符串范围
+range 查询同样可以处理字符串字段
+#+BEGIN_EXAMPLE
+  "range" : {
+      "title" : {
+          "gte" : "a",
+          "lt" :  "b"
+      }
+  }
+#+END_EXAMPLE
+
+*** 布尔过滤器
+一个 bool 过滤器由三部分组成：
+#+BEGIN_EXAMPLE
+  {
+     "bool" : {
+        "must" :     [],
+        "should" :   [],
+        "must_not" : [],
+     }
+  }
+#+END_EXAMPLE
+
++ must :: 所有的语句都 必须（must） 匹配，与 AND 等价。 
++ must_not :: 所有的语句都 不能（must not） 匹配，与 NOT 等价。 
++ should :: 至少有一个语句要匹配，与 OR 等价。 
+            
+例如：
+#+BEGIN_EXAMPLE
+  GET /my_store/products/_search
+  {
+     "query" : {
+        "filtered" : { 
+           "filter" : {
+              "bool" : {
+                "should" : [
+                   { "term" : {"price" : 20}}, 
+                   { "term" : {"productID" : "XHDK-A-1293-#fJ3"}} 
+                ],
+                "must_not" : {
+                   "term" : {"price" : 30} 
+                }
+             }
+           }
+        }
+     }
+  }
+#+END_EXAMPLE
+
+相当于：
+
+#+BEGIN_SRC sql
+  SELECT *
+  FROM   products
+  WHERE  (price = 20 OR productID = "XHDK-A-1293-#fJ3")
+  AND  (price != 30)
+#+END_SRC
+
+*** 嵌套布尔过滤器
+尽管 bool 是一个复合的过滤器，可以接受多个子过滤器，需要注意的是 bool 过滤器本身仍然还只是一个过滤器。
+这意味着我们可以将一个 bool 过滤器置于其他 bool 过滤器内部，这为我们提供了对任意复杂布尔逻辑进行处理的能力。
+
+例如
+#+BEGIN_EXAMPLE
+  GET /my_store/products/_search
+  {
+     "query" : {
+        "filtered" : {
+           "filter" : {
+              "bool" : {
+                "should" : [
+                  { "term" : {"productID" : "KDKE-B-9947-#kL5"}}, 
+                  { "bool" : { 
+                    "must" : [
+                      { "term" : {"productID" : "JODL-X-1937-#pV7"}}, 
+                      { "term" : {"price" : 30}} 
+                    ]
+                  }}
+                ]
+             }
+           }
+        }
+     }
+  }
+#+END_EXAMPLE
+
+类似于
+
+#+BEGIN_SRC sql
+  SELECT *
+  FROM   products
+  WHERE  productID      = "KDKE-B-9947-#kL5"
+  OR (     productID = "JODL-X-1937-#pV7"
+  AND price     = 30 )
+#+END_SRC
+
