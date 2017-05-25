@@ -189,6 +189,55 @@ range 查询同样可以处理字符串字段
   }
 #+END_EXAMPLE
 
+*** exists查询
+这个查询会返回那些在指定字段有任何值的文档
+
+例如：
+#+BEGIN_EXAMPLE
+  GET /my_index/posts/_search
+  {
+      "query" : {
+          "constant_score" : {
+              "filter" : {
+                  "exists" : { "field" : "tags" }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+类似于
+
+#+BEGIN_SRC sql
+  select * from posts where tags is not null
+#+END_SRC
+
+
+*** missing查询
+missing 查询本质上与 exists 恰好相反： 它返回某个特定 _无_ 值字段的文档:
+
+例如：
+#+BEGIN_EXAMPLE
+  GET /my_index/posts/_search
+  {
+      "query" : {
+          "constant_score" : {
+              "filter": {
+                  "missing" : { "field" : "tags" }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+类似于
+
+#+BEGIN_SRC sql
+  select * from posts where tags is null
+#+END_SRC
+
+注意： *我们不能判断是一个字段有明确的null值，还是根本没有这个字段*
+
 *** 布尔过滤器
 一个 bool 过滤器由三部分组成：
 #+BEGIN_EXAMPLE
