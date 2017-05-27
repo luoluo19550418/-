@@ -437,3 +437,129 @@ bool查询与bool过滤器的区别就在于两个 *should* 语句的意义，�
   }
 #+END_EXAMPLE
 
+*** 修改比重
+我们可以通过指定 boost 来控制任何查询语句的相对的权重， boost 的默认值为 1 ，大于 1 会提升一个语句的相对权重。例如这样：
+
+#+BEGIN_EXAMPLE
+  GET /_search
+  {
+      "query": {
+          "bool": {
+              "must": {
+                  "match": {  
+                      "content": {
+                          "query":    "full text search",
+                          "operator": "and"
+                      }
+                  }
+              },
+              "should": [
+                  { "match": {
+                      "content": {
+                          "query": "Elasticsearch",
+                          "boost": 3 
+                      }
+                  }},
+                  { "match": {
+                      "content": {
+                          "query": "Lucene",
+                          "boost": 2 
+                      }
+                  }}
+              ]
+          }
+      }
+  }
+#+END_EXAMPLE
+
+*** dis_max查询
+dis_max查询指的是： 将任何与任一查询匹配的文档作为结果返回，但只将最佳匹配的评分作为查询的评分结果返回 ：
+例如：
+#+BEGIN_EXAMPLE
+  {
+      "query": {
+          "dis_max": {
+              "queries": [
+                  { "match": { "title": "Brown fox" }},
+                  { "match": { "body":  "Brown fox" }}
+              ]
+          }
+      }
+  }
+#+END_EXAMPLE
+
+相比之下，bool查询中，会对should中的所有查询的匹配度进行平均计算来作为整个文档的匹配度。
+
+**** tie_breaker参数
+不过通过指定 =tie_breaker= 这个参数将其他匹配语句的评分也考虑其中：
+#+BEGIN_EXAMPLE
+  {
+      "query": {
+          "dis_max": {
+              "queries": [
+                  { "match": { "title": "Quick pets" }},
+                  { "match": { "body":  "Quick pets" }}
+              ],
+              "tie_breaker": 0.3
+          }
+      }
+  }
+#+END_EXAMPLE
+tie_breaker 参数提供了一种 dis_max 和 bool 之间的折中选择，它的评分方式如下：
+
++ 获得最佳匹配语句的评分 _score 。
++ 将其他匹配语句的评分结果与 tie_breaker 相乘。
++ 对以上评分求和并规范化。
+
+有了 =tie_breaker= ，会考虑所有匹配语句，但最佳匹配语句依然占最终结果里的很大一部分。
+#+BEGIN_QUOTE
+tie_breaker 可以是 0 到 1 之间的浮点数，
+其中 0 代表使用 dis_max 最佳匹配语句的普通逻辑， 
+1 表示所有匹配语句同等重要。
+最佳的精确值需要根据数据与查询调试得出，
+但是合理值应该与零接近（处于 0.1 - 0.4 之间），这样就不会颠覆 dis_max 最佳匹配性质的根本。
+#+END_QUOTE
+*** multi_match查询
+multi_match查询可以针对多个field进行查询，并指定查询类型是 best_fields,most_fields还是cross_fields
+
+它可以用来简化bool查询中should子句中的多个match查询。
+例如：
+#+BEGIN_EXAMPLE
+  {
+      "multi_match": {
+          "query":                "Quick brown fox",
+          "type":                 "best_fields", 
+          "fields":               [ "title", "body" ],
+          "tie_breaker":          0.3,
+          "minimum_should_match": "30%" 
+      }
+  }
+#+END_EXAMPLE
+
++ best_fields 类型是默认值，可以不指定。
+
++ 像 minimum_should_match 或 operator 这样的参数会被传递到生成的 match 查询中。
+
++ 字段名称可以用模糊匹配的方式给出：任何与模糊模式正则匹配的字段都会被包括在搜索条件中.例如：
+  #+BEGIN_EXAMPLE
+    {
+        "multi_match": {
+            "query":  "Quick brown fox",
+            "fields": "*_title"
+        }
+    }
+  #+END_EXAMPLE
+
++ 可以使用 ^ 字符语法为单个字段提升权重，在字段名称的末尾添加 ^boost ， 其中 boost 是一个浮点数：
+  #+BEGIN_EXAMPLE
+    {
+        "multi_match": {
+            "query":  "Quick brown fox",
+            "fields": [ "*_title", "chapter_title^2" ] 
+        }
+    }
+  #+END_EXAMPLE
+  chapter_title 这个字段的 boost 值为 2 ，而其他两个字段 book_title 和 section_title 字段的默认 boost 值为 1
+*** 跨字段搜索
+有时我们想使用 单个 字符串在多个字段中进行搜索。比如存储的时候分了姓和名，但是在搜索时要搜索整个完整的名字。
+
