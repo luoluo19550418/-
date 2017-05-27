@@ -563,3 +563,50 @@ multi_match查询可以针对多个field进行查询，并指定查询类型是 
 *** 跨字段搜索
 有时我们想使用 单个 字符串在多个字段中进行搜索。比如存储的时候分了姓和名，但是在搜索时要搜索整个完整的名字。
 
+有两种方法解决这个问题：
+**** 自定义_all字段
+Elasticsearch 在字段映射中为我们提供 copy_to 参数来实现这个功能：
+
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+      "mappings": {
+          "person": {
+              "properties": {
+                  "first_name": {
+                      "type":     "string",
+                      "copy_to":  "full_name" 
+                  },
+                  "last_name": {
+                      "type":     "string",
+                      "copy_to":  "full_name" 
+                  },
+                  "full_name": {
+                      "type":     "string"
+                  }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+注意： copy_to 设置对multi-field无效。如果尝试这样配置映射，Elasticsearch 会抛异常。
+
+因为多字段只是以不同方式简单索引“主”字段；它们没有自己的数据源。也就是说没有可供 copy_to 到另一字段的数据源。
+
+**** cross-fields查询
+cross_fields 使用词中心式（term-centric）的查询方式，这与 best_fields 和 most_fields 使用字段中心式（field-centric）的查询方式非常不同，它将所有字段当成一个大字段，并在 每个字段 中查找 每个词 。
+
+采用 cross_fields 查询与 自定义 _all 字段 相比，其中一个优势就是它可以在搜索时为单个字段提升权重。
+#+BEGIN_EXAMPLE
+  GET /books/_search
+  {
+      "query": {
+          "multi_match": {
+              "query":       "peter smith",
+              "type":        "cross_fields",
+              "fields":      [ "title^2", "description" ] 
+          }
+      }
+  }
+#+END_EXAMPLE
