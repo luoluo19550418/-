@@ -921,4 +921,109 @@ functions 关键字保持着一个将要被使用的函数列表。 可以为列
 ** ICU插件
 standard 分词器是大多数语言分词的一个合理的起点，特别是西方语言。它也支持亚洲语言，只是有些缺陷，你可以考虑通过 ICU 插件的方式使用 icu_tokenizer 进行替换。
 
+** 停用词
+
+*** 指定停用词
+为了让 标准分析器能与 自定义停用词表连用，我们要做的只需创建一个分析器的配置好的版本，然后将停用词列表传入：
+
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_analyzer": { 
+            "type": "standard", 
+            "stopwords": [ "and", "the" ] 
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
+
++ 自定义的分析器名称为 my_analyzer 。
++ 这个分析器是一个标准 standard 分析器，进行了一些自定义配置。
++ 过滤掉的停用词包括 and 和 the 。 
+  
+特定语言的默认停用词，可以通过使用 _lang_ 符号来指定:
+#+BEGIN_EXAMPLE
+  "stopwords": "_english_"
+#+END_EXAMPLE
+
+停用词可以通过指定一个特殊列表 _none_ 来禁用。例如，使用 _english_ 分析器而不使用停用词，可以通过以下方式做到：
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_english": {
+            "type":      "english", 
+            "stopwords": "_none_" 
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
+
+最后，停用词还可以使用一行一个单词的格式保存在文件中。此文件必须在集群的所有节点上，并且通过 stopwords_path 参数设置路径:
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_english": {
+            "type":           "english",
+            "stopwords_path": "stopwords/english.txt" 
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
++ 停用词文件的路径，该路径相对于 Elasticsearch 的 config 目录。
+
+*** 根据频率自动识别停用词
+match 查询接受一个参数 cutoff_frequency ，从而可以让它将查询字符串里的词项分为低频和高频两组。
+
+#+BEGIN_EXAMPLE
+  {
+    "match": {
+      "text": {
+        "query": "Quick and the dead",
+        "cutoff_frequency": 0.01 
+      }
+  }
+#+END_EXAMPLE
+
++ 任何词项出现在文档中超过1%，被认为是高频词。cutoff_frequency 配置可以指定为一个分数（ 0.01 ）或者一个正整数（ 5 ）。 
++ 低频组（更重要的词项）组成 bulk 大量查询条件，而高频组（次重要的词项）只会用来评分，而不参与匹配过程。
+  然后，此查询会被重写为以下的 bool 查询：
+  #+BEGIN_EXAMPLE
+    {
+      "bool": {
+        "must": { 
+          "bool": {
+            "should": [
+              { "term": { "text": "quick" }},
+              { "term": { "text": "dead"  }}
+            ]
+          }
+        },
+        "should": { 
+          "bool": {
+            "should": [
+              { "term": { "text": "and" }},
+              { "term": { "text": "the" }}
+            ]
+          }
+        }
+      }
+    }
+  #+END_EXAMPLE
+
+*** 
 
