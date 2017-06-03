@@ -881,6 +881,77 @@ functions 关键字保持着一个将要被使用的函数列表。 可以为列
     }
   }
 #+END_EXAMPLE
+** 模糊查询
+*** fuzzy查询
+fuzzy查询对比查询单词与被查询内容中单词的编辑距离来判断是否为同一个单词.
+
+=fuzziness= 参数可以用于设置多少编辑距离内的单词被认为是同一个单词, 默认被设置为 AUTO ，这将导致以下的最大编辑距离：
+
++ 字符串只有 1 到 2 个字符时是 0
++ 字符串有 3 、 4 或者 5 个字符时是 1
++ 字符串大于 5 个字符时是 2 
+  
+例如,假设我们有以下文档:
+#+BEGIN_SRC es
+  POST /my_index/my_type/_bulk
+  { "index": { "_id": 1 }}
+  { "text": "Surprise me!"}
+  { "index": { "_id": 2 }}
+  { "text": "That was surprising."}
+  { "index": { "_id": 3 }}
+  { "text": "I wasn't surprised."}
+#+END_SRC
+
+那么我们执行
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "fuzzy": {
+        "text": {
+          "value": "surprize",
+          "fuzziness": 1
+        }
+      }
+    }
+  }
+#+END_SRC
+
+只能匹配 =Superise me!=
+
+为了提高性能,你还可以通过 =prefix_length= 参数指定不能被 “模糊化” 的初始字符数,毕竟大部分的拼写错误发生在词的结尾，而不是词的开始。 
+
+而 =max_expansions= 可以用来限制将产生的模糊选项的总数量
+*** match查询的模糊匹配
+通过设置match查询的 =fuzziness= 参数,也能进行模糊查询
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "match": {
+        "text": {
+          "query":     "SURPRIZE ME!",
+          "fuzziness": "AUTO",
+          "operator":  "and"
+        }
+      }
+    }
+  }
+#+END_SRC
+
+同样， multi_match 查询也 支持 fuzziness
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "multi_match": {
+        "fields":  [ "text", "title" ],
+        "query":     "SURPRIZE ME!",
+        "fuzziness": "AUTO"
+      }
+    }
+  }
+#+END_SRC
 * 处理人类语言
 以下列出了一些可优化的地方：
 
