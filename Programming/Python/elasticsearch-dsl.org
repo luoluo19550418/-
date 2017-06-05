@@ -1,0 +1,64 @@
+#+TITLE: elasticsearch-dsl
+#+AUTHOR: lujun9972
+#+TAGS: Programming, Python
+#+DATE: [2017-06-05 一 11:38]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* Search DSL
+
+** Search对象
+我们使用Search对象来进行各种类型的搜索：
++ queries
++ filters
++ aggregations
++ sort
++ pagination
++ additional parameters
++ associated client
+
+Search对象是不可边的，几乎所有的操作（除了aggregations）都会返回一个应用了该操作的Search对象 *副本*
+
+当创建Search对象时，可以为 =using= 参数传递一个elasticsearch client来指定搜索哪个集群。
+#+BEGIN_SRC python
+  from elasticsearch import Elasticsearch
+  from elasticsearch_dsl import Search
+
+  client = Elasticsearch()
+
+  s = Search(using=client)
+#+END_SRC
+
+不过你也可以调用 =using= 方法在后期修改Search对象的搜索集群：
+#+BEGIN_SRC python
+  s = s.using(client)
+#+END_SRC
+
+需要调用 =execute= 方法来真正发送请求到Elasticsearch:
+#+BEGIN_SRC python
+  s = Search().using(client).query("match", title="python")
+  response = s.execute()
+#+END_SRC
+
+返回的查询结果可以直接遍历
+#+BEGIN_SRC python
+  for hit in s:
+      print(hit.title)
+#+END_SRC
+
+需要注意的是: Search的结果会被缓存下来,这样下次再调用该Search对象的execute方法时并不会再此申请查询.
+要强制重新查询需要在调用 =execute= 方法时指定 =ignore_cache=True=.
+
+为了方便调试, Search对象还提供了 =to_dict()= 方法,可以将查询条件用字典的方式显示出来.
+
+*** Delete By Query
+通过调用Search对象的 =delete= 方法可以删除掉符合条件的文档.
+#+BEGIN_SRC python
+  s = Search().query("match", title="python")
+  response = s.delete()
+#+END_SRC
+
+*** Queries
+
+** Response对象
+
