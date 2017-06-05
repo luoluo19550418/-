@@ -438,6 +438,7 @@ bool查询与bool过滤器的区别就在于两个 *should* 语句的意义，�
 #+END_EXAMPLE
 
 *** 修改比重
+**** 使用boost在查询时修改权重
 我们可以通过指定 boost 来控制任何查询语句的相对的权重， boost 的默认值为 1 ，大于 1 会提升一个语句的相对权重。例如这样：
 
 #+BEGIN_EXAMPLE
@@ -469,6 +470,26 @@ bool查询与bool过滤器的区别就在于两个 *should* 语句的意义，�
               ]
           }
       }
+  }
+#+END_EXAMPLE
+
+任意类型的查询都能接受 boost 参数,不过,将 boost 设置为 2 ，并不代表最终的评分 _score 是原值的两倍；实际的权重值会经过归一化和一些其他内部优化过程。
+
+在实际应用中，无法通过简单的公式得出某个特定查询语句的 “正确” 权重提升值，只能通过不断尝试获得。
+**** 提升索引的权重
+当在多个索引中搜索时， 可以使用参数 indices_boost 来提升整个索引的权重
+#+BEGIN_EXAMPLE
+  GET /docs_2014_*/_search 
+  {
+    "indices_boost": { 
+      "docs_2014_10": 3,
+      "docs_2014_09": 2
+    },
+    "query": {
+      "match": {
+        "text": "quick brown fox"
+      }
+    }
   }
 #+END_EXAMPLE
 
@@ -610,3 +631,574 @@ cross_fields 使用词中心式（term-centric）的查询方式，这与 best_f
       }
   }
 #+END_EXAMPLE
+
+*** 短语匹配
+match_phrase 短语匹配查询，它匹配相对顺序一致的所有指定词语，
+
+**** 输入时查询
+对于查询时的输入即搜索，可以使用 match_phrase 的一种特殊形式， match_phrase_prefix 查询：
+
+与 match_phrase 一样，它也可以接受 slop 参数（参照 slop ）让相对词序位置不那么严格：
+
+可以通过设置 max_expansions 参数来限制前缀扩展的影响， 一个合理的值是可能是 50 ：
+#+BEGIN_EXAMPLE
+  {
+      "match_phrase_prefix" : {
+          "brand" : {
+              "query": "walker johnnie bl", 
+              "slop":  10
+              "max_expansions": 50
+          }
+      }
+  }
+#+END_EXAMPLE
+
+*** 部分匹配
+但如果想匹配部分而不是全部的词该怎么办？ 部分匹配 允许用户指定查找词的一部分并找出所有包含这部分片段的词。
+
+在某些情况下部分匹配会比较有用， 常见的应用如下：
+
++ 匹配邮编、产品序列号或其他 not_analyzed 未分析值，这些值可以是以某个特定前缀开始，也可以是与某种模式匹配的，甚至可以是与某个正则式相匹配的。
++ 输入即搜索（search-as-you-type） ——在用户键入搜索词过程的同时就呈现最可能的结果。
++ 匹配如德语或荷兰语这样有长组合词的语言，如： Weltgesundheitsorganisation （世界卫生组织，英文 World Health Organization）。
+
+注意: prefix 、 wildcard 和 regexp 查询是基于词操作的，如果用它们来查询 analyzed 字段，它们会检查字段里面的每个词，而不是将字段作为整体来处理。
+
+**** prefix前缀查询
+prefix 查询是一个词级别的底层的查询，它不会在搜索之前分析查询字符串，它假定传入前缀就正是要查找的前缀。
+
+#+BEGIN_EXAMPLE
+  GET /my_index/address/_search
+  {
+      "query": {
+          "prefix": {
+              "postcode": "W1"
+          }
+      }
+  }
+#+END_EXAMPLE
+
+默认状态下， prefix 查询不做相关度评分计算，它只是将所有匹配的文档返回，并为每条结果赋予评分值 1 。它的行为更像是过滤器而不是查询。 prefix 查询和 prefix 过滤器这两者实际的区别就是过滤器是可以被缓存的，而查询不行。
+
+**** wildcard通配符查询
+wildard查询使用标准的 shell 通配符查询： ? 匹配任意字符， * 匹配 0 或多个字符。
+#+BEGIN_EXAMPLE
+  GET /my_index/address/_search
+  {
+      "query": {
+          "wildcard": {
+              "postcode": "W?F*HW" 
+          }
+      }
+  }
+#+END_EXAMPLE
+
+**** regexp正则表达式查询
+#+BEGIN_EXAMPLE
+  GET /my_index/address/_search
+  {
+      "query": {
+          "regexp": {
+              "postcode": "W[0-9].+" 
+          }
+      }
+  }
+#+END_EXAMPLE
+
+*** boosting查询
+可以通过boosting查询明确指定哪些关键字要提升权重,哪些关键字要降低权重
+#+BEGIN_EXAMPLE
+  GET /_search
+  {
+    "query": {
+      "boosting": {
+        "positive": {
+          "match": {
+            "text": "apple"
+          }
+        },
+        "negative": {
+          "match": {
+            "text": "pie tart fruit crumble tree"
+          }
+        },
+        "negative_boost": 0.5
+      }
+    }
+  }
+#+END_EXAMPLE
+它接受 positive 和 negative 查询。只有那些匹配 positive 查询的文档罗列出来，对于那些同时还匹配 negative 查询的文档将通过文档的原始 _score 与 negative_boost 相乘的方式降级后的结果。
+
+为了达到效果， negative_boost 的值必须小于 1.0 。
+
+*** constant_score查询
+有时候我们根本不关心 TF/IDF ， 只想知道一个词是否在某个字段中出现过。
+
+在 constant_score 查询中，它可以包含查询或过滤，为任意一个匹配的文档指定评分 1 ，忽略 TF/IDF 信息：
+#+BEGIN_EXAMPLE
+  GET /_search
+  {
+    "query": {
+      "bool": {
+        "should": [
+          { "constant_score": {
+            "query": { "match": { "description": "wifi" }}
+          }},
+          { "constant_score": {
+            "query": { "match": { "description": "garden" }}
+          }},
+          { "constant_score": {
+            "boost":   2 
+            "query": { "match": { "description": "pool" }}
+          }}
+        ]
+      }
+    }
+  }
+#+END_EXAMPLE
+
+*** function_socre查询
+function_score 查询 是用来控制评分过程的终极武器，它允许为每个与主查询匹配的文档应用一个函数， 以达到改变甚至完全替换原始查询评分 _score 的目的。
+
+Elasticsearch 预定义了一些函数：
+
++ weight :: 为每个文档应用一个简单而不被规范化的权重提升值：当 weight 为 2 时，最终结果为 2 * _score 。 
++ field_value_factor :: 使用这个值来修改 _score ，如将 popularity 或 votes （受欢迎或赞）作为考虑因素。 
++ random_score :: 为每个用户都使用一个不同的随机评分对结果排序，但对某一具体用户来说，看到的顺序始终是一致的。 
++ 衰减函数 —— linear 、 exp 、 gauss :: 将浮动值结合到评分 _score 中，例如结合 publish_date 获得最近发布的文档，结合 geo_location 获得更接近某个具体经纬度（lat/lon）地点的文档，结合 price 获得更接近某个特定价格的文档。 
++ script_score :: 如果需求超出以上范围时，用自定义脚本可以完全控制评分计算，实现所需逻辑。 
+                  
+下面是个例子:
+#+BEGIN_EXAMPLE
+  GET /blogposts/post/_search
+  {
+    "query": {
+      "function_score": {
+        "query": {
+          "multi_match": {
+            "query":    "popularity",
+            "fields": [ "title", "content" ]
+          }
+        },
+        "field_value_factor": {
+          "field":    "votes",
+          "modifier": "log1p",
+          "factor":   0.1
+        },
+        "boost_mode": "sum",
+        "max_boost":  1.5 
+      }
+    }
+  }
+#+END_EXAMPLE
+
+其中 ="field": "votes"= 说明根据votes字段中的值对结果进行调整
+
+="modifier": "log1p"= 则指明了调整的方式. "log1p" 表示调整因子的计算方式为 =log(1 + number_of_votes)=
+其他常用的值还包括 =none= （默认状态）、 =log= 、 =log1p= 、 =log2p= 、 =ln= 、 =ln1p= 、 =ln2p= 、 =square= 、 =sqrt= 以及 =reciprocal=
+
+="boost_mode"= 则控制函数与原查询评分 _score 合并后的结果，参数接受的值为:
++ multiply :: 评分 _score 与函数值的积（默认） 
++ sum :: 评分 _score 与函数值的和 
++ min :: 评分 _score 与函数值间的较小值 
++ max :: 评分 _score 与函数值间的较大值 
++ replace :: 函数值替代评分 _score 
+             
+因此最终结果的计算公式为 =new_score = old_score + log(1 + 0.1 * number_of_votes)=
+
+最后, ="max_boost"= 限定函数的最大限制
+
+
+下面是另一个例子:
+#+BEGIN_EXAMPLE
+  GET /_search
+  {
+    "query": {
+      "function_score": {
+        "filter": { 
+          "term": { "city": "Barcelona" }
+        },
+        "functions": [ 
+          {
+            "filter": { "term": { "features": "wifi" }}, 
+            "weight": 1
+          },
+          {
+            "filter": { "term": { "features": "garden" }}, 
+            "weight": 1
+          },
+          {
+            "filter": { "term": { "features": "pool" }}, 
+            "weight": 2 
+          }
+          {
+            "random_score": { 
+              "seed":  "the users session id" 
+            }
+          }
+        ],
+        "score_mode": "sum", 
+      }
+    }
+  }
+#+END_EXAMPLE
+
+首先要注意的是 =filter= 过滤器代替了 query 查询，function_score 查询接受 query 或 filter ，如果没有特别指定，则默认使用 match_all 查询。
+
+functions 关键字保持着一个将要被使用的函数列表。 可以为列表里的每个函数都指定一个 filter 过滤器，在这种情况下，函数只会被应用到那些与过滤器匹配的文档，例子中，我们为与过滤器匹配的文档指定权重值 weight 为 1 （为与 pool 匹配的文档指定权重值为 2 ）。
+其中 =random_score=  函数会输出一个 0 到 1 之间的数， 当种子 seed 值相同时，生成的随机结果是一致的
+
+
+每个函数返回一个结果，所以需要一种将多个结果缩减到单个值的方式，然后才能将其与原始评分 _score 合并。评分模式 =score_mode= 参数正好扮演这样的角色， 它接受以下值：
+
++ multiply :: 函数结果求积（默认）。 
++ sum :: 函数结果求和。 
++ avg :: 函数结果的平均值。 
++ max :: 函数结果的最大值。 
++ min :: 函数结果的最小值。 
++ first :: 使用首个函数（可以有过滤器，也可能没有）的结果作为最终结果 
+           
+
+使用 =script_score= 则可以内嵌自己的Groovy代码来自定义计算函数:
+#+BEGIN_EXAMPLE
+  GET /_search
+  {
+    "function_score": {
+      "functions": [
+        {
+          "script_score": {
+            "params": { 
+              "threshold": 80,
+              "discount": 0.1,
+              "target": 10
+            },
+            "script": "price  = doc['price'].value; margin = doc['margin'].value;
+            if (price < threshold) { return price * margin / target };
+            return price * (1 - discount) * margin / target;" 
+          }
+        }
+      ]
+    }
+  }
+#+END_EXAMPLE
+** 模糊查询
+*** fuzzy查询
+fuzzy查询对比查询单词与被查询内容中单词的编辑距离来判断是否为同一个单词.
+
+=fuzziness= 参数可以用于设置多少编辑距离内的单词被认为是同一个单词, 默认被设置为 AUTO ，这将导致以下的最大编辑距离：
+
++ 字符串只有 1 到 2 个字符时是 0
++ 字符串有 3 、 4 或者 5 个字符时是 1
++ 字符串大于 5 个字符时是 2 
+  
+例如,假设我们有以下文档:
+#+BEGIN_SRC es
+  POST /my_index/my_type/_bulk
+  { "index": { "_id": 1 }}
+  { "text": "Surprise me!"}
+  { "index": { "_id": 2 }}
+  { "text": "That was surprising."}
+  { "index": { "_id": 3 }}
+  { "text": "I wasn't surprised."}
+#+END_SRC
+
+那么我们执行
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "fuzzy": {
+        "text": {
+          "value": "surprize",
+          "fuzziness": 1
+        }
+      }
+    }
+  }
+#+END_SRC
+
+只能匹配 =Superise me!=
+
+为了提高性能,你还可以通过 =prefix_length= 参数指定不能被 “模糊化” 的初始字符数,毕竟大部分的拼写错误发生在词的结尾，而不是词的开始。 
+
+而 =max_expansions= 可以用来限制将产生的模糊选项的总数量
+*** match查询的模糊匹配
+通过设置match查询的 =fuzziness= 参数,也能进行模糊查询
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "match": {
+        "text": {
+          "query":     "SURPRIZE ME!",
+          "fuzziness": "AUTO",
+          "operator":  "and"
+        }
+      }
+    }
+  }
+#+END_SRC
+
+同样， multi_match 查询也 支持 fuzziness
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "multi_match": {
+        "fields":  [ "text", "title" ],
+        "query":     "SURPRIZE ME!",
+        "fuzziness": "AUTO"
+      }
+    }
+  }
+#+END_SRC
+* 处理人类语言
+以下列出了一些可优化的地方：
+
++ 清除类似 ´ ， ^ ， ¨ 的变音符号，这样在搜索 rôle 的时候也会匹配 role ，反之亦然。请见 归一化词元。
++ 通过提取单词的词干，清除单数和复数之间的差异—fox 与 foxes—以及时态上的差异—jumping 、 jumped 与 jumps 。请见 将单词还原为词根。
++ 清除常用词或者 停用词 ，如 the ， and ， 和 or ，从而提升搜索性能。请见 停用词: 性能与精度。
++ 包含同义词，这样在搜索 quick 时也可以匹配 fast ，或者在搜索 UK 时匹配 United Kingdom 。 请见 同义词。
++ 检查拼写错误和替代拼写方式，或者 同音异型词 —发音一致的不同单词，例如 their 与 there ， meat 、 meet 与 mete 。 请见 拼写错误。 
+  
+** 配置语言分析器
+语言分析器都不需要任何配置，开箱即用， 它们中的大多数都允许你控制它们的各方面行为，具体来说：
+
++ 指定哪些词语不需要进行词干排除
++ 自定义哪些词作为停用词从分析列表中删除掉.
+  
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_english": {
+            "type": "english",
+            "stem_exclusion": [ "organization", "organizations" ], 
+            "stopwords": [ 
+              "a", "an", "and", "are", "as", "at", "be", "but", "by", "for",
+              "if", "in", "into", "is", "it", "of", "on", "or", "such", "that",
+              "the", "their", "then", "there", "these", "they", "this", "to",
+              "was", "will", "with"
+            ]
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
+
+** ICU插件
+standard 分词器是大多数语言分词的一个合理的起点，特别是西方语言。它也支持亚洲语言，只是有些缺陷，你可以考虑通过 ICU 插件的方式使用 icu_tokenizer 进行替换。
+
+** 停用词
+
+*** 指定停用词
+为了让 标准分析器能与 自定义停用词表连用，我们要做的只需创建一个分析器的配置好的版本，然后将停用词列表传入：
+
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_analyzer": { 
+            "type": "standard", 
+            "stopwords": [ "and", "the" ] 
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
+
++ 自定义的分析器名称为 my_analyzer 。
++ 这个分析器是一个标准 standard 分析器，进行了一些自定义配置。
++ 过滤掉的停用词包括 and 和 the 。 
+  
+特定语言的默认停用词，可以通过使用 _lang_ 符号来指定:
+#+BEGIN_EXAMPLE
+  "stopwords": "_english_"
+#+END_EXAMPLE
+
+停用词可以通过指定一个特殊列表 _none_ 来禁用。例如，使用 _english_ 分析器而不使用停用词，可以通过以下方式做到：
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_english": {
+            "type":      "english", 
+            "stopwords": "_none_" 
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
+
+最后，停用词还可以使用一行一个单词的格式保存在文件中。此文件必须在集群的所有节点上，并且通过 stopwords_path 参数设置路径:
+#+BEGIN_EXAMPLE
+  PUT /my_index
+  {
+    "settings": {
+      "analysis": {
+        "analyzer": {
+          "my_english": {
+            "type":           "english",
+            "stopwords_path": "stopwords/english.txt" 
+          }
+        }
+      }
+    }
+  }
+#+END_EXAMPLE
++ 停用词文件的路径，该路径相对于 Elasticsearch 的 config 目录。
+
+*** 根据频率自动识别停用词
+match 查询接受一个参数 cutoff_frequency ，从而可以让它将查询字符串里的词项分为低频和高频两组。
+
+#+BEGIN_EXAMPLE
+  {
+    "match": {
+      "text": {
+        "query": "Quick and the dead",
+        "cutoff_frequency": 0.01 
+      }
+  }
+#+END_EXAMPLE
+
++ 任何词项出现在文档中超过1%，被认为是高频词。cutoff_frequency 配置可以指定为一个分数（ 0.01 ）或者一个正整数（ 5 ）。 
++ 低频组（更重要的词项）组成 bulk 大量查询条件，而高频组（次重要的词项）只会用来评分，而不参与匹配过程。
+  然后，此查询会被重写为以下的 bool 查询：
+  #+BEGIN_EXAMPLE
+    {
+      "bool": {
+        "must": { 
+          "bool": {
+            "should": [
+              { "term": { "text": "quick" }},
+              { "term": { "text": "dead"  }}
+            ]
+          }
+        },
+        "should": { 
+          "bool": {
+            "should": [
+              { "term": { "text": "and" }},
+              { "term": { "text": "the" }}
+            ]
+          }
+        }
+      }
+    }
+  #+END_EXAMPLE
+
+*** 
+
+* 备份与还原
+
+** 备份
+在备份前先需要创建一个保存数据的仓库,有多个仓库类型可以供你选择：
++ 共享文件系统，比如 NAS
++ Amazon S3
++ HDFS (Hadoop 分布式文件系统)
++ Azure Cloud 
+  
+*** 创建仓库
+#+BEGIN_SRC es
+  PUT _snapshot/my_backup 
+  {
+      "type": "fs", 
+      "settings": {
+        "location": "~/backups/es/my_backup",
+        "max_snapshot_bytes_per_sec" : "50mb",
+        "max_restore_bytes_per_sec" : "50mb"
+      }
+  }
+#+END_SRC
+
+其中
++ 仓库名为my_backup
++ =type= 指明了仓库类型为共享文件系统
++ =max_snapshot_bytes_per_sec= 控制了备份数据进仓库时的速度,默认为20mb/s
++ =max_restore_bytes_per_sec= 控制了恢复数据时的速度,默认也是20mb/s
++ 将request method从PUT改成POST会更改已有仓库的设置
+
+*** 备份快照进仓库
+一个仓库可以包含多个快照。 每个快照跟一系列索引相关（比如所有索引，一部分索引，或者单个索引）。当创建快照的时候，你指定你感兴趣的索引然后给快照取一个唯一的名字。
+#+BEGIN_SRC es
+  PUT _snapshot/my_backup/snapshot_2
+  {
+      "indices": "index_1,index_2"
+  }
+#+END_SRC
++ =indices= 指明了快照备份哪些索引,若省略则会备份所有的索引
++ 这个调用会立刻返回，然后快照会在后台运行。若希望调用等待快照完成后再返回,则需要添加 =wait_for_completion=true= 参数.
+
+*** 获取快照信息
+要获得单个快照的信息，直接对仓库和快照名发起一个 GET 请求：
+#+BEGIN_SRC es
+  GET _snapshot/my_backup/snapshot_2
+#+END_SRC
+
+更好的方案是拽取 _status API 数据：
+#+BEGIN_SRC es
+  GET _snapshot/my_backup/snapshot_3/_status
+#+END_SRC
+_status API 立刻返回，然后给出详细的多的统计值输出
+
+要获取一个仓库中所有快照的完整列表，使用 _all 占位符替换掉具体的快照名称：
+#+BEGIN_SRC es
+  GET _snapshot/my_backup/_all
+#+END_SRC
+
+*** 删除快照
+们需要一个命令来删除所有不再有用的旧快照 。这只要对仓库/快照名称发一个简单的 DELETE HTTP 调用：
+
+#+BEGIN_SRC es
+  DELETE _snapshot/my_backup/snapshot_2
+#+END_SRC
+
+*** 取消快照
+你可能想取消一个快照或恢复。 因为它们是长期运行的进程，执行操作的时候一个笔误或者过错就会花很长时间来解决——而且同时还会耗尽有价值的资源。
+
+要取消一个快照，在他进行中的时候简单的删除快照就可以：
+#+BEGIN_SRC es
+  DELETE _snapshot/my_backup/snapshot_3
+#+END_SRC
+这个会中断快照进程。然后删除仓库里进行到一半的快照。
+
+** 恢复
+*** 从快照恢复
+一旦你备份过了数据，恢复它就简单了：只要在你希望恢复回集群的快照 ID 后面加上 _restore 即可：
+
+#+BEGIN_SRC es
+  POST /_snapshot/my_backup/snapshot_1/_restore
+  {
+      "indices": "index_1",
+      "rename_pattern": "index_(.+)",
+      "rename_replacement": "restored_index_$1"
+  }
+#+END_SRC
++ =indices= 指明了恢复哪些索引,默认恢复所有索引.
++ =rename_pattern= 和 =rename_replacement= 指明了如何重命名快照中的索引
++ restore 命令也会立刻返回，恢复进程会在后台进行。如果你更希望你的 HTTP 调用阻塞直到恢复完成，添加 wait_for_completion 标记：
+  #+BEGIN_SRC es
+    POST _snapshot/my_backup/snapshot_1/_restore?wait_for_completion
+  #+END_SRC
++ 在内部实现上，从仓库恢复分片和从另一个节点恢复是等价的。
++ 如果你想监控恢复的进度，你可以使用 recovery API。这是一个通用目的的 API，用来展示你集群中移动着的分片状态。
+  #+BEGIN_SRC es
+    GET restored_index_3/_recovery
+  #+END_SRC
+*** 取消恢复
+要取消一个恢复，你需要删除正在恢复的索引。 因为恢复进程其实就是分片恢复，发送一个 删除索引 API 修改集群状态，就可以停止恢复进程。比如：
+
+#+BEGIN_SRC es
+  DELETE /restored_index_3
+#+END_SRC
+
+
