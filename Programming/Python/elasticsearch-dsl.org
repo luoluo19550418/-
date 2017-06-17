@@ -62,3 +62,221 @@ Search对象是不可边的，几乎所有的操作（除了aggregations）都�
 
 ** Response对象
 
+* Persistence
+
+** 定义Mappings
+#+BEGIN_SRC python
+  from elasticsearch_dsl import Keyword, Mapping, Nested, Text
+
+  # name your type
+  m = Mapping('my-type')
+
+  # add fields
+  m.field('title', 'text')
+
+  m.field('tags', Keyword(multi=True))
+
+  # you can use multi-fields easily
+  m.field('category', 'text', fields={'raw': Keyword()})
+
+  # you can also create a field manually
+  comment = Nested()
+  comment.field('author', Text())
+  comment.field('created_at', Date())
+
+  # and attach it to the mapping
+  m.field('comments', comment)
+
+  # you can also define mappings for the meta fields
+  m.meta('_all', enabled=False)
+
+  # save the mapping into index 'my-index'
+  m.save('my-index')
+#+END_SRC
+
+field函数支持两个keyword:
++ multi :: 设置为 True 则表示该域为列表
++ required :: 设置该field是否必须有值
+
+** 定义分析器
+#+BEGIN_SRC python
+  from elasticsearch_dsl import analyzer, tokenizer
+
+  my_analyzer = analyzer('my_analyzer',
+      tokenizer=tokenizer('trigram', 'nGram', min_gram=3, max_gram=3),
+      filter=['lowercase']
+  )
+#+END_SRC
+
+** 文档操作
+*** 定义文档类型
+要定义自己的文档类型,可以让它继承至DocType类
+#+BEGIN_SRC python
+  from datetime import datetime
+  from elasticsearch_dsl import DocType, Date, Nested, Boolean, \
+      analyzer, InnerObjectWrapper, Completion, Keyword, Text
+
+  html_strip = analyzer('html_strip',
+      tokenizer="standard",
+      filter=["standard", "lowercase", "stop", "snowball"],
+      char_filter=["html_strip"]
+  )
+
+  class Comment(InnerObjectWrapper):
+      def age(self):
+          return datetime.now() - self.created_at
+
+  class Post(DocType):
+      title = Text()
+      title_suggest = Completion()
+      created_at = Date()
+      published = Boolean()
+      category = Text(
+          analyzer=html_strip,
+          fields={'raw': Keyword()}
+      )
+
+      comments = Nested(
+          doc_class=Comment,
+          properties={
+              'author': Text(fields={'raw': Keyword()}),
+              'content': Text(analyzer='snowball'),
+              'created_at': Date()
+          }
+      )
+
+      class Meta:
+          index = 'blog'
+
+      def add_comment(self, author, content):
+          self.comments.append(
+            {'author': author, 'content': content})
+
+      def save(self, ** kwargs):
+          self.created_at = datetime.now()
+          return super().save(** kwargs)
+#+END_SRC
+
+这就创建了一个名为Post的文档类型. 但是在真正使用该文档类型之前,需要调用 =Post.init()= 来先创建mapping
+
+*** 新增文档
+要实际创建一个post,只需要实例化Post类,然后调用势利的 =save()= 方法即可.
+#+BEGIN_SRC python
+  # instantiate the document
+  first = Post(title='My First Blog Post, yay!', published=True)
+  # assign some field values, can be values or lists of values
+  first.category = ['everything', 'nothing']
+  # every document has an id in meta
+  first.meta.id = 47
+
+  # save the document into the cluster
+  first.save()
+#+END_SRC
+
+要注意的是,新建的文档类型中的 =meta= 属性是保留下来专门访问 =_meta= 属性的,所以如果你的文档有 =meta= 这个字段,那么你需要通过 =post['meta']= 来访问.
+*** 获取/更新已有文档
+你还可以使用类方法 =Post.get= 来获取已存的文档
+#+BEGIN_SRC python
+  # retrieve the document
+  first = Post.get(id=42)
+  # now we can call methods, change fields, ...
+  first.add_comment('me', 'This is nice!')
+  # and save the changes into the cluster again
+  first.save()
+
+  # you can also update just individual fields which will call the update API
+  # and also update the document in place
+  first.update(published=True, published_by='me')
+#+END_SRC
+
+若找不到指定文档,则会跑出异常 =elasticsearch.NotFoundError=. 不过你可以通过设置 =ignore=404= 来让方法返回None
+#+BEGIN_SRC python
+  p = Post.get(id='not-in-es', ignore=404)
+  p is None
+#+END_SRC
+
+你还可以使用类方法 =Post.mget= 来一次性获取多个文档
+#+BEGIN_SRC python
+  posts = Post.mget([42, 47, 256])
+#+END_SRC
+mget方法可能抛出 =NotFoundError= 和 =RequestError= 异常,不过这一行为可以通过下面参数进行修改
+
++ missing :: 有三个值:none(默认值),表示文档为None;raise,表示抛出异常;skip表示返回的结果根本不要包含该文档.
++ raise_on_error :: 默认为True,表示有异常的话,则抛出异常. 若为False,则有异常的文档当成missing来处理.
+*** 删除文档
+只需要调用对象方法中的 =delete()= 方法即可
+#+BEGIN_SRC python
+  first = Post.get(id=42)
+  first.delete()
+#+END_SRC
+*** 搜索文档
+可以通过调用类方法 =search= 来创建一个针对该文档类型的搜索器
+#+BEGIN_SRC python
+  # by calling .search we get back a standard Search object
+  s = Post.search()
+  # the search is already limited to the index and doc_type of our document
+  s = s.filter('term', published=True).query('match', title='first')
+
+
+  results = s.execute()
+
+  # when you execute the search the results are wrapped in your document class (Post)
+  for post in results:
+      print(post.meta.score, post.title)
+#+END_SRC
+** Index类创建索引
+#+BEGIN_SRC python
+  from elasticsearch_dsl import Index, DocType, Text, analyzer
+
+  blogs = Index('blogs')
+
+  # define custom settings
+  blogs.settings(
+      number_of_shards=1,
+      number_of_replicas=0
+  )
+
+  # define aliases
+  blogs.aliases(
+      old_blogs={}
+  )
+
+  # register a doc_type with the index
+  blogs.doc_type(Post)
+
+  # can also be used as class decorator when defining the DocType
+  @blogs.doc_type
+  class Post(DocType):
+      title = Text()
+
+  # You can attach custom analyzers to the index
+
+  html_strip = analyzer('html_strip',
+      tokenizer="standard",
+      filter=["standard", "lowercase", "stop", "snowball"],
+      char_filter=["html_strip"]
+  )
+
+  blogs.analyzer(html_strip)
+
+  # delete the index, ignore if it doesn't exist
+  blogs.delete(ignore=404)
+
+  # create the index in elasticsearch
+  blogs.create()
+#+END_SRC
+
+你还可以使用 =clone= 方法复制一份配置一样的索引
+#+BEGIN_SRC python
+  blogs = Index('blogs', using='production')
+  blogs.settings(number_of_shards=2)
+  blogs.doc_type(Post)
+
+  # create a copy of the index with different name
+  company_blogs = blogs.clone('company-blogs')
+
+  # create a different copy on different cluster
+  dev_blogs = blogs.clone('blogs', using='dev')
+  # and change its settings
+  dev_blogs.setting(number_of_shards=1)
+#+END_SRC
