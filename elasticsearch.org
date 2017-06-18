@@ -70,6 +70,36 @@ document所属类别. 可以用大小写字母
   }
 #+END_SRC
 这时只要$version比es中的版本 *大* 就能更新了.
+** 部分更新
+#+BEGIN_SRC es
+  POST /index/type/$id/_update
+  {
+    "doc":{
+      要修改的几个field
+    }
+  }
+#+END_SRC
+
+partial update也支持指定更新的document version
+#+BEGIN_SRC es
+  POST /index/type/$id/_update?_version=$version
+  {
+    "doc":{
+      要修改的几个field
+    }
+  }
+#+END_SRC
+
+
+实际上partial update还常用到参数 =retry_on_conflict= 用来指定更新冲突时重复更新的次数.
+#+BEGIN_SRC es
+  POST /index/type/$id/_update?retry_on_conflict=$times
+  {
+    "doc":{
+      要修改的几个field
+    }
+  }
+#+END_SRC
 
 
 ** 删除
