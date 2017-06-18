@@ -30,6 +30,8 @@ document所属类别. 可以用大小写字母
      POST /index/type
    #+END_SRC
 
+** _version
+版本号,从1开始累加,是乐观锁的基础
 ** _source元数据
 文档内容
 
@@ -51,6 +53,25 @@ document所属类别. 可以用大小写字母
   }
 #+END_SRC
 这样当$id已经存在时,不会替换原document,而是会提示错误
+** 带版本号更新
+#+BEGIN_SRC es
+  PUT /index/type/$id?version=$version
+  {
+    内容
+  }
+#+END_SRC
+这样只有当es中该document的版本 *等于* $version时才会更新该document
+
+但也可以extern_version
+#+BEGIN_SRC es
+  PUT /index/type/$id?version=$version&version_type=external
+  {
+    内容
+  }
+#+END_SRC
+这时只要$version比es中的版本 *大* 就能更新了.
+
+
 ** 删除
 #+BEGIN_SRC es
   DELETE /index/type/$id
