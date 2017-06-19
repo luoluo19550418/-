@@ -5,6 +5,107 @@
 #+LANGUAGE:  zh-CN
 #+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
 
+* document的核心元数据
+
+** _index
+文档所属的索引. 我们一般把类似的数据(document的大部分field相同)放在一个索引中,非类似的数据放在不同索引中.
+
+索引只能由小写字母组成
+
+** _type   
+document所属类别. 可以用大小写字母
+
+** _id  
+指定文档id,可以手工指定,也可以由es自动生成.
+
+1. 手工指定id
+   #+BEGIN_SRC es
+     PUT /index/type/id
+   #+END_SRC
+
+   一般在从其他系统导入数据到es中时使用这种方式,id为原数据的主键
+
+2. 自动生成id
+   #+BEGIN_SRC es
+     POST /index/type
+   #+END_SRC
+
+** _version
+版本号,从1开始累加,是乐观锁的基础
+** _source元数据
+文档内容
+
+可以使用 =GET /index/type/1?_source=field1,field2= 语法来定制返回_source中的数据
+   
+* document的创建,更新与删除
+** 创建/全量替换
+#+BEGIN_SRC es
+  PUT /index/type/$id
+  {
+    内容
+  }
+#+END_SRC
+** 强制创建
+#+BEGIN_SRC es
+  PUT /index/type/$id/_create
+  {
+    内容
+  }
+#+END_SRC
+这样当$id已经存在时,不会替换原document,而是会提示错误
+** 带版本号更新
+#+BEGIN_SRC es
+  PUT /index/type/$id?version=$version
+  {
+    内容
+  }
+#+END_SRC
+这样只有当es中该document的版本 *等于* $version时才会更新该document
+
+但也可以extern_version
+#+BEGIN_SRC es
+  PUT /index/type/$id?version=$version&version_type=external
+  {
+    内容
+  }
+#+END_SRC
+这时只要$version比es中的版本 *大* 就能更新了.
+** 部分更新
+#+BEGIN_SRC es
+  POST /index/type/$id/_update
+  {
+    "doc":{
+      要修改的几个field
+    }
+  }
+#+END_SRC
+
+partial update也支持指定更新的document version
+#+BEGIN_SRC es
+  POST /index/type/$id/_update?_version=$version
+  {
+    "doc":{
+      要修改的几个field
+    }
+  }
+#+END_SRC
+
+
+实际上partial update还常用到参数 =retry_on_conflict= 用来指定更新冲突时重复更新的次数.
+#+BEGIN_SRC es
+  POST /index/type/$id/_update?retry_on_conflict=$times
+  {
+    "doc":{
+      要修改的几个field
+    }
+  }
+#+END_SRC
+
+
+** 删除
+#+BEGIN_SRC es
+  DELETE /index/type/$id
+#+END_SRC
 * analyze
 它是将文本块转换为有区别的、规范化的 token 的一个过程，目的是为了（a）创建倒排索引以及（b）查询倒排索引。 
 #+BEGIN_EXAMPLE
@@ -392,6 +493,17 @@ match 查询支持 *minimum_should_match* 最小匹配参数， 这让我们可�
     }
   }
 #+END_EXAMPLE
+
+*** match_phrase 查询(d短语搜索)
+短语搜索不会对搜索字段进行拆分
+  GET /my_index/my_type/_search
+  {
+      "query": {
+          "match_phrase": {
+              "title": "QUICK! DOG"
+          }
+      }
+  }
 
 *** bool查询
 bool查询与bool过滤器功能类似，但是它除了决定一个文档是否应该被包括在结果中，还会计算文档的相关程度 。
@@ -952,6 +1064,72 @@ fuzzy查询对比查询单词与被查询内容中单词的编辑距离来判断
     }
   }
 #+END_SRC
+* 聚合分析
+** group by
+#+BEGIN_SRC es
+  GET /cheshi/product/_search
+  {
+    "aggs":{
+      "group_by_tags":{
+        "terms":{"field":"tags"}
+      }
+    }
+  }
+#+END_SRC
+其中"group_by_tags"是任意取的一个名字,且文本field的fielddata属性要设置为true
+#+BEGIN_SRC es
+  PUT /cheshi/_mapping/product
+  {
+    "properties":{
+      "tags":{
+        "type":"text",
+        "fielddata":"true"
+      }
+    }
+  }
+#+END_SRC
+** 先分组,再算平均值
+#+BEGIN_SRC es
+  GET /cheshi/product/_search
+  {
+    "size":0,
+    "aggs":{
+      "group_by_tags":{
+        "terms":{"field":"tags"},
+        "aggs":{
+          "avg_price":{
+            "avg":{"field":"price"}
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
+** 分组排序
+#+BEGIN_SRC es
+  GET /cheshi/product/_search
+  {
+    "aggs":{
+      "group_by_tags":{
+        "terms":{
+          "field":"tags",
+          "order":{
+            "avg_price":"desc"    // 按照avg_price排序
+          }
+        },
+        "aggs":{
+          "avg_price":{
+            "avg":{
+              "field":"price"
+            }
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
+
+
 * 处理人类语言
 以下列出了一些可优化的地方：
 
