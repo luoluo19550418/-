@@ -58,7 +58,300 @@ Search对象是不可边的，几乎所有的操作（除了aggregations）都�
   response = s.delete()
 #+END_SRC
 
-*** Queries
+*** 各种类型的查询类
+该库为所有类型的查询都设计了独立的类. 这些类可以接受任意的关键字参数,这些关键字会成为最终请求报文的顶层key.
+#+BEGIN_SRC python
+  from elasticsearch_dsl.query import MultiMatch, Match
+
+  # {"multi_match": {"query": "python django", "fields": ["title", "body"]}}
+  MultiMatch(query='python django', fields=['title', 'body'])
+
+  # {"match": {"title": {"query": "web framework", "type": "phrase"}}}
+  Match(title={"query": "web framework", "type": "phrase"})
+#+END_SRC
+
+你也可以统一使用 =Q= 来生成这些查询对象
+#+BEGIN_SRC python
+  Q("multi_match", query='python django', fields=['title', 'body'])
+  Q({"multi_match": {"query": "python django", "fields": ["title", "body"]}})
+#+END_SRC
+
+=Q= 的参数还可以是其他查询对象:
+#+BEGIN_SRC python
+  q = Q('bool',
+      must=[Q('match', title='python')],
+      should=[Q(...), Q(...)],
+      minimum_should_match=1
+  )
+  s = Search().query(q)
+#+END_SRC
+
+Search对象的query方法也可以直接接受一个查询对象 #+BEGIN_SRC python
+  q = Q("multi_match", query='python django', fields=['title', 'body'])
+  s = s.query(q)
+#+END_SRC
+
+*** Query combination
+可以使用逻辑操作符整合多个查询对象:
+#+BEGIN_SRC python
+  Q("match", title='python') | Q("match", title='django')
+  # {"bool": {"should": [...]}}
+
+  Q("match", title='python') & Q("match", title='django')
+  # {"bool": {"must": [...]}}
+
+  ~Q("match", title="python")
+  # {"bool": {"must_not": [...]}}
+#+END_SRC
+
+当对一个Search对象多次调用query方法,则表示使用 =&= 来整合这些查询条件.
+
+*** Filters
+若希望在filter context中进行查询,可以使用Search对象的 =filter= 方法:
+#+BEGIN_SRC python
+  s = Search()
+  s = s.filter('terms', tags=['search', 'python'])
+  # 等价于
+  s = Search()
+  s = s.query('bool', filter=[Q('terms', tags=['search', 'python'])])
+#+END_SRC
+
+也可以使用 =exclude= 方法排除某些item
+#+BEGIN_SRC python
+  s = Search()
+  s = s.exclude('terms', tags=['search', 'python'])
+#+END_SRC
+
+*** Aggregations
+To define an aggregation, you can use the A shortcut:
+
+#+BEGIN_SRC python
+  A('terms', field='tags')
+  # {"terms": {"field": "tags"}}
+#+END_SRC
+
+To nest aggregations, you can use the .bucket(), .metric() and .pipeline() methods:
+
+#+BEGIN_SRC python
+  a = A('terms', field='category')
+  # {'terms': {'field': 'category'}}
+
+  a.metric('clicks_per_category', 'sum', field='clicks')\
+      .bucket('tags_per_category', 'terms', field='tags')
+  # {
+  #   'terms': {'field': 'category'},
+  #   'aggs': {
+  #     'clicks_per_category': {'sum': {'field': 'clicks'}},
+  #     'tags_per_category': {'terms': {'field': 'tags'}}
+  #   }
+  # }
+#+END_SRC
+
+To add aggregations to the Search object, use the .aggs property, which acts as a top-level aggregation:
+
+#+BEGIN_SRC python
+  s = Search()
+  a = A('terms', field='category')
+  s.aggs.bucket('category_terms', a)
+  # {
+  #   'aggs': {
+  #     'category_terms': {
+  #       'terms': {
+  #         'field': 'category'
+  #       }
+  #     }
+  #   }
+  # }
+#+END_SRC
+
+or
+
+#+BEGIN_SRC python
+  s = Search()
+  s.aggs.bucket('articles_per_day', 'date_histogram', field='publish_date', interval='day')\
+      .metric('clicks_per_day', 'sum', field='clicks')\
+      .pipeline('moving_click_average', 'moving_avg', buckets_path='clicks_per_day')\
+      .bucket('tags_per_day', 'terms', field='tags')
+
+  s.to_dict()
+  # {
+  #   "aggs": {
+  #     "articles_per_day": {
+  #       "date_histogram": { "interval": "day", "field": "publish_date" },
+  #       "aggs": {
+  #         "clicks_per_day": { "sum": { "field": "clicks" } },
+  #         "moving_click_average": { "moving_avg": { "buckets_path": "clicks_per_day" } },
+  #         "tags_per_day": { "terms": { "field": "tags" } }
+  #       }
+  #     }
+  #   }
+  # }
+#+END_SRC
+
+You can access an existing bucket by its name:
+
+#+BEGIN_SRC python
+  s = Search()
+
+  s.aggs.bucket('per_category', 'terms', field='category')
+  s.aggs['per_category'].metric('clicks_per_category', 'sum', field='clicks')
+  s.aggs['per_category'].bucket('tags_per_category', 'terms', field='tags')
+#+END_SRC
+
+*** Sorting
+To specify sorting order, use the .sort() method:
+
+#+BEGIN_SRC python
+  s = Search().sort(
+      'category',
+      '-title',
+      {"lines" : {"order" : "asc", "mode" : "avg"}}
+  )
+#+END_SRC
+
+It accepts positional arguments which can be either strings or dictionaries. String value is a field name, optionally prefixed by the - sign to specify a descending order.
+
+To reset the sorting, just call the method with no arguments:
+
+#+BEGIN_SRC python
+  s = s.sort()
+#+END_SRC
+
+*** 分页
+分页的方法就算是使用Python的切片
+#+BEGIN_SRC python
+  s = s[10:20]
+  # {"from": 10, "size": 10}
+#+END_SRC
+
+*** Highlighting
+
+To set common attributes for highlighting use the highlight_options method:
+
+#+BEGIN_SRC python
+  s = s.highlight_options(order='score')
+#+END_SRC
+
+Enabling highlighting for individual fields is done using the highlight method:
+
+#+BEGIN_SRC python
+  s = s.highlight('title')
+  # or, including parameters:
+  s = s.highlight('title', fragment_size=50)
+#+END_SRC
+
+The fragments in the response will then be available on reach Result object as .meta.highlight.FIELD which will contain the list of fragments:
+
+#+BEGIN_SRC python
+  response = s.execute()
+  for hit in response:
+      for fragment in hit.meta.highlight.title:
+          print(fragment)
+#+END_SRC
+
+*** Suggestions
+To specify a suggest request on your Search object use the suggest method:
+
+#+BEGIN_SRC python
+  s = s.suggest('my_suggestion', 'pyhton', term={'field': 'title'})
+#+END_SRC
+
+The first argument is the name of the suggestions (name under which it will be returned), second is the actual text you wish the suggester to work on and the keyword arguments will be added to the suggest’s json as-is which means that it should be one of term, phrase or completion to indicate which type of suggester should be used.
+
+If you only wish to run the suggestion part of the search (via the _suggest endpoint) you can do so via execute_suggest:
+
+#+BEGIN_SRC python
+  s = s.suggest('my_suggestion', 'pyhton', term={'field': 'title'})
+  suggestions = s.execute_suggest()
+
+  print(suggestions.my_suggestion)
+#+END_SRC
+
+*** Extra properties and parameters
+
+To set extra properties of the search request, use the .extra() method. This can be used to define keys in the body that cannot be defined via a specific API method like explain or search_after:
+
+#+BEGIN_SRC python
+  s = s.extra(explain=True)
+#+END_SRC
+
+To set query parameters, use the .params() method:
+
+#+BEGIN_SRC python
+  s = s.params(search_type="count")
+#+END_SRC
+
+If you need to limit the fields being returned by elasticsearch, use the source() method:
+
+#+BEGIN_SRC python
+  # only return the selected fields
+  s = s.source(['title', 'body'])
+  # don't return any fields, just the metadata
+  s = s.source(False)
+  # explicitly include/exclude fields
+  s = s.source(include=["title"], exclude=["user.*"])
+  # reset the field selection
+  s = s.source(None)
+#+END_SRC
+
+*** 序列化与反序列化
+调用Search对象的 =to_dict()= 方法可以将Search对象转换成字典格式.
+
+反之,调用类方法 =from_dict= 可以根据字典生成心的Search对象.
+#+BEGIN_SRC python
+  s = Search.from_dict({"query": {"match": {"title": "python"}}})
+#+END_SRC
+
+也可以调用Search对象中的 =update_from_dict= 来更新本对象中的内容:
+#+BEGIN_SRC python
+  s = Search(index='i')
+  s.update_from_dict({"query": {"match": {"title": "python"}}, "size": 42})
+#+END_SRC
 
 ** Response对象
+调用Rearch对象的 =execute= 方法后就会返回一个Response对象.
 
+要获取回应中的内容也很简单,直接用点符号访问就行了:
+#+BEGIN_SRC python
+  response = s.execute()
+
+  print(response.success())
+  # True
+
+  print(response.took)
+  # 12
+
+  print(response.hits.total)
+
+  print(response.suggest.my_suggestions)
+#+END_SRC
+
+若想获取response中的元数据,则直接访问Response对象中的 =meta= 属性(注意不是_meta):
+#+BEGIN_SRC python
+  response = s.execute()
+  h = response.hits[0]
+  print('/%s/%s/%s returned with score %f' % (
+      h.meta.index, h.meta.doc_type, h.meta.id, h.meta.score))
+#+END_SRC
+
+注意: *若你的文档中恰好有一个名叫 meta 的域,你只能用 hit['meta'] 这种方法来访问它.*
+
+** MultiSearch
+你可以使用MultiSearch类来一次性进行多个查询
+#+BEGIN_SRC python
+  from elasticsearch_dsl import MultiSearch, Search
+
+  ms = MultiSearch(index='blogs')
+
+  ms = ms.add(Search().filter('term', tags='python'))
+  ms = ms.add(Search().filter('term', tags='elasticsearch'))
+
+  responses = ms.execute()
+
+  for response in responses:
+      print("Results for query %r." % response.search.query)
+      for hit in response:
+          print(hit.title)
+#+END_SRC
+
+* Persistence
