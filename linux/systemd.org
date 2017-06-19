@@ -1,0 +1,51 @@
+#+TITLE: systemd
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2017-06-19 一 11:40]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 单元文件存放位置
+单元文件可以从两个地方加载，优先级从低到高分别是：
++ /usr/lib/systemd/system/ :: 软件包安装的单元
++ /etc/systemd/system/ :: 系统管理员安装的单元
+
+注意 *当 systemd 运行在用户模式下时，使用的加载路径是完全不同的.*
+
+* 编写单元文件
+systemd 单元文件的语法来源于 XDG 桌面项配置文件.desktop文件，最初的源头则是Microsoft Windows的.ini文件。
+
+systemd 单元名仅能包含 ASCII 字符，下划线和点号。其它字符需要用 C-style "\x2d" 替换。参阅 man systemd.unit 和 man systemd-escape 。}}
+
+** 处理依赖关系
+
+** 服务类型
+
+* systemd的用户实例
+systemd会给每个用户生成一个systemd实例(systemd --user)，用户可以在这个实例下管理服务，启动、停止、启用以及禁用他们自己的单元。
+
+用户单元可以在以下目录找到(按优先级从低到高排序）：
++ /usr/lib/systemd/user/ :: 这里存放的是各个软件包安装的服务。
++ /etc/systemd/user/ :: 这里存放的是由系统管理员维护的系统范围的用户服务。
++ ~/.config/systemd/user/ :: 这里存放的是用户自身的服务。
+
+** 关于依赖
+systemd --user 和 systemd --system运行于不同的进程里面，所以用户单元不能引用或依赖于系统单元。
+
+** 环境变量
+systemd用户实例不会继承类似.bashrc中定义的 环境变量。systemd用户实例有三种设置环境变量的方式：
+
+1. 对于有$HOME目录的用户，可以在~/.config/systemd/user.conf文件中使用DefaultEnvironment选项，这些设置只对当前用户的用户单元有效。
+2. 在 /etc/systemd/user.conf文件中使用 DefaultEnvironment 选项。这个配置在所有的用户单元中可见。
+3. 在 /etc/systemd/system/user@.service.d/ 下增加配置文件设置。 这个配置在所有的用户单元中可见。
+
+在任何时候， 使用 systemctl --user set-environment 或 systemctl --user import-environment. 对设置之后启动的所有用户单元有效，但已经启动的用户单元不会生效。
+
+如果想一次设置多个环境变量，可以写一个配置文件，文件里面每一行定义一个环境变量，用"key=value"的键值对表示，然后在你的启动脚本里添加xargs systemctl --user set-environment < /path/to/file.conf。
+
+假设你在 .bash_profile 中设置了 PATH，让systemd感知到这个变化的最好方法是在修改PATH 之后，加入以下行通知systemd：
+#+BEGIN_SRC shell
+  ~/.bash_profile
+  systemctl --user import-environment PATH
+#+END_SRC
+
