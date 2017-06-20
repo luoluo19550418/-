@@ -117,6 +117,69 @@ partial update也支持指定更新的document version
 #+END_EXAMPLE
 
 * 搜索
+** 超时机制
+默认elasticsearch不会超时,但是可以通过在 _update api后接 =_time=$带单位的时间= 来设置超时
+#+BEGIN_SRC es
+  GET /_search?_timeout=10ms
+#+END_SRC
+** mult-index与multi-type搜索
++ /_search :: 搜索所有索引和类型下的所有数据
++ /index1/_search :: 搜索指定index1下的所有类型的数据
++ /_index1,index2/_search :: 同时搜索两个index下的数据
++ /index*/_search :: 通过通配符去匹配多个索引
++ /index1/type1/_index :: 搜索一个index1下type2类的数据
++ /index1/type1,type2/_index :: 搜索一个索引index1下多个type的数据
++ /index1,index2/type1,typ2/_index :: 指定多个索引下多个类型的数据
++ /_all/type1,type2/_search :: 就是/*/type1,type2/_search
+** 分页搜索
+size参数和from参数
+#+BEGIN_SRC es
+  /_search?size=10&from=0
+#+END_SRC
+** 批量查询mget
+#+BEGIN_SRC es
+  GET /_mget
+  {
+    "doc":[
+      {"_index":$index,
+       "_type":$type,
+       "_id":$id
+      }
+      {"_index":$index,
+       "_type":$type,
+       "_id":$id
+      }
+      {"_index":$index,
+       "_type":$type,
+       "_id":$id
+      }
+    ]
+  }
+#+END_SRC
+若只想查询某个index下的内容,则可以将$index放入URL中,在body中省略"_index"
+#+BEGIN_SRC es
+  GET /index/_mget
+  {
+    "doc":[
+      {"_type":$type,
+       "_id":$id
+      }
+      {"_type":$type,
+       "_id":$id
+      }
+      {"_type":$type,
+       "_id":$id
+      }
+    ]
+  }
+#+END_SRC
+你也可以同时省略index和type
+#+BEGIN_SRC es
+  GET /index/type/_mget
+  {
+    "ids":[$id,$id,$id]
+  }
+#+END_SRC
 
 ** 精确搜索
 当进行精确值查找时， 我们会使用过滤器（filters）。过滤器很重要，因为它们执行速度非常快，不会计算相关度（直接跳过了整个评分阶段）而且很容易被缓存。
