@@ -106,6 +106,13 @@ partial update也支持指定更新的document version
 #+BEGIN_SRC es
   DELETE /index/type/$id
 #+END_SRC
+* mapping
+** 创建mapping
+** 获取mapping信息
+1. 获取指定index下type的mapping
+   #+BEGIN_SRC es
+     GET /index/_mapping/type
+   #+END_SRC
 * analyze
 它是将文本块转换为有区别的、规范化的 token 的一个过程，目的是为了（a）创建倒排索引以及（b）查询倒排索引。 
 #+BEGIN_EXAMPLE
