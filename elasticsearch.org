@@ -107,7 +107,56 @@ partial update也支持指定更新的document version
   DELETE /index/type/$id
 #+END_SRC
 * mapping
+** 核心的数据类型
++ string / text
++ long
++ double
++ boolean
++ date
 ** 创建mapping
+注意: 只能创建index时手工创建mapping,或者新增field mapping,而 *无法修改mapping*
+
++ 创建index时手工创建mapping
+  #+BEGIN_SRC es
+    PUT /index/
+    {
+      "mappings":{
+        "$type":{
+          "properties":{
+            "$field1" :{
+              "type":"string",
+              "analyzer":"english"
+            },
+            "$field2" :{
+              "type":"data"
+            },
+            "$filed3":{
+              "type":"long"
+            },
+            "$field4":{
+              "type":"text",
+              "index":"not_analyzed"
+            }
+          }
+        }
+      }
+    }
+  #+END_SRC
+
++ 新增field mapping
+  #+BEGIN_SRC es
+    PUT /index/_mapping/type
+    {
+      "properties":{
+        "field5":{
+          "type":"string"
+        },
+        "field6":{
+          "type":"boolean"
+        }
+      }
+    }
+  #+END_SRC
 ** 获取mapping信息
 1. 获取指定index下type的mapping
    #+BEGIN_SRC es
@@ -122,6 +171,8 @@ partial update也支持指定更新的document version
     "text": "XHDK-A-1293-#fJ3"
   }
 #+END_EXAMPLE
+
+测试"XHDK-A-1293-#ffJ3"在域"productID"上的分词效果
 ** 测试分词器
 #+BEGIN_SRC es
   GET /_analyze
