@@ -115,6 +115,14 @@ partial update也支持指定更新的document version
     "text": "XHDK-A-1293-#fJ3"
   }
 #+END_EXAMPLE
+** 测试分词器
+#+BEGIN_SRC es
+  GET /_analyze
+  {
+    "analyzer" : "standard",
+    "text": "Text to analyze"
+  }
+#+END_SRC
 
 * 搜索
 
