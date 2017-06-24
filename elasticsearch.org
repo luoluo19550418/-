@@ -554,6 +554,67 @@ missing 查询本质上与 exists 恰好相反： 它返回某个特定 _无_ �
   AND price     = 30 )
 #+END_SRC
 
+** search api基本语法
+#+BEGIN_SRC es
+  GET /index/_search
+  {
+    条件
+  }
+#+END_SRC
+
+
+#+BEGIN_SRC es
+  GET /index1,index2/type1,type2/_search
+  {
+    条件
+  }
+#+END_SRC
+
+#+BEGIN_SRC es
+  GET /index1,index2/type1,type2/_search
+  {
+    "from":0,
+    "size":10,
+    条件
+  }
+#+END_SRC
+
+** Query DSL的基本语法
+#+BEGIN_SRC es
+  GET /_search
+  {
+    "query":{
+      "match_all":{}
+    }
+  }
+#+END_SRC
+
+#+BEGIN_SRC es
+  {
+    "query":{
+      QUERY_NAME:{
+        ARGUMENT:VALUE,
+        ARGUMENT:VALUE,...
+      }
+    }
+  }
+
+#+END_SRC
+
+#+BEGIN_SRC es
+  {
+    "query":{
+      QUERY_NAME:{
+        FIELD_NAME:{
+          ARGUMENT:VALUE,
+          ARGUMENT:VALUE,...
+        }
+      }
+    }
+  }
+
+#+END_SRC
+
 ** 全文查询
 像 match 或 query_string 这样的查询是高层查询，它们了解字段映射的信息：
 
