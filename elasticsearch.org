@@ -1261,6 +1261,16 @@ fuzzy查询对比查询单词与被查询内容中单词的编辑距离来判断
     }
   }
 #+END_SRC
+** 搜索结果排序
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    query语句,
+    "sort":[
+      {"$FIELD":{"order":"asc"}}
+    ]
+  }
+#+END_SRC
 * 聚合分析
 ** group by
 #+BEGIN_SRC es
