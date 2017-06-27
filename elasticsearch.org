@@ -1271,6 +1271,46 @@ fuzzy查询对比查询单词与被查询内容中单词的编辑距离来判断
     ]
   }
 #+END_SRC
+** 查看score怎么算出来的
+#+BEGIN_SRC es
+  GET /index/type/_search?explain
+  {
+    $搜索DSL
+  }
+#+END_SRC
+** 分析一个文档是如何匹配的
+#+BEGIN_SRC es
+  GET /index/type/$id/_explain
+  {
+    $搜索DSL
+  }
+#+END_SRC
+** scroll搜索
+使用scroll滚动搜索,可以先搜索一批数据,然后下次再搜索一批数据,以此类推,直到搜索出全部的数据来.
+
+scroll搜索会在第一次搜索的时候,保存一个当时的视图快照,之后基于该旧的试图快照来滚动搜索,期间数据的变化不会让用户看到.
+
+每次发送scroll请求,我们需要指定一个scroll参数,指定一个时间窗口,表示每次搜索应该在这个时间窗口内完成.
+#+BEGIN_SRC es
+  GET /type/index/_search?scroll=1m
+  {
+    "query":{
+      "match_all":{}
+    },
+    "sort":["_doc"],
+    "size":10
+  }
+#+END_SRC
+
+scroll搜索的结果中有一个scroll_id,下一次发送scroll请求时,需要带上该id
+#+BEGIN_SRC es 
+  GET /_search
+  {
+    "scroll":"1m",
+    "scroll_id":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  }
+#+END_SRC
+这里不用指定index,type以及query的其他参数,scroll_id本身会保存这些上下文.
 * 聚合分析
 ** group by
 #+BEGIN_SRC es
