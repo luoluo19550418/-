@@ -286,7 +286,7 @@ size参数和from参数
 
 *** term查询
 我们首先来看最为常用的 term 查询， 可以用它处理数字（numbers）、布尔值（Booleans）、日期（dates）以及文本（text）。
-erm 查询会查找我们指定的精确值。作为其本身， term 查询是简单的。它接受一个字段名以及我们希望查找的数值：
+term 查询会查找我们指定的精确值。作为其本身， term 查询是简单的。它接受一个字段名以及我们希望查找的数值：
 
 #+BEGIN_EXAMPLE
   {
@@ -831,7 +831,7 @@ bool查询与bool过滤器的区别就在于两个 *should* 语句的意义，�
   }
 #+END_EXAMPLE
 
-*** dis_max查询
+*** dis_max查询(best_fields策略)
 dis_max查询指的是： 将任何与任一查询匹配的文档作为结果返回，但只将最佳匹配的评分作为查询的评分结果返回 ：
 例如：
 #+BEGIN_EXAMPLE
@@ -879,7 +879,7 @@ tie_breaker 可以是 0 到 1 之间的浮点数，
 但是合理值应该与零接近（处于 0.1 - 0.4 之间），这样就不会颠覆 dis_max 最佳匹配性质的根本。
 #+END_QUOTE
 *** multi_match查询
-multi_match查询可以针对多个field进行查询，并指定查询类型是 best_fields,most_fields还是cross_fields
+multi_match查询可以针对多个field进行查询，并指定查询类型是 best_fields,most_fields(优先返回最多匹配项的文档)还是cross_fields
 
 它可以用来简化bool查询中should子句中的多个match查询。
 例如：
