@@ -718,7 +718,7 @@ match 查询支持 *minimum_should_match* 最小匹配参数， 这让我们可�
   }
 #+END_EXAMPLE
 
-*** match_phrase 查询(d短语搜索)
+*** match_phrase 查询(短语搜索)
 短语搜索不会对搜索字段进行拆分
   GET /my_index/my_type/_search
   {
@@ -729,6 +729,68 @@ match 查询支持 *minimum_should_match* 最小匹配参数， 这让我们可�
       }
   }
 
+match_phrase 短语匹配查询，它匹配相对顺序一致的所有指定词语，
+
+短语查询还支持slop参数,用于指定短语中的各个词语之间所允许的最大间隔数(QUICK和DOG移动的次数)
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "query":{
+      "match_phrase":{
+        "title":{
+          "query":"QUICK! DOG",
+          "slop":3
+        }
+      }
+    }
+  }
+#+END_SRC
+
+**** 输入时查询
+对于查询时的输入即搜索，可以使用 match_phrase 的一种特殊形式， match_phrase_prefix 查询：
+
+与 match_phrase 一样，它也可以接受 slop 参数（参照 slop ）让相对词序位置不那么严格：
+
+可以通过设置 max_expansions 参数来限制前缀扩展的影响， 一个合理的值是可能是 50 ：
+#+BEGIN_EXAMPLE
+  {
+      "match_phrase_prefix" : {
+          "brand" : {
+              "query": "walker johnnie bl", 
+              "slop":  10
+              "max_expansions": 50
+          }
+      }
+  }
+#+END_EXAMPLE
+
+**** 与match结合平衡召回率和精准度
+可以使用bool组合match query和match_phrase query一起
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "query":{
+      "bool":{
+        "must":{
+          "match":{
+            "title":{
+              "query":"java spark",
+              "minimum_should_match":"50%"
+            }
+          }
+        },
+        "should":{
+          "match_phrase":{
+            "title":{
+              "query":"java spark",
+              "slop":50
+            }
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
 *** bool查询
 bool查询与bool过滤器功能类似，但是它除了决定一个文档是否应该被包括在结果中，还会计算文档的相关程度 。
 
@@ -965,27 +1027,6 @@ cross_fields 使用词中心式（term-centric）的查询方式，这与 best_f
               "query":       "peter smith",
               "type":        "cross_fields",
               "fields":      [ "title^2", "description" ] 
-          }
-      }
-  }
-#+END_EXAMPLE
-
-*** 短语匹配
-match_phrase 短语匹配查询，它匹配相对顺序一致的所有指定词语，
-
-**** 输入时查询
-对于查询时的输入即搜索，可以使用 match_phrase 的一种特殊形式， match_phrase_prefix 查询：
-
-与 match_phrase 一样，它也可以接受 slop 参数（参照 slop ）让相对词序位置不那么严格：
-
-可以通过设置 max_expansions 参数来限制前缀扩展的影响， 一个合理的值是可能是 50 ：
-#+BEGIN_EXAMPLE
-  {
-      "match_phrase_prefix" : {
-          "brand" : {
-              "query": "walker johnnie bl", 
-              "slop":  10
-              "max_expansions": 50
           }
       }
   }
