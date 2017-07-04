@@ -791,6 +791,36 @@ match_phrase 短语匹配查询，它匹配相对顺序一致的所有指定词�
     }
   }
 #+END_SRC
+
+**** 优化性能
+一般来说,match_phrase的耗时是match的10倍
+
+为了提高效率,可以先使用match搜索出要显示的内容,然后再通过rescore机制对这些内容根据match phrase搜索来重新打分.
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "query": {
+      "match":{
+        "title":{
+          "query": "java spark"
+        }
+      }
+    },
+    "rescore":{
+      "window_size": 50,
+      "query":{
+        "rescore_query":{
+          "match_phrase":{
+            "title":{
+              "query":"java spark",
+              "slop":50
+            }
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
 *** bool查询
 bool查询与bool过滤器功能类似，但是它除了决定一个文档是否应该被包括在结果中，还会计算文档的相关程度 。
 
