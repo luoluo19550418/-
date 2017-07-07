@@ -718,6 +718,22 @@ match 查询支持 *minimum_should_match* 最小匹配参数， 这让我们可�
   }
 #+END_EXAMPLE
 
+match查询还能使用 =fuzziness= 参数来自动纠正query中的单词错误
+#+BEGIN_SRC es
+  GET /my_index/my_type/_search
+  {
+    "query": {
+      "match": {
+        "title": {
+          "query":                "quick brown dog",
+          "minimum_should_match": "75%",
+          "fuzziness":"AUTO"
+        }
+      }
+    }
+  }
+#+END_SRC
+
 *** match_phrase 查询(短语搜索)
 短语搜索不会对搜索字段进行拆分
   GET /my_index/my_type/_search
@@ -746,23 +762,6 @@ match_phrase 短语匹配查询，它匹配相对顺序一致的所有指定词�
   }
 #+END_SRC
 
-**** 输入时查询
-对于查询时的输入即搜索，可以使用 match_phrase 的一种特殊形式， match_phrase_prefix 查询：
-
-与 match_phrase 一样，它也可以接受 slop 参数（参照 slop ）让相对词序位置不那么严格：
-
-可以通过设置 max_expansions 参数来限制前缀扩展的影响， 一个合理的值是可能是 50 ：
-#+BEGIN_EXAMPLE
-  {
-      "match_phrase_prefix" : {
-          "brand" : {
-              "query": "walker johnnie bl", 
-              "slop":  10
-              "max_expansions": 50
-          }
-      }
-  }
-#+END_EXAMPLE
 
 **** 与match结合平衡召回率和精准度
 可以使用bool组合match query和match_phrase query一起
@@ -821,6 +820,72 @@ match_phrase 短语匹配查询，它匹配相对顺序一致的所有指定词�
     }
   }
 #+END_SRC
+
+*** 输入时查询
+**** 使用match_phrase_prefix实现search-time搜索推荐
+对于查询时的输入即搜索，可以使用 match_phrase 的一种特殊形式， match_phrase_prefix 查询：
+
+其原理与match_phrase类似,但是会把最后一个term作为前缀来搜索.
+
+与 match_phrase 一样，它也可以接受 slop 参数（参照 slop ）让相对词序位置不那么严格：
+
+可以通过设置 max_expansions 参数来限制前缀扩展的影响， 一个合理的值是可能是 50 ：
+#+BEGIN_EXAMPLE
+  {
+      "match_phrase_prefix" : {
+          "brand" : {
+              "query": "walker johnnie bl", 
+              "slop":  10
+              "max_expansions": 50
+          }
+      }
+  }
+#+END_EXAMPLE
+**** 使用ngram分词机制实现index-time搜索推荐
+使用edge ngram将每个单词都进一步分词切分,用切分后的ngram来实现前缀搜索推荐功能
+
+比如一个单词"quick"会被分解为q,qu,qui,quic,quick
+
+#+BEGIN_SRC es
+  POST /index
+  {
+    "settings":{
+      "filter":{
+        "$自定义filter":{
+          "type":"edge_ngram",
+          "min_gram":1,
+          "max_gram":20
+        }
+      },
+      "analyzer":{
+        "$自定义filter":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "filter":[
+            "lowercase",
+            "$自定义filter"
+          ]
+        }
+      }
+    }
+  }
+#+END_SRC
+
+自定义好analyzer后,就可以在定义field时使用了
+#+BEGIN_SRC es
+  PUT /index/_mapping/type
+  {
+    "properties":{
+      "title":{
+        "type":"string",
+        "analyzer":"$自定义的autocomplete_analyzer",
+        "search_analyzer":"standard"
+      }
+    }
+  }
+#+END_SRC
+
+但是请注意, *这里搜索的analyzer依然是"standard"*
 *** bool查询
 bool查询与bool过滤器功能类似，但是它除了决定一个文档是否应该被包括在结果中，还会计算文档的相关程度 。
 
@@ -1741,3 +1806,39 @@ _status API 立刻返回，然后给出详细的多的统计值输出
 #+END_SRC
 
 
+* 中文分词
+** ik插件
+*** 安装
+1. 去https://github.com/medcl/elasticsearch-analysis-ik/releases 下载对应版本的插件zip包
+2. 将zip包中的内容解压到 elasticsearch中的 plugins/ik/ 目录中
+3. 重启elasticsearch
+*** 使用
+ik提供了两种分析起 =ik_max_word= 和 =ik_smart= 我们可以看看效果
+#+BEGIN_SRC es
+  GET /_analyze
+  {
+    "text":"你会唱中华人民共和国国歌吗?",
+    "analyzer":"ik_max_word"
+  }
+#+END_SRC
+
+
+#+BEGIN_SRC es
+  GET /_analyze
+  {
+    "text":"你会唱中华人民共和国国歌吗?",
+    "analyzer":"ik_smart"
+  }
+#+END_SRC
+*** 配置
++ IKAnalyzer.cfg.xml :: 用来配置自定义词库
+
++ main.dic :: ik原生内置的中文词库
+
++ quantifier.dic :: 表示单位的词
+
++ suffix.dic :: 后缀名
+
++ surname.dic :: 姓氏
+
++ stopword.dic :: 英文停用词
