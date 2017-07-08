@@ -1597,7 +1597,49 @@ scroll搜索的结果中有一个scroll_id,下一次发送scroll请求时,需要
     }
   }
 #+END_SRC
-
+** histogram
+类似terms,也是进行bucket分组操作,但是它接受一个field,然后按照field值的各个范围区间来进行分组(相比之下,terms是每个值一个分组)
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "size":0,
+    "aggs":{
+      "prince":{
+        "histogram":{
+          "field":"price",
+          "interval":20000
+        },
+        "aggs":{
+          "revenue":{
+            "sum":{"field":"price"}
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
+** date histogram
+按照指定的某个date类型的日期field,以及日期的interval分组
+#+BEGIN_SRC es
+  GET /tvs/sales/_search
+  {
+    "size":0,
+    "aggs":{
+      "sales":{
+        "date_histogram":{
+          "field":"sold_date",
+          "interval":"month",
+          "format":"yyyy-MM-dd",
+          "min_doc_count":0,      // 即使区间内没有记录,这个区间也需要返回
+          "extended_bounds":{
+            "min":"2017-01-01",
+            "max":"2017-12-31"
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
 * 处理人类语言
 以下列出了一些可优化的地方：
 
