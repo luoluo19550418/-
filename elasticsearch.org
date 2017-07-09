@@ -1740,6 +1740,28 @@ global bucket就是将所有数据纳入聚合的scope,而不管之前的query
     }
   }
 #+END_SRC
+** 近似聚合算法
+*** cardinality去重算法(distinct)
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "aggs":{
+      "group_by_sold_date":{
+        "date_histogram":{
+          "field":"sold_date",
+          "interval":"month"
+        },
+        "aggs":{
+          "distinct_brand_count":{
+            "cardinality":{
+              "field":"brand"
+            }
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
 * 处理人类语言
 以下列出了一些可优化的地方：
 
