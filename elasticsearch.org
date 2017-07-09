@@ -1755,7 +1755,7 @@ global bucket就是将所有数据纳入聚合的scope,而不管之前的query
           "distinct_brand_count":{
             "cardinality":{
               "field":"brand",
-              "precision_threshold":100 // 当brand的总个数在100以内,保证100%准确
+              "precision_threshold":100 // 当brand的总个数在100以内,保证100%准确,每个占用8个字节
             }
           }
         }
@@ -1774,6 +1774,28 @@ global bucket就是将所有数据纳入聚合的scope,而不管之前的query
         "percents":[50,           // 50%记录的latency在多少时间以内
                     95,           // 95记录的latency在多少时间以内
                     99]           // 99%记录的latency在多少时间以内
+      }
+    }
+  }
+#+END_SRC
+*** percentile_ranks算法(TDigest算法)
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "size":0,
+    "aggs":{
+      "group_by_province":{
+        "terms":{"filed":"province"}
+      },
+      "aggs":{
+        "latency_percentile_ranks":{
+          "percentile_ranks":{
+            "filed":"latency",
+            "values":[200,        // 延时在200以内的百分比
+                     1000],       // 延时在1000以内的百分比
+            "compression":200     // 设置用多少个节点来计算,节点越多越精准,默认为100,每个节点32个字节
+          }
+        }
       }
     }
   }
