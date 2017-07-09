@@ -1741,7 +1741,7 @@ global bucket就是将所有数据纳入聚合的scope,而不管之前的query
   }
 #+END_SRC
 ** 近似聚合算法
-*** cardinality去重算法(distinct)
+*** cardinality去重算法(count(distinct)算法,性能高但有5%的错误率)
 #+BEGIN_SRC es
   GET /index/type/_search
   {
@@ -1754,10 +1754,26 @@ global bucket就是将所有数据纳入聚合的scope,而不管之前的query
         "aggs":{
           "distinct_brand_count":{
             "cardinality":{
-              "field":"brand"
+              "field":"brand",
+              "precision_threshold":100 // 当brand的总个数在100以内,保证100%准确
             }
           }
         }
+      }
+    }
+  }
+#+END_SRC
+*** percentiles算法
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "size":0,
+    "aggs":{
+      "latency_percentiles":{
+        "field":"latency",
+        "percents":[50,           // 50%记录的latency在多少时间以内
+                    95,           // 95记录的latency在多少时间以内
+                    99]           // 99%记录的latency在多少时间以内
       }
     }
   }
