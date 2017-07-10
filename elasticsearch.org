@@ -1505,7 +1505,8 @@ scroll搜索的结果中有一个scroll_id,下一次发送scroll请求时,需要
     }
   }
 #+END_SRC
-其中"group_by_tags"是任意取的一个名字,且文本field的fielddata属性要设置为true
+其中"group_by_tags"是任意取的一个名字,且若聚合的field是分词的field(text),则fielddata属性要设置为true.
+若聚合的field是不分词的field(keyword),则fielddata可以不设置 =fielddate=true=.
 #+BEGIN_SRC es
   PUT /cheshi/_mapping/product
   {
