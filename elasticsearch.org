@@ -189,6 +189,28 @@ partial update也支持指定更新的document version
    #+BEGIN_SRC es
      GET /index/_mapping/type
    #+END_SRC
+** 父子关系定义
+#+BEGIN_SRC es
+  PUT /index
+  {
+    "mappings":{
+      "rd_center":{},
+      "employee":{
+        "_parent":{
+          "type":"rd_center"
+        }
+      }
+    }
+  }
+#+END_SRC
+
+当提交数据时,使用_parent指定父子关系
+#+BEGIN_SRC es
+  PUT /index/type1?parent=1
+  {
+    ...
+  }
+#+END_SRC
 * analyze
 它是将文本块转换为有区别的、规范化的 token 的一个过程，目的是为了（a）创建倒排索引以及（b）查询倒排索引。 
 #+BEGIN_EXAMPLE
