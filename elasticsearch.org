@@ -211,6 +211,7 @@ partial update也支持指定更新的document version
     ...
   }
 #+END_SRC
+
 * analyze
 它是将文本块转换为有区别的、规范化的 token 的一个过程，目的是为了（a）创建倒排索引以及（b）查询倒排索引。 
 #+BEGIN_EXAMPLE
@@ -1498,6 +1499,38 @@ scroll搜索的结果中有一个scroll_id,下一次发送scroll请求时,需要
   }
 #+END_SRC
 这里不用指定index,type以及query的其他参数,scroll_id本身会保存这些上下文.
+** 父子关系的搜索
+*** has_child
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "query":{
+      "has_child":{
+        "type":"empoyee",
+        "min_children":2
+        "query":{
+          "match":{"hobby":"Climbing"}
+        }
+      }
+    }
+  }
+#+END_SRC
+*** has_parent
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "query":{
+      "has_parent":{
+        "parent_type":"rd_center",
+        "query":{
+          "match":{
+            "country":"China"
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
 * alias
 #+BEGIN_SRC es
   PUT /index/_alias/alias_index
@@ -1817,6 +1850,35 @@ global bucket就是将所有数据纳入聚合的scope,而不管之前的query
             "values":[200,        // 延时在200以内的百分比
                      1000],       // 延时在1000以内的百分比
             "compression":200     // 设置用多少个节点来计算,节点越多越精准,默认为100,每个节点32个字节
+          }
+        }
+      }
+    }
+  }
+#+END_SRC
+** 父子关系的聚合
+#+BEGIN_SRC es
+  GET /index/type/_search
+  {
+    "size":0,
+    "aggs":{
+      "group_by_country":{
+        "terms":{
+          "field":"country.keyword"
+        },
+        "aggs":{
+          "group_by_child_employee":{
+            "children":{
+              "type":"employee"
+            },
+            "aggs":{
+              "group_by_hobby":{
+                "terms":{
+                  "field":"hobby.keyword",
+                  "size":10
+                }
+              }
+            }
           }
         }
       }
