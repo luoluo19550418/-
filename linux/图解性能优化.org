@@ -28,4 +28,156 @@
 
 一般采用定期连续抓拍的形式,适用于调查问题的原因。
 
+* 等待队列理论
+:PROPERTIES:
+:interleave_page_note: 72
+:END:
 
+等待队列模型假设：
++ 客户的到来遵守泊松分布
++ 客户的服务时间遵守指数分布
++ 只有单个进程提供服务
+
+那么，可以使用以下公式来计算平均等待时间：
+
+#+BEGIN_QUOTE
+平均使用率p = (处理时间×处理条数)/单位时间
+等待时间/处理时间 = p/(1-p)
+
+比如，假设处理时间是1秒，每小时的处理条数是3000条(每小时来3000个请求)那么
+p = 3000/3600 = 0.83
+等待时间 / 1秒 = 0.83 / （1-0.83） = 4.88
+那么，响应时间 = 4.88（等待时间）+1（处理时间）
+#+END_QUOTE
+
+等待队列有以下几个特点：
+1. 由于请求到达的时间不平均，因此即使平均使用率没达到100%也会出现等待时间
+2. 随着使用率接近100%（p上升），等待时间会呈指数级增加
+
+* 推荐获取的性能信息
+:PROPERTIES:
+:interleave_page_note: 77
+:END:
+
+| 对象     | 性能信息                             |
+|----------+--------------------------------------|
+| OS信息   | vmstat                               |
+|          | iostat                               |
+|          | ps /top                              |
+|----------+--------------------------------------|
+| AP服务器 | 访问日志                             |
+|          | AP服务器的处理等待队列信息  连续     |
+|          | AP服务器的线程使用情况信息  连续     |
+|          | AP夫u武器的DB使用情况信息  连续      |
+|          | Java的GC日志  连续                   |
+|          | Java的低负载的详细事件记录日志  连续 |
+|----------+--------------------------------------|
+| DB服务器 | 连接接受信息                         |
+|          | DBMS的概要信息                       |
+|          | DB绘画的快照                         |
+
+** OS命令
+:PROPERTIES:
+:interleave_page_note: 78
+:END:
+
+*** sar
+:PROPERTIES:
+:interleave_page_note: 79
+:END:
+sar只能查看CPU使用率和空闲率、读写I/O的量、内存的概况等信息，常与top等获取快照信息的命令结合使用。
+
+直接使用sar命令的效果差强人意，它的信息输出项目比较少，因此有时需要使用专门的命令（vmstat/iostat）来获取更详细的信息。
+
+通过 =-f= 参数能够从已经自动记录的文件中把过去的数据显示出来
+#+BEGIN_SRC shell
+  sar -f
+#+END_SRC
+
+*** vmstat
+:PROPERTIES:
+:interleave_page_note: 81
+:END:
+
+获取等待执行的平均进程数、等待的平均进程数、CPU使用率、对Swap空间的I/O、通常的I/O、上下文切换次数等。
+
+由于获取的也是概要形式，因此也常与top等获取快照信息的命令一起使用。
+
+比起CPU使用率，等待执行的平均进程数（r列）和被阻塞的进程数（b列）更值得关注。
+
+特别要留意wa列，它一般会被作为I/O等待的指标。
+#+BEGIN_SRC shell :results raw
+  vmstat 
+#+END_SRC
+
+#+RESULTS:
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b 交换 空闲 缓冲 缓存   si   so    bi    bo   in   cs us sy id wa st
+ 0  0      0 1220856  49820 764048    0    0    18    24  928  927  3  2 94  0  0
+
+
+一般认为r列的值不应高于CPU核数的2倍或4倍。
+
+*** ps
+:PROPERTIES:
+:interleave_page_note: 83
+:END:
+获取某个瞬间存在哪些进程，这些进程的状态(执行中/休眠等)、各进程CPU累计时间。
+
+在使用ps命令特定到具体的进程后，有时候会通过对进程的栈或对进程的追踪来进行详细的调查。
+
+注意： 由于该命令负载较大，因此不能在短时间内重复执行。
+若需要在短时间内重复执行，则一般使用top命令代替。
+
+*** netstat
+:PROPERTIES:
+:interleave_page_note: 85
+:END:
+
+使用 =-a= 参数可以获取套接字的瞬时快照，
+#+BEGIN_SRC shell :dir /ssh:root@wulin:~/ :results raw
+netstat -a |head
+#+END_SRC
+
+#+RESULTS:
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+tcp        0      0 0.0.0.0:mysql           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:29100           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:29712           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:29300           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:29301           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:ssh             0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:29400           0.0.0.0:*               LISTEN     
+tcp        0      0 0.0.0.0:29401           0.0.0.0:*               LISTEN     
+
+使用 =-r= 参数可以获取路由的瞬时快照，
+#+BEGIN_SRC shell :dir /ssh:root@wulin:~/ :results raw
+netstat -r
+#+END_SRC
+
+#+RESULTS:
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+default         gateway         0.0.0.0         UG        0 0          0 eth0
+link-local      0.0.0.0         255.255.0.0     U         0 0          0 eth0
+169.254.169.254 gateway         255.255.255.255 UGH       0 0          0 eth0
+192.168.0.0     0.0.0.0         255.255.255.0   U         0 0          0 eth0
+
+使用 =i= 参数可以获取各个接口的统计信息。
+#+BEGIN_SRC shell :dir /ssh:root@wulin:~/ :results raw
+netstat -i
+#+END_SRC
+
+#+RESULTS:
+Kernel Interface table
+Iface      MTU    RX-OK RX-ERR RX-DRP RX-OVR    TX-OK TX-ERR TX-DRP TX-OVR Flg
+eth0      1500   521207      0      0 0        285050      0      0      0 BMRU
+lo       65536  1776618      0      0 0       1776618      0      0      0 LRU
+
+当感觉网络性能异常时，应该查看使用这个网络通信的应用程序的性能日志，或者使用网络抓包获取事件形式的日志。
+
+*** iostat
+:PROPERTIES:
+:interleave_page_note: 87
+:END:
