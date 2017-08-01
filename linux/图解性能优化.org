@@ -181,3 +181,71 @@ lo       65536  1776618      0      0 0       1776618      0      0      0 LRU
 :PROPERTIES:
 :interleave_page_note: 87
 :END:
+获取磁盘的繁忙程度，通过使用 =-x= 参数能获取响应时间和各种队列的长度。
+
+一般推荐使用 =-t= (t表示显示时间) 和 =-x= (-x表示详细信息)参数.
+通过检查队列的长度，就能知道有多少IO请求已经被发送或者有多少正在等待。
+
+但要注意：无能通过OS层面的繁忙度来判断磁盘是否真的已经接近临界值，因为很多时候存储方面已经进行了虚拟化或分割，OS看到的磁盘信息与实际情况会有偏差。
+
+*另外，第一次显示的值是从系统启动到现在为止的平均值，一般会跳过不做参考*
+
+**** 关于active和wait的概念说明：
+
+active指的是从OS的角度来看已经向磁盘发送完，wait指的是尚未发送。
+
+active和wait都有队列长度和平均时间。 当存储接近临界值时，首先active的队列长度会增加，响应会变慢，接着wait的队列长度也会增加，响应开始变慢。
+
++ svctm :: 表示磁盘的服务时间(单位是毫秒)
++ await :: 表示每一个IO请求的处理的平均时间（单位是毫秒）。这里可以理解为IO的响应时间，一般地系统IO响应时间应该低于5ms，如果大于10ms就比较大了。这个时间包括了等待时间和服务时间，也就是说，一般情况下，await大于svctm，它们的差值越小，则说明队列时间越短，反之差值越大，队列时间越长，说明系统出了问题。
++ %util :: 表示磁盘使用率，为重点关注对象。
+*** top
+:PROPERTIES:
+:interleave_page_note: 90
+:END:
+
+最适合用来实时掌握OS整体的情况。
+
+top可以整理出活跃的进程，并显示这些进程的信息，一般常与pstack命令配合获取调用栈的信息。
+*** wireshark/tcpdump
+:PROPERTIES:
+:interleave_page_note: 91
+:END:
+详细记录正在进行什么通讯。
+
+注意： 这个工具只能通过root用户执行，如果在OS上捕获数据包转储，会对系统性能产生很大的影响。
+*** pstack
+:PROPERTIES:
+:interleave_page_note: 93
+:END:
+
+获取某个进程在某个瞬间执行了什么样的处理的快照信息。
+
+由于获取的是快照信息，因此需要多次执行来获取信息，如果程序在等待什么，那么多次执行pstack命令应该也是在同一个调用栈等待。
+
+#+BEGIN_SRC shell
+  pstack $pid
+#+END_SRC
+*** strace
+:PROPERTIES:
+:interleave_page_note: 95
+:END:
+strace可以获取某个进程的系统调用信息，一般与top命令结合使用。
+首先使用top命令确定哪个进程值得怀疑，然后再调用strace命令寻找卡在哪个系统调用上，再通过pstack输出调用栈信息。
+
+*strace负载很高，请谨慎使用*
+*** profiler(gprof)
+:PROPERTIES:
+:interleave_page_note: 97
+:END:
+得到哪个函数被调用多少次以及时间耗费在哪个函数上的信息。
+
+通过连续执行pstack能够模拟部分profiler的功能，比如10此连续执行pstack可能能发现某个函数出现4次，那么这个函数可能就是一个关键节点。
+*** Windows下的性能工具
+:PROPERTIES:
+:interleave_page_note: 99
+:END:
+
++ 任务管理器
++ 性能监视器（perfmon）
++ 资源监视器
