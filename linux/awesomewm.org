@@ -49,7 +49,7 @@ Awesome window manager是一款小巧的平铺式窗口管理器，它具有以�
 | M-x     | 运行lua代码           |
 | M-Enter | 打开terminal emulator |
 | M-w     | 打开主菜单            |
-| M-S-q   | 推出awesome wm        |
+| M-S-q   | 退出awesome wm       |
 | M-C-r   | 重启awesome wm          |
 ** Clients
  | 键序列 | 功能           |
