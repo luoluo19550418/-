@@ -618,6 +618,23 @@ docker允许指定docker0的ip地址和子网掩码,还能定义MTU(接口允许
      sudo service docker start
    #+END_SRC
 
+   
+* 资源限制
+
+** CPU
+
++ --cpu-share=权重 / -c 权重 :: 当运行多个docker容器时，会根据各个容器的权重分配CPU资源，默认权重为1024
++ --cpuset-cpus=0,1 :: 设置在哪些CPU上运行容器
+** 内存
+
++ -m 128M :: 限制容器的内存使用量
++ --memory-swap 256M :: 限制容器内存和swap的总使用量
+** IO
+
++ --device-read-bps list  :: 各磁盘的读取速率限制(bytes per second),默认为[]
++ --device-read-iops list :: 各磁盘读取次数的限制 (IO per second),默认为 []
++ --device-write-bps list :: 各磁盘的写入速率限制(bytes per second),默认为[]
++ --device-write-iops list :: 各磁盘写入次数的限制 (IO per second),默认为 []       Limit write rate (IO per second) to a device (default [])
 * Dockerfile编写说明
 1. 新建一个目录和Dockerfile
 
