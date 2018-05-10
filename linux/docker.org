@@ -206,6 +206,8 @@ docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 
 #+END_SRC
 则该docker容器会在后台一直输出hello
 
+另外，若容器在前台运行，则按下 =C-p C-q= 也会让容器切换到后台来运行
+
 当使用 ~docker run~ 来创建容器时,Docker在后台运行的标准操作包括:
 
 1. 检查本地是否存在指定的镜像,不存在就从公有仓库下载
@@ -228,12 +230,20 @@ docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 
   sudo docker stop echo
 #+END_SRC
 
+可以使用 ~docker kill~ 来立即强制终止一个运行中的容器. 
+#+BEGIN_SRC sh
+  # sudo docker kill 容器id/容器name  
+  sudo docker kill echo
+#+END_SRC
+
 *** 重新启动容器
 可以利用命令 ~docker start~ 来将一个已经终止的容器启动运行
 #+BEGIN_SRC sh
-  # sudo docker start 容器id/容器name
-  sudo docker start echo
+  # sudo docker start -i 容器id/容器name
+  sudo docker start  echo
 #+END_SRC
+
+其中，若带有 =-i= 参数则表示进入interactive模式
 
 此外, ~docker restart~ 命令会将一个运行态的容器终止,然后再重新启动它
 #+BEGIN_SRC sh
@@ -273,7 +283,10 @@ docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 
   sudo docker run -idt --name ubuntu_d ubuntu:latest
   sudo docker attach ubuntu_d
 #+END_SRC
+*** 在已运行的容器中运行新的进程
+使用 =docker exec [-d] [-i] [-t] 容器名 [command] [args]= 可以在已运行的容器中再运行新的命令。
 
+其中 =-d= =-i= =-t= 跟 =docker run= 中的一样。
 *** 导出容器
 如果要导出某个容器快照到本地文件,可以使用 ~docker export~ 命令
 #+BEGIN_SRC sh
