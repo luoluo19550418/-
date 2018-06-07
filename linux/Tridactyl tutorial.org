@@ -1,0 +1,147 @@
+#+TITLE: Tridactyl tutorial
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2018-06-07 四 14:32]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+Tridactyl 是一款让Firefox变成类Vim操作的插件。
+
+* Normal mode
+该模式用于浏览页面。从其他mode中按下 =ESC= 进入该mode
+
++ b :: 选择Tab页，按下 =TAB/Shift-TAB= 来选择哪个Tab
++ w / W :: 用新窗口打开URL
++ o / O :: 用当前tab打开URL
++ t / T :: 用新tab打开URL
++ s :: 进行搜索引擎搜索
++ H / L :: 退回后一个浏览页面/进入前一个浏览页面
++ yy :: 将当前URL拷贝到clipboard中
++ p / P :: 在当前tab/新tab中访问clipboard中的内容
++ zz / zo // zz :: zoom in / zoom out /恢复正常zoom
++ : :: 进入Command mode
++ f / F :: 访问当前屏幕中显示的URL
++ gi :: 进入屏幕中第一个text box，然后按 =TAB= 跳转到后面的text box
++ . :: 重复上一个动作
++ d :: 关闭当前taba
++ r :: 刷新页面
++ gt :: 进入后一个tab
++ gT :: 进入前一个tab
++ g0 :: 进入第一个tab
++ g$ :: 进入最后一个tab
++ gr :: 进入阅读模式
+
+* Hint mode
+该模式会高量页面中的各个element，并对这些element进行操作
+
++ ;y :: 拷贝link url到clipboard
++ ;p :: 拷贝各个element的text到clipboard
++ ;# :: 拷贝anchor location
++ ;k :: 删掉某个element，可以方便的删掉广告
+
+* Command mode
+该模式允许你执行复杂的命令,一般用来设置按键或者查看命令的帮助信息
+
++ :bind <key> :: 列出Normal mode中某个按键所对应的命令
++ :bind <key> <command> :: 绑定command到某个按键
++ :viewsource :: 查看当前页面的源代码
++ :help <command> :: 查看command的帮助
++ :composite command1 command2... :: 顺序执行command,可以与bind连用一键执行多步操作
++ :get nmaps :: 可以查看所有的normal mode下的快捷键
+                #+BEGIN_SRC json
+                  {
+                      "<F1>": "help",
+                      "o": "fillcmdline open",
+                      "O": "current_url open",
+                      "w": "fillcmdline winopen",
+                      "W": "current_url winopen",
+                      "t": "fillcmdline tabopen",
+                      "]]": "followpage next",
+                      "[[": "followpage prev",
+                      "[c": "urlincrement -1",
+                      "]c": "urlincrement 1",
+                      "<c-x>": "urlincrement -1",
+                      "<c-a>": "urlincrement 1",
+                      "T": "current_url tabopen",
+                      "yy": "clipboard yank",
+                      "ys": "clipboard yankshort",
+                      "yc": "clipboard yankcanon",
+                      "gh": "home",
+                      "gH": "home true",
+                      "p": "clipboard open",
+                      "P": "clipboard tabopen",
+                      "j": "scrollline 10",
+                      "<c-e>": "scrollline 10",
+                      "k": "scrollline -10",
+                      "<c-y>": "scrollline 10",
+                      "h": "scrollpx -50",
+                      "l": "scrollpx 50",
+                      "G": "scrollto 100",
+                      "gg": "scrollto 0",
+                      "<c-u>": "scrollpage -0.5",
+                      "<c-d>": "scrollpage 0.5",
+                      "$": "scrollto 100 x",
+                      "^": "scrollto 0 x",
+                      "<c-6>": "buffer #",
+                      "H": "back",
+                      "L": "forward",
+                      "<c-o>": "back",
+                      "<c-i>": "forward",
+                      "d": "tabclose",
+                      "D": "composite tabprev | sleep 100 | tabclose #",
+                      "gx0": "tabclosealltoleft",
+                      "gx$": "tabclosealltoright",
+                      "u": "undo",
+                      "r": "reload",
+                      "R": "reloadhard",
+                      "gi": "focusinput -l",
+                      "g;": "changelistjump -1",
+                      "gt": "tabnext_gt",
+                      "gT": "tabprev",
+                      "g^": "tabfirst",
+                      "g0": "tabfirst",
+                      "g$": "tablast",
+                      "gr": "reader",
+                      "gu": "urlparent",
+                      "gU": "urlroot",
+                      "gf": "viewsource",
+                      ":": "fillcmdline",
+                      "s": "fillcmdline open search",
+                      "S": "fillcmdline tabopen search",
+                      "M": "gobble 1 quickmark",
+                      "b": "fillcmdline buffer",
+                      "ZZ": "qall",
+                      "f": "hint",
+                      "F": "hint -b",
+                      ";i": "hint -i",
+                      ";I": "hint -I",
+                      ";k": "hint -k",
+                      ";y": "hint -y",
+                      ";p": "hint -p",
+                      ";r": "hint -r",
+                      ";s": "hint -s",
+                      ";S": "hint -S",
+                      ";a": "hint -a",
+                      ";A": "hint -A",
+                      ";;": "hint -;",
+                      ";#": "hint -#",
+                      ";v": "hint -W exclaim_quiet mpv",
+                      "<S-Insert>": "mode ignore",
+                      "<CA-Esc>": "mode ignore",
+                      "I": "fillcmdline Ignore mode is now toggled by pressing <S-Insert>",
+                      "a": "current_url bmark",
+                      "A": "bmark",
+                      "zi": "zoom 0.1 true",
+                      "zo": "zoom -0.1 true",
+                      "zz": "zoom 1",
+                      ".": "repeat",
+                      "<SA-ArrowUp><SA-ArrowUp><SA-ArrowDown><SA-ArrowDown><SA-ArrowLeft><SA-ArrowRight><SA-ArrowLeft><SA-ArrowRight>ba": "open https://www.youtube.com/watch?v=M3iOROuTuMA"
+                  }
+
+                #+END_SRC
+
+* Ignore mode
+该模式下所有的按键都直接传递给web页面解析。
+
++ Shift-Insert :: 进入Ignore mode
++ Shift-Esc :: 推出Ignore mode
