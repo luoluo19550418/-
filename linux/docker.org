@@ -461,13 +461,25 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 
 可以看到docker返回了超级多的信息，但是有时候我们只需要其中的某些信息，则可以使用 =-f= 参数来定义输出
 #+BEGIN_SRC shell :results org
-  docker inspect -f {{.ContainerConfig.Env}} centos
+  docker inspect -f {{.ContainerConfig.Cmd}} centos
 #+END_SRC
 
 #+RESULTS:
 #+BEGIN_SRC org
-[PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin]
+[/bin/sh -c #(nop)  CMD ["/bin/bash"]]
 #+END_SRC
+
+上面例子中 =.ContainerConfig.Cmd= 返回了一个数组，那么如果我希望获取数组中的某个元素怎么办呢？
+这个时候就需要用到 =index= 函数了
+#+BEGIN_SRC shell :results org
+  docker inspect -f '{{(index .ContainerConfig.Cmd 0)}}' centos
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+/bin/sh
+#+END_SRC
+
 
 ** Docker仓库与仓库注册服务器(registry)
 仓库是几种存放镜像文件的场所. 要注意它与仓库注册服务器之间的区别.
