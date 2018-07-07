@@ -134,11 +134,54 @@ docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 
      #+END_SRC
      使用-t标记来指定新的image名称及tag
 
-     后面的 ~.~ 是Dockerfile所在的目录名称,当然也可以替换为一个绝对路径的目录
+     后面的 ~.~ 是Dockerfile所在的目录名称(docker默认在该路径中寻找名为Dockerfile的文件),或者是指向Dockerfile的路径也可以(不一定叫Dockerfile文件),甚至还可以是一个 *git地址！*
 
      我们可以看到dockfile中的指令被一条条的执行了. 每一步都创建了一个新的容器,当所有的指令都执行完毕之后,返回一个image id,并且所有的中间步骤所产生的容器都被删除和清理了.
 
      *注意:一个image不能超过127层*
+
+*** 查看别人是怎么创建image的？
+=docker history ${image}= 将会返回指定image在构建过程中所有执行过的命令。
+#+BEGIN_SRC shell :results org
+  docker history lujun9972/archlinuxcn.docker
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+9462714d994c        6 days ago          /bin/sh -c pacman -Syu --noconfirm && pacman…   10.1MB              
+<missing>           6 days ago          /bin/sh -c #(nop) ADD file:924b52f8e9afb079e…   18.7kB              
+<missing>           6 days ago          /bin/sh -c #(nop) ADD file:5b1ab05b934898a2a…   3.06kB              
+<missing>           6 days ago          /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B                  
+<missing>           6 days ago          /bin/sh -c pacman --noconfirm -Syu     && rm…   159MB               
+<missing>           6 days ago          /bin/sh -c #(nop)  LABEL maintainer=ArchLinu…   0B                  
+<missing>           4 weeks ago         /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B                  
+<missing>           4 weeks ago         /bin/sh -c :     && chmod 755 /etc     && pa…   44.9MB              
+<missing>           4 weeks ago         /bin/sh -c #(nop) ADD dir:34946d778ee95c934e…   175B                
+<missing>           4 weeks ago         /bin/sh -c #(nop) ADD dir:a34d7a3975e195fbec…   414MB               
+<missing>           4 weeks ago         /bin/sh -c #(nop)  LABEL maintainer=ArchLinu…   0B                  
+#+END_SRC
+
+这里 =CREATED BY= 就是构建每层的命令了，不过你可以看到这些命令都被截断了。 你可以通过 =--no-trunc= 来显示完整的命令。
+#+BEGIN_SRC shell :results org
+  docker history --no-trunc lujun9972/archlinuxcn.docker
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+IMAGE                                                                     CREATED             CREATED BY                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     SIZE                COMMENT
+sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days ago          /bin/sh -c pacman -Syu --noconfirm && pacman -S archlinuxcn-keyring --noconfirm  && pacman -Scc --noconfirm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    10.1MB              
+<missing>                                                                 6 days ago          /bin/sh -c #(nop) ADD file:924b52f8e9afb079e44786992624eeddb54419139150c58c08f97efb57fc2d6d in /etc/pacman.d/mirrorlist                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        18.7kB              
+<missing>                                                                 6 days ago          /bin/sh -c #(nop) ADD file:5b1ab05b934898a2a4c4e65754ad1edbff9bb92efda235332efb1726a550095d in /etc/pacman.conf                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                3.06kB              
+<missing>                                                                 6 days ago          /bin/sh -c #(nop)  CMD ["/bin/bash"]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           0B                  
+<missing>                                                                 6 days ago          /bin/sh -c pacman --noconfirm -Syu     && rm -f       /var/cache/pacman/pkg/*       /var/lib/pacman/sync/*       /etc/pacman.d/mirrorlist.pacnew                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               159MB               
+<missing>                                                                 6 days ago          /bin/sh -c #(nop)  LABEL maintainer=ArchLinux Dockerimage Maintainers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          0B                  
+<missing>                                                                 4 weeks ago         /bin/sh -c #(nop)  CMD ["/bin/bash"]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           0B                  
+<missing>                                                                 4 weeks ago         /bin/sh -c :     && chmod 755 /etc     && pacman-key --init     && pacman-key --populate archlinux     && pacman --noconfirm -Syu --needed base     && pacman --noconfirm -Rsc          cryptsetup          device-mapper          dhcpcd          iproute2          jfsutils          linux          lvm2          man-db          man-pages          mdadm          nano          netctl          openresolv          pciutils          pcmciautils          reiserfsprogs          s-nail          systemd-sysvcompat          usbutils          vi          xfsprogs     && rm -rf       /usr/share/man/*       /var/cache/pacman/pkg/*       /var/lib/pacman/sync/*       /README       /etc/pacman.d/mirrorlist.pacnew   44.9MB              
+<missing>                                                                 4 weeks ago         /bin/sh -c #(nop) ADD dir:34946d778ee95c934e90e13e7f03eaf5ac42ced78fa513349e2a731bd74343eb in /                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                175B                
+<missing>                                                                 4 weeks ago         /bin/sh -c #(nop) ADD dir:a34d7a3975e195fbecaeaf0faf050c5a672fe492133dedd8f5256128d5db5010 in /                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                414MB               
+<missing>                                                                 4 weeks ago         /bin/sh -c #(nop)  LABEL maintainer=ArchLinux Dockerimage Maintainers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          0B                  
+#+END_SRC
 
 *** 上传images到公共images仓库
 使用docker push上传images
@@ -317,8 +360,115 @@ docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 
 
 若要删除一个运行中的容器,可以添加 ~-f~ 参数. Docker会发送 =SIGKILL= 信号
 
-*** 探测容器
-使用 ~docker inspect~ 来探测容器参数
+*** 探测容器/镜像
+使用 ~docker inspect~ 来探测容器/镜像参数
+#+BEGIN_SRC shell :results org
+  docker inspect centos
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+[
+    {
+        "Id": "sha256:49f7960eb7e4cb46f1a02c1f8174c6fac07ebf1eb6d8deffbcb5c695f1c9edd5",
+        "RepoTags": [
+            "centos:latest"
+        ],
+        "RepoDigests": [
+            "centos@sha256:3b37e941676e3a1f3752e9cdb1d37d1db37c9931fcbdd60339ea5f2134c85c0f"
+        ],
+        "Parent": "",
+        "Comment": "",
+        "Created": "2018-06-04T22:19:34.475342266Z",
+        "Container": "ef04c6fb40e53318c38014531a0bb5647e2d659dbe8a5e375374d4bbac57a02d",
+        "ContainerConfig": {
+            "Hostname": "ef04c6fb40e5",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "#(nop) ",
+                "CMD [\"/bin/bash\"]"
+            ],
+            "ArgsEscaped": true,
+            "Image": "sha256:40ef8420eda09fa48ca36df234cb2b68387b5e13abb352e6390da642afe0351d",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {
+                "org.label-schema.schema-version": "= 1.0     org.label-schema.name=CentOS Base Image     org.label-schema.vendor=CentOS     org.label-schema.license=GPLv2     org.label-schema.build-date=20180531"
+            }
+        },
+        "DockerVersion": "17.06.2-ce",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "/bin/bash"
+            ],
+            "ArgsEscaped": true,
+            "Image": "sha256:40ef8420eda09fa48ca36df234cb2b68387b5e13abb352e6390da642afe0351d",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {
+                "org.label-schema.schema-version": "= 1.0     org.label-schema.name=CentOS Base Image     org.label-schema.vendor=CentOS     org.label-schema.license=GPLv2     org.label-schema.build-date=20180531"
+            }
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 199671138,
+        "VirtualSize": 199671138,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "btrfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:bcc97fbfc9e1a709f0eb78c1da59caeb65f43dc32cd5deeb12b8c1784e5b8237"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "0001-01-01T00:00:00Z"
+        }
+    }
+]
+#+END_SRC
+
+可以看到docker返回了超级多的信息，但是有时候我们只需要其中的某些信息，则可以使用 =-f= 参数来定义输出
+#+BEGIN_SRC shell :results org
+  docker inspect -f {{.ContainerConfig.Env}} centos
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+[PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin]
+#+END_SRC
+
 ** Docker仓库与仓库注册服务器(registry)
 仓库是几种存放镜像文件的场所. 要注意它与仓库注册服务器之间的区别.
 
