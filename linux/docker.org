@@ -198,7 +198,7 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 #+END_SRC
 
 *** 修改镜像标签
-使用 ~docker tag~ 命令可以修改镜像标签
+使用 ~docker tag~ 命令可以修改镜像标签,所谓修改镜像标签其实就是 *对镜像进行重命名操作*
 #+BEGIN_SRC sh
   sudo dockr tag 5db5f8471261 ouruser/sinatra:devel
 #+END_SRC
@@ -235,13 +235,36 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 *** 新建并启动容器
 使用命令 ~docker run~ 新建并启动一个容器
 
-下面这条命令使用ubuntu镜像作为模板启动一个容器,并启动bash shell允许用户进行交互
-#+BEGIN_SRC sh
-  sudo docker run -t -i --name ubuntu ubuntu /bin/bash
+容器在前台运行时，Docker会在容器初始化时将控制台重定向至STDIN、STDOUT和STDERR.
+
+但我们可以通过 =-a= 参数来控制标准挂载哪些输入输出流，比如
+#+BEGIN_SRC shell
+  docker run -a stdin -a stdout  --name ubuntu -it ubuntu /bin/bash
 #+END_SRC
-其中 ~-t~ 选项让Docker分配一个伪终端并绑定到容器的标准输出上.
+
+上面这个命令只挂了标准输入和标准输出，其中
+~-t~ 选项让Docker分配一个伪终端并绑定到容器的标准输出上.
 ~-i~ 则让容器的标准输入保持打开.
 ~--name 容器名~ 指定容器的名称
+
+需要说明的是，当标准输入/输入是通过重定向或者管道传入容器时，不能使用 =-t= 参数
+#+BEGIN_EXAMPLE
+  [lujun9972@T430S tmp]$   ls|docker run -it busybox cat
+  the input device is not a TTY
+  [lujun9972@T430S tmp]$   ls|docker run -i busybox cat
+  babel-nRWTJg
+  emacs1000
+  error.log
+  fcitx-socket-:0
+  hsperfdata_lujun9972
+  info.log
+  mozilla_lujun99720
+  NutstoreTmp0xyz
+  serverauth.ccvtYWQ1RD
+  shadowsocks-qt5
+  Temp-b0bdb25a-2d64-4f54-946d-f0cd05db2640
+#+END_EXAMPLE
+
 
 更多的时候,需要让Docker容器在后台以守护态（Daemonized）形式运行.此时,可以通过添加 ~-d~参数来实现.
 #+BEGIN_SRC sh
@@ -279,14 +302,19 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
   sudo docker kill echo
 #+END_SRC
 
+默认 ~docker kill~ 会向指定容器发送SIGKILL信号，如果需要向容器发送特定的信号可以使用 =--signal= 参数
+#+BEGIN_SRC shell
+  docker kill --signal SIGKILL echo
+#+END_SRC
+
 *** 重新启动容器
 可以利用命令 ~docker start~ 来将一个已经终止的容器启动运行
 #+BEGIN_SRC sh
-  # sudo docker start -i 容器id/容器name
   sudo docker start  echo
 #+END_SRC
-
-其中，若带有 =-i= 参数则表示进入interactive模式
+start可以在启动时完成容器与主机IO流之间的重定向。 其中
++ =-i / --interactive= :: 进入interactive模式,即将挂载stdin
++ =-a / --attach= :: 挂载stdout、stderr并捕获信号
 
 此外, ~docker restart~ 命令会将一个运行态的容器终止,然后再重新启动它
 #+BEGIN_SRC sh
@@ -294,20 +322,81 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
   sudo docker restart echo
 #+END_SRC
 
+若终止容器时容器内部出现异常，可能导致容器无法正常关闭，则我们可以通过 =-t/--time= 设置N秒后强制杀掉容器，默认为10秒
+#+BEGIN_SRC sh
+  sudo docker restart -t 5 echo
+#+END_SRC
+
 *** 查看容器信息
 通过 ~docker ps~ 命令可以查看容器信息
 
-+ 显示正在运行的容器
+**** 显示正在运行的容器
 
-  #+BEGIN_SRC sh
-    sudo docker ps
-  #+END_SRC
+#+BEGIN_SRC sh
+  sudo docker ps
+#+END_SRC
 
-+ 显示所有的容器,包括终止状态的容器
+**** 显示所有的容器,包括终止状态的容器
 
-  #+BEGIN_SRC sh
-    sudo docker ps -a
-  #+END_SRC
+#+BEGIN_SRC sh
+  sudo docker ps -a
+#+END_SRC
+
+**** 根据条件筛选容器
+
+=--filter= 可以用来筛选哪些容器需要被显示，可以从5个维度来筛选
+
++ id
+
++ label
+
++ name
+
++ exited
+
++ status :: 可以是 created/restarting/paused/exited
+            
+
+**** 只输出容器ID
+=--quiet= 参数可以只输出容器ID值，这个功能常在编写脚本时使用，比如批量stop/kill容器时
+**** 监控容器资源
+=docker stats CONTAINER= 可以实时监控容器资源，包括CPU使用率、内存使用率、网络吞吐量等信息
+#+BEGIN_SRC shell :results org
+  docker stats --no-stream 73380fe0cfb5
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+CONTAINER ID        NAME                     CPU %               MEM USAGE / LIMIT   MEM %               NET I/O             BLOCK I/O           PIDS
+73380fe0cfb5        determined_ardinghelli   0.00%               880KiB / 7.5GiB     0.01%               1.26kB / 0B         2.87MB / 0B         1
+#+END_SRC
+
+其中 =--no-stream= 表示只统计并显示一次资源数据，而不要实时监控
+
+而 =docker top CONTAINER [ps参数]= 则可以显示容器内运行进程的信息，相当于在容器内执行ps命令
+#+BEGIN_SRC shell :results org
+  docker top 73380fe0cfb5 axjf
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+PPID                PID                 PGID                SID                 TTY                 TPGID               STAT                UID                 TIME                COMMAND
+6812                6830                6830                6830                ?                   -1                  Ss                  0                   0:00                | \_ cat
+#+END_SRC
+
+其中 =ps参数= 可以是ps命令可用的任意参数
+
+而相比之下，使用 =docker exec ps= 命令则会多出一个 ps 进程
+#+BEGIN_SRC shell :results org
+  docker exec 73380fe0cfb5 ps -a
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+PID   USER     TIME  COMMAND
+    1 root      0:00 cat
+   14 root      0:00 ps -a
+#+END_SRC
 
 *** 获取容器的输出信息
 要获取容器的输出信息，可以通过 ~docker logs~ 命令
@@ -319,6 +408,19 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 #+BEGIN_SRC sh
   sudo docker logs -f echo
 #+END_SRC
+
+=--since= 可以用来截取日志，截取的范围是指定时间开始到现在为止所有的日志。时间格式可以是UNIX时间戳，或者是RFC3339时间表达式
+#+BEGIN_SRC sh
+  sudo docker logs --since "2018-07-04T12:34:53" echo
+#+END_SRC
+
+此外，也能使用 =--tail= 来截取最后N条日志
+#+BEGIN_SRC sh
+  sudo docker logs --tail=20 echo
+#+END_SRC
+
+
+不过要注意的是， =docker logs= 只能获取容器内应用输出到stdin和stderr的日志，若日志输出到了文件中，之只能使用 =docker exec XXX tail yyy= 来变通查看了。
 
 *** 进入容器
 在使用 ~-d~ 参数时,容器启动后会进入后台. 若需要进入容器进行操作,则可以使用 ~docker attach~ 命令或 ~nsenter~ 工具
@@ -481,6 +583,41 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 #+END_SRC
 
 
+*** 对容器进行重命名
+docker rename 旧容器名或ID 新容器名
+
+*** 设置命名空间
+默认情况下一个容器有自己独立的命名空间，但若需要将容器与主机或者多个容器相互访问时，则可能需要设置命名空间
+
+**** pid命名空间
+~--pid="XXX"~ 参数可以设置pid命名空间，相同pid命名空间的容器可以看到彼此的进程。
+
+~--pid="host"~ 表示使用宿主的PID命名空间
+
+**** UTS命名空间
+UTS命名空间用来设定主机名和域名
+
+~--uts="XXX"~ 参数可以设置uts命名空间.
+
+~--uts="host"~ 表示使用宿主的UTS命名空间,但一般不推荐这样设置，因为这表示容器具有了修改主机配置文件的权限。
+
+**** IPC命名空间
+IPC命名空间提供了相互隔离的命名共享内存、信号灯变量和消息队列
+
+~--ipc="XXX"~ 参数可以设置ipc命名空间
+
+~--ipc="container:<name/id>"~ 使用指定容器的IPC命名空间
+
+~--pid="host"~ 表示使用宿主的ipc命名空间
+
+*** 设置重启策略
+docker可以通过 =--restart= 参数设定重启策略，目前支持4种重启策略
+
++ no :: 退出后不再重启
++ on-failure[:max-retries] :: 当容器失败退出时重启,还可以设定最大重启次数
++ always :: 总是重启，而且每次Docker Daemon启动时都会启动容器
++ unless-stopped :: 类似always，但是在Docker Daemon启动时不会去启动 =stopped= 状态的容器
+                    
 ** Docker仓库与仓库注册服务器(registry)
 仓库是几种存放镜像文件的场所. 要注意它与仓库注册服务器之间的区别.
 
