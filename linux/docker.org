@@ -1066,3 +1066,17 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 
 + USER user-name
 
+* Docker Restful命令
+默认情况下Docker监听的是本地unix:///var/run/docker.sock文件。
+
+因此访问Docker Restful命令的一般格式为
+#+BEGIN_SRC shell
+  curl --unix-socket /var/run/docker.sock http://localhost/${url}
+#+END_SRC
+
+或者
+#+BEGIN_SRC shell
+  curl --unix-socket /var/run/docker.sock -d "XXXXXXX" http://localhost/${url}
+#+END_SRC
+
+* Docker组件命令
