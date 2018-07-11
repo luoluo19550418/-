@@ -1024,6 +1024,8 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 创建一个可以从本地主机或其他容器挂载的挂载点,一般用来存放数据库和需要保持的数据等
 
 + VOLUME ["/volume-dir"]
+  
+注意： *在Dockerfile中声明挂载点后，那么以后对该挂载点中文件的操作都不会生效！* 因此一般来说只会在 =Dockerfile= 结尾处声明挂载点。
 
 *** WORKDIR
 为后续的 ~RUN~, ~CMD~, ~ENTRYPOINT~ 指令配置工作目录.
@@ -1064,7 +1066,7 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 + ENTRYPOINT command param1 param2 :: 使用 =/bin/sh -c= 方式执行
 
      
-ENTRYPOINT 和 CMD 可以放在一起连用
+当使用第一种设定方法时，ENTRYPOINT 和 CMD 可以放在一起连用
 #+BEGIN_EXAMPLE
   ENTRYPINT["cmd", "parm1"]
   CMD["optional-parm1","optional-parm2"]
@@ -1072,6 +1074,10 @@ ENTRYPOINT 和 CMD 可以放在一起连用
 
 在该容器运行时，默认是调用的 =cmd parm1 optional-parm1 optional-parm2=
 但若指定了运行参数，则会变成 =cmd parm1 other-parm1 other-parm2=
+
+若使用第二种方法， *则ENTRYPOINT设定的二进制命令会忽略来自于CMD和RUN命令所添加的参数*
+
+为了确保容器可以正确处理 =docker stop= 命令发来的 SIG 信号，Docker建议用第一种方法来启动二进制文件
 *** USER
 指定运行容器时的用户名或UID,后续的 ~RUN~ 也会使用指定用户.
 
