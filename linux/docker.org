@@ -990,9 +990,10 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 *** RUN
 每条 ~RUN~ 指定都将在当前镜像基础上执行指定命令,并提交为新的镜像.当命令较长时可以使用 =\= 来换行
 
-+ RUN command :: 在shell终端中运行命令,即 =/bin/sh -c=
++ RUN command :: 在shell终端中运行命令,即 =/bin/sh -c=, *这也意味着镜像中必须包含/bin/sh才行*
   
-+ RUN ["executable","param1","param2"...] :: 使用exec执行
++ RUN ["executable","param1","param2"...] :: 使用exec执行, *这种情况下则需要注意环境变量的问题，它不会加载环境变量中的数据*
+     
 
 *** EXPOSE
 告诉Docker服务端容器暴露的端口号,供互联系统使用. 在启动容器时需要 =-P= 选项,Docker主机会自动分配一个端口转发到指定的端口.
@@ -1007,9 +1008,12 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 + ENV key value
 
 *** ADD
-将复制指定的<src>到容器中的<dest>. 其中<src>可以是Dockerfile所在目录的一个相对路径也可以是一个URL,还可以是一个tar文件(会自动解压为目录)
-
 + ADD src dest
+
+将复制指定的<src>到容器中的<dest>. 其中<src>可以是Dockerfile所在目录的一个相对路径也可以是一个URL,还可以是一个tar文件(会自动解压为目录)
+在src标记的路径中，还支持通配符
+
+<dest>是容器中的一个目录，且若 <dest>目录不存在，ADD命令会自动创建该目录
 
 *** COPY
 复制本地主机的<src>(必须为Dockerfile所在目录的相对路径)到容器中的<dest>
@@ -1052,13 +1056,22 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 :PROPERTIES:
 :ID:       kr5d4wq0r6h0
 :END:
-配置容器启动后执行的命令,并且不可被 ~docker run~ 提供的参数覆盖.
+配置容器启动后执行的命令,并且它会被 ~docker run~ 的 =--entrypoint= 参数替代，而不会被 ~docker run~ 提供的直接参数覆盖.
 
 每个Dockerfile中只能有一个 ~ENTRYPOINT~,当指定多个时,只有最后一个起效.
 
 + ENTRYPOINT ["executable","param1","param2"] :: =exec= 方式执行
 + ENTRYPOINT command param1 param2 :: 使用 =/bin/sh -c= 方式执行
 
+     
+ENTRYPOINT 和 CMD 可以放在一起连用
+#+BEGIN_EXAMPLE
+  ENTRYPINT["cmd", "parm1"]
+  CMD["optional-parm1","optional-parm2"]
+#+END_EXAMPLE
+
+在该容器运行时，默认是调用的 =cmd parm1 optional-parm1 optional-parm2=
+但若指定了运行参数，则会变成 =cmd parm1 other-parm1 other-parm2=
 *** USER
 指定运行容器时的用户名或UID,后续的 ~RUN~ 也会使用指定用户.
 
