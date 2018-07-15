@@ -398,7 +398,8 @@ PID   USER     TIME  COMMAND
    14 root      0:00 ps -a
 #+END_SRC
 
-*** 获取容器的输出信息
+*** 获取容器的日志信息
+**** docker logs命令
 要获取容器的输出信息，可以通过 ~docker logs~ 命令
 #+BEGIN_SRC sh
   sudo docker logs echo
@@ -421,6 +422,45 @@ PID   USER     TIME  COMMAND
 
 
 不过要注意的是， =docker logs= 只能获取容器内应用输出到stdin和stderr的日志，若日志输出到了文件中，之只能使用 =docker exec XXX tail yyy= 来变通查看了。
+**** 容器的日志引擎
++ json-file
+
+  默认情况下，Docker使用json-file的日志引擎，它会捕获容器中进程的STDOUT和STDERR，将之保存以json的格式保存起来。
+
+  宿主机上拥有root权限的用户可以直接访问容器日志，可以通过下面命令来获取容器的日志路径
+  #+BEGIN_SRC shell :results org :dir /ssh:192.168.1.9:
+    docker inspect -f '{{.LogPath}}' aria2-service
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  /var/lib/docker/containers/b017f3306ffd81ba2a2dd36298928c6955d48870281169c396c9175a57bc0b21/b017f3306ffd81ba2a2dd36298928c6955d48870281169c396c9175a57bc0b21-json.log
+  #+END_SRC
+  
++ syslog
+
+  Docker的另一个日志驱动可以是 syslog, 这中情况下 Docker 会将应用日志发送到宿主机上的syslog.
+
+  用户可以在启动容器时使用 ~--log-driver=syslog~ 来设置,比如
+  #+BEGIN_SRC shell :results org
+    docker run --rm --log-driver=syslog ubuntu date
+  #+END_SRC
+
+  #+RESULTS:
+  #+BEGIN_SRC org
+  Sun Jul 15 09:53:49 UTC 2018
+  #+END_SRC
+  
++ none
+
+  Docker还可以将日志驱动设置为 none，这种情况下，Docker会忽略应用程序生成的所有日志：
+  #+BEGIN_SRC shell :results org
+    docker run --rm --log-driver=none ubuntu date
+  #+END_SRC
+
+  #+RESULTS:
+  #+BEGIN_SRC org
+  Sun Jul 15 09:55:42 UTC 2018
+  #+END_SRC
 
 *** 进入容器
 在使用 ~-d~ 参数时,容器启动后会进入后台. 若需要进入容器进行操作,则可以使用 ~docker attach~ 命令或 ~nsenter~ 工具
@@ -792,24 +832,6 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
 
 5. 完成这些后,容器可以使用eth0虚拟网卡来连接其他容器和其他网络了
 
-可以为特殊容器设置特定的参数:
-
-+ --net=bridge
-
-  连接到默认的docker0网桥
-
-+ --net=host
-
-  告诉docker不要将容器放到隔离的网络堆栈中,即容器直接使用host相同的网络
-
-+ --net=container:NAME_OR_ID
-
-  告诉docker将新容器进程放到一个已存在容器的网络堆栈中,两者共享ip地址和端口,他们之间还可以通过环回接口通信
-
-+ --net=none
-
-  告诉docker将新容器放在自己的网络堆栈中,但是不要配置它的网络. 其类似vmware的host-only,可以让你创建任何自定义的配置.
-
 *** 映射内部容器端口到host端口
 默认情况下,容器可以建立到外部网络的连接,但是外部网络无法连接到容器.
 
@@ -843,19 +865,133 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
 #+END_SRC
 
 *** 容器间互联
-
+**** 使用 =--link= 进行互联
 运行 ~docker run~ 是使用 =--link= 参数可以让容器之间安全的进行交互.
 
-+ --link=CONTAINER_NAME:ALLIAS
+其语法为 ~--link=CONTAINER_NAME:ALLIAS~
 
-  该选项会在创建容器时时候添加一个其他容器CONTAINER_NAME的主机到/etc/hosts文件中, 让新容器的进程可以使用主机名ALIAS就可以连接它.
-  
+该选项会在创建容器时时候添加一个其他容器CONTAINER_NAME的主机到/etc/hosts文件中, 让新容器的进程可以使用主机名ALIAS就可以连接它.
+
 #+BEGIN_SRC sh
   sudo docker run -d --name db lujun9972/mysql
   sudo docker run -d -P --name web --link db:db lujun9972/webapp python app.py
 #+END_SRC
 
 *在通过 ~-icc=false~ 关闭网络访问后,还可以通过 ~--link=CONTAINER_NAME:ALIAS~ 选项来访问容器的开放端口*
+
+Docker 在用 =--link= 连接容器时，还会创建一系列的的环境变量，来帮助启动的容器发现目标容器公开的IP和服务端口。
+这些环境变量包括：
+
++ <ALIAS>_NAME
++ <ALIAS>_PORT
++ <ALIAS>_PORT_<EXPOSEDPORT>_TCP
++ <ALIAS>_PORT_<EXPOSEDPORT>_TCP_PROTO
++ <ALIAS>_PORT_<EXPOSEDPORT>_TCP_PORT
++ <ALIAS>_PORT_<EXPOSEDPORT>_TCP_ADDR
+
+比如
+#+BEGIN_SRC shell :results org :dir /ssh:192.168.1.9:
+  docker run --rm  --link=aria2-service:test busybox env
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOSTNAME=88e33ba5c741
+TEST_PORT=tcp://172.17.0.2:6800
+TEST_PORT_6800_TCP=tcp://172.17.0.2:6800
+TEST_PORT_6800_TCP_ADDR=172.17.0.2
+TEST_PORT_6800_TCP_PORT=6800
+TEST_PORT_6800_TCP_PROTO=tcp
+TEST_PORT_51413_TCP=tcp://172.17.0.2:51413
+TEST_PORT_51413_TCP_ADDR=172.17.0.2
+TEST_PORT_51413_TCP_PORT=51413
+TEST_PORT_51413_TCP_PROTO=tcp
+TEST_NAME=/focused_morse/test
+HOME=/root
+#+END_SRC
+**** 使用 --net 共享网络命名空间
+
++ --net=none
+
+  告诉docker将新容器放在自己的网络堆栈中,但是不要配置它的网络. 其类似vmware的host-only,可以让你创建任何自定义的配置.
+
++ --net=bridge
+
+  连接到默认的docker0网桥,这是docker启动容器时的默认值
+
++ --net=host
+
+  告诉docker不要将容器放到隔离的网络堆栈中,即容器直接使用host相同的网络.
+
+  例如,我们可以做个比较：
+  #+BEGIN_SRC shell :results org :dir /ssh:192.168.1.9:
+    ip link list
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+  2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
+      link/ether 02:01:57:df:77:3d brd ff:ff:ff:ff:ff:ff
+  3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+      link/ether 02:42:21:ca:10:79 brd ff:ff:ff:ff:ff:ff
+  165: vethd96edba@if164: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+      link/ether f2:4d:94:b2:68:4a brd ff:ff:ff:ff:ff:ff link-netnsid 2
+  227: vetha522e28@if226: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+      link/ether 2a:c3:60:73:81:50 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+  #+END_SRC
+  
+  与
+
+  #+BEGIN_SRC shell :results org :dir /ssh:192.168.1.9:
+    docker run --rm --net=host busybox ip link list
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue qlen 1000
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+  2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq qlen 1000
+      link/ether 02:01:57:df:77:3d brd ff:ff:ff:ff:ff:ff
+  3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue 
+      link/ether 02:42:21:ca:10:79 brd ff:ff:ff:ff:ff:ff
+  165: vethd96edba@if164: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue master docker0 
+      link/ether f2:4d:94:b2:68:4a brd ff:ff:ff:ff:ff:ff
+  227: vetha522e28@if226: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue master docker0 
+      link/ether 2a:c3:60:73:81:50 brd ff:ff:ff:ff:ff:ff
+  #+END_SRC
+  
+  这两个的输出是一样的
+
++ --net=container:NAME_OR_ID
+
+  告诉docker将新容器进程放到一个已存在容器的网络命名空间中,两者共享ip地址和端口,他们之间还可以通过环回接口通信.
+
+  例如,我们可以做个比较：
+  #+BEGIN_SRC shell :results org :dir /ssh:192.168.1.9:
+    docker exec top ip link list
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue qlen 1000
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+  246: eth0@if247: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue 
+      link/ether 02:42:ac:11:00:04 brd ff:ff:ff:ff:ff:ff
+  #+END_SRC
+  
+  与
+  #+BEGIN_SRC shell :results org :dir /ssh:192.168.1.9:
+    docker run --rm --net=container:top busybox ip link list
+  #+END_SRC
+
+  #+BEGIN_SRC org
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue qlen 1000
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+  246: eth0@if247: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue 
+      link/ether 02:42:ac:11:00:04 brd ff:ff:ff:ff:ff:ff
+  #+END_SRC
+  
+  结果是一样的
 
 *** 配置DNS
 
