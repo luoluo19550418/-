@@ -112,6 +112,24 @@ busybox             latest              sha256:141c253bc4c3fd0a201d32dc1f493bcf3
 
 #+RESULTS:
 #+BEGIN_SRC org
+sha256:ad40853b5a41267138de587391960b9a0f4a3f20c37cb2a5001cd8b797aa0673: Pulling from base/archlinux
+dd22593c6335: Pulling fs layer
+2d0a93adad2c: Pulling fs layer
+a8e30b2d8506: Pulling fs layer
+6fa053f065b2: Pulling fs layer
+6fa053f065b2: Waiting
+2d0a93adad2c: Download complete
+6fa053f065b2: Verifying Checksum
+6fa053f065b2: Download complete
+a8e30b2d8506: Verifying Checksum
+a8e30b2d8506: Download complete
+dd22593c6335: Download complete
+dd22593c6335: Pull complete
+2d0a93adad2c: Pull complete
+a8e30b2d8506: Pull complete
+6fa053f065b2: Pull complete
+Digest: sha256:ad40853b5a41267138de587391960b9a0f4a3f20c37cb2a5001cd8b797aa0673
+Status: Downloaded newer image for base/archlinux@sha256:ad40853b5a41267138de587391960b9a0f4a3f20c37cb2a5001cd8b797aa0673
 #+END_SRC
 
 *** 创建自己的image
