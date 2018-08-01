@@ -77,18 +77,41 @@ docker hub上有很多人创建的各种不同的images. 使用 ~docker search~ 
 *** 获取images
 
 我们可以使用 ~docker pull~ 命令来预先下载我们需要的image
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
     sudo docker pull ubuntu
 #+END_SRC
 上述命令实际上相当于
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
   sudo docker pull registry.hub.docker.com/ubuntu:latest
 #+END_SRC
 即从注册服务器 =registry.hub.docker.com= 的 =ubunut= 仓库下载标记为 =latest= 的镜像.
 
 若官方仓库注册服务器下载太慢,可以从其他仓库下载,但此时需要指定完整的仓库注册服务器地址
-#+BEGIN_SRC sh
+#+BEGIN_SRC shell
   sudo docker pull dl.dockerpool.com:5000/ubuntu:12.04
+#+END_SRC
+
+每个镜像都有一个摘要值,可以通过  =docker images --digiests= 来查看image对应的摘要
+#+BEGIN_SRC shell :results org
+  docker images --digests
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+REPOSITORY          TAG                 DIGEST                                                                    IMAGE ID            CREATED             SIZE
+silex/emacs         master              sha256:bc8ad6b899387fc145b6dbcc122a744a65903978d859bb18f9edfeebfec2d7c4   14571ed1613d        2 weeks ago         500MB
+ubuntu              latest              sha256:5f4bdc3467537cbbe563e80db2c3ec95d548a9145d64453b06939c4592d67b6d   113a43faa138        8 weeks ago         81.1MB
+centos              latest              sha256:3b37e941676e3a1f3752e9cdb1d37d1db37c9931fcbdd60339ea5f2134c85c0f   49f7960eb7e4        8 weeks ago         200MB
+busybox             latest              sha256:141c253bc4c3fd0a201d32dc1f493bcf3fff003b6df416dea4f41046e0f37d47   8c811b4aec35        2 months ago        1.15MB
+#+END_SRC
+
+我们可以使用这个摘要值来下载镜像，这能保证下载镜像的唯一性
+#+BEGIN_SRC shell :results org
+  docker pull base/archlinux@sha256:ad40853b5a41267138de587391960b9a0f4a3f20c37cb2a5001cd8b797aa0673
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
 #+END_SRC
 
 *** 创建自己的image
@@ -356,6 +379,17 @@ start可以在启动时完成容器与主机IO流之间的重定向。 其中
 
 + status :: 可以是 created/restarting/paused/exited
             
+            
+#+BEGIN_SRC shell :results org
+  docker ps -a --filter=status=created
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+CONTAINER ID        IMAGE               COMMAND                   CREATED             STATUS              PORTS               NAMES
+98a9d8100fc1        3c09bddc26b1        "/bin/sh -c 'echo \"e…"   11 days ago         Created                                 unruffled_wilson
+9103874e80da        5bbbe403001d        "/bin/sh -c 'pacman …"    11 days ago         Created                                 unruffled_ramanujan
+#+END_SRC
 
 **** 只输出容器ID
 =--quiet= 参数可以只输出容器ID值，这个功能常在编写脚本时使用，比如批量stop/kill容器时
@@ -1091,6 +1125,10 @@ docker允许指定docker0的ip地址和子网掩码,还能定义MTU(接口允许
 3. 当所有的指令都执行完毕之后,返回最终的镜像id. 所有的中间步骤产生的容器都被删除和清理了.
 
 4. 注意,一个镜像不能超过127层
+
+5. 注意，docker build构建镜像时会把指定目录(一般为Dockerfile所在目录)作为构建环境的上下文通过tar文件传递给Docker守护进程。
+   docker的CS架构，使得只有构建环境上下文中的文件/目录才能被ADD/COPY命令所应用。
+   为了从构建环境的上下文中排除不必要的文件，可以使用 =.dockerignore= 文件
 
 ** Dockerfile基础语法
 + =#= 用来注释
