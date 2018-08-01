@@ -359,7 +359,7 @@ start可以在启动时完成容器与主机IO流之间的重定向。 其中
 
 **** 只输出容器ID
 =--quiet= 参数可以只输出容器ID值，这个功能常在编写脚本时使用，比如批量stop/kill容器时
-**** 监控容器资源
+*** 监控容器资源
 =docker stats CONTAINER= 可以实时监控容器资源，包括CPU使用率、内存使用率、网络吞吐量等信息
 #+BEGIN_SRC shell :results org
   docker stats --no-stream 73380fe0cfb5
