@@ -710,6 +710,34 @@ docker可以通过 =--restart= 参数设定重启策略，目前支持4种重启
 + always :: 总是重启，而且每次Docker Daemon启动时都会启动容器
 + unless-stopped :: 类似always，但是在Docker Daemon启动时不会去启动 =stopped= 状态的容器
                     
+docker的定时重启策略为指数回退策略，即后一次尝试重启的时间为前一次尝试重启时间的两倍。
+我们可以通过下面实验来验证这一点:
+#+BEGIN_SRC shell :results org
+  docker run -d --name backoff-test --restart always busybox date
+  sleep 120
+  docker logs -f backoff-test
+  docker stop backoff-test
+  docker rm backoff-test
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+ae0b8bbd1a1fda8677a1646520fe304fe2cd4ad42f1c2edba216d1d34179a58b
+Sun Aug  5 02:15:22 UTC 2018
+Sun Aug  5 02:15:23 UTC 2018
+Sun Aug  5 02:15:24 UTC 2018
+Sun Aug  5 02:15:25 UTC 2018
+Sun Aug  5 02:15:26 UTC 2018
+Sun Aug  5 02:15:29 UTC 2018
+Sun Aug  5 02:15:32 UTC 2018
+Sun Aug  5 02:15:39 UTC 2018
+Sun Aug  5 02:15:53 UTC 2018
+Sun Aug  5 02:16:19 UTC 2018
+Sun Aug  5 02:17:11 UTC 2018
+backoff-test
+backoff-test
+#+END_SRC
+
 ** Docker仓库与仓库注册服务器(registry)
 仓库是几种存放镜像文件的场所. 要注意它与仓库注册服务器之间的区别.
 
