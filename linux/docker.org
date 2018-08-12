@@ -25,7 +25,16 @@ container从image创建. 它可以被启动,开始,停止,删除. 每个容器�
 7. -i -t 指定标准输入和输出
 * docker使用说明
 ** docker image相关命令
-Docker镜像就是一个只读的模板. Docker根据镜像来创建容器.
+Docker镜像就是一个只读的模板. Docker根据镜像来创建容器.一个镜像包括以下内容:
+
++ 所有的环境变量(ENV)
++ 当前工作目录(WORKDIR)
++ 定义的开放端口集合(PORT)
++ 所有的卷定义(VOLUME)
++ 容器入口点(ENTRYPOINT)
++ 命令和参数(CMD)
+  
+Docker镜像呈层级结构，若某些值没有在本层明确指定，则会从上一层镜像中继承。
 *** 镜像的实现原理
 Docker镜像是怎么实现增量的修改和维护的?
 每个镜像都由很多层次构成,Docker使用Union	FS将这些不同的层结合到一个镜像中去.
@@ -326,10 +335,89 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 7. 应用程序执行完毕后容器终止
 8. 容器也可能被 ~docker stop~ 终止
 
-*** 创建临时容器
+**** 创建临时容器
 在执行 ~docker run~ 时如果添加 =--rm= 标记,则容器会在终止后立刻删除.
 
 *注意 =--rm= 和 =-d= 不能同时使用*
+
+**** 设置命名空间
+默认情况下一个容器有自己独立的命名空间，但若需要将容器与主机或者多个容器相互访问时，则可能需要设置命名空间
+
+***** pid命名空间
+~--pid="XXX"~ 参数可以设置pid命名空间，相同pid命名空间的容器可以看到彼此的进程。
+
+~--pid="host"~ 表示使用宿主的PID命名空间
+
+***** UTS命名空间
+UTS命名空间用来设定主机名和域名
+
+~--uts="XXX"~ 参数可以设置uts命名空间.
+
+~--uts="host"~ 表示使用宿主的UTS命名空间,但一般不推荐这样设置，因为这表示容器具有了修改主机配置文件的权限。
+
+***** IPC命名空间
+IPC命名空间提供了相互隔离的命名共享内存、信号灯变量和消息队列
+
+~--ipc="XXX"~ 参数可以设置ipc命名空间
+
+~--ipc="container:<name/id>"~ 使用指定容器的IPC命名空间
+
+~--pid="host"~ 表示使用宿主的ipc命名空间
+
+
+**** 设备访问权
+有时候，在主机和特定容器之间共享设备可能非常重要。通过 =-device= 选项可以指定一个设备挂载进新容器中，比如
+#+BEGIN_SRC shell
+  docker -it --rm --device /dev/video0:/dev/video1 ubuntu:latest # 挂载位于/dev/video0位置的网络摄像头
+#+END_SRC
+
+**** 设置重启策略
+docker可以通过 =--restart= 参数设定重启策略，目前支持4种重启策略
+
++ no :: 退出后不再重启
++ on-failure[:max-retries] :: 当容器失败退出时重启,还可以设定最大重启次数
++ always :: 总是重启，而且每次Docker Daemon启动时都会启动容器
++ unless-stopped :: 类似always，但是在Docker Daemon启动时不会去启动 =stopped= 状态的容器
+                    
+docker的定时重启策略为指数回退策略，即后一次尝试重启的时间为前一次尝试重启时间的两倍。
+我们可以通过下面实验来验证这一点:
+#+BEGIN_SRC shell :results org
+  docker run -d --name backoff-test --restart always busybox date
+  sleep 120
+  docker logs -f backoff-test
+  docker stop backoff-test
+  docker rm backoff-test
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+ae0b8bbd1a1fda8677a1646520fe304fe2cd4ad42f1c2edba216d1d34179a58b
+Sun Aug  5 02:15:22 UTC 2018
+Sun Aug  5 02:15:23 UTC 2018
+Sun Aug  5 02:15:24 UTC 2018
+Sun Aug  5 02:15:25 UTC 2018
+Sun Aug  5 02:15:26 UTC 2018
+Sun Aug  5 02:15:29 UTC 2018
+Sun Aug  5 02:15:32 UTC 2018
+Sun Aug  5 02:15:39 UTC 2018
+Sun Aug  5 02:15:53 UTC 2018
+Sun Aug  5 02:16:19 UTC 2018
+Sun Aug  5 02:17:11 UTC 2018
+backoff-test
+backoff-test
+#+END_SRC
+
+**** 指定额外的安全选项
+Docker在容器创建(docker create)或运行(docker run)时能够通过 =--security-opt= 选项来指定Linux安全模块(LSM)的选项，常见的LSM包括SELinux和AppArmor.
+
+=--security-opt= 选项可以设置多次，其值的格式可以是:
+
++ label:user:<USERNAME> :: 设置SELinux用户标签
++ label:role:<ROLE> :: 设置SELinux角色标签
++ label:type:<TYPE> :: 设置SELinux的类型标签
++ label:level:<LEVEL> :: 设置SELinux的级别标签
++ label:disable :: 禁用SELinux标签限制
++ label:apparmor:<PROFILE> :: 应用一个AppArmor配置
 *** 终止容器
 可以使用 ~docker stop~ 来终止一个运行中的容器. 
 #+BEGIN_SRC sh
@@ -678,66 +766,6 @@ PID   USER     TIME  COMMAND
 *** 对容器进行重命名
 docker rename 旧容器名或ID 新容器名
 
-*** 设置命名空间
-默认情况下一个容器有自己独立的命名空间，但若需要将容器与主机或者多个容器相互访问时，则可能需要设置命名空间
-
-**** pid命名空间
-~--pid="XXX"~ 参数可以设置pid命名空间，相同pid命名空间的容器可以看到彼此的进程。
-
-~--pid="host"~ 表示使用宿主的PID命名空间
-
-**** UTS命名空间
-UTS命名空间用来设定主机名和域名
-
-~--uts="XXX"~ 参数可以设置uts命名空间.
-
-~--uts="host"~ 表示使用宿主的UTS命名空间,但一般不推荐这样设置，因为这表示容器具有了修改主机配置文件的权限。
-
-**** IPC命名空间
-IPC命名空间提供了相互隔离的命名共享内存、信号灯变量和消息队列
-
-~--ipc="XXX"~ 参数可以设置ipc命名空间
-
-~--ipc="container:<name/id>"~ 使用指定容器的IPC命名空间
-
-~--pid="host"~ 表示使用宿主的ipc命名空间
-
-*** 设置重启策略
-docker可以通过 =--restart= 参数设定重启策略，目前支持4种重启策略
-
-+ no :: 退出后不再重启
-+ on-failure[:max-retries] :: 当容器失败退出时重启,还可以设定最大重启次数
-+ always :: 总是重启，而且每次Docker Daemon启动时都会启动容器
-+ unless-stopped :: 类似always，但是在Docker Daemon启动时不会去启动 =stopped= 状态的容器
-                    
-docker的定时重启策略为指数回退策略，即后一次尝试重启的时间为前一次尝试重启时间的两倍。
-我们可以通过下面实验来验证这一点:
-#+BEGIN_SRC shell :results org
-  docker run -d --name backoff-test --restart always busybox date
-  sleep 120
-  docker logs -f backoff-test
-  docker stop backoff-test
-  docker rm backoff-test
-#+END_SRC
-
-#+RESULTS:
-#+BEGIN_SRC org
-ae0b8bbd1a1fda8677a1646520fe304fe2cd4ad42f1c2edba216d1d34179a58b
-Sun Aug  5 02:15:22 UTC 2018
-Sun Aug  5 02:15:23 UTC 2018
-Sun Aug  5 02:15:24 UTC 2018
-Sun Aug  5 02:15:25 UTC 2018
-Sun Aug  5 02:15:26 UTC 2018
-Sun Aug  5 02:15:29 UTC 2018
-Sun Aug  5 02:15:32 UTC 2018
-Sun Aug  5 02:15:39 UTC 2018
-Sun Aug  5 02:15:53 UTC 2018
-Sun Aug  5 02:16:19 UTC 2018
-Sun Aug  5 02:17:11 UTC 2018
-backoff-test
-backoff-test
-#+END_SRC
-
 ** Docker仓库与仓库注册服务器(registry)
 仓库是几种存放镜像文件的场所. 要注意它与仓库注册服务器之间的区别.
 
@@ -893,7 +921,7 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
 + --iptables=true|false :: 决定启动docker服务时,是否添加转发策略到iptables的FORWARD链上.(参见--icc选项)
 + --mtu=BYTES :: 指定MTU-接口允许接受的最大传输单元
 + --dns=IP_ADDRESS :: 设定DNS服务器IP
-+ --dns-search=DOMAIN :: 设定容器的搜索域
++ --dns-search=DOMAIN :: 设定容器的搜索域,当该选项被设置，在查询时，任何不包括已知顶级域名(比如.com/.cn)的主机名会自动加上该后缀。
 + -h HOSTNAME / --hostname=HOSTNAME :: 主机配置
 + --link=CONTAINER_NAME:ALIAS :: 与其他容器进行互联,其中其他容器在容器中以ALIAS为名
 + --net=bridge|none|container:NAME_OR_ID|host :: 桥接配置
@@ -917,6 +945,12 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
 
 若向容器接受外部连接,则需要在docker run执行的时候就指定对应选项
 
++ --expose PORT / --expose PORT/tcp / --expose PORT/udp
+  
+  docker run 命令提供了一个 --expose 选项，能够设置容器想要开放,但没有在Dockerfile中注明的端口.
+  
+  --expose 注明的端口会添加到 -P 选项的端口列表中。
+
 + -P --publish-all=true|false
 
   该选项会映射dockerfile中expose的所有端口,对应的主机端口在49000-49900中随机选择.
@@ -936,7 +970,8 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
     sudo docker run -d -p 127.0.0.1:5000:5000/udp training/webapp python app.py
   #+END_SRC
 
-*如果希望永久改变绑定的主机ip地址,可以在docker配置中指定--ip=IP_ADDRESS*
+  *如果希望永久改变绑定的主机ip地址,可以在docker配置中指定--ip=IP_ADDRESS*
+
 
 *** 查看端口映射
 使用 ~docker port~ 来查看当前映射的端口设置,还能查看绑定到的地址
@@ -1091,11 +1126,15 @@ docker提供了一些选项来动态的配置他们:
 
 + --dns=IP_ADDRESS
 
-  添加dns服务器到容器的/etc/resolv.conf中,让容器用这ip地址来解析所有不在/etc/hosts中的主机名
+  添加dns服务器到容器的/etc/resolv.conf中,让容器用这ip地址来解析所有不在/etc/hosts中的主机名,可以在启动Docker后台进程时用来设置默认值。
 
 + --dns-search=DOMAIN
 
-  设定容器的搜索域, 例如,当搜索域为.example.com时,会在搜索host主机名时,DNS不仅搜索host,还会搜索host.example.com
+  设定容器的搜索域, 例如,当搜索域为.example.com时,会在搜索host主机名时,DNS不仅搜索host,还会搜索host.example.com,可以在启动Docker后台进程时用来设置默认值。
+
++ --add-host=HOST:IP
+
+  自定义主机到IP地址的映射关系，可以设置多次以配置多个映射关系，但不能在启动Docker后台进程时设置默认值。
 *** 定制docker0
 docker服务默认会创建一个docker0接口,用于在linux内核层桥接所有容器的虚拟网卡和host物理网卡.
 
@@ -1226,6 +1265,30 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 指定一个环境变量,会被后续 ~RUN~ 指令使用,并在容器运行时保持
 
 + ENV key value
+  
++ ENV key1=value1 key2=value2 ...
+
+ENV声明的环境变量不仅对产生的容器有效，而且还能够在其他Dockerfile的指令中使用，例如
+#+BEGIN_EXAMPLE
+  ENV VERSION="1.0"
+  LABEL base.version=${VERSION}
+#+END_EXAMPLE
+
+*** ARG
+
+类似ENV，ARG能够指定构建镜像时的变量，该变量能够在在其他Dockerfile的指令中使用，但与ENV不同的是，它不能在容器中被访问。例如
+#+BEGIN_SRC shell
+  ARG _USER="arch"
+  ARG _UID="1000"
+  RUN useradd -m  -u ${_UID}  ${_USER}
+#+END_SRC
+
+Docker引入ARG的意义在于，ARG中指定的参数值可以被 =docker build= 中的 =--build-arg= 参数所覆盖，从而起到动态构建镜像的目的
+
+比如下面这个构建语句使用当前用户的用户名和UID来替代Dockerfile中的_USER和_UID的值
+#+BEGIN_SRC shell
+  docker build --tag test_arg --build-arg=_USER=$USER --build-arg=_UID=$UID .
+#+END_SRC
 
 *** ADD
 #+BEGIN_EXAMPLE
@@ -1347,11 +1410,13 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 + ENTRYPOINT command param1 param2 :: 使用 =/bin/sh -c= 方式执行
 
      
-当使用第一种设定方法时，ENTRYPOINT 和 CMD 可以放在一起连用
+当使用 *第一种设定方法* 时，ENTRYPOINT 和 CMD 可以放在一起连用
 #+BEGIN_EXAMPLE
   ENTRYPINT["cmd", "parm1"]
   CMD["optional-parm1","optional-parm2"]
 #+END_EXAMPLE
+
+而如果 ENTRYPOINT 使用了shell格式，那么CMD指令提供的所有其他参数以及docker run命令运行时指定的额外参数都会被忽略！
 
 在该容器运行时，默认是调用的 =cmd parm1 optional-parm1 optional-parm2=
 但若指定了运行参数，则会变成 =cmd parm1 other-parm1 other-parm2=
@@ -1365,6 +1430,17 @@ Dockerfile由一行行命令语句组成,并且支持以 =#= 开头的注释行.
 当服务不需要管理员权限时,可以通过该命令指定运行用户.并且可以在之前创建所需要的用户.
 
 + USER user-name
+  
+在没有使用 =--userns-remap=USER= 来映射USER namespace的情况下，容器中的用户和主机上的用户共享同一个用户ID空间。例如
+#+BEGIN_SRC shell
+  echo "hello" >/tmp/test.txt
+  chmod 600 /tmp/test.txt
+  sudo chown root:root /tmp/test.txt
+  docker run --rm -v /tmp/test.txt:/tmp/test.txt -u nobody ubuntu cat /tmp/test.txt # 会提示无权限
+  docker run --rm -v /tmp/test.txt:/tmp/test.txt -u root ubuntu cat /tmp/test.txt # 运行正常
+
+#+END_SRC
+
 
 * Docker Restful命令
 默认情况下Docker监听的是本地unix:///var/run/docker.sock文件。
