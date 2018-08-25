@@ -1909,6 +1909,590 @@ Commands:
   up                 Create and start containers
   version            Show the Docker-Compose version information
 #+END_SRC
+
+其中，比较常用的两个参数有:
+
++ -f 配置文件 :: 用于指定一个或多个Docker Compose的配置文件，默认解析的是当前目录下的 =docker-compose.yml= 文件
++ -p 项目名称 :: Docker Compose默认把当前目录名作为项目名称，项目名称会作为启动容器的前缀
+
+** Compose环境变量
+在当前目录中可以包含一个名为 =.env= 的文件，在这个文件中设置一些Docker Compose的环境变量:
+
++ COMPOSE_API_VERSION ::
++ COMPOSE_FILE :: 指定默认的配置文件名称，类似 =-f= 选项
++ COMPOSE_HTTP_TIMEOUT ::
++ COMPOSE_PROJECT_NAME :: 指定项目名称，类似 =-p= 选项
++ DOCKER_CERT_PATH ::
++ DOCKER_HOST :: 指定Docker client连接Docker daemon的地址，默认为 =unix:///var/run/docker.sock=
++ DOCKER_TLS_VERIFY ::
+     
+** Docker Compose子命令
+
+*** build :: 构建并启动服务镜像
+在 =docker-compose.yml= 中通常包括了多个容器构建和启动的配置，默认情况下 =docker-compose build= 会构建其中定义的所有镜像。
+
+但若只是想构建其中的某个容器镜像，则可以在 =build= 子命令后加上容器名称
+#+BEGIN_SRC shell
+  docker-compose build ui
+#+END_SRC
+
+除此之外，build子命令还可以指定 =--force-rm= 来让Docker在构建结束后删除中间容器，
+还可以指定 =--no-cache= 来在构建过程中自动删除构建缓存。
+
+此外， =docker-compose build= 默认在在本地已经有镜像的情况下会直接使用本地已经有的镜像，，
+但是通过 =--pull= 选项可以让docker强制拉取最新的镜像。
+
+另外，若构建镜像的Dockerfile中包含有 =ARG=, 则可以通过 ~--build-arg key1=value2~ 来传递参数
+*** bundle :: 生成DAB包
+通过 docker-compose.yml 文件能够生成一个分布式应用程序包(DAB),这个包可以通过 =docker delpoy= 来进行部署
+
+*** config :: 检查配置语法
+config命令用来检查 =docker-compose.yml= 文件是否有语法问题，如果有则会返回错误原因
+#+BEGIN_SRC shell :results org
+  docker-compose config --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Validate and view the Compose file.
+
+Usage: config [options]
+
+Options:
+    --resolve-image-digests  Pin image tags to digests.
+    -q, --quiet              Only validate the configuration, don't print
+                             anything.
+    --services               Print the service names, one per line.
+    --volumes                Print the volume names, one per line.
+#+END_SRC
+
+*** create :: 创建服务容器
+=docker-compose create= 跟 =docker create= 类似，会创建服务所需要的所有容器，但不会运行容器
+#+BEGIN_SRC shell :results org
+  docker-compose create --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Creates containers for a service.
+This command is deprecated. Use the `up` command with `--no-start` instead.
+
+Usage: create [options] [SERVICE...]
+
+Options:
+    --force-recreate       Recreate containers even if their configuration and
+                           image haven't changed. Incompatible with --no-recreate.
+    --no-recreate          If containers already exist, don't recreate them.
+                           Incompatible with --force-recreate.
+    --no-build             Don't build an image, even if it's missing.
+    --build                Build images before creating containers.
+#+END_SRC
+
++ --force-recreate :: 即使容器配置和镜像没有变动，也重新创建容器
++ --no-recreate :: 如果容器存在则不再重新创建
++ --no-build :: 即使镜像不存在，也不去构建该镜像
++ --build :: 在创建容器之前先构建镜像
+
+*** down :: 清理项目
+与 =up= 命令相对，会删除服务定义所需的容器以及网络，
+通过 =-v= 参数还可以删除相关的数据卷，
+通过 =--rmi= 可以删除相关的镜像
+通过 =--remove-orphans= 还可以删除没有在配置文件中定义的容器
+
+#+BEGIN_SRC shell :results org
+  docker-compose down --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Stops containers and removes containers, networks, volumes, and images
+created by `up`.
+
+By default, the only things removed are:
+
+- Containers for services defined in the Compose file
+- Networks defined in the `networks` section of the Compose file
+- The default network, if one is used
+
+Networks and volumes defined as `external` are never removed.
+
+Usage: down [options]
+
+Options:
+    --rmi type              Remove images. Type must be one of:
+                              'all': Remove all images used by any service.
+                              'local': Remove only images that don't have a
+                              custom tag set by the `image` field.
+    -v, --volumes           Remove named volumes declared in the `volumes`
+                            section of the Compose file and anonymous volumes
+                            attached to containers.
+    --remove-orphans        Remove containers for services not defined in the
+                            Compose file
+    -t, --timeout TIMEOUT   Specify a shutdown timeout in seconds.
+                            (default: 10)
+#+END_SRC
+
+
+*** events :: 查看事件
+=docker-compose events= 其实就是对 =docker events= 命令的整合，它可以看到配置文件中服务定义各容器所发生的相关事件
+
+#+BEGIN_SRC shell :results org
+  docker-compose events --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Receive real time events from containers.
+
+Usage: events [options] [SERVICE...]
+
+Options:
+    --json      Output events as a stream of json objects
+#+END_SRC
+
+
+*** exec :: 进入服务中某个容器执行命令
+=docker-compose exec= 与 =docker exec= 类似，都是进入容器执行命令。
+不同点在于 =docker-compose= 后面接的是服务名称而不是容器名称，同时由于可能一个服务由多个容器组成，因此可能需要使用 ~--index=index~ 来指定在哪个容器上运行命令
+
+#+BEGIN_SRC shell :results org
+  docker-compose exec --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Execute a command in a running container
+
+Usage: exec [options] [-e KEY=VAL...] SERVICE COMMAND [ARGS...]
+
+Options:
+    -d, --detach      Detached mode: Run command in the background.
+    --privileged      Give extended privileges to the process.
+    -u, --user USER   Run the command as this user.
+    -T                Disable pseudo-tty allocation. By default `docker-compose exec`
+                      allocates a TTY.
+    --index=index     index of the container if there are multiple
+                      instances of a service [default: 1]
+    -e, --env KEY=VAL Set environment variables (can be used multiple times,
+                      not supported in API < 1.25)
+    -w, --workdir DIR Path to workdir directory for this command.
+#+END_SRC
+
++ -d :: 后台执行命令
++ --privileged :: 开启特权模式，获得宿主机的root权限
++ --user $USER :: 切换进入容器时的用户身份
++ -T :: 禁止伪终端分配，默认会给命令分配伪终端
++ --index=$INDEX :: 若服务中包含多个实例，则通过它指定在那个容器实例中运行，默认为1
++ --env KEY=VAL :: 设置环境变量
++ --workdir $DIR :: 设置该命令所在的工作目录
+
+*** kill :: 杀死服务下的容器
+使用kill命令，默认会杀死项目下所有服务的相关容器，但也可以通过指定服务器名称杀死自定服务下的容器
+
+#+BEGIN_SRC shell :results org
+  docker-compose kill --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Force stop service containers.
+
+Usage: kill [options] [SERVICE...]
+
+Options:
+    -s SIGNAL         SIGNAL to send to the container.
+                      Default signal is SIGKILL.
+#+END_SRC
+
+可以通过 =-s $SIGNAL= 来指定杀死容器时发送的信号量，默认为 =SIGKILL=
+
+
+*** logs :: 查看服务日志
+logs命令默认查看项目下所有服务的相关容器的日志,也可以通过指定服务名称来只查看指定服务的日志
+
+#+BEGIN_SRC shell :results org
+  docker-compose logs --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+View output from containers.
+
+Usage: logs [options] [SERVICE...]
+
+Options:
+    --no-color          Produce monochrome output.
+    -f, --follow        Follow log output.
+    -t, --timestamps    Show timestamps.
+    --tail="all"        Number of lines to show from the end of the logs
+                        for each container.
+#+END_SRC
+
++ -f :: 不断输出日志
++ -t :: 在每行日志前加上一个时间戳
++ --tail N :: 只显示最后的N行
+              
+*** pause :: 暂停服务容器
+pause命令默认暂停所有服务的所有相关容器，但也可以通过指定服务名称停止指定服务
+#+BEGIN_SRC shell :results org
+  docker-compose pause --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Pause services.
+
+Usage: pause [SERVICE...]
+#+END_SRC
+
+*** port :: 查看服务容器端口
+=docker-compose port= 与 =docker port= 类似，但是需要同时指定服务名称以及服务暴露的端口，才能查看到端口在宿主机中的映射
+
+#+BEGIN_SRC shell :results org
+  docker-compose port --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Print the public port for a port binding.
+
+Usage: port [options] SERVICE PRIVATE_PORT
+
+Options:
+    --protocol=proto  tcp or udp [default: tcp]
+    --index=index     index of the container if there are multiple
+                      instances of a service [default: 1]
+#+END_SRC
+
++ --protocol=PROTO :: 指定TCP还是UDP协议
++ --index=INDEX :: 指定容器索引值，可以用来显示指定容器端口的映射情况
+
+*** ps :: 查看正在运行的服务容器
+
+=docker-compose ps= 与 =docker ps= 类似，用于查看正在运行的容器。默认它显示所有服务的正在运行容器，但也可以通过指定服务的方式来只显示某个服务的相关容器
+#+BEGIN_SRC shell :results org
+  docker-compose ps --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+List containers.
+
+Usage: ps [options] [SERVICE...]
+
+Options:
+    -q, --quiet          Only display IDs
+    --services           Display services
+    --filter KEY=VAL     Filter services by a property
+#+END_SRC
+
+*** pull :: 拉取项目镜像
+使用 =docker-compose pull= 可以拉去多个服务的多个相关镜像
+
+#+BEGIN_SRC shell :results org
+  docker-compose pull --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Pulls images for services defined in a Compose file, but does not start the containers.
+
+Usage: pull [options] [SERVICE...]
+
+Options:
+    --ignore-pull-failures  Pull what it can and ignores images with pull failures.
+    --parallel              Deprecated, pull multiple images in parallel (enabled by default).
+    --no-parallel           Disable parallel pulling.
+    -q, --quiet             Pull without printing progress information
+    --include-deps          Also pull services declared as dependencies
+#+END_SRC
+
+=docker-compose pull= 拉取镜像时，若某个镜像拉取失败会自动停止后面的镜像拉取操作，
+而参数 =ignore-pull-failures= 可以无视这个镜像拉取失败的提示，继续拉取后面的镜像
+
+*** push :: 推送项目镜像
+在项目中，某些服务的镜像可能是基于Dockerfile构建的，则可以通过push命令推送项目的服务镜像到仓库
+
+#+BEGIN_SRC shell :results org
+  docker-compose push --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Pushes images for services.
+
+Usage: push [options] [SERVICE...]
+
+Options:
+    --ignore-push-failures  Push what it can and ignores images with push failures.
+#+END_SRC
+
+类似 =pull= 子命令， =docker-compose push= 推送镜像时，若某个镜像失败会自动停止后面的镜像推送操作，
+而参数 =ignore-push-failures= 可以无视这个镜像推送失败的提示，继续推送后面的镜像
+
+*** restart :: 重启服务中的容器
+=docker-compose restart= 默认重启项目中所有服务的容器，但也可以指定服务只重启指定服务的容器
+
+#+BEGIN_SRC shell :results org
+  docker-compose restart --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Restart running containers.
+
+Usage: restart [options] [SERVICE...]
+
+Options:
+  -t, --timeout TIMEOUT      Specify a shutdown timeout in seconds.
+                             (default: 10)
+#+END_SRC
+
+=-t= 参数在指定秒数内若容器无法停止，则会发送 =SIGKILL= 信号来强制停止容器
+
+*** rm :: 删除服务中的容器
+默认删除整个项目的容器，但也可以通过指定服务名称只删除指定容器
+#+BEGIN_SRC shell :results org
+  docker-compose rm --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Removes stopped service containers.
+
+By default, anonymous volumes attached to containers will not be removed. You
+can override this with `-v`. To list all volumes, use `docker volume ls`.
+
+Any data which is not in a volume will be lost.
+
+Usage: rm [options] [SERVICE...]
+
+Options:
+    -f, --force   Don't ask to confirm removal
+    -s, --stop    Stop the containers, if required, before removing
+    -v            Remove any anonymous volumes attached to containers
+    -a, --all     Deprecated - no effect.
+#+END_SRC
+
++ -f :: 不确认是否真的删除容器,需要说明的是， *compose不允许强制删除正在运行的容器，必须先停止或杀掉容器后才能删除，除非指定了-s参数*
+
++ -s :: 会先停止服务中的容器，然后再删除这些容器
+        
++ -v :: 删除容器的同时也会删掉数据卷
+
+*** run :: 创建临时容器并运行命令
+#+BEGIN_SRC shell :results org
+  docker-compose run --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Run a one-off command on a service.
+
+For example:
+
+    $ docker-compose run web python manage.py shell
+
+By default, linked services will be started, unless they are already
+running. If you do not want to start linked services, use
+`docker-compose run --no-deps SERVICE COMMAND [ARGS...]`.
+
+Usage:
+    run [options] [-v VOLUME...] [-p PORT...] [-e KEY=VAL...] [-l KEY=VALUE...]
+        SERVICE [COMMAND] [ARGS...]
+
+Options:
+    -d, --detach          Detached mode: Run container in the background, print
+                          new container name.
+    --name NAME           Assign a name to the container
+    --entrypoint CMD      Override the entrypoint of the image.
+    -e KEY=VAL            Set an environment variable (can be used multiple times)
+    -l, --label KEY=VAL   Add or override a label (can be used multiple times)
+    -u, --user=""         Run as specified username or uid
+    --no-deps             Don't start linked services.
+    --rm                  Remove container after run. Ignored in detached mode.
+    -p, --publish=[]      Publish a container's port(s) to the host
+    --service-ports       Run command with the service's ports enabled and mapped
+                          to the host.
+    --use-aliases         Use the service's network aliases in the network(s) the
+                          container connects to.
+    -v, --volume=[]       Bind mount a volume (default [])
+    -T                    Disable pseudo-tty allocation. By default `docker-compose run`
+                          allocates a TTY.
+    -w, --workdir=""      Working directory inside the container
+#+END_SRC
+
+使用 =docker-compose $SERVER $COMMAND= 会使用配置文件中定义的 =$SERVER= 配置来启动一个新容器并执行 =$COMMAND=.
+也就是说，启动的容器具有相同的数据卷、链接映射和配置，但需要注意以下几点:
+
++ run 会使用 =$COMMAND= 覆盖配置文件中的运行指令
+
++ run 命令默认并不执行配置文件中的端口映射配置，除非带了 =--service-ports= 参数，但你可以通过 =-p= 手工指定端口映射
+
++ 新创建的容器并不属于项目服务的一部分
+
+*** scale :: 设置提供服务的容器数量
+有时候为了保证服务的高可用和负载均衡，我们会为一个服务运行多个容器,这时可以用 =docker-compose scale $SERVER=$NUM= 来设置启动的容器个数
+
+#+BEGIN_SRC shell :results org
+  docker-compose scale --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Set number of containers to run for a service.
+
+Numbers are specified in the form `service=num` as arguments.
+For example:
+
+    $ docker-compose scale web=2 worker=3
+
+This command is deprecated. Use the up command with the `--scale` flag
+instead.
+
+Usage: scale [options] [SERVICE=NUM...]
+
+Options:
+  -t, --timeout TIMEOUT      Specify a shutdown timeout in seconds.
+                             (default: 10)
+#+END_SRC
+
+*** start :: 启动提供服务的容器
+start命令启动服务，可以启动非运行的容器，默认会启动所有服务的容器，但也可以指定服务名称以只启动该服务的容器
+#+BEGIN_SRC shell :results org
+  docker-compose start --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Start existing containers.
+
+Usage: start [SERVICE...]
+#+END_SRC
+
+当然该命令只会启动已经存在的容器，因此第一次运行前记得build
+
+*** stop :: 停止提供服务的容器
+stop命令默认停止全部服务的容器，也可以指定服务名称来停止特定服务的容器
+#+BEGIN_SRC shell :results org
+  docker-compose stop --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Stop running containers without removing them.
+
+They can be started again with `docker-compose start`.
+
+Usage: stop [options] [SERVICE...]
+
+Options:
+  -t, --timeout TIMEOUT      Specify a shutdown timeout in seconds.
+                             (default: 10)
+#+END_SRC
+
+-t 参数指定多少秒之内响应超时则直接杀死容器
+
+*** pause :: 暂停服务容器
+pause暂停服务，效果类似 =docker pause=, 其默认也是暂停项目所有服务，但可以指定服务名称从而只暂停某个服务的相关容器
+#+BEGIN_SRC shell :results org
+  docker-compose pause --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Pause services.
+
+Usage: pause [SERVICE...]
+#+END_SRC
+
+被暂停了的容器无法被操作，即使kill也不能杀死，必须先使用 =unpause= 恢复
+
+*** unpause :: 恢复服务容器
+unpause恢复被暂停的服务容器
+#+BEGIN_SRC shell :results org
+  docker-compose unpause --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Unpause services.
+
+Usage: unpause [SERVICE...]
+#+END_SRC
+
+unpause同样默认针对项目全部服务，但是也能指定服务。
+
+无论是pause还是unpause命令，都需要容器出于运行状态才能操作
+
+*** up :: 启动项目
+
+=docker-compose up= 命令是最常用的命令，它会包含了 =构建镜像、创建/重新创建容器、启动容器和连接服务容器= 一系列的步骤
+#+BEGIN_SRC shell :results org
+  docker-compose up --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Builds, (re)creates, starts, and attaches to containers for a service.
+
+Unless they are already running, this command also starts any linked services.
+
+The `docker-compose up` command aggregates the output of each container. When
+the command exits, all containers are stopped. Running `docker-compose up -d`
+starts the containers in the background and leaves them running.
+
+If there are existing containers for a service, and the service's configuration
+or image was changed after the container's creation, `docker-compose up` picks
+up the changes by stopping and recreating the containers (preserving mounted
+volumes). To prevent Compose from picking up changes, use the `--no-recreate`
+flag.
+
+If you want to force Compose to stop and recreate all containers, use the
+`--force-recreate` flag.
+
+Usage: up [options] [--scale SERVICE=NUM...] [SERVICE...]
+
+Options:
+    -d, --detach               Detached mode: Run containers in the background,
+                               print new container names. Incompatible with
+                               --abort-on-container-exit.
+    --no-color                 Produce monochrome output.
+    --quiet-pull               Pull without printing progress information
+    --no-deps                  Don't start linked services.
+    --force-recreate           Recreate containers even if their configuration
+                               and image haven't changed.
+    --always-recreate-deps     Recreate dependent containers.
+                               Incompatible with --no-recreate.
+    --no-recreate              If containers already exist, don't recreate
+                               them. Incompatible with --force-recreate and -V.
+    --no-build                 Don't build an image, even if it's missing.
+    --no-start                 Don't start the services after creating them.
+    --build                    Build images before starting containers.
+    --abort-on-container-exit  Stops all containers if any container was
+                               stopped. Incompatible with -d.
+    -t, --timeout TIMEOUT      Use this timeout in seconds for container
+                               shutdown when attached or when containers are
+                               already running. (default: 10)
+    -V, --renew-anon-volumes   Recreate anonymous volumes instead of retrieving
+                               data from the previous containers.
+    --remove-orphans           Remove containers for services not defined
+                               in the Compose file.
+    --exit-code-from SERVICE   Return the exit code of the selected service
+                               container. Implies --abort-on-container-exit.
+    --scale SERVICE=NUM        Scale SERVICE to NUM instances. Overrides the
+                               `scale` setting in the Compose file if present.
+#+END_SRC
+
+直接使用 =docker-compose up= 命令会聚合全部的容器信息，每个容器输出内容用不同颜色区分，这时按下 =Ctrl-c= 命令会停止所有容器。
+
+如果想让项目在后台运行，则需要添加参数 =-d=
+
+** Compose配置文件
+Docker Compose使用YML配置文件来定义多个容器的关系. Compose配置文件定义了包括服务（容器）、网络、数据卷在内的一系列项目组建。
+Docker Compose实际上就解析这个YML配置文件,然后根据解析结果生成原生的Docker命令去执行
+
+
 * Docker Machine
 Docker Machine是Docker官方提供的一个帮助我们在远程机器上安装Docker和在本地安装带Docker的虚拟机的工具。
 我们还可以通过docker=machine命令来对远程主机的Docker进行管理。

@@ -3669,13 +3669,13 @@ Common Lisp的header argument支持一个名为 ~:package~ 的header argument,�
 
 **** results
   
-有四种类型的 ~:result~ 参数. 对于某个代码块来说,每种类型的 ~:reslt~ 参数值只能有一个. 这四种类型分别为:
+有四种类型的 ~:result~ 参数. 对于某个代码块来说,每种类型的 ~:result~ 参数值只能有一个. 这四种类型分别为:
 
 + collection: specify how the results should be collected from the code block
     
   - value :: 默认值,表示result为代码块中最后一个语句的返回值
 
-  - output :: result为代码块输出到STDOUT中的结果.
+  - output :: result为代码块输出到 STDOUT 中的结果.
 
 + type:  specify what type of result the code block will return—which has implications for how they will be processed before insertion into the Org mode buffer
 
