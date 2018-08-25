@@ -282,6 +282,8 @@ sha256:9462714d994c154bf9d2f7bb96e00c700cc618f5beff29c3c6a4f176dc9b58ee   6 days
 
 容器是从镜像创建的运行实例. 它可以被启动,开始,停止,删除. 每个容器都是相互隔离的,保证安全的平台.
 
+Docker在创建容器时，会在镜像上再添加两层layer:一个初始层,包含了与容器相关的环境信息，如容器主机名，主机host信息等，
+还有一层是可读写层，Docker容器中进程的写时复制操作就是做用在这一层。
 *** 新建并启动容器
 使用命令 ~docker run~ 新建并启动一个容器
 
@@ -773,6 +775,81 @@ PID   USER     TIME  COMMAND
 *** 对容器进行重命名
 docker rename 旧容器名或ID 新容器名
 
+*** 主机与容器之间复制文件
+使用 =docker cp= 能够实现主机与容器之间复制文件
+
+#+BEGIN_SRC shell :results org
+  docker cp --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH|-
+	docker cp [OPTIONS] SRC_PATH|- CONTAINER:DEST_PATH
+
+Copy files/folders between a container and the local filesystem
+
+Options:
+  -a, --archive       Archive mode (copy all uid/gid information)
+  -L, --follow-link   Always follow symbol link in SRC_PATH
+#+END_SRC
+
+*** 更新容器的运行参数
+#+BEGIN_SRC shell :results org
+  docker update --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker update [OPTIONS] CONTAINER [CONTAINER...]
+
+Update configuration of one or more containers
+
+Options:
+      --blkio-weight uint16        Block IO (relative weight), between 10
+                                   and 1000, or 0 to disable (default 0)
+      --cpu-period int             Limit CPU CFS (Completely Fair
+                                   Scheduler) period
+      --cpu-quota int              Limit CPU CFS (Completely Fair
+                                   Scheduler) quota
+      --cpu-rt-period int          Limit the CPU real-time period in
+                                   microseconds
+      --cpu-rt-runtime int         Limit the CPU real-time runtime in
+                                   microseconds
+  -c, --cpu-shares int             CPU shares (relative weight)
+      --cpus decimal               Number of CPUs
+      --cpuset-cpus string         CPUs in which to allow execution (0-3, 0,1)
+      --cpuset-mems string         MEMs in which to allow execution (0-3, 0,1)
+      --kernel-memory bytes        Kernel memory limit
+  -m, --memory bytes               Memory limit
+      --memory-reservation bytes   Memory soft limit
+      --memory-swap bytes          Swap limit equal to memory plus swap:
+                                   '-1' to enable unlimited swap
+      --restart string             Restart policy to apply when a
+                                   container exits
+#+END_SRC
+
+注意，docker update不是用来更新容器中的应用的，也不是用来让容器内应用程序重新读取配置的，而是修改容器运行时加上的那些运行参数的。
+
+*** 等待容器运行完毕
+执行 =docker wait 容器= 命令后，终端会被挂起，直到指定容器停止，然后输出容器的退出码。
+
+该命令一般用在容器监控、异常捕捉方面
+
+#+BEGIN_SRC shell :results org
+  docker wait --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker wait CONTAINER [CONTAINER...]
+
+Block until one or more containers stop, then print their exit codes
+#+END_SRC
+
 ** Docker仓库与仓库注册服务器(registry)
 仓库是几种存放镜像文件的场所. 要注意它与仓库注册服务器之间的区别.
 
@@ -781,6 +858,16 @@ docker rename 旧容器名或ID 新容器名
 + 一个镜像可以有不同标签
 
 一般来说,仓库可以被认为是一个具体的项目或目录.例如对于仓库地址 =dl.dockerpool.com/ubuntu= 来说, =dl.dockerpool.com= 是注册服务器地址, =ubuntu= 是仓库名.
+
+当使用公开的 Docker Registry 镜像构建自己的私有仓库时，默认的镜像存储位置为 =/var/lib/registry=, 因此可以将宿主机上的目录挂载到该位置从而在删掉registry容器后依然能够保留推送到该私有仓库中的镜像
+#+BEGIN_SRC shell :results org :dir /ssh:lujun9972@192.168.1.9:
+  mkdir -p /media/usb0/docker_registry
+  docker run -d -p 5000:5000 --restart=always --name registry -v /media/usb0/docker_registry:/var/lib/registry registry
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+#+END_SRC
 
 *** 登录仓库注册服务器
 可以通过执行 ~docker login~ 命令来输入用户名、密码和邮箱来完成注册和登录.注册成功后,本地用户目录的 =.dockercfg= 中将保存用户的认证信息.
@@ -916,6 +1003,37 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
 
 如果要删除一个数据卷,必须在删除最后一个还挂载着它的容器时使用 ~docker rm -v~ 命令来指定同时删除关联的容器.
 
+*** 管理数据卷的docker volume命令
+#+BEGIN_SRC shell :results org
+  docker volume --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker volume COMMAND
+
+Manage volumes
+
+Commands:
+  create      Create a volume
+  inspect     Display detailed information on one or more volumes
+  ls          List volumes
+  prune       Remove all unused local volumes
+  rm          Remove one or more volumes
+
+Run 'docker volume COMMAND --help' for more information on a command.
+#+END_SRC
+
+#+TABLE:docker volume命令说明
+| 命令           | 说明                 |
+|----------------+----------------------|
+| docker create  | 创建一个数据卷       |
+| docker inspect | 查看数据卷的详细说明 |
+| docker ls      | 列出本机全部的数据卷 |
+| docker prune   | 清除无用的数据卷     |
+| docker rm      | 删除指定的数据卷     |
+
 ** docker中的网络介绍
 
 *** docker网络相关的命令列表
@@ -934,6 +1052,123 @@ docker加载的数据卷默认是读写权限,但我们可以通过在 ~-v 容�
 + --net=bridge|none|container:NAME_OR_ID|host :: 桥接配置
 + -p SPEC / --publish=SPEC :: 映射容器端口到宿主主机
 + -P / --publish-all=true|false :: 映射容器端口到宿主主机
++ network :: 管理网络的子命令
+
+*** 管理网络的docker network子命令
+#+BEGIN_SRC shell :results org
+  docker network --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker network COMMAND
+
+Manage networks
+
+Commands:
+  connect     Connect a container to a network
+  create      Create a network
+  disconnect  Disconnect a container from a network
+  inspect     Display detailed information on one or more networks
+  ls          List networks
+  prune       Remove all unused networks
+  rm          Remove one or more networks
+
+Run 'docker network COMMAND --help' for more information on a command.
+#+END_SRC
+
+docker network 本身还有几个自己的子命令。
+
+#+TABLE:docker network命令的说明
+| 命令                               | 说明                     |
+|------------------------------------+--------------------------|
+| network connect 网络 容器          | 连接一个容器到指定网络   |
+| network create  网络 [-d 网络类型] | 创建一个网络             |
+| network disconnect 网络容器        | 指定容器从一个网络中断开 |
+| network inspect 网络               | 显示指定网络的详细信息   |
+| network ls                         | 显示所有的Docker网络     |
+| network prune                      | 删除所有未用的网络       |
+| network rm 网络                    | 删除指定网络             |
+
+#+BEGIN_SRC shell :results org
+  eval $(docker-machine env host1)
+  echo 创建一个名为network-bridge的网络
+  docker network create network-bridge
+  echo 再创建一个名为network-useless的网络
+  docker network create network-useless
+  echo 显示network-bridge的详细信息
+  docker network inspect network-bridge
+  echo 创建一个名为sleep的容器
+  docker run -d --name sleep alpine sleep 10
+  echo 将sleep容器加入network-bridge网络中
+  docker network connect network-bridge sleep
+  echo 显示所有docker网络
+  docker network ls
+  echo 删除未用的网络
+  yes|docker network prune
+  echo 将sleep容器从network-bridge中断开
+  docker network disconnect network-bridge sleep
+  echo 删除network-bridge网络
+  docker network rm network-bridge
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+创建一个名为network-bridge的网络
+b065c1b3890d79fc13e4d003a7b5a3bdb3fc3d6c7cba0393f0a6bf4013721636
+再创建一个名为network-useless的网络
+0a48532a84be42ff93e618758ca8b36100fae82909b4c77164708da750dc615c
+显示network-bridge的详细信息
+[
+    {
+        "Name": "network-bridge",
+        "Id": "b065c1b3890d79fc13e4d003a7b5a3bdb3fc3d6c7cba0393f0a6bf4013721636",
+        "Created": "2018-08-24T23:03:15.475915419Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.19.0.0/16",
+                    "Gateway": "172.19.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+创建一个名为sleep的容器
+e264450f91fe852ebab63a3a5647a43a8730b59e860beee3e57e0f13d13c18aa
+将sleep容器加入network-bridge网络中
+显示所有docker网络
+NETWORK ID          NAME                DRIVER              SCOPE
+7db4156f35f5        bridge              bridge              local
+213ef497e043        host                host                local
+b065c1b3890d        network-bridge      bridge              local
+0a48532a84be        network-useless     bridge              local
+a24eef5aaaa2        none                null                local
+删除未用的网络
+WARNING! This will remove all networks not used by at least one container.
+Are you sure you want to continue? [y/N] Deleted Networks:
+network-useless
+
+将sleep容器从network-bridge中断开
+删除network-bridge网络
+network-bridge
+#+END_SRC
 
 *** docker创建容器网络的过程
 
@@ -1193,6 +1428,122 @@ docker允许指定docker0的ip地址和子网掩码,还能定义MTU(接口允许
    #+END_SRC
 
    
+** docker 集群相关命令
+*** 管理集群的docker swarm命令
+docker swarm命令与docker node、docker service命令共同提供集群管理编排能力
+
+#+BEGIN_SRC shell :results org
+  docker swarm --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker swarm COMMAND
+
+Manage Swarm
+
+Commands:
+  ca          Display and rotate the root CA
+  init        Initialize a swarm
+  join        Join a swarm as a node and/or manager
+  join-token  Manage join tokens
+  leave       Leave the swarm
+  unlock      Unlock swarm
+  unlock-key  Manage the unlock key
+  update      Update the swarm
+
+Run 'docker swarm COMMAND --help' for more information on a command.
+#+END_SRC
+
+#+TABLE: swarm命令说明
+| 命令       | 说明                                                                  |
+|------------+-----------------------------------------------------------------------|
+| init       | 初始化集群                                                            |
+| join       | 以workder(node)或manager的身份加入集群,身份根据join token的不同而不同 |
+| join-token | 管理join token                                                        |
+| update     | 更新集群                                                              |
+| leave      | 退出集群                                                              |
+
+*** 管理节点的docker node命令
+docker node是一个集群管理命令，它也有很多子命令
+
+#+BEGIN_SRC shell :results org
+  docker node --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker node COMMAND
+
+Manage Swarm nodes
+
+Commands:
+  demote      Demote one or more nodes from manager in the swarm
+  inspect     Display detailed information on one or more nodes
+  ls          List nodes in the swarm
+  promote     Promote one or more nodes to manager in the swarm
+  ps          List tasks running on one or more nodes, defaults to current node
+  rm          Remove one or more nodes from the swarm
+  update      Update a node
+
+Run 'docker node COMMAND --help' for more information on a command.
+#+END_SRC
+
+docker node命令只能在Swarm的管理节点上才能运行
+
+#+TABLE: docker node的命令说明
+| 命令         | 说明                          |
+|--------------+-------------------------------|
+| node promoto | 提升节点为manager节点         |
+| node demote  | 将集群中指定的manager节点降权 |
+| node inspect | 显示节点详细信息              |
+| node update  | 更新节点属性                  |
+| node ps      | 显示集群中正在运行的节点      |
+| node ls      | 显示集群中全部节点            |
+| node rm      | 从集群中删除指定节点                    |
+
+*** 管理服务的docker service
+docker service用于管理集群中的服务
+#+BEGIN_SRC shell :results org
+  docker service --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+Usage:	docker service COMMAND
+
+Manage services
+
+Commands:
+  create      Create a new service
+  inspect     Display detailed information on one or more services
+  logs        Fetch the logs of a service or task
+  ls          List services
+  ps          List the tasks of one or more services
+  rm          Remove one or more services
+  rollback    Revert changes to a service's configuration
+  scale       Scale one or multiple replicated services
+  update      Update a service
+
+Run 'docker service COMMAND --help' for more information on a command.
+#+END_SRC
+
+该命令必须在 swarm manager 上执行
+
+#+TABLE: service命令说明
+
+| 命令            | 说明                  |
+|-----------------+-----------------------|
+| service create  | 创建service           |
+| service inspect | 取得service详细信息   |
+| service ps      | 获取service的任务信息 |
+| service ls      | 获取service列表       |
+| service rm      | 删除指定service       |
+| service scale   | 调整service的replicas |
+| service update  | 更新service             |
 * 资源限制
 
 ** CPU
@@ -1394,6 +1745,32 @@ Docker引入ARG的意义在于，ARG中指定的参数值可以被 =docker build
 
 + ONBUILD [INSTRUCTION]
 
+*** USER
+指定运行容器时的用户名或UID,后续的 ~RUN~ 也会使用指定用户.
+
+当服务不需要管理员权限时,可以通过该命令指定运行用户.并且可以在之前创建所需要的用户.
+
++ USER user-name
+  
+在没有使用 =--userns-remap= 来映射USER namespace的情况下，容器中的用户和主机上的用户共享同一个用户ID空间。例如
+#+BEGIN_SRC shell
+  echo "hello" >/tmp/test.txt
+  chmod 600 /tmp/test.txt
+  sudo chown root:root /tmp/test.txt
+  docker run --rm -v /tmp/test.txt:/tmp/test.txt -u nobody ubuntu cat /tmp/test.txt # 会提示无权限
+  docker run --rm -v /tmp/test.txt:/tmp/test.txt -u root ubuntu cat /tmp/test.txt # 运行正常
+
+#+END_SRC
+
+*** 设置命令执行环境的SHELL命令
+在Docker构建过程中，默认使用 =/bin/sh= 作为shell环境，Windows下则默认使用 =cmd= 作为shell环境。
+
+但有时候需要使用其他SHELL执行RUN的内容，则可以使用SHELL指定让Docker更换shell环境
+
+比如，下面命令使用 =powershell= 作为shell环境
+#+BEGIN_EXAMPLE
+  SHELL ["powershell", "-command"]
+#+END_EXAMPLE
 ** 容器启动时执行指令
 *** CMD
 
@@ -1431,23 +1808,28 @@ Docker引入ARG的意义在于，ARG中指定的参数值可以被 =docker build
 若使用第二种方法， *则ENTRYPOINT设定的二进制命令会忽略来自于CMD和RUN命令所添加的参数*
 
 为了确保容器可以正确处理 =docker stop= 命令发来的 SIG 信号，Docker建议用第一种方法来启动二进制文件
-*** USER
-指定运行容器时的用户名或UID,后续的 ~RUN~ 也会使用指定用户.
+*** 检查镜像状态的HEALTHCHECK指令
 
-当服务不需要管理员权限时,可以通过该命令指定运行用户.并且可以在之前创建所需要的用户.
+HEALTHCHECK 指令是告诉 Docker 应该如何进行判断容器的状态是否正常,其格式为:
 
-+ USER user-name
-  
-在没有使用 =--userns-remap= 来映射USER namespace的情况下，容器中的用户和主机上的用户共享同一个用户ID空间。例如
-#+BEGIN_SRC shell
-  echo "hello" >/tmp/test.txt
-  chmod 600 /tmp/test.txt
-  sudo chown root:root /tmp/test.txt
-  docker run --rm -v /tmp/test.txt:/tmp/test.txt -u nobody ubuntu cat /tmp/test.txt # 会提示无权限
-  docker run --rm -v /tmp/test.txt:/tmp/test.txt -u root ubuntu cat /tmp/test.txt # 运行正常
++ HEALTHCHECK [选项] CMD <命令> :: 设置检查容器健康状况的命令
++ HEALTHCHECK NONE :: 如果基础镜像有健康检查指令，使用这行可以屏蔽掉其健康检查指令
 
-#+END_SRC
+在没有 HEALTHCHECK 指令前，Docker 引擎只可以通过容器内主进程是否退出来判断应用程序是否退出。
 
+但应用程序没有退出，并不代表应用程序能够正常提供服务，于是引入了 =HEALTHCHECK= 指令通过该指令指定一行命令，用这行命令来判断容器主进程的服务状态是否还正常，从而比较真实的反应容器实际状态。
+
+当在一个镜像指定了 HEALTHCHECK 指令后，用其启动容器，初始状态会为 starting，在 HEALTHCHECK 指令检查成功后变为 healthy，如果连续一定次数失败，则会变为 unhealthy。
+
+HEALTHCHECK 支持下列选项：
+
++ --interval=<间隔> :: 两次健康检查的间隔，默认为 30 秒；
++ --timeout=<时长> :: 健康检查命令运行超时时间，如果超过这个时间，本次健康检查就被视为失败，默认 30 秒；
++ --retries=<次数> :: 当连续失败指定次数后，则将容器状态视为 unhealthy，默认 3 次。
+
+和 CMD, ENTRYPOINT 一样，HEALTHCHECK 只可以出现一次，如果写了多个，只有最后一个生效。
+
+在 HEALTHCHECK [选项] CMD 后面的命令，格式和 ENTRYPOINT 一样，分为 shell 格式，和 exec 格式。命令的返回值决定了该次健康检查的成功与否：0：成功；1：失败；2：保留，不要使用这个值。
 
 * Docker Restful命令
 默认情况下Docker监听的是本地unix:///var/run/docker.sock文件。
@@ -1840,3 +2222,6 @@ REPOSITORY          TAG                 IMAGE ID            CREATED             
 
 1. 激活host1主机后，ACTIVE这一列，在 =host1= 这一行有一个 =*= 号标识
 2. 激活host1主机后，docker images变成空了，因为 =host1= 主机上并没有任何镜像。
+* Docker Daemon
+Docker1.12之后使用 =/etc/docker/daemon.json= 来配置daemon.
+
