@@ -947,7 +947,7 @@
 
    * (defconst symbol value &optional doc-string)
 
-	 与defvardefconst也定义一个名为symbol-name的变量,它的值为value.
+	 与defvar defconst也定义一个名为symbol-name的变量,它的值为value.
 
 	 另外,defconst绑定的也是symbol在动态域下的默认值,它并不会影响symbol的buffer-local值,也不改变symbol的静态绑定值.
 
