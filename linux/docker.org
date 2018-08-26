@@ -2492,6 +2492,370 @@ Options:
 Docker Compose使用YML配置文件来定义多个容器的关系. Compose配置文件定义了包括服务（容器）、网络、数据卷在内的一系列项目组建。
 Docker Compose实际上就解析这个YML配置文件,然后根据解析结果生成原生的Docker命令去执行
 
+一个配置文件的例子如下所示，
+#+BEGIN_SRC yaml
+  version : '2'
+  services:
+    web:
+      build: ../webapp
+      ports:
+        - 8080
+        - 80
+      networks:
+        - front-tier
+        - back-tier
+
+    redis:
+      image: redis
+      links:
+        - web
+      networks:
+        - back-tier
+
+    lib:
+      image: haproxy
+      build:
+        context: ../haproxy
+        dockerfile: ../haproxy/docker.file
+        args:
+          buildno: 1
+          password: secret
+      ports:
+        - 80:80
+      links:
+        - web
+      networks:
+        - front-tier
+        - back-tier
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+  networks:
+    front-tier:
+      driver: bridge
+    back-tier:
+      driver: bridge
+#+END_SRC
+
+从中可以看出，一份标准的配置文件应该包括version,services,networks三部分，其中最关键的是services和networks这两个部分。
+
+*** services部分的配置
+把services看成一个map来看的话，其中的key就是每个服务的名称，比如上面例子中的 =db,redis,lib=
+而value则是另一个map，里面存储了关于服务的各项配置信息。
+
+**** image :: 指定服务使用的镜像
+image指定了提供服务的镜像名称或镜像ID，如果镜像本地不存在则Compose会尝试拉取这个镜像
+
+**** build :: 指定构建镜像的上下文
+服务也可以根据一份Dockerfile来构建镜像，给build构建标签指定Dockerfile所在的目录，Compose就能利用它来自动构建镜像，然后使用镜像启动容器了。
+#+BEGIN_SRC yaml
+  build: /path/to/dockerfile/directory
+  # 也可以是相对路径
+  build: ../directory
+#+END_SRC
+
+除此之外，build标签还支持子标签
+#+BEGIN_SRC yaml
+    build:
+      context: ../haproxy
+      dockerfile: ../haproxy/docker.file
+      args:
+        buildno: 1
+        password: secret
+#+END_SRC
+
+如果同时指定了image和build两个标签，那么Comose会根据build标签构建镜像，并且把构建出来的镜像根据image标签进行命名
+#+BEGIN_SRC yaml
+  build: ../docker
+  image: webapp:tag
+#+END_SRC
+
+**** command :: 指定容器启动时的CMD
+类似于Dockerfile中的CMD指令，它也有两种写法
+#+BEGIN_SRC yaml
+  command: make -f make.file
+  command: [make, -f, make.file]
+#+END_SRC
+
+**** container_name :: 指定运行服务的容器名称
+一般Compose会自动生成提供服务的容器名称: =$项目名称_$服务名称_$序号=
+但你也可以通过 =container_name= 标签直接指定容器名称
+#+BEGIN_SRC yaml
+  container_name: app
+#+END_SRC
+
+**** depends_on :: 指定服务依赖关系
+该标签指定了容器的启动先后顺序
+
+#+BEGIN_SRC yaml
+  version: "1"
+  services:
+    web:
+      build: .
+      depends_on:
+        - db
+        - redis
+    redis:
+      image: redis
+    db:
+      image: mysql
+#+END_SRC
+
+则执行 =docker-compose up web= 时，会先启动 =redis= 和 =db= 服务，然后再启动 =web= 服务。
+
+**** dns / dns_search :: 指定服务的DNS配置
+与 --dns 和 --dns_search 参数一样，可以为单个字符串也可以为一个数组:
+#+BEGIN_SRC yaml
+  dns: 8.8.8.8
+  dns:
+    - 8.8.8.8
+    - 9.9.9.9
+  dns_search: dev.com
+  dns_search:
+    - dev.com
+    - prod.com
+#+END_SRC
+
+**** tmpfs :: 挂载临时目录
+挂载临时目录到容器内部，与run的参数效果一样:
+#+BEGIN_SRC yaml
+  tmpfs: /run
+  tmpfs:
+    - /run
+    - /tmp
+#+END_SRC
+
+**** entrypont :: 指定容器运行时的entrypoint
+entrypoint也支持两种写法，一种字符串，一种数组
+#+BEGIN_SRC yaml
+  entrypoint: php -d memory_limit=-1
+  entrypoint: [php, -d, memory_limit=-1]
+  entrypoint:
+    - php
+    - -d
+    - memory_limit=-1
+#+END_SRC
+
+**** env_file :: 指定compose的环境变量文件
+前面提到Compose默认使用 =.env= 文件来保存一些Compose应用相关的环境变量信息。
+
+通过 =env_file= 指令我们可以指定Compose从另一个或多个文件中读取环境变量的值
+#+BEGIN_SRC yaml
+  env_file: .env
+  env_file:
+    - ./common.env
+    - ./japps/web.env
+    - /opt/secrets.env
+#+END_SRC
+
+**** environment :: 设置构建和运行容器时的环境变量
+#+BEGIN_SRC yaml
+  environment:
+    KEY1: VALUE1
+    KEY2: VALUE2
+  environment:
+    - KEY3=VALUE3
+    - KEY4=VALUE4
+#+END_SRC
+
+**** expose :: 指定暴露端口
+expose标签与Dockerfile中的EXPOSE指令一样，用于指定暴露的端口，但只是作为一种参考，实际上的端口映射由 =port= 标签决定
+#+BEGIN_SRC yaml
+  expose:
+    - "3000"
+    - "8000"
+#+END_SRC
+
+**** external_links :: 连接外部容器
+这个标签使得Compose能够连接那些不在docker-compose.yml中定义的容器，前提是外部容器与项目中的容器在同一个网络中
+#+BEGIN_SRC yaml
+  external_links:
+    - redis_1
+    - project_db_1:mysql
+    - project_db_1:postgresql
+#+END_SRC
+
+**** extra_hosts :: 扩展连接服务器的hosts列表
+extra_host会向容器中的 =/etc/hosts= 文件中添加额外的记录，与 =--add-host= 类似
+#+BEGIN_SRC yaml
+  extra_hosts:
+    - "host1:192.168.1.2"
+    - "host2:192.168.1.3"
+#+END_SRC
+
+**** labels :: 添加元数据
+与Dockerfile中的LABEL意思一样:
+
+#+BEGIN_SRC yaml
+  labels:
+    description: "Acounting webapp"
+    department: "Finance"
+  labels:
+    - "description=Accounting webapp"
+    - "department=Finance"
+#+END_SRC
+
+**** links :: 设置容器互联
+与 =--link= 效果一样，连接其他服务中的容器
+#+BEGIN_SRC yaml
+  links:
+    - mysql:database
+    - redis
+#+END_SRC
+
+**** logging :: 配置服务日志
+#+BEGIN_SRC yaml
+  logging:
+    driver: syslog
+    options:
+      syslog-address: "tcp://192.168.1.9:123"
+#+END_SRC
+
+**** pid :: 指定进程空间
+#+BEGIN_SRC yaml
+  # 主机PID模式，与主机共享进程命名空间
+  pid: "host"
+  # 自定义进程命名空间
+  pid: "NS1"
+#+END_SRC
+
+**** ports :: 设置容器端口映射
+使用 =HOST_PORT:CONTAINER_PORT= 格式,若只指定容器端口，则随机映射主机端口
+#+BEGIN_SRC yaml
+  ports:
+    - "3000"                      # 宿主3000端口会映射到主机的随机端口
+    - "8000:8000"
+    - "49100:22"
+    - "127.0.0.1:8001:8001"
+#+END_SRC
+
+**** security_opt :: 设置容器安全选项
+#+BEGIN_SRC yaml
+  security_opt:
+    - label:user:USER
+    - label:role:ROLE
+#+END_SRC
+
+**** stop_signal :: 设置容器的停止信号
+设置另一个信号来停止容器，默认情况下使用 =SIGTERM= 停止容器。我们可以用 =stop_signal= 标签设置另一个信号
+#+BEGIN_SRC yaml
+  stop_signal: SIGUSR1
+#+END_SRC
+
+**** volumes :: 设置容器数据卷
+类似 =-v= 参数的语法
+#+BEGIN_SRC yaml
+  volumes:
+    - /var/lib/mysql
+    - ./cache:/tmp/.cache
+    - /etc/audit/:/etc/audit:ro
+#+END_SRC
+
+**** volumes_from :: 挂载数据卷容器
+#+BEGIN_SRC yaml
+  volumes_from:
+    - service_name
+    - service_name:ro
+    - container:container_name
+    - container:container_name:rw
+#+END_SRC
+
+**** cap_add,cap_drop :: 修改内核功能
+添加或删除容器的内核功能
+#+BEGIN_SRC yaml
+  cap_add:
+    - ALL
+  cap_drop:
+    - NET_ADMIN
+    - SYS_ADMIN
+#+END_SRC
+
+**** cgroup_parent :: 指定父级CGroup
+#+BEGIN_SRC yaml
+  cgroup_parent: m-executor-abcd
+#+END_SRC
+
+**** devices :: 设备映射列表
+与 =--devices= 参数类似
+#+BEGIN_SRC yaml
+  devices:
+    - "/dev/video0:/dev/video0"
+    - "/dev/video1:/dev/video1"
+#+END_SRC
+
+**** extends :: 配置服务扩展
+相当于是将其他配置文件中的服务设定引用过来
+#+BEGIN_SRC yaml
+  extends:
+    file: common.yml
+    service: webapp
+#+END_SRC
+
+**** network_mode :: 设置服务的网络模式
+与 =--net= 参数类似，只是多了一个 =service:[service name]= 的格式
+#+BEGIN_SRC yaml
+  network_mode: "bridge"
+  network_mode: "host"
+  network_mode: "none"
+  network_mode: "service:[service name]"
+  network_mode: "container:[container name/id]"
+#+END_SRC
+
+**** networks: 设置服务容器要加入哪个网络
+#+BEGIN_SRC yaml
+  services:
+    app:
+      networks:
+        - some-network
+        - other-network
+#+END_SRC
+
+networks标签还有一个特别的子标签aliases,用来设置服务在该网络中的别名，相同的服务在不同网络中可以有不同的别名
+#+BEGIN_SRC yaml
+  services:
+    app:
+      networks:
+        some-network:
+          aliases:
+            - alias1
+            - alias2
+        other-network:
+          aliases:
+            - alias3
+#+END_SRC
+
+**** 其他标签
+还有其他很多单值标签，类似于 =docker run= 中对应参数的效果
+
++ cpu_shares
++ cpu_quota
++ cpuset
++ domainname
++ hostname
++ ipc
++ mac_address
++ mem_limit
++ memswap_limit
++ privileged
++ read_only
++ restart
++ shm_size
++ stdin_oen
++ tty
++ user
++ working_dir
+  
+*** 网路配置
+Compose可以自定义网络，这允许用户创建复杂的拓扑结构，指定网络驱动程序以及选项。
+
+#+BEGIN_SRC yaml
+  networks:
+    net1:
+      driver: custom-driver
+      driver_opts:
+        foo: "1"
+        bar: "2"
+#+END_SRC
 
 * Docker Machine
 Docker Machine是Docker官方提供的一个帮助我们在远程机器上安装Docker和在本地安装带Docker的虚拟机的工具。
