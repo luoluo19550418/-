@@ -31,6 +31,9 @@ Tridactyl 是一款让Firefox变成类Vim操作的插件。
 + g$ :: 进入最后一个tab
 + gr :: 进入阅读模式
 
+* Find mode
++ / :: 搜索关键字
++ C-g/C-G :: 搜索上一个/下一个关键字出现的地方
 * Hint mode
 该模式会高量页面中的各个element，并对这些element进行操作
 
@@ -144,4 +147,4 @@ Tridactyl 是一款让Firefox变成类Vim操作的插件。
 该模式下所有的按键都直接传递给web页面解析。
 
 + Shift-Insert :: 进入Ignore mode
-+ Shift-Esc :: 推出Ignore mode
++ Shift-Esc :: 退出Ignore mode
