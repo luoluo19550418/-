@@ -1,0 +1,418 @@
+#+TITLE: debug_tips
+#+AUTHOR: lujun9972
+#+TAGS: ../
+#+DATE: [2018-10-14 日 19:07]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+
+
+* windows下的UNIX环境
+
+** cygwin
+
+* 查找源代码
+
+** ctags/etags
+
+** grep/egrep
+
+* 版本控制
+
+每次修改都应该单独提交，而且写上有意义的提交消息，如果有可能，还应该连接到对应的事务上
+
+** svn
+
+** git
+当发现BUG时，首先查看软件所经历的变化:
+#+BEGIN_SRC shell
+  git log
+#+END_SRC
+
+找出某几行代码是由谁、什么时候修改的:
+#+BEGIN_SRC shell
+  git blame
+#+END_SRC
+
+找出两个版本之间经历的变化
+#+BEGIN_SRC shell
+  git diff v1 v2
+#+END_SRC
+
+若知道BUG是某两个版本之间的某个版本引入的，那么可以通过二分法定位是哪个版本引入的
+#+BEGIN_SRC shell
+  git bisect start $Vstart $Vend
+  git bisect run test.sh
+  git reset
+
+#+END_SRC
+* 性能
+
+** profile
+
+* 静态检查
+** gcc
+*** -E :: 把预处理之后的源代码显示出来
+*** -Wall, -Wextra, -Wshadow, -Werror  :: 对代码进行严格检查
+** lint
+
+* 调试
+
+** strace
+
+下面命令可以显示已经成功打开文件的名字
+#+BEGIN_SRC shell
+  strace ${command}|grep '^open(' |grep -v '= -1'|awk -F\" '{print $2}'
+#+END_SRC
+
+** gdb
+如果是为了调试而构建程序，那么请禁用编译器的优化功能，因为优化会大幅修改生成后的代码。
+
+若使用IDE做开发，则只需要在debug版本和release版本之间切换就行了，IDE会自动把优化选项控制好。
+
+*** step in
+
+*** step over
+
+*** continue
+
+*** 条件断点
+
+*** watch
+
+*** 反向调试(record/reverse-next/reverse-step)
+
+*** 查看变量的值(display)
+
+*** 查看调用栈(where)
+
+*** 查看变量及表达式的值
+
++ info locals/info args :: 把局部变量的值展示出来
++ print expression :: 打印表达式的值
++ display expression :: 观察代码执行过程中，表达式的取值变化
+
+*** 查看反汇编代码
+
++ display/i$pc
+
+*** 查看并理解复杂的数据结果(pretty-printer)
+
+*** 连接到正在运行的进程上
+
+sudo gdb -p $pid
+
+*** 查看Unix核心转储镜像
+把程序名称与核心转储文件的名称作为参数传递给gdb。
+
+然后就可以用where命令查看程序发生崩溃时所执行到的位置，也可以在调用栈之间游走，还可以对表达式进行求值，以判断程序状态。
+
+可以在程序中主动调用abort函数来生成这样一份文件。或者通过 =kill -ABRT $pid= 来生成转储文件。
+
+*** 图形化前端:ddd
+
+*** 初始化文件:.gdbinit
+
+*** 多线程调试
++ info threads :: 列出正在执行的线程
++ thread N :: 切换到地N号进程
++ backtrace :: 将当前线程栈打印出来
+** 核心转储
+*** 生成核心转储文件
+一般通过 kill 命令给某个进程发送 QUIT 信号可能生成核心转储文件
+#+BEGIN_SRC shell
+  kill -QUIT $(pidof xxx)
+#+END_SRC
+** nm
+
+nm命令会列出目标中间中引用到的符号。
+
+比如，若某个C/C++程序意外退出，可以用 =nm= 命令查看目标文件，看那些文件调用了 =exit= 函数
+#+BEGIN_SRC shell
+  nm -A *.o |grep 'U exit$'
+#+END_SRC
+
+** dumpbin
+
+** javap
+* 日志
+** Unix的syslog接口
+#+BEGIN_SRC c
+  #include <syslog.h>
+
+  int main()
+  {
+    openlog("myapp", 0, LOG_USER);
+    syslog(LOG_DEBUG, "Called main() in %s", __FILE__);
+    closelog();
+    return 0;
+  }
+#+END_SRC
+* 代码重构
+* 其他
+** 地址空间布局随机化对调试带来的影响
+现代linux内核每次加载程序时会将程序加载到内存的随机位置，以防止缓冲区益处的代码注入攻击。
+
+比如下面程序可以输出自身的栈、堆、代码及数据相关的内存地址:
+#+BEGIN_SRC C :results org
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  int z;
+  int i=1;
+  const int c=1;
+
+  int main(int argc, char *argv[])
+  {
+    printf("Stack:\t%p\n", (void*)&argc);
+    printf("heap:\t%p\n", (void*) malloc(1));
+    printf("code:\t%p\n", (void*) main);
+    printf("data:\t%p (zero)\n", (void*) &z);
+    printf("data:\t%p (initialized)\n", (void*) &i);
+    printf("data:\t%p (constant)\n", (void*) &c);
+    return 0;
+  }
+#+END_SRC
+
+第一次执行结果:
+#+BEGIN_SRC org
+Stack:	0x7ffde6f8cf9c
+heap:	0x55ca3fd9d270
+code:	0x55ca3ee95149
+data:	0x55ca3ee98040 (zero)
+data:	0x55ca3ee98038 (initialized)
+data:	0x55ca3ee96004 (constant)
+#+END_SRC
+
+第二次执行结果:
+#+BEGIN_SRC org
+Stack:	0x7ffebd2eb6ec
+heap:	0x55a72ae36270
+code:	0x55a72ae04149
+data:	0x55a72ae07040 (zero)
+data:	0x55a72ae07038 (initialized)
+data:	0x55a72ae05004 (constant)
+#+END_SRC
+
+然而这种地址空间布局随机化措施(address space layout randomization, ASLR)可能干扰调试工作，比如会使我们记录下来的指针指变得无效。
+
+要禁止ASLR,可以采用下面方法来运行程序
+#+BEGIN_SRC shell
+  setarch $(uname -m) -R myprogram
+  # 这里 -R 表示 --addr-no-randomize
+                # Disables randomization of the virtual address space.  Turns on ADDR_NO_RANDOMIZE.
+#+END_SRC
+** 其中第三方代码库中的检查功能
+*** GNU STL
+使用GNU STL来编程时，通过定义 =_GLIBCXX_DEBUG= 宏，可以对程序代码的执行开启很多检查。
+例如迭代器越界操作，对已销毁容器的迭代器进行解引用，违反算法的前置条件等.
+
+比如下面段代码
+#+BEGIN_SRC cpp
+  #define _GLIBCXX_DEBUG
+  #include <vector>
+
+  int main()
+  {
+    std::vector<int> v;
+    v[0]=3;
+    return 0;
+  }
+#+END_SRC
+
+在运行时会提示
+#+BEGIN_EXAMPLE
+  /usr/include/c++/8.2.1/debug/vector:417:
+  Error: attempt to subscript container with out-of-bounds index 0, but 
+  container only holds 0 elements.
+
+  Objects involved in the operation:
+      sequence "this" @ 0x0x7fffa4319740 {
+        type = std::__debug::vector<int, std::allocator<int> >;
+      }
+#+END_EXAMPLE
+*** mcheck
+GNU 的 C 语言程序库也可以通过 mcheck 检查程序在整个生命期内是否存在内存泄露的情况。其方式是:
+
+1. 引用 =mbcheck.h=
+2. 在程序开头调用 =mtrace= 函数
+3. 在程序运行时设置 =MALLOC_TRACE= 环境变量，该环境变量指向一个文件，用来保存内存泄露检查所输出的信息。
+
+例如将下面这段代码保存为 =/tmp/t.c=
+#+BEGIN_SRC C :tangle /tmp/t.c
+  #include <stdlib.h>
+  #include <mcheck.h>
+
+  int main()
+  {
+    mtrace();
+    char* c=malloc(1);
+    return 0;
+  }
+#+END_SRC
+
+然后编译运行该程序
+#+BEGIN_SRC shell :results org
+  gcc /tmp/t.c -o /tmp/t
+  export MALLOC_TRACE=/tmp/t.leak
+  /tmp/t
+  echo 这会生成一个/tmp/t.leak的文件
+  cat ${MALLOC_TRACE}
+#+END_SRC
+
+#+BEGIN_SRC org
+这会生成一个/tmp/t.leak的文件
+= Start
+@ /tmp/t:[0x5599a4a54160] + 0x5599a5c386a0 0x1
+#+END_SRC
+
+但是你会发现很难看懂这个文件什么意思，我们可以使用mtrace来格式化输出
+#+BEGIN_EXAMPLE
+  [lujun9972@T430S ~]$ mtrace /tmp/t.leak 
+
+  Memory not freed:
+  -----------------
+             Address     Size     Caller
+  0x000055945befa6a0      0x1  at 0x55945a3a6160
+#+END_EXAMPLE
+*** 通过 AddressAnitizer检测C与C++代码在内存访问方面的问题
+gcc可以通过 =-fsanitize-address= 选项来启用内存访问方面的检测。
+
+为了让结果更清晰，还可以同时开启 =-g= 与 =-fno-omit-frame-pointer= 选项，比如下面这段代码
+#+BEGIN_SRC C
+  int main()
+  {
+    int i, a[5];
+    for(i=0;i<sizeof(a);i++)
+    {
+      a[i]=i;
+    }
+    return 0;
+  }
+#+END_SRC
+
+启用AddressSanitizer机制后运行该程序会看到下面错误信息：
+#+BEGIN_EXAMPLE
+  [lujun9972@T430S tmp]$ gcc -fsanitize=address -g -fno-omit-frame-pointer t.c -o t
+  [lujun9972@T430S tmp]$ ./t 
+  =================================================================
+  ==4096==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7ffdf444d244 at pc 0x55a063544244 bp 0x7ffdf444d1f0 sp 0x7ffdf444d1e0
+  WRITE of size 4 at 0x7ffdf444d244 thread T0
+      #0 0x55a063544243 in main /tmp/t.c:6
+      #1 0x7fed49811222 in __libc_start_main (/usr/lib/libc.so.6+0x24222)
+      #2 0x55a0635440ad in _start (/tmp/t+0x10ad)
+
+  Address 0x7ffdf444d244 is located in stack of thread T0 at offset 52 in frame
+      #0 0x55a063544188 in main /tmp/t.c:2
+
+    This frame has 1 object(s):
+      [32, 52) 'a' <== Memory access at offset 52 overflows this variable
+  HINT: this may be a false positive if your program uses some custom stack unwind mechanism or swapcontext
+        (longjmp and C++ exceptions *are* supported)
+  SUMMARY: AddressSanitizer: stack-buffer-overflow /tmp/t.c:6 in main
+  Shadow bytes around the buggy address:
+    0x10003e8819f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  =>0x10003e881a40: 00 00 f1 f1 f1 f1 00 00[04]f2 00 00 00 00 00 00
+    0x10003e881a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    0x10003e881a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  Shadow byte legend (one shadow byte represents 8 application bytes):
+    Addressable:           00
+    Partially addressable: 01 02 03 04 05 06 07 
+    Heap left redzone:       fa
+    Freed heap region:       fd
+    Stack left redzone:      f1
+    Stack mid redzone:       f2
+    Stack right redzone:     f3
+    Stack after return:      f5
+    Stack use after scope:   f8
+    Global redzone:          f9
+    Global init order:       f6
+    Poisoned by user:        f7
+    Container overflow:      fc
+    Array cookie:            ac
+    Intra object redzone:    bb
+    ASan internal:           fe
+    Left alloca redzone:     ca
+    Right alloca redzone:    cb
+  ==4096==ABORTING
+#+END_EXAMPLE
+* 追踪程序的执行情况
+** ltrace :: 追踪对程序库的调用
+** strace,ktrace,truss :: 追踪对操作系统的调用
+** JProfile :: java程序的工具
+** dtrace :: 一套保罗万象的程序追踪平台
+** Valgrind :: 动态分析系统
+
+Valgrind内涵一个强大的内存检测组件.
+
+比如下面代码包含三个错误:内存泄露，访问非法内存地址，返回未经初始化的变量
+#+BEGIN_SRC C :tangle "/tmp/memory.c"
+  #include <stdlib.h>
+
+  int main()
+  {
+    char* c=malloc(42);
+    c[42]=1;
+    return c[0];
+  }
+#+END_SRC
+
+我们试试用valgrind来运行上面程序
+#+BEGIN_SRC shell :results org
+  exec 2>&1
+  gcc /tmp/memory.c -o /tmp/memory
+  valgrind --track-origins=yes --leak-check=yes /tmp/memory
+#+END_SRC
+
+#+BEGIN_SRC org
+==13738== Memcheck, a memory error detector
+==13738== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==13738== Using Valgrind-3.14.0 and LibVEX; rerun with -h for copyright info
+==13738== Command: /tmp/memory
+==13738== 
+==13738== Invalid write of size 1
+==13738==    at 0x109157: main (in /tmp/memory)
+==13738==  Address 0x4a4106a is 0 bytes after a block of size 42 alloc'd
+==13738==    at 0x483777F: malloc (vg_replace_malloc.c:299)
+==13738==    by 0x10914A: main (in /tmp/memory)
+==13738== 
+==13738== Syscall param exit_group(status) contains uninitialised byte(s)
+==13738==    at 0x4942956: _Exit (in /usr/lib/libc-2.28.so)
+==13738==    by 0x48B4561: __run_exit_handlers (in /usr/lib/libc-2.28.so)
+==13738==    by 0x48B458D: exit (in /usr/lib/libc-2.28.so)
+==13738==    by 0x489E229: (below main) (in /usr/lib/libc-2.28.so)
+==13738==  Uninitialised value was created by a heap allocation
+==13738==    at 0x483777F: malloc (vg_replace_malloc.c:299)
+==13738==    by 0x10914A: main (in /tmp/memory)
+==13738== 
+==13738== 
+==13738== HEAP SUMMARY:
+==13738==     in use at exit: 42 bytes in 1 blocks
+==13738==   total heap usage: 1 allocs, 0 frees, 42 bytes allocated
+==13738== 
+==13738== 42 bytes in 1 blocks are definitely lost in loss record 1 of 1
+==13738==    at 0x483777F: malloc (vg_replace_malloc.c:299)
+==13738==    by 0x10914A: main (in /tmp/memory)
+==13738== 
+==13738== LEAK SUMMARY:
+==13738==    definitely lost: 42 bytes in 1 blocks
+==13738==    indirectly lost: 0 bytes in 0 blocks
+==13738==      possibly lost: 0 bytes in 0 blocks
+==13738==    still reachable: 0 bytes in 0 blocks
+==13738==         suppressed: 0 bytes in 0 blocks
+==13738== 
+==13738== For counts of detected and suppressed errors, rerun with: -v
+==13738== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)
+#+END_SRC
+
+另外，Valgrind工具包中的Helgrind工具可以找出POSIX Threads原语中的并发错误。
+#+BEGIN_SRC shell
+  valgrind --tool=helgrind deadlock
+#+END_SRC
