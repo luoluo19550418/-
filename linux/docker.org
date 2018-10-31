@@ -3172,7 +3172,6 @@ REPOSITORY          TAG                 IMAGE ID            CREATED             
 2. 激活host1主机后，docker images变成空了，因为 =host1= 主机上并没有任何镜像。
 * Docker Daemon
 Docker1.12之后使用 =/etc/docker/daemon.json= 来配置daemon.
-
 * Docker Tips
 ** logs
 Docker应用一般将日志内容输出到stdin和stderr上，以方便通过 =docker log= 来查看应用日志情况，但有些应用习惯是将日志写入到日志文件中去。
@@ -3184,4 +3183,13 @@ Docker应用一般将日志内容输出到stdin和stderr上，以方便通过 =d
 ** entrypoint
 在编写entrypoint shell时，一般最后会用 =exec XXXX= 来让应用替换shell脚本，
 这样才能保证容器停止的信号是直接发给应用程序，而不是shell脚本
-** 
+** 建立本地Doker注册中心
+1. 在一台具有大量磁盘空间的机器上运行命令
+   #+BEGIN_SRC shell
+     docker run -d -p 5000:5000 -v $HOME/registry:/var/lib/registry registry:2
+   #+END_SRC
+   
+   其中 =/var/lib/registry= 是registry默认存储文件的地方
+
+2. 在想访问该注册中心的机器上，将 =--insecure-registry HOSTNAME= 加入docker守护进程选项中
+   其中，HOST为注册中心服务器主机名或IP
