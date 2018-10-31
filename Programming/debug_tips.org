@@ -15,8 +15,19 @@
 
 ** ctags/etags
 
+给所有文件创建索引
+#+BEGIN_SRC shell
+  ctags -R .
+#+END_SRC
 ** grep/egrep
+下面命令尝试从C代码中找出可能除于0的地方找出来
+#+BEGIN_SRC shell
+  grep -r '/' . |                 # 搜索除法
+      grep -v '/ sizeof' |          # sizeof不可能返回0
+      grep --color=always '/ [0-9]*' | # 过滤纯数字
+      sort -u                          # 出重复
 
+#+END_SRC
 * 版本控制
 
 每次修改都应该单独提交，而且写上有意义的提交消息，如果有可能，还应该连接到对应的事务上
@@ -80,8 +91,11 @@
 
 *** watch
 
-*** 反向调试(record/reverse-next/reverse-step)
+*** 反向调试
 
++ record :: 让gdb把程序的执行过程记录下来，以便稍后进行反向执行
++ reverse-next/revserse-step :: 反向执行程序
++ reverse-continue :: 一直反向执行程序，直到遇到断点
 *** 查看变量的值(display)
 
 *** 查看调用栈(where)
