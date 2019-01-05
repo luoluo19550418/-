@@ -66,5 +66,239 @@
 + truss :: 跟踪系统调用
 + gdb :: 源码级别的调试器
 + mdb :: 一个具有可扩展性的调试器
-** 计数器
 
+*** 剖析(profiling)
+profiling通过对目标收集采样或者快照来归纳目标特征
+
+常见的profiler有:
+
++ oprofile :: Linux系统剖析
++ perf :: Linux性能工具集
++ DTrace :: 程序化剖析，profile provider提供基于时间的剖析，cpc provider提供基于硬件的剖析
++ SystemTap :: 程序化剖析，timer tapset提供基于时间的剖析，perf tapset提供基于硬件的剖析
++ cachegrind :: 源自valgrind工具集，能对硬件缓存的使用做剖析，也能用kcachegrind做数据可视化
++ Intel VTune Amplifier XE :: Linux和Windows的剖析，拥有包括源代码浏览在内的图形界面
++ Oracle Solaris Studio :: 用自带的性能分析器对Solaris和Linux做剖析
+
+此外，编程语言通常有各自的专用分析器
+
+*** 监视
+:PROPERTIES:
+:interleave_page_note: 150
+:END:
+
+最广泛应用的监视工具是sar，它基于计数器，在预定的时间被调用以记录系统计数器的状态
+
+除了sar之外，还有其他的替代，比如System Data Recorder和Collectl
+
+** 观测来源
+:PROPERTIES:
+:interleave_page_note: 151
+:END:
+
+系统性能统计的主要来源包括 =/proc=, =/sys=, =kstat= 等
+
+#+TABLE: 观测来源
+| Type               | Linux                      | Solaris         |
+|--------------------+----------------------------+-----------------|
+| 进程级计数器       | /proc                      | /proc,lxproc    |
+| 系统级计数器       | /proc,/sys                 | kstat           |
+| 设备驱动和调试信息 | /sys                       | kstat           |
+| 进程级跟踪         | ptrace,uprobes             | procfs,dtrace   |
+| 性能计数器         | perf_event                 | libcpc          |
+| 网络跟踪           | libpcap                    | libdlpi,libpcap |
+| 进程级延时指标     | 延时核算                   | 微状态核算      |
+| 系统级跟踪         | tracepoints,kprobes,ftrace | dtrace          |
+
+*** /proc
+这是一个提供内核统计信息的文件系统接口。 =/proc= 提供很多目录，其中以进程ID命名的目录代表的就是那个进程。
+这些目录下的众多文件包含了进程的信息和统计数据，由内核数据结构映射而来。其中，与进程性能观测相关的文件如下:
++ limits :: 实际的资源限制
++ maps :: 映射的内存区域
++ sched :: CPU调度器的各种统计
++ schedstat :: CPU运行时间、延时和时间分片
++ smaps :: 映射内存区域的使用统计
++ stat :: 进程状态和统计，包括总的CPU和内存的使用情况
++ statm :: 以页为单位的内存使用总结
++ status :: stat和statm的信息，用户可读
++ task :: 每个任务的统计目录
+
+Linux将 =/proc= 延伸到了系统级别的统计,与性能观测相关的系统级别的文件包括:
++ cpuinfo :: CPU信息，包括所有虚拟CPU、型号、时钟频率和缓存大小
++ diskstats :: 对所有磁盘设备的磁盘IO统计
++ interrupts :: 每个CPU的中断计数器
++ loadavg :: 负载平均值
++ meminfo :: 系统内存使用明细
++ net/dev :: 网络接口统计
++ net/tcp :: 活跃的TCP套结字信息
++ schedstat :: 系统级别的CPU调度器统计
++ self :: 当前进程ID路径的符号连接
++ slabinfo :: 内核slab分配器缓存统计
++ stat :: 内核和系统资源的统计，CPU、磁盘、分页、交换区、进程
++ zoneinfo :: 内存区信息
+
+关于 =/proc= 的内容可以在 =proc(5)= d的man页和Linux内核文档 =/Documentation/filesystems/proc.txt= 中找到。
+Linux中的 =/proc= 的文件系统类型是 =proc=, 而基于Solaris的系统是 =procfs=.
+
+*** /sys
+:PROPERTIES:
+:interleave_page_note: 156
+:END:
+
+Linux还提供了一个sysfs文件系统，挂载在 =/sys=.
+
+#+BEGIN_SRC shell :results org
+grep . /sys/devices/system/cpu/cpu0/cache/index*/size
+#+END_SRC
+
+#+BEGIN_SRC org
+/sys/devices/system/cpu/cpu0/cache/index0/size:32K
+/sys/devices/system/cpu/cpu0/cache/index1/size:32K
+/sys/devices/system/cpu/cpu0/cache/index2/size:256K
+/sys/devices/system/cpu/cpu0/cache/index3/size:3072K
+#+END_SRC
+
+这说明CPU0有两个L1缓存，每个都是32KB，还有一个256K的缓存和3M的L3缓存
+
+*** 延时核算
+:PROPERTIES:
+:interleave_page_note: 159
+:END:
+
+开启 =CONFIG_TASK_DELAY_ACCT= 选项的Linux还会跟踪以下状态的时间
++ 调度器延时(CPU) :: 等待轮上CPU的是时间
++ 块IO(IO) :: 等待块IO完成的时间
++ 交换(SWAP) :: 等待内存换页的时间
++ 内存回收(RECLAIM) :: 等待内存回收的时间
+
+*** 其他观测源
+:PROPERTIES:
+:interleave_page_note: 160
+:END:
+
++ CPU性能计数器 :: 在Linux上通过 =perf_events= 接口，或者系统调用 =perf_event_open(0= ，或者 =perf= 这样的工具来访问
++ 进程级跟踪 :: Linux上可以通过系统调用 =ptrace()= 来控制进程跟踪， =strace= 命令来跟踪系统调用，还有 =uprobes= 来做用户级别的动态跟踪
++ 内核跟踪 :: 在Linux中，tracepoints提供静止的内核探针，kproes提供动态探针。
++ 网络嗅探 :: 在Linux上，嗅探的功能是通过libpcap库和 =/proc/net/dev= 提供的
++ 系统调用 :: 某些系统调用和库函数可以提供性能指标，比如 =getrusage()= 函数可以为进程拿到自己资源的统计信息
+
+** DTrace
+:PROPERTIES:
+:interleave_page_note: 162
+:END:
+DTrace的设计是生产环境安全的，拥有极小的性能开销。
+DTrace同时支持静态跟踪和动态跟踪，两者功能互补。静态探针有文档完备且稳定的接口，而动态探针能够提供近乎无限的可观测性。
+其中，静态跟踪是o通过直接嵌入源代码的静态探针实现的，而动态跟踪是通过内核地址空间的 =live patching= 将函数入口指令修改为引发一个软中断,该软中断会出发指定的action。
+
+DTrace能动态跟踪函数的入口和返回，以及任何在用户空间执行的指令，但这是通过为CPU指令动态建立探针实现的，而CPU指令可能发生改变，因此该接口并不稳定。
+
+*** D语言
+DTrace通过一套D语言来设置各个探针，并定义在探针命中时执行的操作。
+D语言与awk很像，甚至它也能跟awk一样既能在单行命令中执行，也能写成脚本。D语言的语法形式如下:
+
+#+begin_example
+  探针描述 /过滤条件/ {actions}
+#+end_example
+
+**** 探针描述
+DTrace探针描述分成四个部分:
+
+#+begin_example
+  provider:module:function:name
+#+end_example
+
+其中， =provider= 是探针的集合，类似于库的概念,
+=module= 和 =function= 用来标记探针指示的代码位置，可以用通配符 =*=,或者留空("::"相当于":*:")来表示任意位置。
+=name= 则是探针的名字。
+
+可用的provider取决于你的DTrance和操作系统的版本，比较常见的provider有:
+
++ syscall :: 系统调用自陷表
++ vminfo :: 虚拟内存统计
++ sysinfo :: 系统统计
++ profile :: 任意频率的采样
++ sched :: 内核调度事件
++ proc :: 进程级别事件，比如创建、执行、退出
++ io :: 块设备接口跟踪
++ pid :: 用户级别动态跟踪
++ tcp :: TCP协议事件，网络连接，数据包发送和接受
++ ip :: IP协议事件，发送和接受
++ fbt :: 内核级别动态跟踪
++ 其他高级语言的provider :: 比如Java，JavaScript，Node.js，Perl，Python,Ruby,Tcl等
+
+**** 参数
+探针通过参数来获取数据，不同探针接受的参数也不一样。
+我们可以通过 =arg0...argN= 来获取这些参数，可以通过 =dtrace -lv= 选项来查看每个provider参数的概要说明。
+
+**** 跟
+内置变量awk一样，DTrace默认也提供了一些内置变量，可以在 =过滤条件= 和 =action= 中使用. 常见的内置变量有:
+
+#+TABLE: 常用内置变量
+
+| 变量            | 描述                         |
+|-----------------+------------------------------|
+| execname        | 执行的进程名字               |
+| uid             | 用户ID                       |
+| pid             | 进程ID                       |
+| timestamp       | 当前时间，为自启动以来的ns数 |
+| vtimestamp      | 线程执行时间，单位是ns       |
+| arg0...argN     | 探针参数                     |
+| arg[0]...arg[N] | 探针参数                     |
+| curthread       | 指向当前线程内核结构的指针   |
+| probefunc       | 探针触发的function位置       |
+| probename       | 探针名称                     |
+| curpsinfo       | 当前进程信息                 |
+
+*** 过滤条件
+=/过滤条件/= 这一部分是可选的，例如
+#+begin_example
+  proc:::exec-success /execname == "httpd"/ {trace(pid);}
+#+end_example
+就会限定指定对 =httpd= 进程执行 =trace(pid)= 这一action
+
+如果省略这一部分，则表示不做过滤。
+*** action
+action指定了当触发探针时做的操作，常见的action包括:
+
+#+TABLE: 常见action
+| action                 | 描述                                                                       |
+|------------------------+----------------------------------------------------------------------------|
+| trace(arg)             | 输出arg的值                                                                |
+| printf(format,arg,...) | 格式化输出arg的值                                                          |
+| stringof(addr)         | 返回来自内核空间的字符串                                                   |
+| copyinstr(addr)        | 返回来自用户空间的字符串（需要内核执行一次从用户空间到内核空间的复制操作） |
+| stack(count)           | 打印内核级别的栈跟踪，如果有count则按count截断                             |
+| ustack(count)          | 打印用户级别的栈跟踪，如果有count则按count截断                             |
+| func(pc)               | 根据内核程序计数器(pc),返回内核函数名                                      |
+| ufunc(pc)              | 根据用户程序计数器(pc),返回用户函数名                                      |
+| exit(status)           | 退出DTrace，并返回状态                                                     |
+| trunc(@agg,count)      | 截断聚合变量，若没有count则表示清空该聚合变量                              |
+| clear(@agg)            | 清空聚合变量中各个键对应的值                                               |
+| printa(format,@agg)    | 格式化输出聚合变量中的值                                                               |
+*** 变量类型
+#+TABLE: 变量类型及开销
+
+| 类型               | 前缀   | 作用域         | 开销   | 多CPU是否安全 | 示例             |
+|--------------------+--------+----------------+--------+---------------+------------------|
+| 聚合变量           | @      | 全局           | 低     | 是            | @x = count();    |
+| 带键的聚合变量     | @[]    | 全局           | 低     | 是            | @x[pid]=count(); |
+| action子句局部变量 | this-> | action子句内部 | 非常低 | 是            | this->x=1;       |
+| 线程局部变量       | self-> | 线程内         | 中等   | 是            | self->x=1;       |
+| 标量               | 无     | 全局           | 中下   | 否            | x=1;             |
+| 关联数组           | 无     | 全局           | 中上   | 否            | x[y]=1;         |
+
+其中，聚合变量是一种特殊类型的变量，可以由CPU单独计算汇总之后再传递到用户空间。
+该变量类型拥有最低的开销，是另一种数据汇总的方法。
+
+下面这些action可以用来填充聚合变量
+
+#+TABLE: 聚合action
+| 聚合action                                                 | 描述                                              |
+|------------------------------------------------------------+---------------------------------------------------|
+| count()                                                    | 发生计数                                          |
+| sum(value)                                                 | 对value求和                                       |
+| min(value)                                                 | 记录value的最小值                                 |
+| max(value)                                                 | 记录value的最大值                                 |
+| quantize(value)                                            | 用2的幂次方直方图记录value                        |
+| lquantize(value,min,max,step)                              | 用给定最小值、最大值和步进值做线性直方图记录value |
+| llquantize(value,factor,min)magnitude,max_magnitude,steps) | 用混合对数/线性直方图记录value                                |
