@@ -276,6 +276,9 @@ action指定了当触发探针时做的操作，常见的action包括:
 | clear(@agg)            | 清空聚合变量中各个键对应的值                                               |
 | printa(format,@agg)    | 格式化输出聚合变量中的值                                                               |
 *** 变量类型
+:PROPERTIES:
+:interleave_page_note: 192
+:END:
 #+TABLE: 变量类型及开销
 
 | 类型               | 前缀   | 作用域         | 开销   | 多CPU是否安全 | 示例             |
@@ -340,8 +343,11 @@ poll()系统调用用来检查文件描述符的状态，提供与轮询相似�
 poll()借口将多个文件描述符放在数组中，应用系统扫描整个数组来寻找相应的文件描述符
 这个扫描是O(n)的，因此可能会引发性能问题。
 **** epoll()
+:PROPERTIES:
+:interleave_page_note: 188
+:END:
 Linux中提供了epoll()系统调用，它能够避免这种扫描，时间复杂度是O(1)
-**** 并发和并行
+Notes for page 188**** 并发和并行
 :PROPERTIES:
 :interleave_page_note: 186
 :END:
@@ -352,3 +358,298 @@ Linux中提供了epoll()系统调用，它能够避免这种扫描，时间复�
 + 排它锁(mutex) :: 只有锁持有者才能操作，其他线程阻塞并等待CPU
 + 自旋锁 :: 自旋锁允许所持有者操作，其他需要自旋锁的线程则会在CPU上循环自旋，检查锁是否被释放。这样的好处是线程不离开CPU，能够延时低，但是另一方面浪费CPU资源
 + 读写锁 :: 读写锁允许多个读者，但是只能有一个写着。
+
+**** 使用hash表减少锁竞争
+创建固定数目的锁，用hash算法来选择哪个锁用于哪个数据结构，这样可以减少锁的竞争。
+
+一般来说，为了最大程度的并行，hash表的桶的数目应该大于或等于CPU的数目。
+
+*** 非阻塞IO
+在进程IO是进行阻塞，这种模型存在以下两个性能问题:
+
+1. 由于每一次阻塞就是消耗一个线程/进程，因此对于多路并发的IO就意味着会创建很多的线程/进程，线程/进程的创建和销毁代码巨大。
+2. 对于频繁发起的短时IO，会导致频换切换上下文，从而增加CPU资源的消耗。
+
+而非阻塞IO模型则是异步发起IO，不阻塞当前的线程，线程可以执行其他工作。当IO完成后再通过信号通知线程继续下面的工作。
+
+*** 处理器绑定
+在使用NUMA的多处理器系统中将进程绑定到某个处理器运行，可以一直使用该CPU的本地存储器，从而减少对内存的IO，提高应用程序的整体性能。
+
+但CPU绑定也会带来风险，比如若其他用户或程序也刚好用到这个绑定的CPU，则可能会引发冲突和调度器延时。
+
+** 编程语言
+:PROPERTIES:
+:interleave_page_note: 189
+:END:
+解析器和语言虚拟机一般都有自己专门的工具来做不同级别的性能观测.
+
+对于编译语言我们可以通过编译器优化来提升性能，但优化程度越高，其产生的机器码与源代码之间的映射关系就越模糊，可能会使性能分析变得不那么直观。
+
+GC是常见的性能调整对象，用以降低CPU成本和减少延时时异常值的发生。
+比如Java虚拟机就提供了许多可调参数来设置GC类型，GC线程数，堆尺寸最大值、目标堆空闲率等。
+
+** 分析方法
+
+*** 线程状态分析
+:PROPERTIES:
+:interleave_page_note: 192
+:END:
+线程状态分析的目的是分辨应用程序线程的时间用在了什么地方。
+
+在线程状态分析时，我们可以把线程状态分成下面几中类型：
++ 执行 :: 正在CPU上执行
++ 可运行 :: CPU时间片耗尽，等待下一次轮询
++ 匿名换页 :: 因内存换页而受阻
++ 睡眠 :: 等待网络、块设备等IO操作完成
++ 锁 :: 等待获取同步锁
++ 空闲 :: 等待工作
+
+提高性能的关键在于减少线程处于前五类状态的时间，针对线程处于哪类状态，我们可以做进一步的研究:
++ 执行 :: 检查线程实在用户态执行还是内核态执行，用profiling对CPU资源消耗情况进行分析，确定哪些代码路径消耗的CPU过大
++ 可运行 :: 这可能意味着应用程序需要更多的CPU资源，检查整个系统的CPU负载以及是否对应用程序做了CPU限制
++ 匿名换页 :: 应用程序缺少主存会引起换页，需要检查整个系统的内存使用情况，是否对应用程序做了不合理的内存限制
++ 睡眠 :: 分析到底是哪些资源导致应用程序阻塞，IO是否异常
++ 锁 :: 识别那些线程持有锁，确定线程持锁这么长时间的原因。
+
+Linux系统为我们提供了下面这些工具进行分析:
++ 使用 =top= 命令可以查看各个进程的CPU消耗情况
++ 内核的 =schedstat= 功能会追踪可运行的线程，并将信息显示在 =/proc/$pid/schedstat= 中
++ =perf sched= 工具也提供了用于了解可运行线程与等待线程所花时间的指标
++ =pidstat -d= 可以判断一个进程实在执行磁盘IO还是睡眠
++ =iotop= 能够查看各个进程的io情况
++ 若某个应用程序的睡眠时间很长（达到秒级），则可以用pstack输出堆栈快照来调查原因。
+
+*** CPU剖析
+剖析的目标是要判断应用程序是如何消耗CPU资源的。一个有效的技术是对CPU上的用户栈跟踪做采样并将采样结果联系起来。
+这些栈信息能够让告诉我们代码的执行路径，从而揭示出应用程序消耗CPU的原因。
+
+针对解释语言和虚拟机语言的CPU剖析是很难的，因为从执行的代码到原始的程序之间并没有简单的映射关系。
+只能寄希望于
+
+*** 系统调用分析
+:PROPERTIES:
+:interleave_page_note: 197
+:END:
+系统调用分析的目标是要找出系统调用的时间花在什么地方，还有系统调用的类型以及使用该系统调用的原因。
+
+**** strace命令
+在Linux下可以使用strace命令跟踪系统调用，例如:
+#+BEGIN_SRC shell
+  strace -ttt -T -p $(pidof emacs)
+#+END_SRC
+
+#+BEGIN_EXAMPLE
+  [lujun9972@T520 8948]$ sudo strace -ttt -T -p $(pidof emacs)
+  strace: Process 6407 attached
+  1546945285.834914 pselect6(21, [3 5 6 7 8 10 12 19 20], [], NULL, {tv_sec=2, tv_nsec=500433727}, {NULL, 8}) = 1 (in [7], left {tv_sec=0, tv_nsec=978006169}) <1.522453>
+  1546945287.357587 rt_sigprocmask(SIG_BLOCK, [INT], [], 8) = 0 <0.000122>
+  1546945287.357868 rt_sigprocmask(SIG_SETMASK, [], NULL, 8) = 0 <0.000045>
+  1546945287.358029 accept4(7, {sa_family=AF_UNIX}, [112->2], SOCK_CLOEXEC) = 9 <0.000071>
+  1546945287.358181 fcntl(9, F_SETFL, O_RDONLY|O_NONBLOCK) = 0 <0.000011>
+  1546945287.358237 getsockname(9, {sa_family=AF_UNIX, sun_path="/tmp/emacs1000/server"}, [112->24]) = 0 <0.000008>
+  1546945287.358430 recvmsg(10, {msg_namelen=0}, 0) = -1 EAGAIN (资源暂时不可用) <0.000009>
+  1546945287.359993 poll([{fd=8, events=POLLIN}, {fd=10, events=POLLIN}, {fd=12, events=POLLIN}], 3, 0) = 0 (Timeout) <0.000012>
+  1546945287.360174 rt_sigprocmask(SIG_BLOCK, [INT], [], 8) = 0 <0.000018>
+  1546945287.360250 rt_sigprocmask(SIG_SETMASK, [], NULL, 8) = 0 <0.000010>
+  1546945287.360288 pselect6(21, [3 5 6 7 8 9 10 12 19 20], [], NULL, {tv_sec=0, tv_nsec=975134338}, {NULL, 8}) = 1 (in [9], left {tv_sec=0, tv_nsec=975125651}) <0.000023>
+  1546945287.360361 rt_sigprocmask(SIG_BLOCK, [INT], [], 8) = 0 <0.000023>
+  1546945287.360432 rt_sigprocmask(SIG_SETMASK, [], NULL, 8) = 0 <0.000007>
+  1546945287.360474 read(9, "-dir /home/lujun9972/ -current-f"..., 4096) = 332 <0.000016>
+  1546945287.360624 getpid()              = 6407 <0.000008>
+  1546945287.360659 write(9, "-emacs-pid 6407\n", 16) = 16 <0.000016>
+  1546945287.361017 stat("/home/lujun9972", {st_mode=S_IFDIR|0710, st_size=12288, ...}) = 0 <0.000017>
+  1546945287.361351 write(9, "-print nil\n", 11) = 11 <0.000015>
+  1546945287.361517 close(9)              = 0 <0.000023>
+  1546945287.363620 rt_sigprocmask(SIG_BLOCK, [WINCH IO], NULL, 8) = 0 <0.000020>
+  1546945287.363783 poll([{fd=10, events=POLLIN|POLLOUT}], 1, -1) = 1 ([{fd=10, revents=POLLOUT}]) <0.000012>
+  1546945287.363836 writev(10, [{iov_base=";\0\5\0\325\1\340\2\0\0\0\0x\3\202\2\315\1\22\0C\0\5\0H\1\340\2\325\1\340\2"..., iov_len=148}, {iov_base=NULL, iov_len=0}, {iov_base="", iov_len=0}], 3) = 148 <0.000020>
+#+END_EXAMPLE
+
+其中:
+
++ -ttt :: 在第一栏输出UNIX时间戳，以秒为单位，精确度可以到毫秒级
++ -T :: 在最后一栏输出系统调用的时间，以秒为单位，精确到毫秒级别
++ -p $PID :: 跟踪某个PID的进程
+
+上述形式的strace没一行都表示一个系统调用。若只想输出系统调用活动的统计信息可以使用 =-c= 选项
+#+BEGIN_SRC shell :results org
+  strace -c date 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+2019年 01月 08日 星期二 19:11:10 HKT
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 20.00    0.000032           5         6           close
+ 18.75    0.000030           7         4           openat
+ 17.50    0.000028           4         6           fstat
+ 15.00    0.000024          24         1           write
+ 10.62    0.000017           2         6           read
+  6.88    0.000011           1         8           mmap
+  6.88    0.000011           3         3           brk
+  4.38    0.000007           1         4           lseek
+  0.00    0.000000           0         4           mprotect
+  0.00    0.000000           0         1           munmap
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+  0.00    0.000000           0         2         1 arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.000160                    47         2 total
+#+END_SRC
+
+其中:
++ time :: 显示系统CPU时间花在哪里的百分比
++ seconds :: 总的系统CPU时间，单位是秒
++ usecs/call :: 每次调用的平均系统CPU时间，单位是毫秒
++ calls :: 整个strace过程中系统嗲用的次数
++ syscall :: 系统调用的名字
+**** truss
+:PROPERTIES:
+:interleave_page_note: 199
+:END:
+在Solaris系统上使用truss命令来分析系统调用,例如
+#+BEGIN_SRC shell
+  truss -dE -p $(pidof emacs)
+#+END_SRC
+
+这里的选项：
++ -d :: 输出命令启动后的秒数
++ -E :: 输出系统调用的耗时，单位为秒
++ -p PID :: 指定跟踪的进程
+
+同样的，truss也使用 =-c= 选项进行系统调用的统计总结:
+#+BEGIN_SRC shell
+  truss -c dd if=/dev/zero of=/dev/null bs=1k count=10k
+#+END_SRC
+
+truss还可以使用 =-u= 选项对用户级函数进行动态跟踪，例如跟踪 =printf= 调用:
+#+BEGIN_SRC shell
+  truss -u 'libc:*printf*' uptime
+#+END_SRC
+
+**** 缓存跟踪
+:PROPERTIES:
+:interleave_page_note: 201
+:END:
+
+与断点跟踪相比，缓存跟踪并不会中断目标程序的执行，而是将监控程序缓存在内核中。
+
+在perf中可以通过trace子命令来执行系统调用的缓存跟踪:
+#+BEGIN_SRC shell :results org :dir /sudo::/tmp
+  sudo perf trace touch a 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+         ? (         ): touch/26378  ... [[33mcontinued[m]: execve()) = 0
+     0.080 ( 0.006 ms): touch/26378 brk(                                                                  ) = 0x55d62ec22000
+     0.093 ( 0.004 ms): touch/26378 arch_prctl(option: 12289, arg2: 140723363955488                       ) = -1 EINVAL Invalid argument
+     0.134 ( 0.010 ms): touch/26378 access(filename: 0xe6f043a0, mode: R                                  ) = -1 ENOENT No such file or directory
+     0.153 ([33m 0.011 ms[m): touch/26378 openat(dfd: CWD, filename: 0xe6f01891, flags: CLOEXEC                 ) = 3
+     0.169 ( 0.005 ms): touch/26378 fstat(fd: 3, statbuf: 0x7ffcb61eb500                                  ) = 0
+     0.178 ([33m 0.011 ms[m): touch/26378 mmap(len: 308934, prot: READ, flags: PRIVATE, fd: 3                   ) = 0x7f89e6e93000
+     0.193 ( 0.004 ms): touch/26378 close(fd: 3                                                           ) = 0
+     0.231 ( 0.009 ms): touch/26378 openat(dfd: CWD, filename: 0xe6f0ac70, flags: CLOEXEC                 ) = 3
+     0.244 ( 0.006 ms): touch/26378 read(fd: 3, buf: 0x7ffcb61eb6c8, count: 832                           ) = 832
+     0.255 ( 0.004 ms): touch/26378 lseek(fd: 3, offset: 792, whence: SET                                 ) = 792
+     0.262 ( 0.004 ms): touch/26378 read(fd: 3, buf: 0x7ffcb61eb580, count: 68                            ) = 68
+     0.271 ( 0.004 ms): touch/26378 fstat(fd: 3, statbuf: 0x7ffcb61eb560                                  ) = 0
+     0.279 ( 0.008 ms): touch/26378 mmap(len: 8192, prot: READ|WRITE, flags: PRIVATE|ANONYMOUS            ) = 0x7f89e6e91000
+     0.298 ( 0.004 ms): touch/26378 lseek(fd: 3, offset: 792, whence: SET                                 ) = 792
+     0.305 ( 0.004 ms): touch/26378 read(fd: 3, buf: 0x7ffcb61eb1d0, count: 68                            ) = 68
+     0.313 ( 0.003 ms): touch/26378 lseek(fd: 3, offset: 864, whence: SET                                 ) = 864
+     0.320 ( 0.004 ms): touch/26378 read(fd: 3, buf: 0x7ffcb61eb1f0, count: 32                            ) = 32
+     0.328 ([33m 0.010 ms[m): touch/26378 mmap(len: 1848896, prot: READ, flags: PRIVATE|DENYWRITE, fd: 3        ) = 0x7f89e6ccd000
+     0.343 ([33m 0.019 ms[m): touch/26378 mprotect(start: 0x7f89e6cef000, len: 1671168                          ) = 0
+     0.366 ([33m 0.017 ms[m): touch/26378 mmap(addr: 0x7f89e6cef000, len: 1355776, prot: EXEC|READ, flags: PRIVATE|FIXED|DENYWRITE, fd: 3, off: 139264) = 0x7f89e6cef000
+     0.388 ([33m 0.010 ms[m): touch/26378 mmap(addr: 0x7f89e6e3a000, len: 311296, prot: READ, flags: PRIVATE|FIXED|DENYWRITE, fd: 3, off: 1495040) = 0x7f89e6e3a000
+     0.402 ([33m 0.013 ms[m): touch/26378 mmap(addr: 0x7f89e6e87000, len: 24576, prot: READ|WRITE, flags: PRIVATE|FIXED|DENYWRITE, fd: 3, off: 1806336) = 0x7f89e6e87000
+     0.427 ([33m 0.011 ms[m): touch/26378 mmap(addr: 0x7f89e6e8d000, len: 13888, prot: READ|WRITE, flags: PRIVATE|FIXED|ANONYMOUS) = 0x7f89e6e8d000
+     0.455 ( 0.004 ms): touch/26378 close(fd: 3                                                           ) = 0
+     0.557 ( 0.006 ms): touch/26378 arch_prctl(option: 4098, arg2: 140230261286272                        ) = 0
+     0.691 ([33m 0.016 ms[m): touch/26378 mprotect(start: 0x7f89e6e87000, len: 16384, prot: READ                ) = 0
+     0.760 ( 0.010 ms): touch/26378 mprotect(start: 0x55d62e37e000, len: 4096, prot: READ                 ) = 0
+     0.781 ([33m 0.011 ms[m): touch/26378 mprotect(start: 0x7f89e6f08000, len: 4096, prot: READ                 ) = 0
+     0.797 ([33m 0.029 ms[m): touch/26378 munmap(addr: 0x7f89e6e93000, len: 308934                              ) = 0
+     1.004 ( 0.005 ms): touch/26378 brk(                                                                  ) = 0x55d62ec22000
+     1.013 ( 0.008 ms): touch/26378 brk(brk: 0x55d62ec43000                                               ) = 0x55d62ec43000
+     1.036 ([33m 0.011 ms[m): touch/26378 openat(dfd: CWD, filename: 0xe6e588a0, flags: CLOEXEC                 ) = 3
+     1.052 ( 0.004 ms): touch/26378 fstat(fd: 3, statbuf: 0x7f89e6e8c920                                  ) = 0
+     1.060 ([33m 0.011 ms[m): touch/26378 mmap(len: 6180864, prot: READ, flags: PRIVATE, fd: 3                  ) = 0x7f89e66e8000
+     1.084 ( 0.004 ms): touch/26378 close(fd: 3                                                           ) = 0
+     1.159 ([33m 0.011 ms[m): touch/26378 openat(dfd: CWD, filename: 0xb61ecea9, flags: CREAT|NOCTTY|NONBLOCK|WRONLY, mode: IRUGO|IWUGO) = 3
+     1.175 ( 0.004 ms): touch/26378 dup2(oldfd: 3                                                         ) = 0
+     1.183 ( 0.003 ms): touch/26378 close(fd: 3                                                           ) = 0
+     1.190 ( 0.007 ms): touch/26378 utimensat(                                                            ) = 0
+     1.200 ( 0.003 ms): touch/26378 close(                                                                ) = 0
+     1.220 ( 0.004 ms): touch/26378 close(fd: 1                                                           ) = 0
+     1.229 ( 0.003 ms): touch/26378 close(fd: 2                                                           ) = 0
+     1.251 (         ): touch/26378 exit_group(                                                           )
+#+END_SRC
+
+*** I/O剖析
+:PROPERTIES:
+:interleave_page_note: 203
+:END:
+
+与CPU剖析作用类似，I/O剖析判断的是I/O相关的系统调用（比如read(),write()）执行的原因和方式。
+
+比如下面dtrace命令跟踪PostgreSQL的read()系统调用，并收集用户级别的栈跟踪:
+#+BEGIN_SRC shell
+  dtrace -n 'syscall::read:entry /execname == "postgres"/ {@[ustack()] = count();}'
+#+END_SRC
+
+*** USE方法
+:PROPERTIES:
+:interleave_page_note: 204
+:END:
+
+USE方法通过检查资源的使用率，饱和度和发生的错误来判断某一资源是否成为瓶颈。
+
+例如若系统为文件描述符设置了一个数量上限，则相应的指标为:
+
++ 使用率 :: 使用中文件描述符的数量，与系统设置上限的比率
++ 饱和度 :: 等待文件描述符分配的线程数
++ 错误 :: 分配失败，提示EFILE，打开太多文件。
+
+*** 锁分析
+:PROPERTIES:
+:interleave_page_note: 205
+:END:
+
+对于多线程的应用程序，锁可能会成为阻碍并发和扩展性的瓶颈。
+
+对于自旋锁来说，当锁出现竞争时，CPU使用率也会发生变化。
+通过对CPU进行栈跟踪通常能识别出来。
+
+*** 静态性能调优
+:PROPERTIES:
+:interleave_page_note: 208
+:END:
+
+静态性能调优是通过对程序运行环境的检查，看是否有优化的空间，例如:
+
++ 运行的程序是什么版本？是否有更新版本？发布说明是否提及性能提高
++ 应用程序有哪些已知的性能问题？有可供搜索的bug数据库吗？
++ 应用程序是怎么配置的？能通过调整配置优化速度吗？
++ 应用程序利用了缓存吗？缓存大小如何？
++ 应用程序是并发运行吗？线程池大小如何？
++ 应用程序是在调试模式下运行吗？
++ 应用程序用到了哪些程序库？他们的版本是什么？
++ 应用程序用的是怎样的内存分配器
++ 应用程序用大页面做堆吗？
++ 应用程序是编译的吗？编译器版本是什么？优化选项有哪些？
++ 应用程序遇到错误了吗？发生错误后会运行在降级模式吗？
++ 有没有系统资源方面的限制？
+
+* CPU
+:PROPERTIES:
+:interleave_page_note: 212
+:END:
+
+正在排队和就绪运行的软件线程数量是一个很重要的性能指标，表示了CPU的饱和度。
+花在等待CPU运行上的时间又被称为运行队列延时或者分发器队列延时。
+
+对于多处理器系统，内核通常为每个CPU提供了一个运行队列，并尽量使每个线程每次都放在同一个队列。
+这是因为CPU缓存中很可能保存了该线程的数据，同时在NUMA系统中，这会提高内存本地性，从而提高系统性能。
