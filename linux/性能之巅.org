@@ -866,6 +866,9 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
 + wa :: 线程被阻塞等待磁盘IO的CPU空闲时间
 + st :: CPU其他开销
 ** mpstat
+:PROPERTIES:
+:interleave_page_note: 245
+:END:
 多处理器统计信息工具 =mpstat= 能够报告每个CPU的统计信息。
 
 #+BEGIN_SRC shell :results org
