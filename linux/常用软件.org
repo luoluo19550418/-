@@ -1,0 +1,38 @@
+#+TITLE: 常用软件
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2019-01-30 三 14:36]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 游戏
+
+** RetroArch
+模拟器游戏
+
+*** 安装
+#+BEGIN_SRC shell
+  sudo pacman -S retroarch
+#+END_SRC
+
+** itch
+独立游戏平台
+
+*** 安装
+
+1. 去 https://itch.io/app 下载安装文件
+   #+BEGIN_SRC shell :dir ~/Downloads
+     wget http://nuts.itch.zone/download -O itch-setup
+   #+END_SRC
+
+2. 加执行权限
+   #+BEGIN_SRC shell  :dir ~/Downloads
+     chmod +x itch-setup
+   #+END_SRC
+
+3. 运行安装程序
+   #+BEGIN_SRC shell  :dir ~/Downloads
+     ./itch-setup
+   #+END_SRC
+
+4. 在 =https://itch.io= 注册itch账户
