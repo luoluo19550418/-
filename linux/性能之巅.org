@@ -808,7 +808,7 @@ CPU微信基准测试对一个简单操作进行多次测量计算操作时间�
 + 内存访问: 调查不同CPU缓存的延时和主存吞吐量
 + 高级语言: 测量高级语言中不同指令的耗时
 + 操作系统: 测量调用操作系统各API所消耗的时间
-* CPU性能分析工具
+** CPU性能分析工具
 :PROPERTIES:
 :interleave_page_note: 242
 :END:
@@ -826,7 +826,7 @@ CPU微信基准测试对一个简单操作进行多次测量计算操作时间�
 | time         | ptime   | 计算命令执行耗时           |
 | DTrace，perf | DTrace  | CPU剖析和跟踪              |
 | perf         | cpustat | CPU性能计数器分析                |
-** uptime
+*** uptime
 #+BEGIN_SRC shell :results org
   uptime
 #+END_SRC
@@ -838,7 +838,7 @@ CPU微信基准测试对一个简单操作进行多次测量计算操作时间�
 
 最后三个数字是1、5、15分钟内的平均负载。通过比较这三个数字，可以判断负载的趋势。
 这个值的意义在于，当平均负载大于CPU数量时表示CPU不足以服务线程，有些线程需要等待;如果平均负载小于CPU数量，则代表CPU还有一些余量。
-** vmstat
+*** vmstat
 vmstat本是虚拟内存统计信息命令，但其最后几列输出了系统全局范围的CPU平均负载。
 #+BEGIN_SRC shell :results org
   vmstat 1 5
@@ -865,7 +865,7 @@ procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
 + id :: 空闲时间
 + wa :: 线程被阻塞等待磁盘IO的CPU空闲时间
 + st :: CPU其他开销
-** mpstat
+*** mpstat
 :PROPERTIES:
 :interleave_page_note: 245
 :END:
@@ -886,3 +886,265 @@ Linux 4.20.3-arch1-1-ARCH (T520) 	2019年01月24日 	_x86_64_	(4 CPU)
 15时56分56秒    2    3.65    2.04    2.17    0.49    0.34    0.23    0.00    0.00    0.00   91.08
 15时56分56秒    3    3.76    1.93    1.83    0.86    0.43    0.23    0.00    0.00    0.00   90.96
 #+END_SRC
+
+这里 =-P ALL= 会输出每个CPU的报告，其输出列的说明如下:
+
++ CPU :: 逻辑CPU ID，all表示总结信息
++ %usr :: 用户态比率
++ %nice :: 以nice优先级运行的进程用户态比率
++ %sys :: 内核态比率
++ %iowait :: IO等待比率
++ %irq :: CPU处理硬件中断的比率
++ %soft :: CPU处理软件中断的比率
++ %steal :: 耗费在服务其他租户上的比率
++ %quest :: percentage of time spent in  involuntary  wait by  the  virtual  CPU  or CPUs while the hypervisor was servicing another virtual processor.
++ %idle :: the percentage of time spent by the CPU or CPUs to run a virtual processor
+*** sar 
+:PROPERTIES:
+:interleave_page_note: 247
+:END:
+
+sar可以用来观察系统当前活动，以及归档报告历史统计信息。sar的用法为:
+#+BEGIN_SRC shell :results org
+  sar --help
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+用法: sar [ 选项 ] [ <时间间隔> [ <次数> ] ]
+主要选项和报告（报告名以方括号分隔）：
+	-B	分页状况 [A_PAGE]
+	-b	I/O 和传输速率信息状况 [A_IO]
+	-d	块设备状况 [A_DISK]
+	-F [ MOUNT ]
+		文件系统统计信息 [A_FS]
+	-H	巨大页面利用率 [A_HUGE]
+	-I { <中断列表> | SUM | ALL }
+		中断信息状况 [A_IRQ]
+	-m { <关键字> [,...] | ALL }
+		电源管理统计信息 [A_PWR_...]
+		关键字：
+		CPU	CPU 瞬时时钟频率
+		FAN	风扇速度
+\t\tFREQ\tCPU 平均时钟频率
+		IN	输入电压
+		TEMP	设备温度
+\t\tUSB\t连接的 USB 设备
+	-n { <关键字> [,...] | ALL }
+		网络统计信息 [A_NET_...]
+		关键字：
+		DEV	网络接口
+		EDEV	网络接口（错误）
+		NFS	NFS 客户端
+		NFSD	NFS 服务端
+		SOCK	Sockets	(v4)
+		IP	IP 流	(v4)
+		EIP	IP 流	(v4)（错误）
+		ICMP	ICMP 流	(v4)
+		EICMP	ICMP 流	(v4)（错误）
+		TCP	TCP 流	(v4)
+		ETCP	TCP 流	(v4) (错误)
+		UDP	UDP 流	(v4)
+		SOCK6	Sockets	(v6)
+		IP6	IP 流	(v6)
+		EIP6	IP 流	(v6)（错误）
+		ICMP6	ICMP 流	(v6)
+		EICMP6	ICMP 流	(v6) (错误)
+		UDP6	UDP 流	(v6)
+		FC	Fibre channel HBAs
+		SOFT	基于软件的网络处理
+
+	-q	队列长度和平均负载统计信息 [A_QUEUE]
+	-r [ ALL ]
+		内存利用率信息 [A_MEMORY]
+	-S	交换空间利用率信息 [A_MEMORY]
+	-u [ ALL ]
+		CPU 利用率信息 [A_CPU]
+	-v	内核表统计信息 [A_KTABLES]
+	-W	交换信息 [A_SWAP]
+	-w	任务创建与系统切换信息 [A_PCSW]
+	-y	TTY 设备信息 [A_SERIAL]
+#+END_SRC
+*** ps
+ps命令能够列出进程的细节信息，包括CPU使用率
+#+BEGIN_SRC shell :results org
+  ps aux |head
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.1  0.2 190100  7676 ?        Ss   15:47   0:03 /sbin/init
+root         2  0.0  0.0      0     0 ?        S    15:47   0:00 [kthreadd]
+root         3  0.0  0.0      0     0 ?        I<   15:47   0:00 [rcu_gp]
+root         4  0.0  0.0      0     0 ?        I<   15:47   0:00 [rcu_par_gp]
+root         6  0.0  0.0      0     0 ?        I<   15:47   0:00 [kworker/0:0H-kblockd]
+root         8  0.0  0.0      0     0 ?        I<   15:47   0:00 [mm_percpu_wq]
+root         9  0.0  0.0      0     0 ?        S    15:47   0:00 [ksoftirqd/0]
+root        10  0.0  0.0      0     0 ?        I    15:47   0:00 [rcu_preempt]
+root        11  0.0  0.0      0     0 ?        S    15:47   0:00 [rcuc/0]
+#+END_SRC
+
+其中 =TIME= 列显示了进程从创建开始消耗的CPU总时间(用户态+系统态),格式为"小时:分钟:秒"
+
+=%CPU= 列显示了前一秒内所有CPU上的使用率之合，因此在多核系统上该值可能超过100%
+*** top
+使用top命令可以方便查看占用CPU使用率最高的几个进程。
+但需要注意的是,由于 =top= 对 =/proc= 拍快照，它会错过一些寿命较短的进程。
+
+top有一个变种:atop,其使用进程核算计算来捕获短寿命进程的存在，然后把这些进程加入显示。
+*** pidstat
+:PROPERTIES:
+:interleave_page_note: 250
+:END:
+
+pidstat工具能够输出每个进程使用的CPU数量、CPU用户态和系统态的时间比，默认情况下只循环输出活动进程的信息:
+#+BEGIN_SRC shell :results org
+  pidstat 1 2
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Linux 4.20.5-arch1-1-ARCH (T520) 	2019年01月30日 	_x86_64_	(4 CPU)
+
+16时44分41秒   UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+16时44分42秒     0       422    0.00    0.98    0.00    0.00    0.98     2  irq/29-iwlwifi
+16时44分42秒     0       971    0.00    0.98    0.00    0.00    0.98     2  dockerd
+16时44分42秒     0       974    0.98    0.00    0.00    0.00    0.98     3  lxd
+16时44分42秒     0      1021    0.98    0.00    0.00    0.00    0.98     0  containerd
+16时44分42秒  1000      1561    0.00    0.98    0.00    0.00    0.98     2  Xorg
+16时44分42秒  1000      2811    0.98    0.98    0.00    0.00    1.96     1  nutstore
+16时44分42秒  1000      4351    1.96    0.00    0.00    0.00    1.96     2  firefox
+16时44分42秒  1000      4798    0.98    0.98    0.00    0.00    1.96     0  Web Content
+16时44分42秒  1000      4808    0.00    0.98    0.00    0.00    0.98     2  Web Content
+
+16时44分42秒   UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+16时44分43秒     0      1021    0.00    1.00    0.00    0.00    1.00     0  containerd
+16时44分43秒  1000      4499    1.00    0.00    0.00    0.00    1.00     2  Web Content
+16时44分43秒  1000      4572    1.00    0.00    0.00    0.00    1.00     2  WebExtensions
+16时44分43秒  1000      5776    0.00    2.00    0.00    0.00    2.00     1  pidstat
+
+平均时间:   UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+平均时间:     0       422    0.00    0.50    0.00    0.00    0.50     -  irq/29-iwlwifi
+平均时间:     0       971    0.00    0.50    0.00    0.00    0.50     -  dockerd
+平均时间:     0       974    0.50    0.00    0.00    0.00    0.50     -  lxd
+平均时间:     0      1021    0.50    0.50    0.00    0.00    0.99     -  containerd
+平均时间:  1000      1561    0.00    0.50    0.00    0.00    0.50     -  Xorg
+平均时间:  1000      2811    0.50    0.50    0.00    0.00    0.99     -  nutstore
+平均时间:  1000      4351    0.99    0.00    0.00    0.00    0.99     -  firefox
+平均时间:  1000      4499    0.50    0.00    0.00    0.50    0.50     -  Web Content
+平均时间:  1000      4572    0.50    0.00    0.00    0.00    0.50     -  WebExtensions
+平均时间:  1000      4798    0.50    0.50    0.00    0.00    0.99     -  Web Content
+平均时间:  1000      4808    0.00    0.50    0.00    0.00    0.50     -  Web Content
+平均时间:  1000      5776    0.00    0.99    0.00    0.00    0.99     -  pidstat
+#+END_SRC
+
+使用 =-p ALL= 能输出所有进程信息，而不仅仅是活动进程信息。
+
+选项 =-t= 会输出每个线程的统计信息
+
+#+BEGIN_SRC shell :results org
+  pidstat -t 1 2
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Linux 4.20.5-arch1-1-ARCH (T520) 	2019年01月30日 	_x86_64_	(4 CPU)
+
+16时46分56秒   UID      TGID       TID    %usr %system  %guest   %wait    %CPU   CPU  Command
+16时46分57秒     0       422         -    0.00    0.98    0.00    0.00    0.98     2  irq/29-iwlwifi
+16时46分57秒     0         -       422    0.00    0.98    0.00    0.00    0.98     2  |__irq/29-iwlwifi
+16时46分57秒     0         -      1040    0.00    0.98    0.00    0.00    0.98     1  |__dockerd
+16时46分57秒     0       974         -    0.98    0.00    0.00    0.00    0.98     0  lxd
+16时46分57秒     0         -       974    0.98    0.00    0.00    0.00    0.98     0  |__lxd
+16时46分57秒     0         -      1003    0.98    0.00    0.00    0.00    0.98     3  |__lxd
+16时46分57秒     0         -      1008    0.00    0.98    0.00    0.00    0.98     2  |__lxd
+16时46分57秒  1000         -      1277    0.98    0.00    0.00    0.00    0.98     0  |__emacs
+16时46分57秒  1000      1561         -    0.00    0.98    0.00    0.98    0.98     2  Xorg
+16时46分57秒  1000         -      1561    0.00    0.98    0.00    0.98    0.98     2  |__Xorg
+16时46分57秒  1000         -      2906    0.00    0.98    0.00    0.00    0.98     3  |__nutstore
+16时46分57秒  1000      4351         -    1.96    0.00    0.00    0.00    1.96     0  firefox
+16时46分57秒  1000         -      4351    0.98    0.00    0.00    0.00    0.98     0  |__firefox
+16时46分57秒  1000         -      4356    0.00    0.98    0.00    0.00    0.98     0  |__Timer
+16时46分57秒  1000         -      4397    0.98    0.00    0.00    0.00    0.98     1  |__Compositor
+16时46分57秒  1000         -      4433    0.98    0.00    0.00    0.00    0.98     2  |__Web Content
+16时46分57秒  1000      4499         -    0.98    0.00    0.00    0.98    0.98     2  Web Content
+16时46分57秒  1000      4808         -    0.98    0.00    0.00    0.00    0.98     3  Web Content
+16时46分57秒  1000         -      4828    0.00    0.98    0.00    0.00    0.98     0  |__Timer
+16时46分57秒  1000      5856         -    1.96    0.98    0.00    0.00    2.94     1  pidstat
+16时46分57秒  1000         -      5856    1.96    0.98    0.00    0.00    2.94     1  |__pidstat
+
+16时46分57秒   UID      TGID       TID    %usr %system  %guest   %wait    %CPU   CPU  Command
+16时46分58秒     0         -        20    0.00    1.00    0.00    0.00    1.00     1  |__rcuc/1
+16时46分58秒     0         -        42    0.00    1.00    0.00    0.00    1.00     2  |__kworker/2:1-mm_percpu_wq
+16时46分58秒     0       971         -    1.00    0.00    0.00    0.00    1.00     0  dockerd
+16时46分58秒     0      1021         -    1.00    0.00    0.00    0.00    1.00     0  containerd
+16时46分58秒  1000      1277         -    0.00    1.00    0.00    0.00    1.00     0  emacs
+16时46分58秒  1000      4351         -    1.00    0.00    0.00    0.00    1.00     0  firefox
+16时46分58秒  1000      4433         -    0.00    1.00    0.00    1.00    1.00     3  Web Content
+16时46分58秒  1000         -      4433    0.00    1.00    0.00    1.00    1.00     3  |__Web Content
+16时46分58秒  1000         -      4499    1.00    0.00    0.00    0.00    1.00     0  |__Web Content
+16时46分58秒  1000         -      4502    1.00    0.00    0.00    0.00    1.00     0  |__JS Watchdog
+16时46分58秒  1000         -      4572    0.00    1.00    0.00    0.00    1.00     2  |__WebExtensions
+16时46分58秒  1000      4798         -    1.00    0.00    0.00    0.00    1.00     2  Web Content
+16时46分58秒  1000         -      4798    1.00    0.00    0.00    0.00    1.00     2  |__Web Content
+16时46分58秒  1000      4808         -    0.00    1.00    0.00    0.00    1.00     2  Web Content
+16时46分58秒  1000         -      4808    1.00    1.00    0.00    0.00    2.00     2  |__Web Content
+16时46分58秒  1000      5856         -    1.00    2.00    0.00    0.00    3.00     1  pidstat
+16时46分58秒  1000         -      5856    1.00    2.00    0.00    0.00    3.00     1  |__pidstat
+
+平均时间:   UID      TGID       TID    %usr %system  %guest   %wait    %CPU   CPU  Command
+平均时间:     0         -        20    0.00    0.50    0.00    0.00    0.50     -  |__rcuc/1
+平均时间:     0         -        42    0.00    0.50    0.00    0.00    0.50     -  |__kworker/2:1-mm_percpu_wq
+平均时间:     0       422         -    0.00    0.50    0.00    0.00    0.50     -  irq/29-iwlwifi
+平均时间:     0         -       422    0.00    0.50    0.00    0.00    0.50     -  |__irq/29-iwlwifi
+平均时间:     0       971         -    0.50    0.00    0.00    0.00    0.50     -  dockerd
+平均时间:     0         -      1040    0.00    0.50    0.00    0.00    0.50     -  |__dockerd
+平均时间:     0       974         -    0.50    0.00    0.00    0.00    0.50     -  lxd
+平均时间:     0         -       974    0.50    0.00    0.00    0.00    0.50     -  |__lxd
+平均时间:     0         -      1003    0.50    0.00    0.00    0.00    0.50     -  |__lxd
+平均时间:     0         -      1008    0.00    0.50    0.00    0.00    0.50     -  |__lxd
+平均时间:     0      1021         -    0.50    0.00    0.00    0.00    0.50     -  containerd
+平均时间:  1000      1277         -    0.00    0.50    0.00    0.00    0.50     -  emacs
+平均时间:  1000         -      1277    0.50    0.00    0.00    0.00    0.50     -  |__emacs
+平均时间:  1000      1561         -    0.00    0.50    0.00    0.50    0.50     -  Xorg
+平均时间:  1000         -      1561    0.00    0.50    0.00    0.50    0.50     -  |__Xorg
+平均时间:  1000         -      2906    0.00    0.50    0.00    0.00    0.50     -  |__nutstore
+平均时间:  1000      4351         -    1.49    0.00    0.00    0.00    1.49     -  firefox
+平均时间:  1000         -      4351    0.50    0.00    0.00    0.00    0.50     -  |__firefox
+平均时间:  1000         -      4356    0.00    0.50    0.00    0.00    0.50     -  |__Timer
+平均时间:  1000         -      4397    0.50    0.00    0.00    0.00    0.50     -  |__Compositor
+平均时间:  1000      4433         -    0.00    0.50    0.00    0.50    0.50     -  Web Content
+平均时间:  1000         -      4433    0.50    0.50    0.00    0.50    0.99     -  |__Web Content
+平均时间:  1000      4499         -    0.50    0.00    0.00    0.50    0.50     -  Web Content
+平均时间:  1000         -      4499    0.50    0.00    0.00    0.50    0.50     -  |__Web Content
+平均时间:  1000         -      4502    0.50    0.00    0.00    0.00    0.50     -  |__JS Watchdog
+平均时间:  1000         -      4572    0.00    0.50    0.00    0.00    0.50     -  |__WebExtensions
+平均时间:  1000      4798         -    0.50    0.00    0.00    0.00    0.50     -  Web Content
+平均时间:  1000         -      4798    0.50    0.00    0.00    0.00    0.50     -  |__Web Content
+平均时间:  1000      4808         -    0.50    0.50    0.00    0.00    0.99     -  Web Content
+平均时间:  1000         -      4808    0.50    0.50    0.00    0.00    0.99     -  |__Web Content
+平均时间:  1000         -      4828    0.00    0.50    0.00    0.00    0.50     -  |__Timer
+平均时间:  1000      5856         -    1.49    1.49    0.00    0.00    2.97     -  pidstat
+平均时间:  1000         -      5856    1.49    1.49    0.00    0.00    2.97     -  |__pidstat
+#+END_SRC
+*** time
+:PROPERTIES:
+:interleave_page_note: 252
+:END:
+
+time用来运行命令，并报告CPU用量:
+#+BEGIN_EXAMPLE
+  [lujun9972@T520 wowebook]$ time sleep 1
+
+  real	0m1.007s
+  user	0m0.004s
+  sys	0m0.000s
+#+END_EXAMPLE
+
+其中 =real= 表示运行该命令运行完的实际等待时间是 =1.007s=
+其中 =0.004s= 花在用户态上， =0.000s= 花在系统态上，还有 =1.003s= 的时间CPU被阻塞。
+*** perf 
+:PROPERTIES:
+:interleave_page_note: 259
+:END:
