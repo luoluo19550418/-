@@ -2142,27 +2142,27 @@ Org mode可以帮助你记录下某项任务花了多少时间. 当你开始工�
       ,   
 	#+end_src
 *** 识别空闲时间                          :识别出你未做工作的空闲时间
-	如果你正在对某项任务计时,在期间你离开电脑去接了个电话,通常情况下,你需要识别出你离开的那段时间并从计时统计中减去这段时间,或许还需要把这段时间计入其他的计时统计中.
+如果你正在对某项任务计时,在期间你离开电脑去接了个电话,通常情况下,你需要识别出你离开的那段时间并从计时统计中减去这段时间,或许还需要把这段时间计入其他的计时统计中.
 
-	通过配置变量`org-clock-idle-time`的值为某个整数,例如10或15,当你空闲时间超过这么多分钟之后[fn:82],Emacs会提醒你,并询问你要怎么处理这段空闲的时间. 你可以看到空闲时间的长度(不断的持续更新)和一系列的操作选项:
-	* k
-	  要将部分或者全部的离开时间计入正在计时的当前任务中,则键入k. Org随后会询问要将其中的多少分钟计入当前任务. 直接按回车表示所有时间都计入当前任务.
-	* K
-	  类似k,但会立刻停止对任务的计时
-	* s
-	  空闲时间不计入当前任务,并从你离开的时刻接着计时
-	* S
-	  类似s,但是会立刻停止计时. 记住无论哪个选项,连上shift键,都会立刻停止计时
-	* C
-	  撤销当前的计时统计. 需要注意的是,如果没有用C撤销计时,然而在把离开的时间剔除出去后发现剩余时间少于1分钟,则Emacs也会取消这次计时,这么做的目的是为了防止太多零散的计时统计.
+通过配置变量`org-clock-idle-time`的值为某个整数,例如10或15,当你空闲时间超过这么多分钟之后[fn:82],Emacs会提醒你,并询问你要怎么处理这段空闲的时间. 你可以看到空闲时间的长度(不断的持续更新)和一系列的操作选项:
++ k
+  要将部分或者全部的离开时间计入正在计时的当前任务中,则键入k. Org随后会询问要将其中的多少分钟计入当前任务. 直接按回车表示所有时间都计入当前任务.
++ K
+  类似k,但会立刻停止对任务的计时
++ s
+  空闲时间不计入当前任务,并从你离开的时刻接着计时
++ S
+  类似s,但是会立刻停止计时. 记住无论哪个选项,连上shift键,都会立刻停止计时
++ C
+  撤销当前的计时统计. 需要注意的是,如果没有用C撤销计时,然而在把离开的时间剔除出去后发现剩余时间少于1分钟,则Emacs也会取消这次计时,这么做的目的是为了防止太多零散的计时统计.
 
-	那么,如果想把这段离开的时间作为一项新的计时统计又该怎么处理呢? 只要在减去这段离开时间后立刻对新任务进行计时,Org会注意到你有一段被减去的计时登记在册,然后它会询问是否要将这段计时信息计入新任务的计时中.
-	
-	还存在这么一种可能,假设你正在对某项任务计时,突然电脑电源被关了,一瞬间,所有的buffer都消失了. 通过emacs的auto-saving机制,你可能恢复了最近的一些Org-mode的改变,包括最后的哪个clock in操作.
+那么,如果想把这段离开的时间作为一项新的计时统计又该怎么处理呢? 只要在减去这段离开时间后立刻对新任务进行计时,Org会注意到你有一段被减去的计时登记在册,然后它会询问是否要将这段计时信息计入新任务的计时中.
 
-	在这种情况下,如果你重启了Emacs,并且对任一任务进行计时时,Org会注意到上次session中留有一个悬空的clock in操作,然后Emacs会把该悬空的开始时间戳到现在的这段时间识别为空闲时间,并询问你的下一步操作. 其逻辑和行为与普通的空闲时间一致.
-	
-	你也可以通过命令`M-x org-resolve-clocks`一次性检查所有在Org Agenda中注册过的Org文件中的悬挂clock in操作.
+还存在这么一种可能,假设你正在对某项任务计时,突然电脑电源被关了,一瞬间,所有的buffer都消失了. 通过emacs的auto-saving机制,你可能恢复了最近的一些Org-mode的改变,包括最后的哪个clock in操作.
+
+在这种情况下,如果你重启了Emacs,并且对任一任务进行计时时,Org会注意到上次session中留有一个悬空的clock in操作,然后Emacs会把该悬空的开始时间戳到现在的这段时间识别为空闲时间,并询问你的下一步操作. 其逻辑和行为与普通的空闲时间一致.
+
+你也可以通过命令`M-x org-resolve-clocks`一次性检查所有在Org Agenda中注册过的Org文件中的悬挂clock in操作.
 ** 工作量评估		   		   		   		:提前规划工作成果
 如果你习惯以非常细致的方式作计划,或者你需要提供一份进度评估文档,则你会对每个任务进行进度上的评估. 如果你同时对你的工作进行计时,则随后可以对比进度计划与实际所费时间,这是改进进度评估的一个好方法. 评估所需时间的进度信息存储在属性`Effort`中[fn:83]. 你可以用一下命令来为任务设置进度安排(耗时评估)
 + C-c C-x e (org-set-effort)
@@ -2521,31 +2521,31 @@ Org mode可以帮助你记录下某项任务花了多少时间. 当你开始工�
 
 	   设置ATTACH_DIR_INHERIT属性,这样所有的子节点会使用父节点的attachement directory
 ** RSS Feeds          :从RSS Feeds中获取输入
-   通过配置`org-feed-alist`的至，Org可以根据RSS feeds和Atom feeds中的数据新增/改变entry的内容。下面是一个配置的例子
-   #+BEGIN_SRC elisp
-     (setq org-feed-alist
-           '(("Slashdot"
-              "http://rss.slashdot.org/Slashdot/slashdot"
-              "~/txt/org/feeds.org" "Slashdot Entries")))
-   #+END_SRC
-   上面的例子会使得rss.slashdot.org的feed中的item同步到文件～/org/feeds.org的名为`Slashdot Entries`的heading下。
+通过配置`org-feed-alist`的至，Org可以根据RSS feeds和Atom feeds中的数据新增/改变entry的内容。下面是一个配置的例子
+#+BEGIN_SRC elisp
+  (setq org-feed-alist
+        '(("Slashdot"
+           "http://rss.slashdot.org/Slashdot/slashdot"
+           "~/txt/org/feeds.org" "Slashdot Entries")))
+#+END_SRC
+上面的例子会使得rss.slashdot.org的feed中的item同步到文件～/org/feeds.org的名为`Slashdot Entries`的heading下。
 
-   下面是一些相关的命令
+下面是一些相关的命令
 
-   * C-c C-x g (org-feed-update-all)
++ C-c C-x g (org-feed-update-all)
 
-     同步org-feed-alist中配置feeds的item到Org文件中
+  同步org-feed-alist中配置feeds的item到Org文件中
 
-   * C-c C-x G (org-feed-goto-inbox)
++ C-c C-x G (org-feed-goto-inbox)
 
-     提示你输入一个feed的名称，然后跳转到对于的Org文件
+  提示你输入一个feed的名称，然后跳转到对于的Org文件
 
-   在同名的heading下，Org会创建一个名为`FEEDSTATUS`的drawer，并在其中存储关于feed中item的状态，这样就能避免同一个item多次添加的情况出现。 因此你需要添加`FEEDSTATUS`到Org文件的drawer列表中。例如
-   #+BEGIN_SRC org
-      ,#+DRAWERS: LOGBOOK PROPERTIES FEEDSTATUS
-   #+END_SRC
+在同名的heading下，Org会创建一个名为`FEEDSTATUS`的drawer，并在其中存储关于feed中item的状态，这样就能避免同一个item多次添加的情况出现。 因此你需要添加`FEEDSTATUS`到Org文件的drawer列表中。例如
+#+BEGIN_SRC org
+   ,#+DRAWERS: LOGBOOK PROPERTIES FEEDSTATUS
+#+END_SRC
 
-   更详细的信息请阅读org-feed.el和org-feed-alist的docstring
+更详细的信息请阅读org-feed.el和org-feed-alist的docstring
 ** Protocols          :从外部程序(例如浏览器)获取信息
    外部程序可以根据一定的协议规则通过emacsserver向Org传递要处理的消息。 详细信息请参见 http://orgmode.org/worg/org-contrib/org-protocol.php
 ** Refile and copy    :移动/拷贝tree从一个地方到另一个地方

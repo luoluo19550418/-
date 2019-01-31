@@ -20,7 +20,7 @@ Tridactyl 是一款让Firefox变成类Vim操作的插件。
 + p / P :: 在当前tab/新tab中访问clipboard中的内容
 + zz / zo // zz :: zoom in / zoom out /恢复正常zoom
 + : :: 进入Command mode
-+ f / F :: 访问当前屏幕中显示的URL
++ f / F :: (在当前窗口/新窗口)访问当前屏幕中显示的URL
 + gi :: 进入屏幕中第一个text box，然后按 =TAB= 跳转到后面的text box
 + . :: 重复上一个动作
 + d :: 关闭当前taba

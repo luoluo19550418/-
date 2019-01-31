@@ -1148,3 +1148,303 @@ time用来运行命令，并报告CPU用量:
 :PROPERTIES:
 :interleave_page_note: 259
 :END:
+perf是一整套剖析和跟踪的工具，它有多个子命令，每个子命令都是一个工具。
+
+#+TABLE: perf子命令
+
+| 命令      | 描述                                                 |
+|-----------+------------------------------------------------------|
+| annotate  | 读取perf.data（由perf record创建）并显示注释过的代码 |
+| diff      | 读取两个perf.data文件并显示两份剖析信息之间的差异    |
+| evlist    | 列出一个perf.data文件里的事件名称                    |
+| inject    | 过滤以加强事件流，在其中加入额外信息                 |
+| kmem      | 跟踪/测量kvm客户机操作系统的工具                     |
+| list      | 列出所有的符号事件类型                               |
+| lock      | 分析锁事件                                           |
+| probe     | 定义新的动态跟踪点                                   |
+| record    | 运行一个命令，并把剖析信息记录在perf.data中          |
+| report    | 读取perf.data并显示剖析信息                          |
+| sched     | 跟踪/测量调度器属性（延时）的工具                    |
+| script    | 读取perf.data并显示跟踪输出                          |
+| stat      | 运行一个命令并收集性能计数器统计信息                 |
+| timechart | 可视化某一个负载期间系统总体性能的工具               |
+| top       | 系统剖析工具                                               |
+**** 系统剖析
+perf可以用来剖析CPU调用路径，对CPU时间如何消耗在内核和用户空间进行概括总结。
+这项工作由record命令完成，该命令以一定间隔进行取样，并导出到一个perf.data文件中，然后使用report命令查看文件。
+
+下面例子中，所有CPU(-a)以997Hz的频率(-F 997)对调用栈(-g)取样10s(sleep 10)
+#+BEGIN_SRC shell :dir /sudo::/tmp :results org
+  sudo perf record -a -g -F 997 sleep 10
+#+END_SRC
+
+然后使用report命令来讲结果输出到标准输入(--stdio)
+#+BEGIN_SRC shell :dir /sudo::/tmp :results org
+  sudo perf report --stdio |head -n 20
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 8K of event 'cycles:ppp'
+# Event count (approx.): 3391285697
+#
+# Children      Self  Command          Shared Object               Symbol                                                                                                                           
+# ........  ........  ...............  ..........................  .................................................................................................................................
+#
+    52.70%     0.00%  swapper          [kernel.kallsyms]           [k] secondary_startup_64
+            |
+            ---secondary_startup_64
+               |          
+               |--39.07%--start_secondary
+               |          cpu_startup_entry
+               |          |          
+               |           --39.06%--do_idle
+               |                     |          
+#+END_SRC
+**** 进程剖析
+:PROPERTIES:
+:interleave_page_note: 261
+:END:
+除了剖析系统中所有CPU外，我们也可以对单个进程进行剖析。
+
+下面命令执行了command并创建文件perf.data
+#+BEGIN_SRC shell
+  sudo perf record -g command
+#+END_SRC
+**** 调度器延时
+sched命令记录并报告调度器统计信息，例如:
+#+BEGIN_SRC shell :dir /sudo::/tmp :results org
+  sudo perf sched record sleep 5
+  sudo perf sched latency|cat
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+ -----------------------------------------------------------------------------------------------------------------
+  Task                  |   Runtime ms  | Switches | Average delay ms | Maximum delay ms | Maximum delay at       |
+ -----------------------------------------------------------------------------------------------------------------
+  jbd2/sda2-8:256       |      1.236 ms |        9 | avg:    0.096 ms | max:    0.148 ms | max at:  12660.605688 s
+  khugepaged:48         |      0.000 ms |        1 | avg:    0.092 ms | max:    0.092 ms | max at:  12661.015205 s
+  ksoftirqd/1:21        |      0.026 ms |        1 | avg:    0.067 ms | max:    0.067 ms | max at:  12659.170227 s
+  perf:18804            |      3.165 ms |        1 | avg:    0.066 ms | max:    0.066 ms | max at:  12663.046480 s
+  emacsclient:18806     |      5.941 ms |        1 | avg:    0.062 ms | max:    0.062 ms | max at:  12659.148839 s
+  WebExtensions:2668    |     16.179 ms |       33 | avg:    0.060 ms | max:    0.091 ms | max at:  12659.782529 s
+  rtkit-daemon:(2)      |      0.086 ms |        2 | avg:    0.052 ms | max:    0.076 ms | max at:  12660.462113 s
+  iprt-VBoxTscThr:297   |      0.002 ms |        1 | avg:    0.052 ms | max:    0.052 ms | max at:  12659.948431 s
+  kworker/3:1H-kb:249   |      0.000 ms |        1 | avg:    0.052 ms | max:    0.052 ms | max at:  12660.588465 s
+  usb-storage:17140     |      0.419 ms |        6 | avg:    0.049 ms | max:    0.066 ms | max at:  12660.161970 s
+  Web Content:(4)       |    111.227 ms |      204 | avg:    0.048 ms | max:    0.166 ms | max at:  12658.753336 s
+  kworker/2:2-eve:233   |      0.118 ms |        8 | avg:    0.047 ms | max:    0.071 ms | max at:  12658.668522 s
+  kworker/1:1-eve:56    |      0.177 ms |       13 | avg:    0.047 ms | max:    0.087 ms | max at:  12662.081861 s
+  Chrome_~dThread:(5)   |      1.938 ms |        9 | avg:    0.046 ms | max:    0.062 ms | max at:  12658.343273 s
+  rcu_preempt:10        |      0.000 ms |       69 | avg:    0.045 ms | max:    0.078 ms | max at:  12659.165194 s
+  kworker/u16:0-e:17977 |      6.500 ms |      130 | avg:    0.045 ms | max:    0.090 ms | max at:  12659.039050 s
+  kworker/3:2-eve:14850 |      0.319 ms |        8 | avg:    0.044 ms | max:    0.066 ms | max at:  12659.948456 s
+  kworker/0:2-eve:213   |      0.580 ms |       14 | avg:    0.043 ms | max:    0.103 ms | max at:  12661.628560 s
+  ksoftirqd/3:35        |      0.082 ms |        4 | avg:    0.042 ms | max:    0.053 ms | max at:  12662.262789 s
+  Compositor:2551       |    505.629 ms |      362 | avg:    0.039 ms | max:    0.189 ms | max at:  12661.088443 s
+  firefox:2503          |     86.426 ms |      335 | avg:    0.036 ms | max:    0.137 ms | max at:  12662.305606 s
+  xscreensaver:1838     |      0.388 ms |        2 | avg:    0.036 ms | max:    0.048 ms | max at:  12658.784807 s
+  emacs:1272            |      1.411 ms |        5 | avg:    0.035 ms | max:    0.053 ms | max at:  12660.777312 s
+  kworker/u17:2-r:884   |      0.337 ms |        7 | avg:    0.034 ms | max:    0.062 ms | max at:  12661.802490 s
+  migration/3:33        |      0.000 ms |        1 | avg:    0.033 ms | max:    0.033 ms | max at:  12660.454733 s
+  Xorg:1556             |     60.852 ms |      311 | avg:    0.033 ms | max:    0.110 ms | max at:  12660.955077 s
+  migration/1:19        |      0.000 ms |        1 | avg:    0.029 ms | max:    0.029 ms | max at:  12660.454706 s
+  Gecko_IOThread:2508   |      1.302 ms |        9 | avg:    0.028 ms | max:    0.078 ms | max at:  12662.108214 s
+  SCTP timer:(2)        |     49.491 ms |      985 | avg:    0.028 ms | max:    0.140 ms | max at:  12658.732885 s
+  migration/2:26        |      0.000 ms |        1 | avg:    0.027 ms | max:    0.027 ms | max at:  12660.454727 s
+  dockerd:(9)           |     19.911 ms |      298 | avg:    0.027 ms | max:    0.519 ms | max at:  12658.598484 s
+  ksoftirqd/2:28        |      0.403 ms |       18 | avg:    0.026 ms | max:    0.053 ms | max at:  12658.753252 s
+  Timer:(6)             |     59.257 ms |      662 | avg:    0.026 ms | max:    0.879 ms | max at:  12659.738562 s
+  JS Watchdog:(6)       |      1.453 ms |       28 | avg:    0.025 ms | max:    0.091 ms | max at:  12661.606624 s
+  journal-offline:(2)   |      1.514 ms |       13 | avg:    0.025 ms | max:    0.115 ms | max at:  12660.602353 s
+  InotifyEventThr:5445  |      2.367 ms |       50 | avg:    0.025 ms | max:    0.062 ms | max at:  12658.058499 s
+  nutstore:(9)          |     18.590 ms |      217 | avg:    0.024 ms | max:    0.084 ms | max at:  12662.158416 s
+  lxd:(9)               |     40.865 ms |      522 | avg:    0.024 ms | max:    1.477 ms | max at:  12660.742444 s
+  Softwar~cThread:2550  |     33.328 ms |      302 | avg:    0.024 ms | max:    0.066 ms | max at:  12659.504224 s
+  jbd2/sda3-8:439       |      0.391 ms |        3 | avg:    0.024 ms | max:    0.035 ms | max at:  12661.658040 s
+  ksoftirqd/0:9         |      0.142 ms |        8 | avg:    0.024 ms | max:    0.056 ms | max at:  12660.721098 s
+  systemd-journal:282   |      0.391 ms |        1 | avg:    0.023 ms | max:    0.023 ms | max at:  12660.590444 s
+  containerd:(9)        |     16.213 ms |      232 | avg:    0.023 ms | max:    0.363 ms | max at:  12660.103693 s
+  irq/29-iwlwifi:454    |      0.000 ms |      225 | avg:    0.022 ms | max:    0.090 ms | max at:  12661.498451 s
+  kworker/u16:1-e:17055 |      0.666 ms |       18 | avg:    0.022 ms | max:    0.067 ms | max at:  12661.628603 s
+  migration/0:13        |      0.000 ms |        1 | avg:    0.020 ms | max:    0.020 ms | max at:  12660.454696 s
+  kworker/0:1H-ev:243   |      0.104 ms |        2 | avg:    0.018 ms | max:    0.024 ms | max at:  12659.524745 s
+  sleep:18805           |      1.399 ms |        2 | avg:    0.017 ms | max:    0.031 ms | max at:  12663.045993 s
+  rcuc/1:20             |      0.000 ms |        1 | avg:    0.016 ms | max:    0.016 ms | max at:  12659.170273 s
+  rcuc/0:11             |      0.000 ms |        5 | avg:    0.016 ms | max:    0.029 ms | max at:  12662.235134 s
+  rcuc/2:27             |      0.000 ms |       17 | avg:    0.016 ms | max:    0.028 ms | max at:  12660.901805 s
+  awesome:1830          |     12.056 ms |        6 | avg:    0.012 ms | max:    0.017 ms | max at:  12659.143990 s
+  kworker/1:1H-kb:255   |      0.114 ms |        4 | avg:    0.012 ms | max:    0.031 ms | max at:  12659.735099 s
+  kworker/2:1H-kb:234   |      0.236 ms |       12 | avg:    0.012 ms | max:    0.037 ms | max at:  12660.600666 s
+  rcuc/3:34             |      0.000 ms |        4 | avg:    0.011 ms | max:    0.014 ms | max at:  12658.081183 s
+  redshift:1837         |      0.646 ms |        3 | avg:    0.009 ms | max:    0.011 ms | max at:  12659.524992 s
+ -----------------------------------------------------------------------------------------------------------------
+  TOTAL:                |   1063.877 ms |     5188 |
+ ---------------------------------------------------
+
+#+END_SRC
+
+上面显示了跟踪时期平均和最大的调度器延时
+**** stat
+stat命令基于CPC为CPU周期行为提供了一个概要总结
+
+sched命令记录并报告调度器统计信息，例如:
+#+BEGIN_SRC shell :dir /sudo::/tmp :results org
+  sudo perf stat sleep 1 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+ Performance counter stats for 'sleep 1':
+
+              1.38 msec task-clock                #    0.001 CPUs utilized          
+                 1      context-switches          # 1000.000 M/sec                  
+                 0      cpu-migrations            #    0.000 K/sec                  
+                66      page-faults               # 66000.000 M/sec                 
+         1,429,995      cycles                    # 1429995.000 GHz                 
+           976,043      stalled-cycles-frontend   # [31m  68.25%[m frontend cycles idle   
+           758,074      stalled-cycles-backend    # [35m  53.01%[m backend cycles idle    
+           971,478      instructions              #    0.68  insn per cycle         
+                                                  #    1.00  stalled cycles per insn
+           197,852      branches                  # 197852000.000 M/sec             
+             9,409      branch-misses             #    4.76% of all branches        
+
+       1.002253564 seconds time elapsed
+
+       0.002061000 seconds user
+       0.000000000 seconds sys
+
+
+#+END_SRC
+
+统计信息中包括了上下文切换次数、周期书和指令计数等信息。
+
+使用 =list= 子命令可以列出其他可以检查的计数器
+#+BEGIN_SRC shell :results org
+  perf list |head
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  branch-instructions OR branches                    [Hardware event]
+  branch-misses                                      [Hardware event]
+  bus-cycles                                         [Hardware event]
+  cache-misses                                       [Hardware event]
+  cache-references                                   [Hardware event]
+  cpu-cycles OR cycles                               [Hardware event]
+  instructions                                       [Hardware event]
+  ref-cycles                                         [Hardware event]
+  stalled-cycles-backend OR idle-cycles-backend      [Hardware event]
+  stalled-cycles-frontend OR idle-cycles-frontend    [Hardware event]
+#+END_SRC
+
+注意那些 =Hardware event= 和 =Hardware cache event= 是否可用取决于处理器架构
+
+这些事件可以使用选项 =-e= 来指定，例如:
+#+BEGIN_SRC shell :dir /sudo::/tmp :results org
+  sudo perf stat -e instructions,cycles,L1-dcache-load-misses,branch-misses sleep 1 2>&1
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+
+ Performance counter stats for 'sleep 1':
+
+           947,672      instructions              #    0.71  insn per cycle                                            
+         1,336,684      cycles                                                      
+            16,242      L1-dcache-load-misses                                       
+             9,272      branch-misses                                               
+
+       1.001847125 seconds time elapsed
+
+       0.001674000 seconds user
+       0.000000000 seconds sys
+
+
+#+END_SRC
+**** 软件跟踪
+=perf record -e= 可以与各种软件性能探测点配合，用来跟踪内核调度器的活动。
+这些测量点包括了软件事件和跟踪点事件(静态探测器),这些测量点可以通过 =perf list= 列出
+#+BEGIN_SRC shell :results org
+  perf list |grep -i "Software\|Tracepoint"
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  alignment-faults                                   [Software event]
+  bpf-output                                         [Software event]
+  context-switches OR cs                             [Software event]
+  cpu-clock                                          [Software event]
+  cpu-migrations OR migrations                       [Software event]
+  dummy                                              [Software event]
+  emulation-faults                                   [Software event]
+  major-faults                                       [Software event]
+  minor-faults                                       [Software event]
+  page-faults OR faults                              [Software event]
+  task-clock                                         [Software event]
+       [Not software-prefetch load dispatches that hit FB allocated for
+       [Not software-prefetch load dispatches that hit FB allocated for
+        software prefetch]
+#+END_SRC
+
+#+BEGIN_SRC shell :dir /sudo::/tmp :results org
+  sudo perf record -a -g -e context-switches sleep 1
+  sudo perf report --stdio |cat
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1  of event 'context-switches'
+# Event count (approx.): 1
+#
+# Children      Self  Command  Shared Object      Symbol                         
+# ........  ........  .......  .................  ...............................
+#
+   100.00%   100.00%  sleep    [kernel.kallsyms]  [k] schedule
+            |
+            ---__nanosleep
+               _raw_spin_unlock_irqrestore
+               schedule
+
+   100.00%     0.00%  sleep    libc-2.28.so       [.] __nanosleep
+            |
+            ---__nanosleep
+               _raw_spin_unlock_irqrestore
+               schedule
+
+   100.00%     0.00%  sleep    [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore
+            |
+            ---_raw_spin_unlock_irqrestore
+               schedule
+
+
+
+#
+# (Tip: Skip collecting build-id when recording: perf record -B)
+#
+#+END_SRC
+**** 其他工具
+
++ oprofile :: 最初的CPU剖析工具
++ htop :: 包括了CPU用量的ASCII柱状图，比最初的top有更强大的交互模式
++ atop :: 包括了更多的系统级统计信息，使用进程核算统计能够捕捉短命进程的存在
++ /proc/cpuinfo :: 可以获得处理器详细信息，包括时钟频率和特征标志位
++ valgrind :: 一个内存调试和剖析工具组。它包括了callgrind,一个跟踪函数调用并生成调用图的工具，可以通过kcachegrind可视化
+*** 可视化
+:PROPERTIES:
+:interleave_page_note: 266
+:END:
+
