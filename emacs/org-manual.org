@@ -1795,126 +1795,126 @@
 ** 属性API		  		  		  	 :提供給Lisp程序员的属性相关的API
    有大量的API提供来获取和修改属性. Emacs Lisp程序员可以使用这些API来编辑属性或实现与这些属性相关的特性. 更多信息参见[[ Using the property API][使用属性API]].
 * 日期与时间
-  为了协助进行项目计划. TODO事项可以加上日期和时间的标签. 这种带有日期和时间信息的特定字符串在Org-mode中被称呼为时间戳(timestamp). 这可能会让人有点迷糊,因为时间戳常常用来标识事情是什么时候创建或改变的. 然而,在Org-mode中,该名称的意义更加广泛
+为了协助进行项目计划. TODO事项可以加上日期和时间的标签. 这种带有日期和时间信息的特定字符串在Org-mode中被称呼为时间戳(timestamp). 这可能会让人有点迷糊,因为时间戳常常用来标识事情是什么时候创建或改变的. 然而,在Org-mode中,该名称的意义更加广泛
 ** 时间戳,最后期限和规划日期				:給事项分配时间
-   时间戳以一种特定的格式来标识日期(也可能是时间或一个时间段),比如想这样:`"< 2003-09-16 Tue >"[fn:63] ,`< 2003-09-16 Tue09:39 >`,`‘< 2003-09-16 Tue 12:00-12:30 >`[fn:64]. 时间戳可以放在标题和条目的任意位置处. 带有时间戳的条目在agenda视图中会显示在特定的日期区域(参见[[The weekly/daily agenda][周/日agenda]]). 时间戳有以下几种格式:
-   * 单纯的一个时间点,一般用于单次的约会,会议等
+时间戳以一种特定的格式来标识日期(也可能是时间或一个时间段),比如想这样:`"< 2003-09-16 Tue >"[fn:63] ,`< 2003-09-16 Tue09:39 >`,`‘< 2003-09-16 Tue 12:00-12:30 >`[fn:64]. 时间戳可以放在标题和条目的任意位置处. 带有时间戳的条目在agenda视图中会显示在特定的日期区域(参见[[The weekly/daily agenda][周/日agenda]]). 时间戳有以下几种格式:
++ 单纯的一个时间点,一般用于单次的约会,会议等
 	 时间戳最基本的作用就是为某事项分配一个日期/时间. 这就好像在日程表中安排一项日程一样. 当用timeline或agenda视图查看安排时,带有时间戳的事项就会出现在时间戳指示的日期处.
 	 #+BEGIN_SRC org
        ,* Meet Peter at the movies <2006-11-01 Wed 19:15>
        ,* Discussion on climate change <2006-11-02 Thu 20:00-22:00>
 	 #+END_SRC
-   * 带有重复间隔的时间戳
++ 带有重复间隔的时间戳
 	 如果你想标识某件事不仅仅是在指定的那天需要去办,而且在之后的时间里,每隔N天(d),周(w),月(m)或年(y)也需要重复的做这件事情. 这时你可以在时间戳中包含重复间隔的信息. 例如下面的例子说明了每周周三都要去作的事情
 	 #+BEGIN_SRC org
        ,* Pick up Sam at school <2007-05-16 Wed 12:30 +1w>
 	 #+END_SRC
-   * diary风格的类lisp表达式(Diary-style sexp entries)
++ diary风格的类lisp表达式(Diary-style sexp entries)
 	 要表达更复杂的时间需求, Org-mode可以使用diary风格的类lisp表达式来表示时间,这种表达式是由Emacs内置的calendar/diary包实现的.[fn:65]. 下面是一个例子
 	 #+BEGIN_SRC org
        ,* 22:00-23:00 The nerd meeting on every 2nd Thursday of the month
        ,  <%%(org-float t 4 2)>
 	 #+END_SRC
-   * 时间段
++ 时间段
 	 用`--`连接起来的两个时间戳就表示一个时间段. 下面是一个例子
 	 #+BEGIN_SRC org
        ,** Meeting in Amsterdam
        ,   <2004-08-23 Mon>--<2004-08-26 Thu>
 	 #+END_SRC
-   * 无效的时间戳
++ 无效的时间戳
 	 跟一般的时间戳差不多,只是用方括号代替尖括号. 这种时间戳不会影响事项在agenda中的显示
 	 #+BEGIN_SRC org
        ,* Gillian comes late for the fifth time [2006-11-01 Wed]
 	 #+END_SRC
 ** 创建时间戳		 		 		    :插入时间戳的命令
-   Org-mode中的时间戳必须是复合特定的格式的. 因此Org提供了下面这些命令生成正确格式的时间戳
-   * C-c . (org-time-stamp) ::
+Org-mode中的时间戳必须是复合特定的格式的. 因此Org提供了下面这些命令生成正确格式的时间戳
++ C-c . (org-time-stamp) ::
 	 该命令提示你输入日期然后插入对应的时间戳. 如果执行该命令时,光标已经处于时间戳上,则该命令修改时间戳,而不是插入新的时间戳. 如果连续两次成果执行该命令,则插入的是一个时间段.
-   * C-c ! (org-time-stamp-inactive) :: 
++ C-c ! (org-time-stamp-inactive) :: 
 		类似于C-c . 但是插入的是一个无效的(inactive)时间戳,这种时间戳不会影响事项在agenda上的显示
-   * C-u C-c . /C-u C-c ! :: 
++ C-u C-c . /C-u C-c ! :: 
 	类似`C-c .`和`C-c !`,但是包含日期和时间. 默认的时间会自动四舍五入到每5分钟为单位.参见选项`org-time-stamp-rounding-minutes`
-   * C-c C-c  :: 
++ C-c C-c  :: 
 				 更正时间戳,如果星期数错了或者没有,就会修正或者插入正确的星期数
-   * C-c < (org-date-from-calendar) :: 
++ C-c < (org-date-from-calendar) :: 
 		插入Calendar窗口中光标所处的日期所对应的时间戳
-   * C-c > (org-goto-calendar) :: 
++ C-c > (org-goto-calendar) :: 
 		打开Emacs Calendar窗口并定为到今天. 若光标处于时间戳处,则定为到时间戳表示的位置
-   * C-c C-o (org-open-at-point) :: 
++ C-c C-o (org-open-at-point) :: 
 		在agenda窗口中打开时间戳所指定的日期或时间段(参见章节[[ The weekly/daily agenda][周/日agenda]])
-   * S-<left> (org-timestamp-down-day) / S-<right> (org-timestamp-up-day) ::
++ S-<left> (org-timestamp-down-day) / S-<right> (org-timestamp-up-day) ::
 	 减少/增加光标所在的日期一天. 这些按键序列与shift-selecton及相关模式相互冲突(参见章节[[ Packages that lead to conflicts with Org mode][与org-mode冲突的包]])
-   * S-<up> (org-timestamp-up) / S-<down> (org-timestamp-down) :: 
++ S-<up> (org-timestamp-up) / S-<down> (org-timestamp-down) :: 
 		更改光标所处的时间戳中的各个部分(年,月,日,时,分). 若时间戳是一个类似‘15:30-16:30’的时间段,则修改第一个时间也会同时改变第二个时间,为的是保持时间跨度不变. 若想修改时间跨度,请直接修改第二个时间. 需要注意的是,若光标不是处于时间戳中,而是处于标题上,则该键序列会修改事项的优先级(参见章节[[Priorities][优先级]]).这些按键序列与shift-selecton及相关模式相互冲突(参见章节[[ Packages that lead to conflicts with Org mode][与org-mode冲突的包]])
-   * C-c C-y (org-evaluate-time-range) :: 
++ C-c C-y (org-evaluate-time-range) :: 
 		根据时间段计算出时间跨度显示在minibuffer上. 如果带有前缀参数,则将结果写道时间段的后面(若是在表格中,则写到下一列的位置)
 *** 日期/时间的提示窗口		   		    :Org-mode是如何帮助你输入日期和时间的
-	当Org-mode提示输入日期/时间时,会有一个默认值,这个默认值是以缺省的格式来显示的,这给人的感觉似乎只能输入这种特定的格式的时间才行. 其实Org-mode可用处理任何包含有日期/时间信息的字符串,并且很智能的提取出其中的日期/时间信息. 例如你可以使用`C-y`粘贴email中的内容(可能有多行). Org-mode会丢弃任何不符合默认日期/时间格式的字符串,从而提取出其中的日期/时间信息. 提示的默认值一般来说是当前日期,但是如果是在修改一个已经存在的时间戳或者输入时间段的第二个时间戳信息时,默认值使用的是buffer中的哪个时间戳信息. 当输入日期信息时, Org-mode假设大多数时候你想要输入的都是未来的日期,因此如果你没有输入月/年,同时你输入的天/月又比今天要早时,Org-mode会基于"你输入的是未来的日期"这个假设自动填充月/年信息[fn:66]. 如果输入的日期被自动调整到未来的日期,时间提示符会出现`(=>F)`以此来提醒你
+当Org-mode提示输入日期/时间时,会有一个默认值,这个默认值是以缺省的格式来显示的,这给人的感觉似乎只能输入这种特定的格式的时间才行. 其实Org-mode可用处理任何包含有日期/时间信息的字符串,并且很智能的提取出其中的日期/时间信息. 例如你可以使用`C-y`粘贴email中的内容(可能有多行). Org-mode会丢弃任何不符合默认日期/时间格式的字符串,从而提取出其中的日期/时间信息. 提示的默认值一般来说是当前日期,但是如果是在修改一个已经存在的时间戳或者输入时间段的第二个时间戳信息时,默认值使用的是buffer中的哪个时间戳信息. 当输入日期信息时, Org-mode假设大多数时候你想要输入的都是未来的日期,因此如果你没有输入月/年,同时你输入的天/月又比今天要早时,Org-mode会基于"你输入的是未来的日期"这个假设自动填充月/年信息[fn:66]. 如果输入的日期被自动调整到未来的日期,时间提示符会出现`(=>F)`以此来提醒你
 
-	举个例子,假设今天是2006年6月13日. 下面列出一些输入和实际解释的对应关系
-	#+BEGIN_EXAMPLE
-      3-2-5         ⇒ 2003-02-05
-      2/5/3         ⇒ 2003-02-05
-      14            ⇒ 2006-06-14
-      12            ⇒ 2006-07-12
-      2/5           ⇒ 2007-02-05
-      Fri           ⇒ nearest Friday (default date or later)
-      sep 15        ⇒ 2006-09-15
-      feb 15        ⇒ 2007-02-15
-      sep 12 9      ⇒ 2009-09-12
-      12:45         ⇒ 2006-06-13 12:45
-      22 sept 0:34  ⇒ 2006-09-22 0:34
-      w4            ⇒ ISO week for of the current year 2006
-      2012 w4 fri   ⇒ Friday of ISO week 4 in 2012
-      2012-w04-5    ⇒ Same as above
-	#+END_EXAMPLE
+举个例子,假设今天是2006年6月13日. 下面列出一些输入和实际解释的对应关系
+#+BEGIN_EXAMPLE
+    3-2-5         ⇒ 2003-02-05
+    2/5/3         ⇒ 2003-02-05
+    14            ⇒ 2006-06-14
+    12            ⇒ 2006-07-12
+    2/5           ⇒ 2007-02-05
+    Fri           ⇒ nearest Friday (default date or later)
+    sep 15        ⇒ 2006-09-15
+    feb 15        ⇒ 2007-02-15
+    sep 12 9      ⇒ 2009-09-12
+    12:45         ⇒ 2006-06-13 12:45
+    22 sept 0:34  ⇒ 2006-09-22 0:34
+    w4            ⇒ ISO week for of the current year 2006
+    2012 w4 fri   ⇒ Friday of ISO week 4 in 2012
+    2012-w04-5    ⇒ Same as above
+#+END_EXAMPLE
 
-	另外,你还可以输入相对日期,格式是第一个字符用加减号开头,随后是一个用来表示时间长度的数字和一个用来表示天(d)/周(w)/月(m)/年(y)这种时间单位的字符. 如果以一个`+/-`开头,则表示日期是相对于今天来说的. 如果是以两个`+/-`开头,则表示是相对于默认日期来说的. 如果你省略了表示时间单位的哪个字符,则默认为天. 下面是一些例子
-	#+BEGIN_EXAMPLE
-      +0            ⇒ today
-      .             ⇒ today
-      +4d           ⇒ four days from today
-      +4            ⇒ same as above
-      +2w           ⇒ two weeks from today
-      ++5           ⇒ five days from default date
-      +2tue         ⇒ second Tuesday from now.
-	#+END_EXAMPLE
+另外,你还可以输入相对日期,格式是第一个字符用加减号开头,随后是一个用来表示时间长度的数字和一个用来表示天(d)/周(w)/月(m)/年(y)这种时间单位的字符. 如果以一个`+/-`开头,则表示日期是相对于今天来说的. 如果是以两个`+/-`开头,则表示是相对于默认日期来说的. 如果你省略了表示时间单位的哪个字符,则默认为天. 下面是一些例子
+#+BEGIN_EXAMPLE
+    +0            ⇒ today
+    .             ⇒ today
+    +4d           ⇒ four days from today
+    +4            ⇒ same as above
+    +2w           ⇒ two weeks from today
+    ++5           ⇒ five days from default date
+    +2tue         ⇒ second Tuesday from now.
+#+END_EXAMPLE
 
-	时间函数能够理解英文中的月份了星期几的缩写形式. 如果你像是用英文全称或其他语言,请配置变量`parse-time-months`和`parse-times-weekdays`
+时间函数能够理解英文中的月份了星期几的缩写形式. 如果你像是用英文全称或其他语言,请配置变量`parse-time-months`和`parse-times-weekdays`
 
-	由于当前的Emacs实现并不能合理的表示所有的日期,因此默认情况下Org-mode强制日期的合理区间为1970年-2037年,因为这区间的时间对于所有的Emacs实现都是可处理的. 如果你想使用超过这个时间段的日期,请先阅读变量`org-read-date-force-complatible-dates`的文档字符串
+由于当前的Emacs实现并不能合理的表示所有的日期,因此默认情况下Org-mode强制日期的合理区间为1970年-2037年,因为这区间的时间对于所有的Emacs实现都是可处理的. 如果你想使用超过这个时间段的日期,请先阅读变量`org-read-date-force-complatible-dates`的文档字符串
 
-	定义一个时间段有两种方式,一中方式是用一个或两个`-`将开始和结束时间连接起来. 另一种是用`+`将开始时间与时间段长度连接起来. 举例子如下
-	#+BEGIN_EXAMPLE
-      11am-1:15pm    ⇒ 11:00-13:15
-      11am--1:15pm   ⇒ same as above
-      11am+2:15      ⇒ same as above
-	#+END_EXAMPLE
+定义一个时间段有两种方式,一中方式是用一个或两个`-`将开始和结束时间连接起来. 另一种是用`+`将开始时间与时间段长度连接起来. 举例子如下
+#+BEGIN_EXAMPLE
+    11am-1:15pm    ⇒ 11:00-13:15
+    11am--1:15pm   ⇒ same as above
+    11am+2:15      ⇒ same as above
+#+END_EXAMPLE
 
-	除了minibuffer中的提示符,Org-mode也可能会弹出一个calendar窗口让你选择日期[fn:67]. 在calendar窗口中,你可以通过单击日期或直接安回车的方式选择日期,随后该日期会插入到提示符中去. 你可以在光标不离开minibuffer的同时控制calendar. 命令如下:
-	#+BEGIN_EXAMPLE
-      <RET>           Choose date at cursor in calendar.
-      mouse-1        Select date by clicking on it.
-      S-<right>/<left>     One day forward/backward.
-      S-<down>/<up>     One week forward/backward.
-      M-S-<right>/<left>   One month forward/backward.
-      > / <          Scroll calendar forward/backward by one month.
-      M-v / C-v      Scroll calendar forward/backward by 3 months.
-	#+END_EXAMPLE
+除了minibuffer中的提示符,Org-mode也可能会弹出一个calendar窗口让你选择日期[fn:67]. 在calendar窗口中,你可以通过单击日期或直接安回车的方式选择日期,随后该日期会插入到提示符中去. 你可以在光标不离开minibuffer的同时控制calendar. 命令如下:
+#+BEGIN_EXAMPLE
+    <RET>           Choose date at cursor in calendar.
+    mouse-1        Select date by clicking on it.
+    S-<right>/<left>     One day forward/backward.
+    S-<down>/<up>     One week forward/backward.
+    M-S-<right>/<left>   One month forward/backward.
+    > / <          Scroll calendar forward/backward by one month.
+    M-v / C-v      Scroll calendar forward/backward by 3 months.
+#+END_EXAMPLE
 
-	日期/时间提示符的这些操作看起来很复杂,但是你很快就能适应它们, 随后你会觉得使用其他方式输入日期/时间很不方便. 为了帮助你理解你输入的到底是什么日期,对你输入的实时解释会显示在minibuffer中[fn:68]
+日期/时间提示符的这些操作看起来很复杂,但是你很快就能适应它们, 随后你会觉得使用其他方式输入日期/时间很不方便. 为了帮助你理解你输入的到底是什么日期,对你输入的实时解释会显示在minibuffer中[fn:68]
 *** 定制时间格式							:让时间看起来与众不同
-	Org-mode使用ISO8601的日期和时间规范. 如果你不习惯此规范想换成其他格式的显示方式,你需要配置变量`org-display-custom-times`和`org-time-stamp-custom-formats`
-	* C-c C-x C-t (org-toggle-time-stamp-overlays)
+Org-mode使用ISO8601的日期和时间规范. 如果你不习惯此规范想换成其他格式的显示方式,你需要配置变量`org-display-custom-times`和`org-time-stamp-custom-formats`
++ C-c C-x C-t (org-toggle-time-stamp-overlays)
 	  切换客户化定制的日期/时间显示的格式
 	
 	在输入时间/日期时,Org-mode还是修安排使用默认的格式. 实际上,客户化定制的时间格式并不会正在改变文件中的实际时间格式(存入文件的还是以默认格式存入的). 它只是在显示时转换成客户化定制的格式显示而已. 因此就会造成下面这些后果
-	* 你不能把光标移动到时间戳内部了,你只能从时间戳前面直接跳到时间戳的后面
-	* `S-<up>`,`S-<down>`不能再用于调整时间戳的内部组件了. 如果光标在时间戳前面,则`S-<up>/<down>`跟`S-<left>/<right>`一样,增减一天. 如果光标在时间戳后面,则时间戳增减一分钟
-	* 如果时间段或包含了重复间隔信息的时间戳是不会被转换显示的,还是保留原样
-	* 若在表格中包含了日期,则若定制的时间格式比原格式长,表格的对齐会被搞乱,如果比原格式短,则可用正常对齐
++ 你不能把光标移动到时间戳内部了,你只能从时间戳前面直接跳到时间戳的后面
++ `S-<up>`,`S-<down>`不能再用于调整时间戳的内部组件了. 如果光标在时间戳前面,则`S-<up>/<down>`跟`S-<left>/<right>`一样,增减一天. 如果光标在时间戳后面,则时间戳增减一分钟
++ 如果时间段或包含了重复间隔信息的时间戳是不会被转换显示的,还是保留原样
++ 若在表格中包含了日期,则若定制的时间格式比原格式长,表格的对齐会被搞乱,如果比原格式短,则可用正常对齐
 ** 最后期限和规划日期		 		 		:制定工作计划
-   * 最后期限(DEADLINE)
++ 最后期限(DEADLINE)
 	 当到达最后期限时,该任务会显示在agenda中. 另外在today这个agenda上也会警示一些快要(由变量org-deadline-warning-days决定提前多少天开始警告)或者已经逾期的任务,该警示会一直持续到任务标识为完成后才消失. DEADLINE的一个例子如下:
 	 #+begin_src org
        *** TODO write article about the Earth for the Guide
@@ -1925,79 +1925,79 @@
 	 #+begin_src org
        DEADLINE: <2004-02-29 Sun -5d>    
 	 #+end_src
-   * 规划日期(SCHEDULED)
++ 规划日期(SCHEDULED)
 	 当到达规划日期及之后,该任务会在agenda中一直显示[fn:69]. 另外在today这个agenda上会显示今天距离规划日期已经过去多少天了. 该显示会一直持续到任务被标记为完成状态为止. 下面是一个例子
 	 #+begin_src org
        *** TODO Call Trillian for a date on New Years Eve.
            SCHEDULED: <2004-12-25 Sat>
 	 #+end_src
 *** 插入最后期限和规划日期
-	下面的命令使你可以快速插入[fn:70]最后期限和规划日期
-	* C-c C-d (org-deadline)
-	  在标题的下一行插入DEADLINE关键字,该关键字用来标识最后期限信息. 除了插入DEADLINE关键字外,任何CLOSED时间戳都会被删除调.
-	  若调用该命令时带了前缀参数,则表示删除DEADLINE关键字. 
-	  根据变量`org-log-redeadline`[fn:71]的值,当更改已经存在的最终期限时,可能会记录日志
-	* C-c C-s (org-schedule)
-	  在标题的下一行插入SCHEDULED关键字,该关键字标识了规划日期的信息. 除了插入SCHEDULED关键字外,任何CLOSED时间戳都会被删除.
-	  若调用该命令时带了前缀参数,则标识删除SCHEDULED关键字.
-	  根据变量`org-log-reschedule`[fn:72]的值,当更改已经存在的规划日期时,可能会记录日志
-	* C-c C-x C-k (org-mark-entry-for-agenda-action)
-	  标记当前任务为agenda action的目标. 执行该命令后,可以打开agenda或calenda,把光标定位到何时的日期处,然后按下k键,会有一系列的agenda action提供来选择.
-	* C-c / d (org-check-deadlines)
-	  创建一颗sparse tree,在该sparse tree中包含了哪些已经超期或者快要超期(根据变量org-deadline-warning-days决定)的任务.
-	  若带有C-u前缀,则显示当前文件中的所有带有deadline的条目.
-	  若带有数字前缀N,则显示N天内超期的和已经超期的条目,例如`C－1 C-c / d`显示所有明天就会超期的条目.
-	* C-c / b (org-check-before-date)
-	  创建一颗sparse tree,在该sparse tree中包含了那些最终期限或规划日期在给定日期之前的条目
-	* C-c / a (org-check-after-date)
-	  创建一颗sparse tree,在该sparse tree中包含了那些最终期限或规划日期在给定日期之前的条目
-	
-	注意:org-shedule和org-deadline支持通过指定相对时间来标识日期,例如+1d意思是当前时间戳的下一天,-1w意思是当前时间戳的上一个星期
+下面的命令使你可以快速插入[fn:70]最后期限和规划日期
++ C-c C-d (org-deadline)
+  在标题的下一行插入DEADLINE关键字,该关键字用来标识最后期限信息. 除了插入DEADLINE关键字外,任何CLOSED时间戳都会被删除调.
+  若调用该命令时带了前缀参数,则表示删除DEADLINE关键字. 
+  根据变量`org-log-redeadline`[fn:71]的值,当更改已经存在的最终期限时,可能会记录日志
++ C-c C-s (org-schedule)
+  在标题的下一行插入SCHEDULED关键字,该关键字标识了规划日期的信息. 除了插入SCHEDULED关键字外,任何CLOSED时间戳都会被删除.
+  若调用该命令时带了前缀参数,则标识删除SCHEDULED关键字.
+  根据变量`org-log-reschedule`[fn:72]的值,当更改已经存在的规划日期时,可能会记录日志
++ C-c C-x C-k (org-mark-entry-for-agenda-action)
+  标记当前任务为agenda action的目标. 执行该命令后,可以打开agenda或calenda,把光标定位到何时的日期处,然后按下k键,会有一系列的agenda action提供来选择.
++ C-c / d (org-check-deadlines)
+  创建一颗sparse tree,在该sparse tree中包含了哪些已经超期或者快要超期(根据变量org-deadline-warning-days决定)的任务.
+  若带有C-u前缀,则显示当前文件中的所有带有deadline的条目.
+  若带有数字前缀N,则显示N天内超期的和已经超期的条目,例如`C－1 C-c / d`显示所有明天就会超期的条目.
++ C-c / b (org-check-before-date)
+  创建一颗sparse tree,在该sparse tree中包含了那些最终期限或规划日期在给定日期之前的条目
++ C-c / a (org-check-after-date)
+  创建一颗sparse tree,在该sparse tree中包含了那些最终期限或规划日期在给定日期之前的条目
+
+注意:org-shedule和org-deadline支持通过指定相对时间来标识日期,例如+1d意思是当前时间戳的下一天,-1w意思是当前时间戳的上一个星期
 *** 重复的任务
-	有些任务是重复性的. Org mode通过在DEADLINE,SCHEDULED或普通的时间戳中放置所谓的`repeater`来标识这种重复性的任务. 例如
-	#+begin_src org
-      , ** TODO Pay the rent
-      ,   DEADLINE: <2005-10-01 Sat +1m>
-	#+end_src
-	这里的+1m就是repeater. 意思是每个月重复一次. 如果你需要在一个DEADLINE中同时表明repeater和指定预警期的话,则repeater需要放在前面,预警期放在后面,例如
-	#+begin_src org
-      ,DEADLINE: <2005-10-01 Sat +1m -3d>. 
-	#+end_src
-	
-	当任务的最后期限和规划时间超期后,就会在agenda中出现. 因此即使标记带有DEADLINE和SCHEDULE的任务为DONE状态就很重要了. 当你将这种任务标记为DONE状态后,该任务就不会在agenda中出现了. 
-	然而这么作带来一个问题,带有repeater的任务被标识为DONE之后,下一个循环的任务不会自动被激活. 为了解决这个问题,Org mode通过如下方法来绕过这个限制:当你使用命令C-c C-t将任务标记为DONE时, 它会将时间戳信息改为下一个重复的时间. 然后将任务标记回为TODO[fn:73].同时原时间戳会被复制并放在deadline的下一行处[fn:74],这样做的目的是保留一个记录告诉你,该任务其实是在上一个循环任务处完结后而来的. 举例来说,如果把上一个例子中的任务标记为DONE,则该任务会变成:
-	#+begin_src org
-      , ** TODO Pay the rent
-      ,   DEADLINE: <2005-11-01 Tue +1m>   
-	#+end_src
-	
-	当使用`+1m`作为repeater时,循环日期的增加会严格第一个月一个月地进行. 这样的话,假设你连续三个月忘了付账单了,你再把这个任务标记为DONE后,这个任务的deadline只会增加一个月,因此该任务还是被认为是超期的. 另外,还有一些任务--比如说更换电池,它只需要你在最后一次完成任务的时间点之后开始计算重复时间间隔. 为了应付这些情况,Org mode提供了另外两种repeater:`++`和`.+`. 例如
-	#+begin_src org
-      ,** TODO Call Father
-      ,   DEADLINE: <2008-02-10 Sun ++1w>
-      ,   Marking this DONE will shift the date by at least one week,
-      ,   but also by as many weeks as it takes to get this date into
-      ,   the future.  However, it stays on a Sunday, even if you called
-      ,   and marked it done on Saturday.
-      ,** TODO Check the batteries in the smoke detectors
-      ,   DEADLINE: <2005-11-01 Tue .+1m>
-      ,   Marking this DONE will shift the date to one month after
-      ,   today.
-	#+end_src
+有些任务是重复性的. Org mode通过在DEADLINE,SCHEDULED或普通的时间戳中放置所谓的`repeater`来标识这种重复性的任务. 例如
+#+begin_src org
+    , ** TODO Pay the rent
+    ,   DEADLINE: <2005-10-01 Sat +1m>
+#+end_src
+这里的+1m就是repeater. 意思是每个月重复一次. 如果你需要在一个DEADLINE中同时表明repeater和指定预警期的话,则repeater需要放在前面,预警期放在后面,例如
+#+begin_src org
+    ,DEADLINE: <2005-10-01 Sat +1m -3d>. 
+#+end_src
 
-	若你在某项任务上同时设置了最后期限和规划日期,请保持两者的repater间隔一致.
+当任务的最后期限和规划时间超期后,就会在agenda中出现. 因此即使标记带有DEADLINE和SCHEDULE的任务为DONE状态就很重要了. 当你将这种任务标记为DONE状态后,该任务就不会在agenda中出现了. 
+然而这么作带来一个问题,带有repeater的任务被标识为DONE之后,下一个循环的任务不会自动被激活. 为了解决这个问题,Org mode通过如下方法来绕过这个限制:当你使用命令C-c C-t将任务标记为DONE时, 它会将时间戳信息改为下一个重复的时间. 然后将任务标记回为TODO[fn:73].同时原时间戳会被复制并放在deadline的下一行处[fn:74],这样做的目的是保留一个记录告诉你,该任务其实是在上一个循环任务处完结后而来的. 举例来说,如果把上一个例子中的任务标记为DONE,则该任务会变成:
+#+begin_src org
+    , ** TODO Pay the rent
+    ,   DEADLINE: <2005-11-01 Tue +1m>   
+#+end_src
 
-	另一种替代repeater的方法是创建一系列的任务拷贝,每隔拷贝使用不同的日期. 命令`C-c C-x c`可以实现这个功能,参见[[Structure editing][结构编辑]]
+当使用`+1m`作为repeater时,循环日期的增加会严格第一个月一个月地进行. 这样的话,假设你连续三个月忘了付账单了,你再把这个任务标记为DONE后,这个任务的deadline只会增加一个月,因此该任务还是被认为是超期的. 另外,还有一些任务--比如说更换电池,它只需要你在最后一次完成任务的时间点之后开始计算重复时间间隔. 为了应付这些情况,Org mode提供了另外两种repeater:`++`和`.+`. 例如
+#+begin_src org
+    ,** TODO Call Father
+    ,   DEADLINE: <2008-02-10 Sun ++1w>
+    ,   Marking this DONE will shift the date by at least one week,
+    ,   but also by as many weeks as it takes to get this date into
+    ,   the future.  However, it stays on a Sunday, even if you called
+    ,   and marked it done on Saturday.
+    ,** TODO Check the batteries in the smoke detectors
+    ,   DEADLINE: <2005-11-01 Tue .+1m>
+    ,   Marking this DONE will shift the date to one month after
+    ,   today.
+#+end_src
+
+若你在某项任务上同时设置了最后期限和规划日期,请保持两者的repater间隔一致.
+
+另一种替代repeater的方法是创建一系列的任务拷贝,每隔拷贝使用不同的日期. 命令`C-c C-x c`可以实现这个功能,参见[[Structure editing][结构编辑]]
 ** 计时工作时间		   		   		    :跟踪你在一项任务上花了多少时间
-   Org mode可以帮助你记录下某项任务花了多少时间. 当你开始工作时,你可以打开计时功能. 当你停止工作或者标识该任务为DONE时,则停止计时并记录下相应的时间间隔. 它还能计算出每项任务所花的总共时间. 同时它还会记录下最近计时任务的历史,这样你可以在这些任务之间快速跳转.
+Org mode可以帮助你记录下某项任务花了多少时间. 当你开始工作时,你可以打开计时功能. 当你停止工作或者标识该任务为DONE时,则停止计时并记录下相应的时间间隔. 它还能计算出每项任务所花的总共时间. 同时它还会记录下最近计时任务的历史,这样你可以在这些任务之间快速跳转.
 
-   要在不同的Emacs session之间保存计时历史,使用如下配置
-   #+begin_src elisp
-     (setq org-clock-persist 'history)
-     (org-clock-persistence-insinuate)
-   #+end_src
-   
-   在恢复Emacs后,当你开始对一个新任务进行计时时,此时若有上次未完成的计时[fn:75],则会提示你如何处理,详见[[Resolving i][分辨空闲时间]]
+要在不同的Emacs session之间保存计时历史,使用如下配置
+#+begin_src elisp
+  (setq org-clock-persist 'history)
+  (org-clock-persistence-insinuate)
+#+end_src
+
+在恢复Emacs后,当你开始对一个新任务进行计时时,此时若有上次未完成的计时[fn:75],则会提示你如何处理,详见[[Resolving i][分辨空闲时间]]
 *** 计时命令                             :开始/停止计时
 	* C-c C-x C-i (org-clock-in)
 	  开始对当前任务计时,该命令会插入CLOCK关键字和时间戳. 如果插入的CLOCK不是该任务的第一个计时记录,那么这些CLOCK记录都会放入一个名为`LOGBOOK`的drawer中(由变量`org-clock-into-drawer`设定). 你也可以通过设置`CLOCK_INTO_DRAWER`或`LOG_INTO_DRAWER`属性的方式来覆盖全局设置. 
@@ -2164,45 +2164,45 @@
 	
 	你也可以通过命令`M-x org-resolve-clocks`一次性检查所有在Org Agenda中注册过的Org文件中的悬挂clock in操作.
 ** 工作量评估		   		   		   		:提前规划工作成果
-   如果你习惯以非常细致的方式作计划,或者你需要提供一份进度评估文档,则你会对每个任务进行进度上的评估. 如果你同时对你的工作进行计时,则随后可以对比进度计划与实际所费时间,这是改进进度评估的一个好方法. 评估所需时间的进度信息存储在属性`Effort`中[fn:83]. 你可以用一下命令来为任务设置进度安排(耗时评估)
-   * C-c C-x e (org-set-effort)
-	 为当前任务设置进度安排(可以输入一个时间). 如果带有一个数字类型的前缀参数,则表示设置第N个可以的值(具体内容见下文). 也可以在agenda视图中用e快捷键调用该函数
-   * C-c C-x C-e (org-clock-modify-effort-estimate)
-	 修改正在计时的任务的耗时评估
-	 
-   很明显,最好是使用Column视图的方式来展示进度评估(参见[[#Column视图][Column视图]]). 你可以为耗时评估设定多个值,再加上一个COLUMNS格式属性用来展示这些估计值与相关的计时信息(如果你想要对任务进行计时的话). 例如你可以这样设置:
-   #+BEGIN_SRC org
-     ,#+PROPERTY: Effort_ALL 0 0:10 0:30 1:00 2:00 3:00 4:00 5:00 6:00 7:00
-     ,#+COLUMNS: %40ITEM(Task) %17Effort(Estimated Effort){:} %CLOCKSUM
-       
-   #+END_SRC
-   你也可以全局地设定这两个值,方法是分别设定变量`org-global-properties`和`org-columns-default-format`. 这在当你想在agenda中使用该配置时特别有用.
-   
-   一种为任务分配耗时评估的方法是切换到column-mode,然后用S-<right>和S-<left>来改变耗时评估的值. 子任务的耗时评估会自动累加到父任务的耗时评估中. 在耗时评估的后一列会显示实际的计时统计信息.
+如果你习惯以非常细致的方式作计划,或者你需要提供一份进度评估文档,则你会对每个任务进行进度上的评估. 如果你同时对你的工作进行计时,则随后可以对比进度计划与实际所费时间,这是改进进度评估的一个好方法. 评估所需时间的进度信息存储在属性`Effort`中[fn:83]. 你可以用一下命令来为任务设置进度安排(耗时评估)
++ C-c C-x e (org-set-effort)
+为当前任务设置进度安排(可以输入一个时间). 如果带有一个数字类型的前缀参数,则表示设置第N个可以的值(具体内容见下文). 也可以在agenda视图中用e快捷键调用该函数
++ C-c C-x C-e (org-clock-modify-effort-estimate)
+修改正在计时的任务的耗时评估
 
-   如果你在daily/weekly agenda中切换到column view的话, effort这一列会累加每天的耗时评估[fn:84],你可以使用这项功能来找出计划安排中的空闲时间. 如果想查看指定日期的总体情况,可以设置选项`org-agenda-columns-add-appointments-to-effort-sum`. 则那一天已经开始一段时间的会议也会添加到负荷评估中
+很明显,最好是使用Column视图的方式来展示进度评估(参见[[#Column视图][Column视图]]). 你可以为耗时评估设定多个值,再加上一个COLUMNS格式属性用来展示这些估计值与相关的计时信息(如果你想要对任务进行计时的话). 例如你可以这样设置:
+#+BEGIN_SRC org
+  ,#+PROPERTY: Effort_ALL 0 0:10 0:30 1:00 2:00 3:00 4:00 5:00 6:00 7:00
+  ,#+COLUMNS: %40ITEM(Task) %17Effort(Estimated Effort){:} %CLOCKSUM
+    
+#+END_SRC
+你也可以全局地设定这两个值,方法是分别设定变量`org-global-properties`和`org-columns-default-format`. 这在当你想在agenda中使用该配置时特别有用.
 
-   耗时评估也可以在secondary agenda filtering(次要日程过滤??)中使用,在agenda中使用`/`键就能出发该过滤功能(参见[[#Commands in the agenda buffer][Commands in the agenda buffer]]). If you have these estimates defined consistently, two or three key presses will narrow down the list to stuff that fits into an available time slot. (这句话的意思,我是连猜都猜不出来了~)
+一种为任务分配耗时评估的方法是切换到column-mode,然后用S-<right>和S-<left>来改变耗时评估的值. 子任务的耗时评估会自动累加到父任务的耗时评估中. 在耗时评估的后一列会显示实际的计时统计信息.
+
+如果你在daily/weekly agenda中切换到column view的话, effort这一列会累加每天的耗时评估[fn:84],你可以使用这项功能来找出计划安排中的空闲时间. 如果想查看指定日期的总体情况,可以设置选项`org-agenda-columns-add-appointments-to-effort-sum`. 则那一天已经开始一段时间的会议也会添加到负荷评估中
+
+耗时评估也可以在secondary agenda filtering(次要日程过滤??)中使用,在agenda中使用`/`键就能出发该过滤功能(参见[[#Commands in the agenda buffer][Commands in the agenda buffer]]). If you have these estimates defined consistently, two or three key presses will narrow down the list to stuff that fits into an available time slot. (这句话的意思,我是连猜都猜不出来了~)
 
 ** 作记录的同时打开相对计时器		 		    :带计时器的笔记
-   当作会议纪要时,可能会需要记录会议开始后的xx时间某某发了一个什么言. Org提供了一个相对计时器的功能可以帮助记录xx时间.
+作会议纪要时,可能会需要记录会议开始后的xx时间某某发了一个什么言. Org提供了一个相对计时器的功能可以帮助记录xx时间.
 
-   * C-c C-x . (org-timer) ::
-		插入相对时间. 第一次执行该命令时会同时启动相对计时器,并把即使重置为0. 若带了prefix argument则将相对计时器重置为0
-   * C-c C-x - (org-timer-item) :: 
-		插入一段description list item,同时也记录下相对时间. 若带了prefix argument,则首先将相对计时器重置为0
-   * M-<RET> (org-insert-heading) :: 
-		一旦已经插入list item,则可以用M-<RET>插入新的list item
-   * C-c C-x , (org-timer-pause-or-continue) ::
-		暂停/继续相对计时器
-   * Cu C-c C-x , :: 
-		停止相对计时器. 之后你就只能重新开始一个新计时器了. 该命令也会把计时器从mode-line上移除
-   * C-c C-x 0 (org-timer-start) :: 
-		重置相对计时器,但并不将相对时间插入到buffer中. 默认情况下相对计时器重置为0,但可以带C-u的方式来重置相对计时器到特定的开始时间. 使用C-u C-u双prefix argument的方式调用该命令,则会同时对选中范围的所有相对时间信息进行修改.
+ C-c C-x . (org-timer) ::
+ 插入相对时间. 第一次执行该命令时会同时启动相对计时器,并把即使重置为0. 若带了prefix argument则将相对计时器重置为0
+ C-c C-x - (org-timer-item) :: 
+ 插入一段description list item,同时也记录下相对时间. 若带了prefix argument,则首先将相对计时器重置为0
+ M-<RET> (org-insert-heading) :: 
+ 一旦已经插入list item,则可以用M-<RET>插入新的list item
+ C-c C-x , (org-timer-pause-or-continue) ::
+ 暂停/继续相对计时器
+ Cu C-c C-x , :: 
+ 停止相对计时器. 之后你就只能重新开始一个新计时器了. 该命令也会把计时器从mode-line上移除
+ C-c C-x 0 (org-timer-start) :: 
+ 重置相对计时器,但并不将相对时间插入到buffer中. 默认情况下相对计时器重置为0,但可以带C-u的方式来重置相对计时器到特定的开始时间. 使用C-u C-u双prefix argument的方式调用该命令,则会同时对选中范围的所有相对时间信息进行修改.
 ** 倒计时计时器		   		   		    :为任务倒计时
-   在Org-mode下运行`org-timer-set-timer`会调起一个倒计时计时器. 若你在agenda buffer中可以用键`;`调用,其他情况下可以用键序列`C-c Cx ;`.
+在Org-mode下运行`org-timer-set-timer`会调起一个倒计时计时器. 若你在agenda buffer中可以用键`;`调用,其他情况下可以用键序列`C-c Cx ;`.
 
-   命令`org-timer-set-timer`会提示用户输入倒计时的时间,然后在mode-line上显示倒计时的信息. 变量`org-timer-default-timer`设置了默认的倒计时的时间值. 使用prefix numeric argument会覆盖该值.
+命令`org-timer-set-timer`会提示用户输入倒计时的时间,然后在mode-line上显示倒计时的信息. 变量`org-timer-default-timer`设置了默认的倒计时的时间值. 使用prefix numeric argument会覆盖该值.
 * Capture(捕获) - Refile(整理) - Archive(归档)
 
   任何一个整理系统都需要具有快速快速捕获创意和任务,并将其与相关资料链接的能力. Org为该功能实现了名为capture的流程. 它还能够将任务(附件)相关的文件存储在某个特定目录下. 在这套系统中,被处理的对象是任务和项目. 通过将已完成的项目整个移动到归档文件中,可以保持系统的紧凑和快速.
@@ -2656,314 +2656,321 @@
 
   有两个变量控制了agenda buffer是如何显示的,以及agenda退出时,是否还原之前的窗口配置状态. 这两个变量分别为`org-agenda-window-setup`和`org-agenda-restore-windows-after-quit`
 ** Agenda files :从哪些文件中搜索提供給agenda展示的信息
-   agenda视图从agenda文件中抽取数据来展示,所谓agenda文件是指列在变量`org-agenda-files`中的文件. 如果agenda文件为一个目录,则表少该目录下所有的org文件都为agenda文件.
+agenda视图从agenda文件中抽取数据来展示,所谓agenda文件是指列在变量`org-agenda-files`中的文件. 如果agenda文件为一个目录,则表少该目录下所有的org文件都为agenda文件.
 
-   因此,即使你只使用一个org文件,也需要把该文件列入变量`org-agenda-files`中. 你可以手工修改该变量,但Org也提供了很多方便的命令方便你维护该变量
+因此,即使你只使用一个org文件,也需要把该文件列入变量`org-agenda-files`中. 你可以手工修改该变量,但Org也提供了很多方便的命令方便你维护该变量
 
-   * C-c [ (org-agenda-file-to-front)
-	 
-	 添加当前文件到`org-agenda-files`的首部. 若当前文件以及在变量`org-agenda-files`中了,则将它移动到首部. 使用prefix argument调用该命令,则会添加/移动到变量`org-agenda-files`的尾部
++ C-c [ (org-agenda-file-to-front)
 
-   * C-c ] (org-remove-file)
-	 
-	 将当前文件从`org-agenda-files`中删除
+添加当前文件到`org-agenda-files`的首部. 若当前文件以及在变量`org-agenda-files`中了,则将它移动到首部. 使用prefix argument调用该命令,则会添加/移动到变量`org-agenda-files`的尾部
 
-   * C-' / C-, (org-cycle-agenda-files)
++ C-c ] (org-remove-file)
 
-	 循环遍历agenda文件列表(org-agenda-files),打开其中的org文件
+将当前文件从`org-agenda-files`中删除
 
-   * org-iswitchb
++ C-' / C-, (org-cycle-agenda-files)
 
-	 使用类似iswitchb的界面来在各org buffer之间切换
+循环遍历agenda文件列表(org-agenda-files),打开其中的org文件
 
-   Org=>File list for agenda菜单列出了当前agenda文件列表中的所有org文件,你可以用该菜单访问这些org文件
++ org-iswitchb
 
-   若你只想查看某个文件甚至是某个文件的部分subtree的agenda视图,而不管该文件是否在agenda文件列表中,你可以在agenda面板显示时按下一次或多次的<键. 若想永久限制agenda的范围,可以使用以下命令:
-   * C-c C-x < (org-agenda-set-restriction-lock)
+使用类似iswitchb的界面来在各org buffer之间切换
 
-	 永久性的限制agenda范围为当前subtree. 若待用该命令时带了prefix argument或者光标在第一个headline的之前时,agenda的范围被限制为整个这个文件. 若调用该命令时已经有window展示了agenda视图,则新的限制立刻作用在该agenda视图上.
+Org=>File list for agenda菜单列出了当前agenda文件列表中的所有org文件,你可以用该菜单访问这些org文件
 
-   * C-c C-x > (org-agenda-remove-restriction-lock)
+若你只想查看某个文件甚至是某个文件的部分subtree的agenda视图,而不管该文件是否在agenda文件列表中,你可以在agenda面板显示时按下一次或多次的<键. 若想永久限制agenda的范围,可以使用以下命令:
++ C-c C-x < (org-agenda-set-restriction-lock)
 
-	 删除由C-c C-x >所创建的限制.
+永久性的限制agenda范围为当前subtree. 若待用该命令时带了prefix argument或者光标在第一个headline的之前时,agenda的范围被限制为整个这个文件. 若调用该命令时已经有window展示了agenda视图,则新的限制立刻作用在该agenda视图上.
 
-   若你启用了speedbar,则在speedbar frame中还能使用以下命令
-   * < (org-speedbar-set-agenda-restriction)
++ C-c C-x > (org-agenda-remove-restriction-lock)
 
-	 永久性的约束agenda视图范围,类似C-c C-x <
+删除由C-c C-x >所创建的限制.
 
-   * > (org-agenda-remove-restriction-lock)
+若你启用了speedbar,则在speedbar frame中还能使用以下命令
++ < (org-speedbar-set-agenda-restriction)
 
-	 删除<产生的约束,类似C-c C-x >
+永久性的约束agenda视图范围,类似C-c C-x <
+
++ > (org-agenda-remove-restriction-lock)
+
+删除<产生的约束,类似C-c C-x >
 ** Agenda dispatcher :调用agenda视图的面板
    各种agenda视图都是通过一个同一的agenda面板来调用的,这个agenda面板推荐绑定到一个全局键序列上(推荐C-c a). 在angenda面板上提供了如下命令来调用不同的agenda视图:
    
-   * a ::
-		 创建类似日历那样的agenda视图(agenda) (参见[[Weekly/daily agenda][Weekly/daily agenda]])
-   * t / T :: 
-			  创建代办事项列表(TODO list)(参见[[Global TODO list][Global TODO list]])
-   * m / M :: 
-			  显示标签,属性,工作状态符合匹配条件的事项(match view)
-   * L :: 
-		  为当前buffer创建timeline view
-   * s :: 
-		  显示匹配/不匹配某关键字表达式/正则表达式的事项
-   * / :: 
-		  使用`multi-occur`命令来对变量`org-agenda-files`和`org-agenda-text-search-extra-files`中所列出的文件进行正则查找. 使用prefix argument可以定义每次查找匹配多少行,默认为1行
-   * # 或 ! ::
-			 显示无进展的project
-   * < ::
-		 限定接下来调用的agenda视图的显示范围为当前buffer
-   * << :: 
-		   如果有active region,则该命令限制接下来agenda视图的显示范围为该region. 否则显示接下来要显示的agenda视图的范围为当前的subtree
-   * * :: 
-		  开启/关闭sticky agenda views. 默认情况下,Org只维护唯一的一个agenda buffer. 当你更改agenda view时,该buffer会自动更新显示新的agenda view的内容. 若你经常在不同的视图之间切换,则更新agenda buffer会消耗大量的时间和资源.  通过开启sticky agenda view(通过配置变量`org-agenda-sticky`可以默认打开该行为),Org会停止agenda buffer的自动更新,你需要手工按r或g来手动更新agenda buffer的内容.  此外,在任何使用都可以通过运行`org-toggle-sticky-agenda`来切换sticky agenda view
++ a ::
+ 创建类似日历那样的agenda视图(agenda) (参见[[Weekly/daily agenda][Weekly/daily agenda]])
++ t / T :: 
+	  创建代办事项列表(TODO list)(参见[[Global TODO list][Global TODO list]])
++ m / M :: 
+	  显示标签,属性,工作状态符合匹配条件的事项(match view)
++ L :: 
+  为当前buffer创建timeline view
++ s :: 
+  显示匹配/不匹配某关键字表达式/正则表达式的事项
++ / :: 
+  使用`multi-occur`命令来对变量`org-agenda-files`和`org-agenda-text-search-extra-files`中所列出的文件进行正则查找. 使用prefix argument可以定义每次查找匹配多少行,默认为1行
++ # 或 ! ::
+	 显示无进展的project
++ < ::
+ 限定接下来调用的agenda视图的显示范围为当前buffer
++ << :: 
+   如果有active region,则该命令限制接下来agenda视图的显示范围为该region. 否则显示接下来要显示的agenda视图的范围为当前的subtree
++ * :: 
+  开启/关闭sticky agenda views. 默认情况下,Org只维护唯一的一个agenda buffer. 当你更改agenda view时,该buffer会自动更新显示新的agenda view的内容. 若你经常在不同的视图之间切换,则更新agenda buffer会消耗大量的时间和资源.  通过开启sticky agenda view(通过配置变量`org-agenda-sticky`可以默认打开该行为),Org会停止agenda buffer的自动更新,你需要手工按r或g来手动更新agenda buffer的内容.  此外,在任何使用都可以通过运行`org-toggle-sticky-agenda`来切换sticky agenda view
 
-   出了内置的agenda视图,你还可以自定义自己的agenda视图,并通过agenda面板进入自定义的agenda视图. 
+出了内置的agenda视图,你还可以自定义自己的agenda视图,并通过agenda面板进入自定义的agenda视图. 
 ** Built-in agenda views :哪些agenda视图是天然可用的
-   该章节,我们描述哪些Org内建的agenda视图
+该章节,我们描述那些Org内建的agenda视图
 *** Weekly/daily agenda :带任务信息的日历
-	Weekly/daily agenda看起来就像是一张日程表似的,它显示了当前周/日的所有任务.
+Weekly/daily agenda看起来就像是一张日程表似的,它显示了当前周/日的所有任务.
 
-	* C-c a a (org-agenda-list)
++ C-c a a (org-agenda-list)
 
-	  从一系列Org文件中抽取当前周的信息并以日程表的形式展现出来. 该日程表展示了每一天的事项. 使用numeric prefix argument(比如C-u 2 1 C-c a a),可以设置生成的日程表显示多少天的事项
+  从一系列Org文件中抽取当前周的信息并以日程表的形式展现出来. 该日程表展示了每一天的事项. 使用numeric prefix argument(比如C-u 2 1 C-c a a),可以设置生成的日程表显示多少天的事项
 
-    若不带numeric prefix argument调用该命令,则默认显示的天数由变量`org-agenda-span`决定,该变量的值可以是数字N表示N天,也可以是类似day,week,month,year这样的值. 默认该值为week,这时默认的显示起始时间为前一个周一(参见变量`org-agenda-start-on-weekday`). 你也可以用时间偏移值来表示时间的开始日期,例如(setq org-agenda-start-day "+10d")表示以10天后的日期作为起始日期.
+  若不带numeric prefix argument调用该命令,则默认显示的天数由变量`org-agenda-span`决定,该变量的值可以是数字N表示N天,也可以是类似day,week,month,year这样的值. 默认该值为week,这时默认的显示起始时间为前一个周一(参见变量`org-agenda-start-on-weekday`). 你也可以用时间偏移值来表示时间的开始日期,例如(setq org-agenda-start-day "+10d")表示以10天后的日期作为起始日期.
 
-	agenda buffer还提供了很多远程编辑原Org文件的命令,这些命令的详细说明请参见[[Agenda commands][Agenda commands]]
+agenda buffer还提供了很多远程编辑原Org文件的命令,这些命令的详细说明请参见[[Agenda commands][Agenda commands]]
 
-	*与Calendar/Diary整合在一起*
+*与Calendar/Diary整合在一起*
 
-	Calendar与Diary的功能与Org非常互补,若能将Org的输出与diary整合起来将是十分受用的.
+Calendar与Diary的功能与Org非常互补,若能将Org的输出与diary整合起来将是十分受用的.
 
-	要让Org-mode的agenda也能显示Emacs diary中的事务,需要作如下配置
-	#+BEGIN_SRC elisp
-      (setq org-agenda-include-diary t)
-	#+END_SRC
-	
-	做了如上的配置之后,包括假期,纪念日等等,所有的diary事项都会在agenda视图中显示出来. 在agenda buffer中可以使用<SPC> <TAB> <RET>来跳转到diary文件. 使用i命令创建一个今日事项. 使用S命令查看日出/日落的时间,M来看月相,C用来转换历法格式. c用来在agenda和calendar之间切换
+要让Org-mode的agenda也能显示Emacs diary中的事务,需要作如下配置
+#+BEGIN_SRC elisp
+    (setq org-agenda-include-diary t)
+#+END_SRC
 
-	Org甚至不用做任何配置就天然支持diary sexp entry. 下面是一个例子
-	#+BEGIN_SRC org
-      ,* Birthdays and similar stuff
-        ,#+CATEGORY: Holiday
-        %%(org-calendar-holiday)   ; special function for holiday names
-        ,#+CATEGORY: Ann
-        %%(org-anniversary 1956  5 14) Arthur Dent is %d years old
-        %%(org-anniversary 1869 10  2) Mahatma Gandhi would be %d years old
-	#+END_SRC
+做了如上的配置之后,包括假期,纪念日等等,所有的diary事项都会在agenda视图中显示出来. 在agenda buffer中可以使用<SPC> <TAB> <RET>来跳转到diary文件. 使用i命令创建一个今日事项. 使用S命令查看日出/日落的时间,M来看月相,C用来转换历法格式. c用来在agenda和calendar之间切换
 
-	*从BBDB中读取周年纪念日*
+Org甚至不用做任何配置就天然支持diary sexp entry. 下面是一个例子
+#+BEGIN_SRC org
+    ,* Birthdays and similar stuff
+      ,#+CATEGORY: Holiday
+      %%(org-calendar-holiday)   ; special function for holiday names
+      ,#+CATEGORY: Ann
+      %%(org-anniversary 1956  5 14) Arthur Dent is %d years old
+      %%(org-anniversary 1869 10  2) Mahatma Gandhi would be %d years old
+#+END_SRC
 
-	要使Org在agenda视图中显示存储于BBDB的周年纪念信息,你只需要添加如下代码到Org文件中
-	#+BEGIN_SRC org
-      ,* Anniversaries
-        :PROPERTIES:
-        :CATEGORY: Anniv
-        :END:
-        %%(org-bbdb-anniversaries)
-	#+END_SRC
-	
-	*Appointment reminders*
+*从BBDB中读取周年纪念日*
 
-	通过使用命令`org-agenda-to-appt`,Org可以使用Emacs appointment的通知功能. 该命令默认从agenda files文件中抽取带有起始时间(时间不能只精确到日,一定要精确到几点几分),结束时间,时间戳信息的entry,并添加到appointment中. 另外,你也能够只抽取哪些处于特定的分类,匹配特定的正则的entry(具体信息参见命令`org-agenda-to-appt`的docstring). appointment会提前一段时间发出提醒,这个提前的时间默认由变量`appt-message-warning`决定,但若agenda files中的entry定义了`APPT_WARNTIME`属性,则使用该属性值代替.
+要使Org在agenda视图中显示存储于BBDB的周年纪念信息,你只需要添加如下代码到Org文件中
+#+BEGIN_SRC org
+    ,* Anniversaries
+      :PROPERTIES:
+      :CATEGORY: Anniv
+      :END:
+      %%(org-bbdb-anniversaries)
+#+END_SRC
+
+*Appointment reminders*
+
+通过使用命令`org-agenda-to-appt`,Org可以使用Emacs appointment的通知功能. 该命令默认从agenda files文件中抽取带有起始时间(时间不能只精确到日,一定要精确到几点几分),结束时间,时间戳信息的entry,并添加到appointment中. 另外,你也能够只抽取哪些处于特定的分类,匹配特定的正则的entry(具体信息参见命令`org-agenda-to-appt`的docstring). appointment会提前一段时间发出提醒,这个提前的时间默认由变量`appt-message-warning`决定,但若agenda files中的entry定义了`APPT_WARNTIME`属性,则使用该属性值代替.
 *** Global TODO list :显示所有未完成的事项
-	Global TODO list视图将所有未完成的事项整合在一个地方显示.
+Global TODO list视图将所有未完成的事项整合在一个地方显示.
 
-	* C-c a t (org-todo-list)
++ C-c a t (org-todo-list)
 
-	  该命令进入Global TODO list视图,该视图从agenda files中抽取所有未完成事项并展示在一个buffer中. 此外该buffer为agenda-mode,你可以直接使用agenda命令来查看/处理这些未完成事项
+  该命令进入Global TODO list视图,该视图从agenda files中抽取所有未完成事项并展示在一个buffer中. 此外该buffer为agenda-mode,你可以直接使用agenda命令来查看/处理这些未完成事项
 
-	* C-c a T (org-todo-list)
++ C-c a T (org-todo-list)
 
-	  类似C-c a t .但支持只选择特定TODO关键字的事项. 
+  类似C-c a t .但支持只选择特定TODO关键字的事项. 
 
-	  当调用该命令时会提示你你输入TODO关键字,你也可以用`|`同时选择多个TODO关键字. 
+  当调用该命令时会提示你你输入TODO关键字,你也可以用`|`同时选择多个TODO关键字. 
 
-	  若调用该命令时带了numeric prefix argument,则会选择`org-todo-keywords`中的第N个todo关键字. 
+  若调用该命令时带了numeric prefix argument,则会选择`org-todo-keywords`中的第N个todo关键字. 
 
-	  在该视图中,可以使用r来刷选显示. 也可以使用N r来刷新第N个TODO关键字.
+  在该视图中,可以使用r来刷选显示. 也可以使用N r来刷新第N个TODO关键字.
 
-	在该视图模式下,还可以通过单击某个按键来更改原Org文件中的待办事项的完成状态. 
+在该视图模式下,还可以通过单击某个按键来更改原Org文件中的待办事项的完成状态. 
 
-	默认情况下,该视图会将所有的未完成事项都列出来,这使得列表会非常长. 有两种方式进行更进一步的筛选	
-	* 若想根据entry的scheduled,deadline,timestamp来进行过滤,配置如下变量`org-agenda-todo-ignore-scheduled`,`org-agenda-todo-ignore-deadlines`,`org-aegnda-todo-ignore-timestamp`和`org-agenda-todo-ignore-with-date`
-	* 若想只显示最高层次的TODO headline,而不现实sublevel的TODO entry,配置变量`org-agenda-todo-list-sublevels`
+默认情况下,该视图会将所有的未完成事项都列出来,这使得列表会非常长. 有两种方式进行更进一步的筛选	
++ 若想根据entry的scheduled,deadline,timestamp来进行过滤,配置如下变量`org-agenda-todo-ignore-scheduled`,`org-agenda-todo-ignore-deadlines`,`org-aegnda-todo-ignore-timestamp`和`org-agenda-todo-ignore-with-date`
++ 若想只显示最高层次的TODO headline,而不现实sublevel的TODO entry,配置变量`org-agenda-todo-list-sublevels`
 	  
 *** Matching tags and properties :依规则搜索事项
-	如果agenda files中的headline标记了tags 和properties,则你可以根据这些元数据作为匹配条件来抽取事项. 这里使用的匹配规则语法与创建sparse tree时使用的语法是一样的.
+如果agenda files中的headline标记了tags 和properties,则你可以根据这些元数据作为匹配条件来抽取事项. 这里使用的匹配规则语法与创建sparse tree时使用的语法是一样的.
 
-	* C-c a m (org-tag-view)
++ C-c a m (org-tag-view)
 
-	  该命令抽取出tag符合给定tag集合的事项. 该命令会提示你输入选择条件,该选择条件是关于tag的逻辑表达式,像`+work+urgent-withboss`这样或`work|home`这样(具体语法请参见[[tags][tags]]).  若你经常使用某个条件作为查询条件,你可以自定义一个命令来专门进行这种查询(方法参见[[Agenda dispatcher][Agenda dispatcher]])
+  该命令抽取出tag符合给定tag集合的事项. 该命令会提示你输入选择条件,该选择条件是关于tag的逻辑表达式,像`+work+urgent-withboss`这样或`work|home`这样(具体语法请参见[[tags][tags]]).  若你经常使用某个条件作为查询条件,你可以自定义一个命令来专门进行这种查询(方法参见[[Agenda dispatcher][Agenda dispatcher]])
 
-	* C-c a M (org-tags-view)
++ C-c a M (org-tags-view)
 
-	  类似C-c a m, 但是搜索的范围只局限于未完成的事项,并且强制检查子事项(参见变量`org-agenda-tags-todo-honor-ignore-options`). 要排除scheduled / deadline事项,配置变量`org-agenda-tags-todo-honor-ignore-options`. 若想同时对TODO关键字和tag作匹配筛选,请参见[[Tag searches][tag searches]]
+  类似C-c a m, 但是搜索的范围只局限于未完成的事项,并且强制检查子事项(参见变量`org-agenda-tags-todo-honor-ignore-options`). 要排除scheduled / deadline事项,配置变量`org-agenda-tags-todo-honor-ignore-options`. 若想同时对TODO关键字和tag作匹配筛选,请参见[[Tag searches][tag searches]]
 
-	要了解tags list视图中的可用命令,请参见[[Agenda commands][Agenda commands]]
+要了解tags list视图中的可用命令,请参见[[Agenda commands][Agenda commands]]
 
-	*匹配语法(Match syntax)*
-	
-	搜索字符串可以使用布尔运算. `&`表示`与`,`|`表示`或`. 并且`&`的优先级要高于`|`,而且不能用使用括号. 查询字符串中的每个要素可以是要匹配的tag或是一个类似带比较操作符的`PROPERTY OPERATOR VALUE`的表达式. 在元素前家`-`表示不能匹配,而`+`则是主动选择(positive selection?)的语法糖.  当使用`+`或`-`时,不需要使用`&`来表示`和`的关系. 下面是一些根据tag选择的例子
-	#+BEGIN_EXAMPLE
-      ‘work’
-          Select headlines tagged ‘:work:’.
-      ‘work&boss’
-          Select headlines tagged ‘:work:’ and ‘:boss:’.
-      ‘+work-boss’
-          Select headlines tagged ‘:work:’, but discard those also tagged ‘:boss:’.
-      ‘work|laptop’
-          Selects lines tagged ‘:work:’ or ‘:laptop:’.
-      ‘work|laptop+night’
-          Like before, but require the ‘:laptop:’ lines to be tagged also ‘:night:’.
-	#+END_EXAMPLE
-	
-	查询条件除了使用tag名外,还能在大括号中使用正则表达式. 例如`work+{^boss.*}`会匹配同时包含`:work:`标签和一个以上以`boss`开头的标签的headline
+*匹配语法(Match syntax)*
 
-	类似于正则表达式,group tag也会被扩展. 例如,假设`:work:`是`:work:lab:conf:`的group tag,则搜索`work`会扩展为`{\(?:work\|lab\|conf\)}` ,而`-work`会被扩展为`-{\(?:work\|lab\|conf\)}`
-	
-	在匹配tag的同时,你还可以根据headline的属性值(property)来作匹配. 不仅可以对真正的property进行测试,还可以对一些特殊的property进行测试. 例如:`TODO`属性表示entry的TODO关键字,而`PRIORITY`属性表示entry的PRIORITY关键字.  目前暂不支持`ITEM`这个特殊的property
+搜索字符串可以使用布尔运算. `&`表示`与`,`|`表示`或`. 并且`&`的优先级要高于`|`,而且不能用使用括号. 查询字符串中的每个要素可以是要匹配的tag或是一个类似带比较操作符的`PROPERTY OPERATOR VALUE`的表达式. 在元素前家`-`表示不能匹配,而`+`则是主动选择(positive selection?)的语法糖.  当使用`+`或`-`时,不需要使用`&`来表示`和`的关系. 下面是一些根据tag选择的例子
+#+BEGIN_EXAMPLE
+    ‘work’
+        Select headlines tagged ‘:work:’.
+    ‘work&boss’
+        Select headlines tagged ‘:work:’ and ‘:boss:’.
+    ‘+work-boss’
+        Select headlines tagged ‘:work:’, but discard those also tagged ‘:boss:’.
+    ‘work|laptop’
+        Selects lines tagged ‘:work:’ or ‘:laptop:’.
+    ‘work|laptop+night’
+        Like before, but require the ‘:laptop:’ lines to be tagged also ‘:night:’.
+#+END_EXAMPLE
 
-	除了实际property和特殊peroperty外,还有另外一种peroperty:`LEVEL`,它用来指定搜索entry的级别. 也就是说以条件`+LEVEL=3+boss-TODO="DONE"`会列出所有第三级别的,带有tag`boss`的,且TODO关键字为`DONE`的headline. 对于那些设置了`org-odd-levels-only`的buffer来说,`LEVEL`并不与标题前的*个数相匹配了,这时`LEVEL=2`对应3个*,`LEVEL=3`对应5个*,依次类推
+查询条件除了使用tag名外,还能在大括号中使用正则表达式. 例如`work+{^boss.*}`会匹配同时包含`:work:`标签和一个以上以`boss`开头的标签的headline
 
-	下面是其他的一些例子:
+类似于正则表达式,group tag也会被扩展. 例如,假设`:work:`是`:work:lab:conf:`的group tag,则搜索`work`会扩展为`{\(?:work\|lab\|conf\)}` ,而`-work`会被扩展为`-{\(?:work\|lab\|conf\)}`
 
-	`work+TODO="WAITING"`
+在匹配tag的同时,你还可以根据headline的属性值(property)来作匹配. 不仅可以对真正的property进行测试,还可以对一些特殊的property进行测试. 例如:`TODO`属性表示entry的TODO关键字,而`PRIORITY`属性表示entry的PRIORITY关键字.  目前暂不支持`ITEM`这个特殊的property
 
-	搜索带:work:标签,且TODO关键字为`WAITING`的事项
+除了实际property和特殊peroperty外,还有另外一种peroperty:`LEVEL`,它用来指定搜索entry的级别. 也就是说以条件`+LEVEL=3+boss-TODO="DONE"`会列出所有第三级别的,带有tag`boss`的,且TODO关键字为`DONE`的headline. 对于那些设置了`org-odd-levels-only`的buffer来说,`LEVEL`并不与标题前的*个数相匹配了,这时`LEVEL=2`对应3个*,`LEVEL=3`对应5个*,依次类推
 
-	`work+TODO="WAITING"|home+TODO="WAITING"`
+下面是其他的一些例子:
 
-	查询work/home中处于wating状态的任务
+`work+TODO="WAITING"`
 
-	当对属性值进行匹配测试时,可以使用大量的操作符. 下面是一些更复杂的例子:
+搜索带:work:标签,且TODO关键字为`WAITING`的事项
 
-	#+BEGIN_EXAMPLE
-      +work-boss+PRIORITY="A"+Coffee="unlimited"+Effort<2+With={Sarah\|Denny}+SCHEDULED>="<2008-10-11>"
-	#+END_EXAMPLE
-	
-	不同的属性值有不同的比较符:
-	
-	* 若属性值为数字,则可以使用数字比较符`<`,'=','>','<=','>=','<>'
-	* 若属性值包含在""中,则属性值为字符串,可以使用字符串相关的比较符和操作符
-	* 若属性值包含在"<>"中(比如`DEADLINE<="< 2008-12-24 18:30>"`),则属性值被认为是日期/时间格式,可以使用与时间相关的比较符. 
-	  还有一些特殊的属性值比如"<now>"表示当前的时间. "<today>","<tomorrow>"表示今天/明天的0:00时分. 还有"<+5d>","<-2m>","<+3y>"这样的写法
-	* 若属性值包含在{}中,则表示正则表达式,这时可以用`=`表示匹配正则表达式或"<>"表示不匹配正则表达式
-	
-	一般来说,通过TODO,LEVEL和CATEGORY属性进行匹配的速度快,其他的属性进行匹配的速度慢. 但若你对某事项的一个属性进行了匹配操作,则对该事项的其他属性进行匹配会快速的多.
+`work+TODO="WAITING"|home+TODO="WAITING"`
 
-	你可以配置Org mode,使之在搜索时开启属性继承的功能,但是要小心,这项功能会大幅度降低查询速度. 具体细节请查看[[Property inheritance][属性继承]]
+查询work/home中处于wating状态的任务
 
-	为了向下兼容,也为了方便输入搜索式,还存在另外一种方法来匹配TODO状态. 方法是,用`/`将搜索匹配表达式分成前后两部分,前一部分为搜索tag和property的表达式,后一部分用来专门匹配TODO状态. 后一部分的语法跟tag匹配的语法类似,但有一点要注意,用AND逻辑符组合多个必选的TODO关键字是没有意义的,而用AND逻辑符组合的多个排除的TODO关键字是有意义的. 若希望在匹配时搜索的范围局限于那些TODO关键字为未完成状态的事项,则使用C-c a M或者在搜索表达式的搜索TODO部分以`!`开头(这样可以提高搜索的速度). 例如
-	* `work/WAITING`
-	  与`work+TODO="WAITING"`一个效果
-	* `work/!-WAITING-NEXT`
-	  搜索tag包含:work:,且TODO状态不为`WAITING`或`NEXT`的事项
-	* `work/!+WAITING|+NEXT`
-	  搜索tag包含:work:,且TODO状态为`WAITNG`或`NEXT`的事项
+当对属性值进行匹配测试时,可以使用大量的操作符. 下面是一些更复杂的例子:
+
+#+BEGIN_EXAMPLE
+    +work-boss+PRIORITY="A"+Coffee="unlimited"+Effort<2+With={Sarah\|Denny}+SCHEDULED>="<2008-10-11>"
+#+END_EXAMPLE
+
+不同的属性值有不同的比较符:
+
++ 若属性值为数字,则可以使用数字比较符`<`,'=','>','<=','>=','<>'
++ 若属性值包含在""中,则属性值为字符串,可以使用字符串相关的比较符和操作符
++ 若属性值包含在"<>"中(比如`DEADLINE<="< 2008-12-24 18:30>"`),则属性值被认为是日期/时间格式,可以使用与时间相关的比较符. 
+  还有一些特殊的属性值比如"<now>"表示当前的时间. "<today>","<tomorrow>"表示今天/明天的0:00时分. 还有"<+5d>","<-2m>","<+3y>"这样的写法
++ 若属性值包含在{}中,则表示正则表达式,这时可以用`=`表示匹配正则表达式或"<>"表示不匹配正则表达式
+
+一般来说,通过TODO,LEVEL和CATEGORY属性进行匹配的速度快,其他的属性进行匹配的速度慢. 但若你对某事项的一个属性进行了匹配操作,则对该事项的其他属性进行匹配会快速的多.
+
+你可以配置Org mode,使之在搜索时开启属性继承的功能,但是要小心,这项功能会大幅度降低查询速度. 具体细节请查看[[Property inheritance][属性继承]]
+
+为了向下兼容,也为了方便输入搜索式,还存在另外一种方法来匹配TODO状态. 方法是,用`/`将搜索匹配表达式分成前后两部分,前一部分为搜索tag和property的表达式,后一部分用来专门匹配TODO状态. 后一部分的语法跟tag匹配的语法类似,但有一点要注意,用AND逻辑符组合多个必选的TODO关键字是没有意义的,而用AND逻辑符组合的多个排除的TODO关键字是有意义的. 若希望在匹配时搜索的范围局限于那些TODO关键字为未完成状态的事项,则使用C-c a M或者在搜索表达式的搜索TODO部分以`!`开头(这样可以提高搜索的速度). 例如
++ `work/WAITING`
+  与`work+TODO="WAITING"`一个效果
++ `work/!-WAITING-NEXT`
+  搜索tag包含:work:,且TODO状态不为`WAITING`或`NEXT`的事项
++ `work/!+WAITING|+NEXT`
+  搜索tag包含:work:,且TODO状态为`WAITNG`或`NEXT`的事项
 *** Timeline :对单个文件按时间排序事项
-	timeline会收集某个Org文件中所有的带有时间戳的事项,并用time-sorted视图显示出来. 该命令的主要目的是提供某个项目的概览.
+timeline会收集某个Org文件中所有的带有时间戳的事项,并用time-sorted视图显示出来. 该命令的主要目的是提供某个项目的概览.
 
-	* C-c a L (org-timeline)
-	  在time-sorted视图中显示某Org文件中所有带有时间戳的事项. 若调用该命令时带了C-u前缀,则还会列出截止到当天还未完成的事项(不管该事项是否带有时间戳)
++ C-c a L (org-timeline)
+  在time-sorted视图中显示某Org文件中所有带有时间戳的事项. 若调用该命令时带了C-u前缀,则还会列出截止到当天还未完成的事项(不管该事项是否带有时间戳)
 
-	  timeline buffer中可用的命令,参见[[Agenda commands][Agenda commands]]
+  timeline buffer中可用的命令,参见[[Agenda commands][Agenda commands]]
 *** search view :按text查询事项
-	该视图只是对Org mode下的各事项进行文字匹配查询. 在查找笔记时特别有用.
-	
-    * C-c a s (org-search-view)
-	  
-	  该命令使你可用使用布尔逻辑运算符来匹配子字符串或整个单词的事项
+该视图只是对Org mode下的各事项进行文字匹配查询. 在查找笔记时特别有用.
 
-	例如搜索"computer equipment"会查找出子串包含`computer equipment`的事项. 另外它也匹配两个单词之间由多个空格或换行符分隔的字符串(??). 
-	搜索时还可以使用逻辑运算符,例如`+computer +wifi -ethernet -{8\.11[bg]}`会搜索那些包含computer和wifi,但是不含`ethernet`也不匹配正则表达式`8\.11[bg]`的事项. 这里第一个`+`是必须的,它表示开启单词搜索模式(不能只是子串匹配),其他的`+`是可选的. 详见请看命令`org-search-view`的docstring
+  + C-c a s (org-search-view)
+  
+  该命令使你可用使用布尔逻辑运算符来匹配子字符串或整个单词的事项
 
-	该命令也会搜索列在`org-agenda-text-search-extra-files`中的agenda file
+例如搜索"computer equipment"会查找出子串包含`computer equipment`的事项. 另外它也匹配两个单词之间由多个空格或换行符分隔的字符串(??). 
+搜索时还可以使用逻辑运算符,例如`+computer +wifi -ethernet -{8\.11[bg]}`会搜索那些包含computer和wifi,但是不含`ethernet`也不匹配正则表达式`8\.11[bg]`的事项. 这里第一个`+`是必须的,它表示开启单词搜索模式(不能只是子串匹配),其他的`+`是可选的. 详见请看命令`org-search-view`的docstring
+
+该命令也会搜索列在`org-agenda-text-search-extra-files`中的agenda file
 *** stuck projects :搜索哪些你需要检查的项目
-	若你遵从类似David Allen的GTD这样的时间管理系统来组织你的工作,你应该知道有一项工作就是定期的回顾以确定所有的项目都在推进中. 所谓stuck project是指得那种没有定义下一步行动的project. 在作回顾时,你需要找到这些project并为它们制定下一步的行动
+若你遵从类似David Allen的GTD这样的时间管理系统来组织你的工作,你应该知道有一项工作就是定期的回顾以确定所有的项目都在推进中. 所谓stuck project是指得那种没有定义下一步行动的project. 在作回顾时,你需要找到这些project并为它们制定下一步的行动
 
-	* C-c a # (org-agenda-list-stuck-project)
++ C-c a # (org-agenda-list-stuck-project)
 
-	  列出所有的stuck project
+  列出所有的stuck project
 
-	* C-c a !
-	  
-	  自定义变量`org-stuck-projects`,该变量决定了什么是stuck project和如何寻找stuck project
++ C-c a !
+  
+  自定义变量`org-stuck-projects`,该变量决定了什么是stuck project和如何寻找stuck project
 
-	  基本上你肯定会对该变量进行配置,以适应你的实际情况. 默认的值假设你的project处于第二级的headline,并且若该project拥有`TODO`,`NEXT`,`NEXTACTION`其中一种的TODO状态时,就不是stuck的.
+  基本上你肯定会对该变量进行配置,以适应你的实际情况. 默认的值假设你的project处于第二级的headline,并且若该project拥有`TODO`,`NEXT`,`NEXTACTION`其中一种的TODO状态时,就不是stuck的.
 
-	  假设你定义带有`PROJECT` tag的事项为project, 然后你不考虑TODO关键字为MAYBE的事项. 再进一步,假设TODO状态为DONE表示project为已完结,NEXT和TODO表明该事项为project的下一步行动. 带标签@SHOP的事项即使没有NEXT标签也认为是下一步行动. 最后假设包含`IGNORE`的project也排除在考虑范围之外. 
-	  在这种假设条件下,可用使用`+PROJECT/-MAYBE-DONE`来选择符合条件的事项为project. 然后根据project的子树是否包含TODO,NEXT,@SHOP和IGNORE的事项来决定该project是否为stuck的. 
-	  正确的配置为:
-	  #+BEGIN_SRC elisp
-        (setq org-stuck-projects
-              '("+PROJECT/-MAYBE-DONE" ("NEXT" "TODO") ("@SHOP")
-                "\\<IGNORE\\>"))
-	  #+END_SRC
-	  
-	  需要注意一点,一个project是非stuck的,Org还会去搜索它的子project是否为stuck的.
+  假设你定义带有`PROJECT` tag的事项为project, 然后你不考虑TODO关键字为MAYBE的事项. 再进一步,假设TODO状态为DONE表示project为已完结,NEXT和TODO表明该事项为project的下一步行动. 带标签@SHOP的事项即使没有NEXT标签也认为是下一步行动. 最后假设包含`IGNORE`的project也排除在考虑范围之外. 
+  在这种假设条件下,可用使用`+PROJECT/-MAYBE-DONE`来选择符合条件的事项为project. 然后根据project的子树是否包含TODO,NEXT,@SHOP和IGNORE的事项来决定该project是否为stuck的. 
+  正确的配置为:
+  #+BEGIN_SRC elisp
+      (setq org-stuck-projects
+            '("+PROJECT/-MAYBE-DONE" ("NEXT" "TODO") ("@SHOP")
+              "\\<IGNORE\\>"))
+  #+END_SRC
+  
+  需要注意一点,一个project是非stuck的,Org还会去搜索它的子project是否为stuck的.
 ** Presentation and sorting :事物在agenda中显示的方式
-   agenda view在显示事项前,Org mode会预先准备好要显示的事项,并对这些事项进行排序. 每个事项占据一行的位置. 每一行都以一个prefix信息开始,prefix信息中包含了该事项的分类信息以及其他重要信息(通过配置`org-agenda-tags-column`可以修改tag在那一列显示,修改`org-agenda-prefix-format`可以配置prefix信息内容). 
+agenda view在显示事项前,Org mode会预先准备好要显示的事项,并对这些事项进行排序. 每个事项占据一行的位置. 每一行都以一个prefix信息开始,prefix信息中包含了该事项的分类信息以及其他重要信息(通过配置`org-agenda-tags-column`可以修改tag在那一列显示,修改`org-agenda-prefix-format`可以配置prefix信息内容). 
 *** Categories: 不是所有的任务都是等价的
-	agenda显示事项时可以給每个事项分配一个分类标签. 默认情况下,该分类标签的值为事项所属的Org文件名称. 但是你也可以通过在buffer中使用特殊行来指定该分类. 像这样:
-	#+BEGIN_SRC org
-      ,#+CATEGORY: Thesis 
-	#+END_SRC
+agenda显示事项时可以給每个事项分配一个分类标签. 默认情况下,该分类标签的值为事项所属的Org文件名称. 但是你也可以通过在buffer中使用特殊行来指定该分类. 像这样:
+#+BEGIN_SRC org
+    ,#+CATEGORY: Thesis 
+#+END_SRC
 
-	若你要为某个事项或子树分配特定的分类,则需要使用`:CATEGORY:`属性. 
+若你要为某个事项或子树分配特定的分类,则需要使用`:CATEGORY:`属性. 
 
-	一般来说,CATEGORY的值不要超过10个字符,这样在agenda中显示时比较好看
+一般来说,CATEGORY的值不要超过10个字符,这样在agenda中显示时比较好看
 
-	通过定义变量`org-agenda-category-icon-alist`可以为不同的category分配不同的图标.
+通过定义变量`org-agenda-category-icon-alist`可以为不同的category分配不同的图标.
 *** Time-of-day specifications: agenda是如何识别时间的
-	Org mode会检查每个agenda事项中的时间(time-of-day)说明. 这里的时间可以是显示在agenda中时间戳的一部分,像`< 2005-05-10Tue 19:00>`中的一部分. 时间段则由两个时间戳表示,例如`< 2005-05-10 Tue 20:30>--< 2005-05-10 Tue 22:15>`.
+Org mode会检查每个agenda事项中的时间(time-of-day)说明. 这里的时间可以是显示在agenda中时间戳的一部分,像`< 2005-05-10Tue 19:00>`中的一部分. 时间段则由两个时间戳表示,例如`< 2005-05-10 Tue 20:30>--< 2005-05-10 Tue 22:15>`.
 
-	在事项的headline中也可以以纯文本的方式表示时间/时间段(例如`12:45`或`8:30-1pm`). 如果agenda与Emacs diary整合起来了(参见[[Weekly/daily agenda][Weekly/daily agenda]]),diary事项中指定的时间也会被识别出来.
+在事项的headline中也可以以纯文本的方式表示时间/时间段(例如`12:45`或`8:30-1pm`). 如果agenda与Emacs diary整合起来了(参见[[Weekly/daily agenda][Weekly/daily agenda]]),diary事项中指定的时间也会被识别出来.
 
-	在显示agenda时,Org mode会将事项中抽取出来的时间转换成标准的24小时格式并作为prefix的一部分显示出来. 下面是一个例子:
-	#+BEGIN_QUOTE
-	  8:30-13:00 Arthur Dent lies in front of the bulldozer
+在显示agenda时,Org mode会将事项中抽取出来的时间转换成标准的24小时格式并作为prefix的一部分显示出来. 下面是一个例子:
+#+BEGIN_QUOTE
+     8:30-13:00 Arthur Dent lies in front of the bulldozer
+    12:45...... Ford Prefect arrives and takes Arthur to the pub
+    19:00...... The Vogon reads his poem
+    20:30-22:15 Marvin escorts the Hitchhikers to the bridge
+#+END_QUOTE
+
+若agenda处于single-day mode, 或只显示当天的事项时,按时间排序的事项被嵌入到时间格中,类似下面这样
+#+BEGIN_QUOTE
+      8:00...... ------------------
+      8:30-13:00 Arthur Dent lies in front of the bulldozer
+      10:00...... ------------------
+      12:00...... ------------------
       12:45...... Ford Prefect arrives and takes Arthur to the pub
+      14:00...... ------------------
+      16:00...... ------------------
+      18:00...... ------------------
       19:00...... The Vogon reads his poem
+      20:00...... ------------------
       20:30-22:15 Marvin escorts the Hitchhikers to the bridge
-	#+END_QUOTE
-	
-	若agenda处于single-day mode, 或只显示当天的事项时,按时间排序的事项被嵌入到时间格中,类似下面这样
-	#+BEGIN_QUOTE
-	    8:00...... ------------------
-        8:30-13:00 Arthur Dent lies in front of the bulldozer
-        10:00...... ------------------
-        12:00...... ------------------
-        12:45...... Ford Prefect arrives and takes Arthur to the pub
-        14:00...... ------------------
-        16:00...... ------------------
-        18:00...... ------------------
-        19:00...... The Vogon reads his poem
-        20:00...... ------------------
-        20:30-22:15 Marvin escorts the Hitchhikers to the bridge
-	#+END_QUOTE
-	
-	时间格的开关由变量`org-agenda-use-time-grid`决定,它的样式由变量`org-agenda-time-grid`决定
+#+END_QUOTE
+
+时间格的开关由变量`org-agenda-use-time-grid`决定,它的样式由变量`org-agenda-time-grid`决定
 *** Sorting agenda item: 事项的展示顺序
-	在显示到view前,Org mode会对各agenda事项进行排序,排序的规则依agenda view的种类不同而不同.
+在显示到view前,Org mode会对各agenda事项进行排序,排序的规则依agenda view的种类不同而不同.
 
-	* daily/weekly agenda
++ daily/weekly agenda
 
-	  每天的事项都会被排序. 默认的顺序是,先搜集所有包含明确时间的事项. 这些事项会作为计划显示在列表的最开头部分.  然后事项依据category分组,各分组之间按照变量`org-agenda-files`的顺序排列.  各分组内部按照优先级(参见[[Priorities][Priorities]])和超过schedued/deadline的程度来排序.
+  每天的事项都会被排序. 默认的顺序是,先搜集所有包含明确时间的事项. 这些事项会作为计划显示在列表的最开头部分.  然后事项依据category分组,各分组之间按照变量`org-agenda-files`的顺序排列.  各分组内部按照优先级(参见[[Priorities][Priorities]])和超过schedued/deadline的程度来排序.
 
-	* TODO list
++ TODO list
 
-	  事项按照各category的分类进行排序,在每个分类内部,按照优先级排序(参见[[Priorities][Priorities]]). 用于排序的优先级继承至priority cookie(什么意思??),此外他还跟事项到期天数有关
+  事项按照各category的分类进行排序,在每个分类内部,按照优先级排序(参见[[Priorities][Priorities]]). 用于排序的优先级继承至priority cookie(什么意思??),此外他还跟事项到期天数有关
 
-	* tag matches
++ tag matches
 
-	  事项根本不排序,只是按照找到的顺序列出而已.
+  事项根本不排序,只是按照找到的顺序列出而已.
 
-	配置变量`org-agenda-sorting-strategy`可以更改排序的方法
+配置变量`org-agenda-sorting-strategy`可以更改排序的方法
 
 *** Filtering/limiting agenda items: 动态缩减agenda的展示内容
+Agenda内建和自定义的命令产生的结果是固定的。 但Agenda提供的filter和limit功能提供了两种动态限定agenda entry的方法.
+Filter只作用于item的显示上，而limit则在agenda entry创建之前就开始生效了。
+Filter常应用于交互式使用时,而limit则常在定义ageneda命令时作为局部变量来用.
+
+agenda中的Filter
+
+
 ** Agenda commands :远程编辑原Org tree
 ** Custom agenda views :自定义搜索规则和显示方法
 ** Exporting Agenda Views :导出视图到文件中
