@@ -36,3 +36,25 @@
    #+END_SRC
 
 4. 在 =https://itch.io= 注册itch账户
+
+** Dolphin Emulator
+Gamecube / Wii / Triforce 模拟器
+
+*** 安装
+#+BEGIN_SRC shell
+  sudo pacman -S dolphin-emu
+#+END_SRC
+
+** GameHub
+游戏管理器
+
+*** 安装
+#+BEGIN_SRC shell
+  aurman -S gamehub
+#+END_SRC
+或者通过AppImage package
+#+BEGIN_SRC shell
+  wget https://github.com/tkashkin/GameHub/releases/download/0.12.1-91-dev/GameHub-bionic-0.12.1-91-dev-cd55bb5-x86_64.AppImage -O gamehub
+  chmod +x gamehub
+  ./gamehub
+#+END_SRC
