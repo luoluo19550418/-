@@ -1,0 +1,28 @@
+#+TITLE: automate
+#+AUTHOR: lujun9972
+#+TAGS: Programming
+#+DATE: [2019-02-12 二 19:37]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* flow(流程)
+flow相当于automation中的源代码，它由block组成，其中 =block= 类似于编程语言中的语句，每个 =block= 执行一个任务。
+
+=block= 之间通过 =connector= 点连接。不同的 =block= 有不同数量的连接点。
+
+我们可以把 =block= 分成两类:
++ 动作块 :: 执行一个动作,它可以有多个输入但是只能有一个输出，那就是OK
++ 判断块 :: 对某个条件进行判断，它可以有多个输入，并且可以有 YES 和 NO 两个输出
+
+* Fiber
+一个 =fiber= 就是 =flow= 运行的实例，类似于进程。一个 =flow= 可以运行多次从而产生多个 =fiber=. 每个 =fiber= 相互独立地运行。
+
+一般来说 =fiber= 通过 =Flow start= block 来手工运行，但 =automation= 同时还提供了一个 =Fork= block 来复制当前运行的 =fiber=
+
+当 =fiber= 运行到下面条件时终止运行:
+1. 运行到 =Flow stop= block
+2. 运行到 =Fiber stop= block
+3. 运行到一个没有下一步的block
+4. 运行时出现error
+
+当某个 =flow= 派生出的所有的 =fiber= 都停止后，则该 =flow= 被认为是停止状态。
