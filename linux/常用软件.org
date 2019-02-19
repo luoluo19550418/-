@@ -58,3 +58,10 @@ Gamecube / Wii / Triforce 模拟器
   chmod +x gamehub
   ./gamehub
 #+END_SRC
+** DeSmuME
+Nintendo DS游戏模拟器
+
+*** 安装
+#+BEGIN_SRC shell
+  sudo pacman -S desmume
+#+END_SRC
