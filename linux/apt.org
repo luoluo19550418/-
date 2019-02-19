@@ -1,0 +1,104 @@
+#+TITLE: apt
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2019-02-19 二 11:39]
+#+LANGUAGE:  zh-CN
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 升级
+** 获取最新的package信息
+#+BEGIN_SRC shell
+  apt-get update -y
+#+END_SRC
+
+** 升级所有已安装package
+#+BEGIN_SRC shell
+  apt-get upgrade -y
+#+END_SRC
+
+** 升级整个linux发行版
+#+BEGIN_SRC shell
+  apt-get dist-upgrade -y
+#+END_SRC
+
+* 安装
+** 安装新package
+#+BEGIN_SRC shell
+  apt-get install $package1 $package2...
+#+END_SRC
+
+** 只下载package但不安装
+#+BEGIN_SRC shell
+  apt-get install -d $package
+#+END_SRC
+
+改命令会把package下载到 =/var/cache/apt/archives= 目录
+
+** 使用新版本重新安装package
+#+BEGIN_SRC shell
+  apt-get install $package --reinstall
+#+END_SRC
+
+* 删除
+
+** 删除package但保留配置文件
+#+BEGIN_SRC shell
+  apt-get remove $package
+#+END_SRC
+
+** 删除package以及配置文件
+#+BEGIN_SRC shell
+  apt-get purge $package
+#+END_SRC
+
+** 删除无用的package
+#+BEGIN_SRC shell
+  apt-get autoremove
+  apt-get clean
+#+END_SRC
+
+* 搜索
+
+** 在package描述中搜索
+#+BEGIN_SRC shell
+  apt-cache search $关键字
+#+END_SRC
+
+** 搜索package名称以某关键字开头的包
+#+BEGIN_SRC shell
+  apt-cache pkgnames $关键字
+#+END_SRC
+
+* 查询
+** 查看某个package的详细信息
+#+BEGIN_SRC shell
+  apt-cache show $package
+#+END_SRC
+
+** 查看某个package的依赖关系
+#+BEGIN_SRC shell
+  apt-cache showpkg $package
+#+END_SRC
+
+** 查询某个package是否已安装
+#+BEGIN_SRC shell
+  apt-cache policy $package
+#+END_SRC
+
+* 其他
+
+** 检查破损的依赖
+#+BEGIN_SRC shell
+  apt-get check
+#+END_SRC
+
+** 搜索并安装某个package的依赖
+#+BEGIN_SRC shell
+  apt-get build-dep $package
+#+END_SRC
+
+** 下载、解压、编译某个package
+#+BEGIN_SRC shell
+  apt-get --compile source $package
+#+END_SRC
+
