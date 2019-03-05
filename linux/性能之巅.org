@@ -1467,3 +1467,151 @@ CPU活动一般以微秒/毫秒为度量单位，报告一秒内品均值会列�
 + 框的宽度表示函数在CPU上运行，或是它的上级函数在CPU上运行的时间。更宽的函数框可能比窄框函数慢，也可能时因为调用频繁
 + 如果是多线程运行，而且抽样时并发的情况，抽样计数可能会超过总时间。
 
+** 调优
+:PROPERTIES:
+:interleave_page_note: 271
+:END:
+
+*** 编译器优化项
+
+*** 调度优先级与调度类
+nice命令可以用来调整进程优先级。正nice值调低优先级，负nice值调高优先级,范围为-20到19
+#+BEGIN_SRC shell
+  nice -n 19 command
+#+END_SRC
+
+使用renice命令则可以更改一个正在运行进程的优先级
+#+BEGIN_SRC shell
+  sudo renice -n -10 $$
+#+END_SRC
+
+Linux上的chrt命令可以显示并直接设置优先级和调度策略。
+调度优先级也可以通过 =setpriority()= 系统调用来设置，而优先级和调度策略可以通过 =sched_setscheduler()= 来设置。
+
+*** 调度器选项
+内核一般都允许对调度器进行配置，在Linux上可以设置下面选项
+
+| 选项                     | 描述                            | 默认值 |
+|--------------------------+---------------------------------+--------|
+| CONFIG_CGROUP_SCHED      | 允许任务编组，以组为单位分配CPU | y      |
+| CONFIG_FAIR_GROUP_SCHED  | 允许编组CFS任务                 | y      |
+| CONFIG_RT_GROUP_SCHED    | 允许编组实时任务                | y      |
+| CONFIG_SCHED_AUTOGROUP   | 自动识别并构建任务组            | y      |
+| CONFIG_SCHED_SMT         | 超线程支持                      | y      |
+| CONFIG_SCHED_MC          | 多核支持                        | y      |
+| CONFIG_HZ                | 设置内核时钟频率(时钟中断)      | 1000   |
+| CONFIG_NO_HZ             | 无tick内核行为                  | y      |
+| CONFIG_SCHED_HRTICK      | 使用高精度定时器                | y      |
+| CONFIG_PREEMPT           | 全内核抢占(除了自旋锁和中断)    | n      |
+| CONFIG_PREEMPT_NONE      | 无抢占                          | n      |
+| CONFIG_PREEMPT_VOLUNTARY | 在自愿内核代码点进行抢占        | y      |
+
+其他可调参数可以在 =/proc/sys/kernel/sched*= 中看到
+
+
+*** 进程绑定
+一个进程可以绑定在一个或多个CPU上，这样可以通过提高CPU缓存命中率和内存本地性来提高性能。
+
+在Linux上，通过taskset来进行进程绑定,例如下面命令限定emacs只能在2-3号(从0开始计数)CPU上跑
+#+BEGIN_SRC shell :results org
+  taskset -pc 2-3 $(pidof emacs)
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+pid 1261 的当前亲和力列表：0-3
+pid 1261 的新亲和力列表：2,3
+#+END_SRC
+
+*** 独占CPU组
+Linux提供了CPU组，允许对CPU编组并为其分配进程。
+这跟进程绑定类似，可以提高性能，但它还能起到CPU组独占的作用。
+
+下面命令可以创建一个独占组
+#+BEGIN_SRC shell
+  mkdir /dev/cpuset
+  mount -t cpuset cpuset /dev/cpuset
+  cd /dev/cpuset
+  mkdir prodset                   # 创建一个名为prodset的CPU组
+  echo 2-3 > cpus                 # 分配
+  echo 1 > cpu_exclusive          # 设置prodset CPU组的排它性，这样它就不会再分配CPU给其他进程
+  echo 1159 > tasks               # 分配PID 1159 到 prodset
+#+END_SRC
+
+详细信息参见 =man cpuset=
+
+*** 资源控制
+Linux通过cgroups可以对进程和进程组控制资源用量。
+
+*** 处理器选项(BIOS调优)
+
+BIOS上可以通过一些设置来启用、禁用和调优处理器级别的特征。
+
+* 内存
+:PROPERTIES:
+:interleave_page_note: 278
+:END:
+
+内存影响系统性能的因素主要包括：
+
++ 由于内存耗尽引起的内存与磁盘交换数据
++ 分配和释放内存的CPU开销
++ 复制内存的CPU开销
++ 管理内存地址空间映射的CPU开销
++ 内存本地性
+
+
+** 文件系统换页与匿名换页
+*** 文件系统换页
+文件系统换页由读写位于内存中的映射文件(mmap())页所引发，这是很正常的行为不会拖慢系统性能。
+
+若文件系统页在内存中被修改过，则页面换出的同时要求将改页写会磁盘。否则只需要释放该页内存即可。
+*** 匿名换页
+匿名换页将进程堆和栈的私有数据迁移到物理交换设备或交换文件，这种换页会拖慢性能。
+
+当应用程序访问被调出的页时，会被读页的磁盘IO阻塞。但匿名页面换出时可能并不会直接影响应用程序性能，因为它是由内核异步执行的。
+** 分配器
+:PROPERTIES:
+:interleave_page_note: 296
+:END:
+虚拟内存空间中通常由分配器来进行实际内存分配，用户态库或者内核程序向程序员提供简单的内存使用接口(malloc,free等)
+
+分配器对性能有显著影响，一个程序通常会提供多个可选择的用户态分配器库。
+分配器可以利用线程对象缓存等技术来提高性能，但也会由于分配碎片化而损害性能。
+
+内存分配器一般有如下特征:
+
++ 提供便于使用的API: 如何malloc和free操作
++ 高效的内存使用: 分配器会尽可能合并未使用的内存区域，减少碎片化
++ 性能: 内存分配很频繁，而且在多线程环境里可能会由于竞争同步而导致性能太差。因此分配器的实现尽可能不使用锁，并且利用线程级或CPU级的缓存来提高内存本地性。
++ 可观测性: 分配可能会提供统计数据和拍错模式以显示如何被调用，以及调用分配的代码路径
+
+常见的分配器有:
+
++ 内核级分配器: slab分配器以及SLUB分配器
++ 用户级分配器: libmalloc,libumem,mtmalloc
+** 主存架构
+:PROPERTIES:
+:interleave_page_note: 285
+:END:
+*** UMA(均匀访问模型)
+[[file:./images/screenshot-04.png]]
+通过共享系统总线，每个CPU访问所有内存都有均匀的访存延时,该架构又称为SMP(对称多处理器架构)
+
+*** NUMA(非均匀访问模型)
+[[file:./images/screenshot-05.png]]
+这种架构中，对内存的访问时间随着CPU的位置不同而变化。
+
+CPU1可以通过它的内存总线直接对DRAM A发起IO操作，这被称为本地内存。
+
+CPU1听过CPU2以及CPU互联(2跳)对DRAM B发起IO操作，这被称为远程内存，访问延时更高。
+
+*** CPU与内存之间总线连接方式
++ 共享系统总线: 正如UMA架构所示，多个处理器通过一个共享系统总线、一个内存桥控制器访问内存。
++ 直连: 单个处理器通过内存总线直接连接内存
++ 互联: 如NUMA所示，每个处理器通过一个内存总线与各自的内存直连，处理器之间则通过CPU互联来连接。
+
+** 内奸优化和调优的方法
+:PROPERTIES:
+:interleave_page_note: 298
+:END:
