@@ -1809,3 +1809,314 @@ Linux版本的sar支持如下选项提供内存统计信息:
 :PROPERTIES:
 :interleave_page_note: 309
 :END:
+slabtop可以通过slab分配器实时输出内核slab缓存使用情况
+#+BEGIN_SRC shell :results org :dir /sudo::
+  sudo slabtop -o |head
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+ Active / Total Objects (% used)    : 457428 / 566892 (80.7%)
+ Active / Total Slabs (% used)      : 18239 / 18239 (100.0%)
+ Active / Total Caches (% used)     : 106 / 138 (76.8%)
+ Active / Total Size (% used)       : 134870.55K / 179260.05K (75.2%)
+ Minimum / Average / Maximum Object : 0.01K / 0.32K / 15.69K
+
+  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+141372 107303  75%    0.19K   6732       21     26928K dentry                 
+ 63510  40233  63%    1.05K   2117       30     67744K ext4_inode_cache       
+ 61581  56301  91%    0.10K   1579       39      6316K buffer_head            
+#+END_SRC
+
+输出的顶端是汇总信息，下面是slab列表。
+
+slab统计信息取至于 =/proc/slabinfo=,也可以使用 =vmstat -m= 输出
+*** ps
+ps可以列出包括内存使用统计信息在内的所有进程细节.
+
+#+BEGIN_SRC shell :results org
+  ps aux |head
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0 192476  1324 ?        Ss   09:01   0:03 /sbin/init
+root         2  0.0  0.0      0     0 ?        S    09:01   0:00 [kthreadd]
+root         3  0.0  0.0      0     0 ?        I<   09:01   0:00 [rcu_gp]
+root         4  0.0  0.0      0     0 ?        I<   09:01   0:00 [rcu_par_gp]
+root         5  0.0  0.0      0     0 ?        I    09:01   0:00 [kworker/0:0-events]
+root         6  0.0  0.0      0     0 ?        I<   09:01   0:00 [kworker/0:0H-kblockd]
+root         8  0.0  0.0      0     0 ?        I<   09:01   0:00 [mm_percpu_wq]
+root         9  0.0  0.0      0     0 ?        S    09:01   0:00 [ksoftirqd/0]
+root        10  0.0  0.0      0     0 ?        I    09:01   0:03 [rcu_preempt]
+#+END_SRC
+
+其中涉及内存的列包括:
+
++ %MEM :: 内存使用(物理内存，RSS)占总内存的百分比
++ RSS :: 常驻集合大小(KB),它包括系统库在内的映射共享段，可能被多个进程共享。因此如果把RSS列取和可能会超过系统内存综合。
++ VSZ :: 虚拟内存大小(KB)
+         
+         
+我们还可以通过 =-o= 选项指定输出的列，其中 =maj_flt= 表示严重换页， =min_flt= 表示轻微换页
+#+BEGIN_SRC shell :results org
+ps -o pid,pmem,vsz,rss,comm,maj_flt,min_flt
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  PID %MEM    VSZ   RSS COMMAND          MAJFL  MINFL
+ 1465  0.0  36396  1164 systemd              4   1699
+ 1466  0.0 233800     0 (sd-pam)             0     46
+ 2194  0.0  10752  1096 dbus-daemon         24    610
+ 2227  1.3 317552 53136 fcitx             1029  16998
+ 2239  0.0  10536   644 dbus-daemon          0    165
+ 2243  0.0   9208    60 fcitx-dbus-watc      2     41
+ 2271  0.0 308180   688 at-spi-bus-laun     10    660
+ 2278  0.0  10396   580 dbus-daemon          0    277
+ 2280  0.0 167584   364 at-spi2-registr      5    419
+ 2297  0.0 240888   800 gvfsd               15    578
+ 2302  0.0 313536  1212 gvfsd-fuse           1    456
+ 2333  0.0  22580  1480 gconfd-2            28    331
+ 2346  0.0 371592  3544 sogou-qimpanel-     76   1123
+ 2426  0.0      0     0 sh <defunct>         0    284
+ 2518  1.1 3041280 42836 sogou-qimpanel   1210 373425
+ 2808 12.9 2304768 492644 firefox        11744 1019181
+ 2885  4.1 1862460 157128 Web Content     3812 313650
+ 2952  1.7 1776312 66472 Web Content      1126 238892
+ 2975  7.3 2267212 280232 WebExtensions  22415 921570
+ 3175  1.6 1787072 62280 Web Content      3178 357870
+ 3295  1.0 1519624 39228 Web Content      1401  59796
+ 4685  0.3 100640 14288 urxvt              223  11099
+ 5683  5.9 866384 226356 emacs           31186 160679
+ 7008  0.0  10176   436 reddit_wallpape      0     58
+ 7009  0.0  10176  1812 reddit_wallpape      0    117
+ 7010  0.4  32016 15796 wget                 0   2747
+ 7011  0.0   9364  2080 grep                 0    188
+ 7012  0.0   9396  2148 grep                 0    196
+ 7013  0.0   8372   696 shuf                 0    112
+ 7014  0.0   8656   764 head                 0    155
+ 7148  0.1  16104  4500 aspell             152    606
+ 7244  0.0  10176  2716 bash                 0    366
+ 7245  0.0  15788  2920 ps                   0    211
+ 7509  0.0  83512  1568 epdfinfo            43  19665
+24759  0.0  10176  3324 reddit_wallpape      0    252
+#+END_SRC
+*** top
+top命令监控排名靠前的运行中的进程，并显示内存统计信息
+#+BEGIN_SRC shell :results org
+  top -n 1 2>&1 |head
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+  任务: 181 total,   1 running, 179 sleeping,
+     0 stopped,   1 zombie
+  %Cpu(s):  7.6 us,  1.5 sy,  0.0 ni,
+   89.4 id,  0.0 wa,  1.5 hi,  0.0 s
+  i,  0.0 st
+  MiB Mem :   3720.5 total,    755.9 free,   2397.2 
+
+  used,    567.4 buff/cache
+  MiB Swap:   8192.0 total,   6832.2 free,   1359.8 
+  used.    922.2 avail Mem 
+
+   进程 USER      PR  NI    VIRT    RES    SHR    %CPU  %MEM     TIME+ COMMAND    
+    992 root      20   0  339728 178776  28548 S  13.3   4.7  22:35.41 k3s-server 
+   1846 lujun99+  20   0  273824  34256  20656 S   6.7   0.9  16:48.70 Xorg       
+   2223 lujun99+  20   0  371492  73800   6616 S   6.7   1.9   0:33.93 awesome    
+  13302 lujun99+  20   0   16500   3660   3072 R   6.7   0.1   0:00.01 top        
+      1 root      20   0  192476   2212   1796 S   0.0   0.1   0:04.83 systemd    
+      2 root      20   0       0      0      0 S   0.0   0.0   0:00.00 kthreadd   
+      3 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 rcu_gp     
+      4 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 rcu_par_gp 
+      5 root      20   0       0      0      0 I   0.0   0.0   0:00.22 kworker/0+ 
+      6 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 kworker/0+ 
+      8 root       0 -20       0      0      0 I   0.0   0.0   0:00.00 mm_percpu+ 
+      9 root      20   0       0      0      0 S   0.0   0.0   0:00.61 ksoftirqd+ 
+#+END_SRC
+
+顶部的摘要会显示物理内存(Mem)与虚拟内存(Swap)的总量、使用量和空闲量。还有缓冲缓存(buffers)和页缓存(cached)
+
+下面列表中的 内存占用百分比(%MEM),虚拟内存大小(VIRT)和常驻集合大小(RES)跟PS对应的列一样。
+*** pmap
+:PROPERTIES:
+:interleave_page_note: 314
+:END:
+pmap命令列出进程的内存映射，显示它们的大小、权限及映射的对象。
+
+#+BEGIN_SRC shell :results org
+  pmap -x $$
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+20287:   /bin/bash
+住址            Kbytes     RSS   Dirty Mode  Mapping
+0000555b458f0000     124     124       0 r---- bash
+0000555b4590f000     552     552       0 r-x-- bash
+0000555b45999000     180     148       0 r---- bash
+0000555b459c6000      12      12      12 r---- bash
+0000555b459c9000      16      16      16 rw--- bash
+0000555b459cd000      52      40      40 rw---   [ anon ]
+0000555b45f8b000     264     188     188 rw---   [ anon ]
+00007fa21a6dd000    6036     372       0 r---- locale-archive
+00007fa21acc2000       8       8       8 rw---   [ anon ]
+00007fa21acc4000      92      92       0 r---- libncursesw.so.6.1
+00007fa21acdb000     236      56       0 r-x-- libncursesw.so.6.1
+00007fa21ad16000      92       0       0 r---- libncursesw.so.6.1
+00007fa21ad2d000      20      20      20 r---- libncursesw.so.6.1
+00007fa21ad32000       4       4       4 rw--- libncursesw.so.6.1
+00007fa21ad33000     136     136       0 r---- libc-2.28.so
+00007fa21ad55000    1324     876       0 r-x-- libc-2.28.so
+00007fa21aea0000     304     124       0 r---- libc-2.28.so
+00007fa21aeec000       4       0       0 ----- libc-2.28.so
+00007fa21aeed000      16      16      16 r---- libc-2.28.so
+00007fa21aef1000       8       8       8 rw--- libc-2.28.so
+00007fa21aef3000      16      12      12 rw---   [ anon ]
+00007fa21aef7000       4       4       0 r---- libdl-2.28.so
+00007fa21aef8000       4       4       0 r-x-- libdl-2.28.so
+00007fa21aef9000       4       0       0 r---- libdl-2.28.so
+00007fa21aefa000       4       4       4 r---- libdl-2.28.so
+00007fa21aefb000       4       4       4 rw--- libdl-2.28.so
+00007fa21aefc000      88      88       0 r---- libreadline.so.8.0
+00007fa21af12000     160      64       0 r-x-- libreadline.so.8.0
+00007fa21af3a000      40       0       0 r---- libreadline.so.8.0
+00007fa21af44000      12      12      12 r---- libreadline.so.8.0
+00007fa21af47000      24      24      24 rw--- libreadline.so.8.0
+00007fa21af4d000      12       8       8 rw---   [ anon ]
+00007fa21af9f000       8       8       0 r---- ld-2.28.so
+00007fa21afa1000     124     124       0 r-x-- ld-2.28.so
+00007fa21afc0000      32      32       0 r---- ld-2.28.so
+00007fa21afc8000       4       4       4 r---- ld-2.28.so
+00007fa21afc9000       4       4       4 rw--- ld-2.28.so
+00007fa21afca000       4       4       4 rw---   [ anon ]
+00007ffef0f95000     132      28      28 rw---   [ stack ]
+00007ffef0ff1000      12       0       0 r----   [ anon ]
+00007ffef0ff4000       4       4       0 r-x--   [ anon ]
+---------------- ------- ------- ------- 
+total kB           10176    3224     416
+#+END_SRC
+
+其中显示的内存映像中包括，虚拟内存(KBytes)、物理内存(RSS)、私有匿名内存(Dirty)、权限(Mode).
+
+其中大部分映射都没有匿名内存，且大部分的权限应该都是只读的。这意味着这些页面可以被其他进程共享、尤其是系统库更是如此。
+
+由于pmap可能会暂停进程以报告内存使用，这会影响活跃任务的性能，因此该工具不能作为监视工具频繁运行。
+*** 其他工具
++ free :: 报告空闲内存、包括缓冲缓存和页缓存
++ dmesg :: 检查来只OOM Killer的"Out of memory" 信息
++ valgrind :: 一个包括memcheck在内的性能分析套件，可用于发现内存泄漏
++ swapon :: 添加和观察物理交换设备和文件
++ iostat :: 通过观测设备IO来判断系统是否在换页
++ perf :: 利用它能观察CPI、MMU/TSB事件，以及源自CPU性能计数器的内存总线的停滞周期计数。它还提供缺页以及一些内核内存事件的探针
++ /proc/zoneinfo :: NUMA节点的统计信息
++ /proc/buddyinfo :: 内核页面伙伴分配器统计信息
+** 调优
+:PROPERTIES:
+:interleave_page_note: 320
+:END:
+最重要的内存调优是保证应用程序保留在主存中，并且避免换页和交换经常发生。
+
+其他内存调优的方法有:内核可调参数、配置大页面、分配器和资源控制
+*** 可调参数
+:PROPERTIES:
+:interleave_page_note: 321
+:END:
+Documentation/sysctl/vm.txt 的内核源代码文档中介绍了多种可调参数
+
+#+NAME: Linux内存可调参数
+| 选项                         |  默认值 | 说明                                                           |
+|------------------------------+---------+----------------------------------------------------------------|
+| vm.dirty_background_bytes    |       0 | 触发pdflush后台回写的脏主存容量                                |
+| vm.dirty_background_ratio    |      10 | 触发pdflush后台回写的脏主存百分比                              |
+| vm.dirty_bytes               |       0 | 触发一个写入进程开始回写的主存器容量                           |
+| vm.dirty_ratio               |      20 | 触发一个写入进程开始回写的主存器比率                           |
+| vm.dirty_expire_centisecs    |    3000 | 适用pdflush的脏主存最小时间                                    |
+| vm.dirty_writeback_centisecs |     500 | pdflush活跃时间间隔,0表示停用                                  |
+| vm.min_free_kbytes           | dynamic | 设置期望的空闲（free）主存容量                                 |
+| vm.overcommit_memory         |       0 | 0=利用探索法允许合理的过度分配。1=一直过度分配。2=禁止过度分配 |
+| vm.swapiness                 |      60 | 倾向使用交换而不是回收页面高速缓存来释放主存的程度             |
+| vm.vfs_cache_pressure        |     100 | 回收高速缓存的目录和inode对象的程度。                          |
+*** 配置大页面
+大页面能提高TLB缓存命中率从而提升内存IO性能。
+
+在Linux中设置大内存的方法可以参考 =Documentation/vm/hugetlbpage.txt=
+*** 分配器
+有多种为多线程应用提供性能的用户级分配器可供选择，在编译阶段通过 =LD_PRELOAD= 环境变量设置
+*** 资源控制
+基础的资源控制可以通过ulimit实现
+
+Linux cgroup也能对内存子系统进行多种控制:
++ memory.memsw.limit_in_bytes :: 允许的最大内存和交换分区总和，单位是字节
++ memory.limit_in_bytes :: 允许的最大用户内存，包括文件缓存，单位是字节
++ memory.swappiness :: 类似vm.swappiness,设置通过交换释放内存的偏好
++ memory.oom_control :: 设置为0，允许OOM Killer运用于这个cgroup，1则表示禁止OOM killer
+* 文件系统
+:PROPERTIES:
+:interleave_page_note: 328
+:END:
+文件系统通过缓存、缓冲以及异步IO等手段来缓和磁盘延时对应用程序的影响，因此文件系统性能要比磁盘性能更加重要
+
+所谓文件系统缓存是指物理内存中的一块区域，用来缓存文件系统的内容，可能包含各种数据和元数据。
+
+当我们说文件系统IO时，仅仅指的是read(),write(),stat(),mkdir()操作，而不包括open和close操作。
+
+此外，我们还把IO分成两类:
++ 逻辑IO，指由应用程序发给文件系统的IO
++ 物理IO，指由文件系统直接发给磁盘的IO，也成为裸IO
+** 文件系统模型
+*** 文件系统接口
+[[file:./images/screenshot-06.png]]
+*** 文件系统缓存
+读操作从缓存中返回(缓存命中)或者从磁盘返回(缓存未命中). 未命中的操作会被存储在缓存中。
+
+[[file:./images/screenshot-07.png]]
+
+写操作也可以将内容先写入缓存，然后等待时机批量写入。
+** 文件系统性能的几个关键概念
+:PROPERTIES:
+:interleave_page_note: 333
+:END:
+
++ 文件系统延时 :: 指一个文件系统逻辑请求从开始到结束的时间，包括消耗在文件系统、内核磁盘IO子系统以及磁盘设备物理IO的时间。
+
++ 缓存 :: 文件系统缓存对应用程序是透明的，文件系统使用缓存(caching)提高读性能，用换从(buffering)提高写性能
+
++ 随机IO与顺序IO :: 顺序IO里每个IO都开始于上一个IO结束的地址。随机IO则偏移量随机变化。
+
++ 碎片化 :: 若文件在文件系统中的摆放变得杂乱无章则顺序的逻辑IO也可能变成随机的物理IO，这种情况称为碎片化。
+
++ 预取(预读) :: 听过检查当前和上一个IO的文件偏移量，可以检测出当前是否是顺序读负载，从而做出预测，在应用程序请求前将磁盘内容读入文件系统缓存。
+
+  1. 应用程序对文件调用read(),把控制权交给内核
+  2. 文件系统发起磁盘读操作
+  3. 将上一次文件偏移指针与当前地址进行对比，如果是顺序的，则文件系统发起额外读请求
+  4. 第一次读取结果返回，内核把数据和控制权交还给应用程序
+  5. 额外的读请求
+            
++ 写回缓存 :: 当数据写入主存后就认为写入以及结束并返回，之后再异步地把数据刷入磁盘。
+
+  1. 应用程序发起文件的write()请求，把控制权交给内核
+  2. 数据从应用程序地址空间复制到内核空间
+  3. write函数调用被内核视为已结束，把控制权还给应用程序
+  4. 一段时间后，一个异步的内核任务定位到要写入的数据，发起磁盘的写操作
+
++ 同步写 :: 等待所有的数据以及文件系统元数据被完整地写入到磁盘中,常用语数据库写日志。
+
++ 裸IO :: 绕过整个文件系统，直接写入磁盘。因为有些应用程序能比文件系统更好地缓存自己的数据，缺点在于难以管理，不能使用日常文件系统工具进行备份、回复和监控
+
++ 直接IO :: 绕过缓存使用文件系统，类似同步写，可以防止只读一次的数据污染文件系统缓存
+
++ 内存映射文件 :: 可以通过把文件映射到进程地址空间，通过直接存取内存地址的方法来提高文件系统IO性能，因为这样可以避免调用read()和write()时产生的系统调用和上下文切换的开销。 如果内核支持直接复制文件数据缓冲到进程地址空间，那么还能防止复制数据两次
+
++ 逻辑元数据 :: 应用程序读取或写入的信息，如读取文件统计信息(stat),创建、删除文件(create,unlink),创建、删除目录(mkdir,rmdir),更新文件系统存取时间戳,更新目录修改时间戳
+
++ 物理元数据 :: 与磁盘布局相关的元数据，依赖于文件系统类型，可能包括超级块、inode、数据块指针、空闲链表等
+
++ 逻辑IO :: 应用程序向文件系统发起的IO
+
++ 物理IO :: 磁盘IO，由于文件系统缓存读，写，维护元数据，向上对齐,奇偶校验等，因此物理IO对应用程序的影响显得不那么直接。
+
++ 容量对IO性能的影响 :: 当文件系统装满时，写入新数据需要花更多时间来寻找磁盘上的空闲块，此外更小和随机的IO页影响了磁盘性能
