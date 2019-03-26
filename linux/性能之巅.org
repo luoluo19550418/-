@@ -2667,3 +2667,36 @@ Journal backup:           inode blocks
 :PROPERTIES:
 :interleave_page_note: 392
 :END:
+
+** 磁盘模型
+:PROPERTIES:
+:interleave_page_note: 392
+:END:
+*** 简单磁盘
+磁盘接受的IO请求通过队列一个一个的等待处理。
+[[file:./images/screenshot-18.png]]
+
+IO队列不一定遵循FIFO算法，为了优化性能磁盘管理器可能产区其他算法。
+比如，旋转磁盘的电梯寻道算法、或者对读写IO准备分开的队列。
+
+*** 缓存磁盘
+磁盘缓存的加入使有些读、写请求可以更快的从内存介质中返回。
+[[file:./images/screenshot-19.png]]
+
+*** 控制器
+把CPU IO传输总线和磁盘设备之间通过磁盘控制器桥接起来。
+[[file:./images/screenshot-20.png]]
+
+** 概念
+:PROPERTIES:
+:interleave_page_note: 395
+:END:
+下面是磁盘性能领域的一些重要概念
+
+*** 测量时间
+存储设备的响应时间指的是从IO请求到结束的时间。它由服务时间和等待时间组成
+
++ 等待时间 :: IO在队列中等待服务的时间
++ 服务时间 :: IO得到主动服务的时间
+          
+[[file:./images/screenshot-21.png]]
