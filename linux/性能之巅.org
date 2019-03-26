@@ -2349,3 +2349,321 @@ DTrace能从系统调用接口、VFS接口或者文件系统内部的角度来�
 :PROPERTIES:
 :interleave_page_note: 374
 :END:
+free命令显示了内存和交换区的统计信息:
+#+BEGIN_SRC shell :results org
+  free -m
+#+END_SRC
+
+#+BEGIN_SRC org
+              总计         已用        空闲      共享    缓冲/缓存    可用
+内存：        3720        3202         130         156         388         131
+交换：        8191        2812        5379
+#+END_SRC
+
+*** top
+:PROPERTIES:
+:interleave_page_note: 374
+:END:
+有些版本的top命令包括了文件系统缓存的详细信息
+
+*** vmstat
+:PROPERTIES:
+:interleave_page_note: 376
+:END:
+vmstat命令和top类似，也可能包含了文件系统缓存的详细信息
+
+*** sar
+:PROPERTIES:
+:interleave_page_note: 376
+:END:
+sar(system activity reporter)提供了各种文件系统统计信息，还可以配置以进行长期记录
+#+BEGIN_SRC shell :results org
+  sar -v 1 1
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+Linux 5.0.4-arch1-1-ARCH (T520) 	2019年03月26日 	_x86_64_	(4 CPU)
+
+11时41分08秒 dentunusd   file-nr  inode-nr    pty-nr
+11时41分09秒       734      5984     21547         4
+平均时间:       734      5984     21547         4
+#+END_SRC
+
+其中:
++ dentunusd :: 目录项缓存未用技术(可用项)
++ file-nr :: 使用中的文件描述符个数
++ indoe-nr :: 使用中的inode个数
+              
+*** slabtop
+
+:PROPERTIES:
+:interleave_page_note: 376
+:END:
+
+slabtop命令打印出有关内核slab缓存的信息，其中有些用于文件系统缓存:
+#+BEGIN_SRC shell :results org :dir /sudo::
+  sudo slabtop -o
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+ Active / Total Objects (% used)    : 787781 / 895552 (88.0%)
+ Active / Total Slabs (% used)      : 18618 / 18618 (100.0%)
+ Active / Total Caches (% used)     : 105 / 138 (76.1%)
+ Active / Total Size (% used)       : 112483.09K / 153125.68K (73.5%)
+ Minimum / Average / Maximum Object : 0.01K / 0.17K / 15.69K
+
+  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME                   
+513190 480983  93%    0.05K   7030       73     28120K nsproxy                
+ 41013  23244  56%    0.19K   1953       21      7812K dentry                 
+ 33480  33394  99%    0.13K   1116       30      4464K kernfs_node_cache      
+ 30261  27896  92%    0.19K   1441       21      5764K cred_jar               
+ 29070   6707  23%    1.05K    969       30     31008K ext4_inode_cache       
+ 20736  19490  93%    0.03K    162      128       648K kmalloc-32             
+ 20224  17364  85%    0.06K    316       64      1264K anon_vma_chain         
+ 19320  14292  73%    0.57K    690       28     11040K radix_tree_node        
+ 17442  15517  88%    0.58K    646       27     10336K inode_cache            
+ 13632   8952  65%    0.25K    426       32      3408K filp                   
+ 12834  11536  89%    0.09K    279       46      1116K anon_vma               
+ 11840  11299  95%    0.06K    185       64       740K kmalloc-64             
+ 11520  11317  98%    0.02K     45      256       180K kmalloc-16             
+ 10062   8428  83%    0.10K    258       39      1032K buffer_head            
+  9216   9121  98%    0.01K     18      512        72K kmalloc-8              
+  7310   5773  78%    0.05K     86       85       344K ftrace_event_field     
+  5967   5699  95%    0.08K    117       51       468K task_delay_info        
+  5152   4922  95%    0.50K    161       32      2576K kmalloc-512            
+  4872   3921  80%    0.09K    116       42       464K kmalloc-96             
+  4224   3713  87%    1.00K    132       32      4224K kmalloc-1k             
+  4224   2897  68%    0.06K     66       64       264K kmalloc-rcl-64         
+  4032   3427  84%    0.12K    126       32       504K pid                    
+  3696   3692  99%    0.07K     66       56       264K Acpi-Operand           
+  3468   3468 100%    0.04K     34      102       136K pde_opener             
+  3045   2858  93%    0.19K    145       21       580K kmalloc-192            
+  2958   1606  54%    0.04K     29      102       116K ext4_extent_status     
+  2921   2681  91%    0.68K    127       23      2032K shmem_inode_cache      
+  2856   2856 100%    0.07K     51       56       204K eventpoll_pwq          
+  2848   2528  88%    0.25K     89       32       712K skbuff_head_cache      
+  2720   2718  99%    0.02K     16      170        64K numa_policy            
+  2720   2670  98%    1.00K     85       32      2720K UNIX                   
+  2550   2344  91%    0.62K    102       25      1632K sock_inode_cache       
+  2352   1518  64%    0.09K     56       42       224K kmalloc-rcl-96         
+  2244   2242  99%    0.04K     22      102        88K Acpi-Namespace         
+  2088   1276  61%    0.65K     87       24      1392K proc_inode_cache       
+  2016   1721  85%    0.12K     63       32       252K kmalloc-128            
+  1886   1886 100%    0.09K     41       46       164K trace_event_file       
+  1620   1365  84%    1.06K     54       30      1728K signal_cache           
+  1600   1462  91%    2.00K    100       16      3200K kmalloc-2k             
+  1472   1264  85%    0.06K     23       64        92K kmem_cache_node        
+  1410   1184  83%    1.06K     47       30      1504K mm_struct              
+  1386   1178  84%    0.38K     66       21       528K kmem_cache             
+  1056    544  51%    0.66K     44       24       704K ovl_inode              
+  1048    936  89%    7.56K    262        4      8384K task_struct            
+  1035    824  79%    0.69K     45       23       720K files_cache            
+  1024    673  65%    0.12K     32       32       128K kmalloc-rcl-128        
+   924    924 100%    0.14K     33       28       132K ext4_groupinfo_4k      
+   840    645  76%    2.06K     56       15      1792K sighand_cache          
+   824    778  94%    4.00K    103        8      3296K kmalloc-4k             
+   800    781  97%    0.25K     25       32       200K kmalloc-256            
+   735    694  94%    0.19K     35       21       140K proc_dir_entry         
+   630    556  88%    0.38K     30       21       240K mnt_cache              
+   624    521  83%    0.10K     16       39        64K Acpi-ParseExt          
+   512    512 100%    0.03K      4      128        16K jbd2_revoke_record_s   
+   512    512 100%    0.02K      2      256         8K jbd2_revoke_table_s    
+   511    292  57%    0.05K      7       73        28K mbcache                
+   425    325  76%    1.25K     17       25       544K UDPv6                  
+   391    303  77%    2.12K     27       15       864K TCP                    
+   352    352 100%    0.12K     11       32        44K scsi_sense_cache       
+   340    340 100%    0.94K     10       34       320K RAW                    
+   340    340 100%    0.05K      4       85        16K fscrypt_ctx            
+   273    231  84%    0.19K     13       21        52K kmalloc-rcl-192        
+   272    139  51%    0.12K      8       34        32K jbd2_journal_head      
+   256    184  71%    0.25K      8       32        64K pool_workqueue         
+   256    130  50%    0.50K      8       32       128K skbuff_fclone_cache    
+   256    221  86%    0.12K      8       32        32K skbuff_ext_cache       
+   256    256 100%    0.06K      4       64        16K fscrypt_info           
+   204    204 100%    0.08K      4       51        16K Acpi-State             
+   200    103  51%    0.31K      8       25        64K nf_conntrack           
+   196    166  84%    0.56K      7       28       112K i915_vma               
+   189    154  81%    0.75K      9       21       144K xfrm_state             
+   168    168 100%    1.12K      6       28       192K RAWv6                  
+   156    156 100%    0.81K      4       39       128K bdev_cache             
+   156    156 100%    0.60K      6       26        96K hugetlbfs_inode_cache  
+   150    147  98%    0.62K      6       25        96K task_group             
+   148    148 100%    0.21K      4       37        32K file_lock_cache        
+   136    136 100%    0.23K      4       34        32K tw_sock_TCP            
+   128    128 100%    1.00K      4       32       128K biovec-64              
+   128    128 100%    0.25K      4       32        32K dquot                  
+   128    128 100%    0.03K      1      128         4K sd_ext_cdb             
+   128    128 100%    0.12K      4       32        16K ext4_allocation_context
+   117    117 100%    2.31K      9       13       288K TCPv6                  
+   104    104 100%    0.30K      4       26        32K request_sock_TCP       
+   102    102 100%    0.23K      3       34        24K tw_sock_TCPv6          
+   100    100 100%    0.62K      4       25        64K i915_request           
+    92     92 100%    0.34K      4       23        32K taskstats              
+    88     84  95%    8.00K     22        4       704K kmalloc-8k             
+    84     84 100%    0.19K      4       21        16K dmaengine-unmap-16     
+    78     78 100%    0.20K      2       39        16K ip4-frags              
+    74     74 100%    0.43K      2       37        32K uts_namespace          
+    72     32  44%    4.00K      9        8       288K names_cache            
+    72     72 100%    0.88K      2       36        64K mqueue_inode_cache     
+    64     64 100%    0.06K      1       64         4K dmaengine-unmap-2      
+    64     64 100%    2.00K      4       16       128K biovec-128             
+    41     26  63%    8.00K     11        4       352K biovec-max             
+    34     34 100%    0.23K      1       34         8K posix_timers_cache     
+    32     32 100%    0.50K      1       32        16K dma-kmalloc-512        
+    30     30 100%    1.06K      1       30        32K dmaengine-unmap-128    
+    21     21 100%    0.75K      1       21        16K dax_cache              
+    21     21 100%    0.75K      1       21        16K fuse_inode             
+    20     20 100%    6.06K      4        5       128K net_namespace          
+    20     20 100%    0.38K      1       20         8K fuse_request           
+    15     15 100%    2.06K      1       15        32K dmaengine-unmap-256    
+    15     15 100%    2.01K      1       15        32K request_queue          
+     8      8 100%    4.00K      1        8        32K sgpool-128             
+     0      0   0%    0.01K      0      512         0K kmalloc-rcl-8          
+     0      0   0%    0.02K      0      256         0K kmalloc-rcl-16         
+     0      0   0%    0.03K      0      128         0K kmalloc-rcl-32         
+     0      0   0%    0.25K      0       32         0K kmalloc-rcl-256        
+     0      0   0%    0.50K      0       32         0K kmalloc-rcl-512        
+     0      0   0%    1.00K      0       32         0K kmalloc-rcl-1k         
+     0      0   0%    2.00K      0       16         0K kmalloc-rcl-2k         
+     0      0   0%    4.00K      0        8         0K kmalloc-rcl-4k         
+     0      0   0%    8.00K      0        4         0K kmalloc-rcl-8k         
+     0      0   0%    0.09K      0       42         0K dma-kmalloc-96         
+     0      0   0%    0.19K      0       21         0K dma-kmalloc-192        
+     0      0   0%    0.01K      0      512         0K dma-kmalloc-8          
+     0      0   0%    0.02K      0      256         0K dma-kmalloc-16         
+     0      0   0%    0.03K      0      128         0K dma-kmalloc-32         
+     0      0   0%    0.06K      0       64         0K dma-kmalloc-64         
+     0      0   0%    0.12K      0       32         0K dma-kmalloc-128        
+     0      0   0%    0.25K      0       32         0K dma-kmalloc-256        
+     0      0   0%    1.00K      0       32         0K dma-kmalloc-1k         
+     0      0   0%    2.00K      0       16         0K dma-kmalloc-2k         
+     0      0   0%    4.00K      0        8         0K dma-kmalloc-4k         
+     0      0   0%    8.00K      0        4         0K dma-kmalloc-8k         
+     0      0   0%    0.12K      0       34         0K iint_cache             
+     0      0   0%    0.94K      0       34         0K PING                   
+     0      0   0%    0.31K      0       25         0K xfrm_dst_cache         
+     0      0   0%    0.03K      0      128         0K dnotify_struct         
+     0      0   0%    0.45K      0       35         0K bfq_queue              
+     0      0   0%    0.16K      0       25         0K bfq_io_cq              
+     0      0   0%    0.30K      0       26         0K request_sock_TCPv6     
+     0      0   0%    1.12K      0       28         0K PINGv6                 
+     0      0   0%    4.06K      0        7         0K x86_fpu                
+     0      0   0%    0.16K      0       25         0K kvm_mmu_page_header    
+     0      0   0%   15.69K      0        2         0K kvm_vcpu               
+     0      0   0%    0.13K      0       30         0K kvm_async_pf           
+#+END_SRC
+
+其中:
++ dentry :: 目录项缓存
++ inode_cache :: inode缓存
++ ext4_inode_cache :: ext4的inode缓存
+
+** 其他调优
+:PROPERTIES:
+:interleave_page_note: 384
+:END:
+
+*** 应用系统调用
+:PROPERTIES:
+:interleave_page_note: 385
+:END:
+=posix_fadvise()= 和 =masvise()= 函数可以为缓存策略提供建议
+
+**** fsync() 
+程序可以通过 =fsync()= 系统调用，同步提交之前异步写入的数据，通过合并同步写来提供性能
+
+**** int posix_fadvise(int fd,off_t offset,off_t len,int advice);
+该函数对文件的一个区域设置策略
+
+提供的建议包括:
+| advice可选值          | 描述                       |
+|-----------------------+----------------------------|
+| POSIX_FADV_SEQUENTIAL | 指定的数据返回会被连续访问 |
+| POSIX_FADV_RANDOM     | 指定的数据范围会被随机访问 |
+| POSIX_FADV_NOREUSE    | 数据不会被重用             |
+| POSIX_FADV_WILLNEED   | 数据会在不远的将来重用     |
+| POSIX_FADV_DONTNEED   | 数据不会再不远的将来重用         |
+
+内核可以利用这个信息提高性能，决定什么时候预取数据以及什么时候缓存数据。
+内核还可以根据应用程序的建议，提高高优先级数据的缓存命中率。
+
+**** madvise()
+该函数对一块内存映像设置策略
+| advice可选值          | 描述                       |
+|-----------------------+----------------------------|
+| MADV_SEQUENTIAL | 指定的数据返回会被连续访问 |
+| MADV_RANDOM     | 指定的数据范围会被随机访问 |
+| MADV_WILLNEED   | 数据还会再用(需要缓存) |
+| MADV_DONTNEED   | 数据不会再用(无需缓存)  |
+
+*** ext3/ext4文件系统调优
+:PROPERTIES:
+:interleave_page_note: 386
+:END:
+ext3/ext4文件系统可以通过 =tune2fs= 命令调优。
+
+比如我们可以通过 =tunefs -l 设备名= 来查看设备挂载时的选项。
+#+BEGIN_SRC shell :results org :dir /sudo::
+  sudo tune2fs -l /dev/sda2 
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+tune2fs 1.45.0 (6-Mar-2019)
+Filesystem volume name:   <none>
+Last mounted on:          /
+Filesystem UUID:          a3e3ff49-bb3d-4610-a898-c623d9ff4b2b
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype needs_recovery extent 64bit flex_bg sparse_super large_file huge_file uninit_bg dir_nlink extra_isize
+Filesystem flags:         signed_directory_hash 
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              2621440
+Block count:              10485760
+Reserved block count:     524288
+Free blocks:              1397587
+Free inodes:              1682725
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Group descriptor size:    64
+Reserved GDT blocks:      1024
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         8192
+Inode blocks per group:   512
+Flex block group size:    16
+Filesystem created:       Sat May 13 21:56:12 2017
+Last mount time:          Tue Mar 26 10:08:37 2019
+Last write time:          Tue Mar 26 10:08:37 2019
+Mount count:              778
+Maximum mount count:      -1
+Last checked:             Sat May 13 21:56:12 2017
+Check interval:           0 (<none>)
+Lifetime writes:          558 GB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:	          256
+Required extra isize:     32
+Desired extra isize:      32
+Journal inode:            8
+Default directory hash:   half_md4
+Directory Hash Seed:      b425e7a6-fca9-4a3d-b4c3-477929765d88
+Journal backup:           inode blocks
+#+END_SRC
+
+优化文件系统参数有以下常见方法:
++ 使用 =noatime= 精致更新文件访问的时间戳
++ 使用 =tune2fs -O dir_index 设备名= 使用哈希B树提高大目录的查找速度
++ 使用 =e2fsck -D -f 设备名= 来重建文件系统目录索引
+
+* 磁盘
+:PROPERTIES:
+:interleave_page_note: 392
+:END:
