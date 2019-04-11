@@ -11012,6 +11012,8 @@ Emacs在不同类型的终端下启动时,都会加载不同的终端相关的li
 + 跳转到上一层heading :: (org-up-heading-safe)
 + 跳转到heading :: (org-back-to-heading)
 + 根据属性内容查找heading :: (org-find-property)
+** org-options
+org-options就是org文件最开头定义的那些 =#+XXXX=,一般使用 =org-make-options-regexp= 来生成查找的正则表达式
 * 版本信息
   * 变量emacs-version
   * 变量emacs-major-version
