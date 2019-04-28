@@ -5214,3 +5214,145 @@ tcpdump工具可以捕捉并检查网络数据包。
 :PROPERTIES:
 :interleave_page_note: 502
 :END:
+Wireshark工具提供了一个捕捉数据包和检查的图形化接口，并可以从tcpdup和snoop的转储文件中倒入数据包。
+**** DTrace
+DTrace可以在内核和应用程序内部检查网络事件，包括套接字连接、套接字IO、TCP事件、数据包传输、积压队列丢包、TCP重传输等。
+**** SystemTap
+SystemTap也能在Linux系统中动态跟踪文件系统事件
+**** perf
+可以用来跟踪导致内核网络活动的栈跟踪。
+
+比如下面例子用perf创建内核tcp_sendmsg()函数的动态跟踪点，然后跟踪5秒后显示栈的调用图
+#+BEGIN_SRC shell
+  perf probe -add='tcp_sendmsg'
+  perf record -e probe:tcp_sendmsg -aR -g sleep 5
+  perf report --stdio
+#+END_SRC
+**** 其他网络性能工具
++ strace :: 跟踪套接字相关的系统调用并检查其使用的选项
++ lsof :: 按进程ID列出包括套接字细节在内的打开的文件
++ ss :: 套接字统计信息
++ nfsstat :: NFS服务器和客户机统计信息
++ iftop :: 通过主机嗅探统计网络接口的吞吐量
++ /proc/net :: 包含许多网络统计信息的文件
++ iperf :: 测试最大TCP和UDP吞吐量的开源工具
+*** 参数调优
+Linux可调参数可以用sysctl命令查看和设置，并写入 =/etc/sysctl.conf= 中。 也可以通过读写 =/proc/sys/net= 下的文件内容来实现临时的设置
+#+BEGIN_SRC shell :results org
+  sysctl -a |grep -i tcp
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC org
+net.ipv4.tcp_abort_on_overflow = 0
+net.ipv4.tcp_adv_win_scale = 1
+net.ipv4.tcp_allowed_congestion_control = reno cubic
+net.ipv4.tcp_app_win = 31
+net.ipv4.tcp_autocorking = 1
+net.ipv4.tcp_available_congestion_control = reno cubic
+net.ipv4.tcp_available_ulp = 
+net.ipv4.tcp_base_mss = 1024
+net.ipv4.tcp_challenge_ack_limit = 1000
+net.ipv4.tcp_comp_sack_delay_ns = 1000000
+net.ipv4.tcp_comp_sack_nr = 44
+net.ipv4.tcp_congestion_control = cubic
+net.ipv4.tcp_dsack = 1
+net.ipv4.tcp_early_demux = 1
+net.ipv4.tcp_early_retrans = 3
+net.ipv4.tcp_ecn = 2
+net.ipv4.tcp_ecn_fallback = 1
+net.ipv4.tcp_fack = 0
+net.ipv4.tcp_fastopen = 1
+net.ipv4.tcp_fastopen_blackhole_timeout_sec = 3600
+net.ipv4.tcp_fin_timeout = 60
+net.ipv4.tcp_frto = 2
+net.ipv4.tcp_fwmark_accept = 0
+net.ipv4.tcp_invalid_ratelimit = 500
+net.ipv4.tcp_keepalive_intvl = 75
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_time = 7200
+net.ipv4.tcp_l3mdev_accept = 0
+net.ipv4.tcp_limit_output_bytes = 1048576
+net.ipv4.tcp_low_latency = 0
+net.ipv4.tcp_max_orphans = 16384
+net.ipv4.tcp_max_reordering = 300
+net.ipv4.tcp_max_syn_backlog = 128
+net.ipv4.tcp_max_tw_buckets = 16384
+net.ipv4.tcp_mem = 43257	57676	86514
+net.ipv4.tcp_min_rtt_wlen = 300
+net.ipv4.tcp_min_tso_segs = 2
+net.ipv4.tcp_moderate_rcvbuf = 1
+net.ipv4.tcp_mtu_probing = 0
+net.ipv4.tcp_no_metrics_save = 0
+net.ipv4.tcp_notsent_lowat = 4294967295
+net.ipv4.tcp_orphan_retries = 0
+net.ipv4.tcp_pacing_ca_ratio = 120
+net.ipv4.tcp_pacing_ss_ratio = 200
+net.ipv4.tcp_probe_interval = 600
+net.ipv4.tcp_probe_threshold = 8
+net.ipv4.tcp_recovery = 1
+net.ipv4.tcp_reordering = 3
+net.ipv4.tcp_retrans_collapse = 1
+net.ipv4.tcp_retries1 = 3
+net.ipv4.tcp_retries2 = 15
+net.ipv4.tcp_rfc1337 = 0
+net.ipv4.tcp_rmem = 4096	131072	6291456
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_slow_start_after_idle = 1
+net.ipv4.tcp_stdurg = 0
+net.ipv4.tcp_syn_retries = 6
+net.ipv4.tcp_synack_retries = 5
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_thin_linear_timeouts = 0
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_tso_win_divisor = 3
+net.ipv4.tcp_tw_reuse = 2
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_wmem = 4096	16384	4194304
+net.ipv4.tcp_workaround_signed_windows = 0
+net.netfilter.nf_conntrack_tcp_be_liberal = 0
+net.netfilter.nf_conntrack_tcp_loose = 1
+net.netfilter.nf_conntrack_tcp_max_retrans = 3
+net.netfilter.nf_conntrack_tcp_timeout_close = 10
+net.netfilter.nf_conntrack_tcp_timeout_close_wait = 60
+net.netfilter.nf_conntrack_tcp_timeout_established = 432000
+net.netfilter.nf_conntrack_tcp_timeout_fin_wait = 120
+net.netfilter.nf_conntrack_tcp_timeout_last_ack = 30
+net.netfilter.nf_conntrack_tcp_timeout_max_retrans = 300
+net.netfilter.nf_conntrack_tcp_timeout_syn_recv = 60
+net.netfilter.nf_conntrack_tcp_timeout_syn_sent = 120
+net.netfilter.nf_conntrack_tcp_timeout_time_wait = 120
+net.netfilter.nf_conntrack_tcp_timeout_unacknowledged = 300
+#+END_SRC
+**** 套接字和TCP缓冲
++ net.core.rmem_max = 16777216 :: 设置所有协议类型读的最大套接字缓冲大小
++ net.core.wmem_max = 16777216 :: 设置所有协议类型写的最大套接字缓冲大小
++ tcp_moderate_rcvbuf = 1 :: 启用TCP接受缓存的自动调整
++ net.ipv4.tcp_rmem = 4096 87380 16777216 :: 设置TCP读缓冲自动优化参数的最小、默认和最大字节数。长度从默认值开始自动调整。
++ net.ipv4.tcp_wmem = 4096 87380 16777216 :: 设置TCP写缓冲自动优化参数的最小、默认和最大字节数。长度从默认值开始自动调整。
+**** TCP积压队列
++ tcp_max_syn_backlog = 4096 :: 半开连接的队列长度
++ net.core.somaxconn = 1024 :: accept() 的监听积压队列长度
+**** 设备积压队列
++ net.core.netdev_max_backlog = 10000 :: 每个CPU的网络设备积压队列长度
+**** TCP阻塞控制
++ net.ipv4.tcp_available_congestion_control = cubic reno :: Linux支持的阻塞控制算法
++ net.ipv4.tcp_congestion_control = cubic :: 选择当前算法
+**** TCP的SACK和FACK扩展，他们会消耗一定的CPU
++ net.ipv4.tcp_sack = 1 :: 开启TCP SACK扩展
++ net.ipv4.tcp_fack = 1 :: 开启TCP_FACK扩展
++ net.ipv4.tcp_tw_reuse =1 :: 重利用一个TIME-WAIT会话，使得两个主机之间有更高的连接率
++ net.ipv4.tcp_tw_recycle :: 另一个重利用TIME-WAIT会话的方法，但没有tcp_tw_reuse安全
+**** 网络接口
+TX队列长度可以用ifconfig命令设置:
+#+BEGIN_SRC shell
+ifconfig eth0 txqueuelen 10000
+#+END_SRC
+**** 资源控制
+cgroup的net_prio子系统能够对进程或进程组的出站网络通讯应用优先级。
+配置的优先级数值会被翻译成一个IP ToS水平，并包含在数据包中
+
+* 云计算
+:PROPERTIES:
+:interleave_page_note: 526
+:END:
