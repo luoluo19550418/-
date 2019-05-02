@@ -1,0 +1,105 @@
+#+TITLE: delphi
+#+AUTHOR: lujun9972
+#+TAGS: Programming
+#+DATE: [2019-05-02 四 12:11]
+#+LANGUAGE:  zh-CN
+#+STARTUP:  inlineimages
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 自定义变量类型
+变量类型定义在 =TYPE= section 中，一般类型以 =T= 开头.
+
+** 定义枚举类型:
+#+begin_src c
+  TYPE
+  TWeekDay=(Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday);
+  VAR
+  WeekDay:TWeekDay;
+#+end_src
+
+** 子界类型:
+字节类型定义了某种类型的取值范围,其与语法为
+#+begin_example
+TYPE
+  类型标识符 = 上界值 .. 下界值;
+#+end_example
+
+例如
+#+begin_src c
+  TYPE
+  TSingle=0..9;
+#+end_src
+
+** 类型重定义
+我们可以把某个类型重定义为另一个类型,类似于C中的 =typedef= ,方法为:
+#+begin_example
+  TYPE
+    重定义类型 = type 类型;
+#+end_example
+
+例如TDateTime就不是编译器可直接识别的预定义类型，它在System单元重定义的。
+#+begin_example
+  TYPE
+    TDateTime = type Double;
+#+end_example
+
+** 集合
+定义某个有序类型的集合，其语法为:
+#+begin_example
+  TYPE
+    集合类型=SET OF 有序类型;
+#+end_example
+
+例如下面声明了一个叫做TIntSet的集合类型，它的值时从1到10之间所有可能的选择:
+#+begin_example
+  TYPE
+    TInts = 1..10;
+    TIntSet = SET OF TInts;
+#+end_example
+
+** 数组
+定义数组时可以通过方括号来指定可能的下标值:
+#+begin_example
+  VAR
+    myArray: ARRAY[1..10] of Integer;
+#+end_example
+
+** 记录类型(类似C的结构体)
+定义记录类型用 =record...end= 来定义
+#+begin_example
+  TYPE
+    TDate = record
+      Year: Integer;
+      Month: Byte;
+      Day: Byte;
+    end;
+  VAR
+    BirthDay: TDate;
+  BEGIN
+    BirthDay.Year := 1997;
+    BirthDay.Month := 2;
+    BirthDay.Day := 14;
+  END
+#+end_example
+
+** 过程类型
+过程和函数可以作为值，赋给某个变量或传递给其他过程和函数。过程类型变量其实就是指向函数的指针。
+
+比如，假设有一个叫做Calc的函数，它有两个整型参数并返回一个整数值:
+#+begin_example
+  function Calc(x,y:Integer):Integer;
+#+end_example
+
+那么我们可以定义一个拥有相同函数前面的过程类型f，将Calc函数赋值给变量f:
+#+begin_example
+  VAR
+    F:function(x,y:Integer):Integer;
+  F := Calc;
+#+end_example
+
+** 指针类型
+指针类型的声明格式为:
+#+begin_example
+  type 指针类型标识符 = ^数据类型;
+#+end_example
+
