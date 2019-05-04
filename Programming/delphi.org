@@ -148,7 +148,7 @@ with语句是一种简写方式，用来引用一个记录或对象
 delphi的if语句没有elif，即只能有两个分支
 #+begin_example
   if 条件 then
-    单条简单语句或复合语句;
+    单条简单语句或复合语句   // 注意这里没有分号!!
   else
     单条简单语句或复合语句;
 #+end_example
@@ -157,13 +157,15 @@ delphi的if语句没有elif，即只能有两个分支
 #+begin_example
   case 选择表达式 of
     值1: 语句1;
-    值2: 语句2;
+    值2,值3: 语句2;  // 当多个值使用相同的语句时，可以写在一起。
     ...
     值n: 语句n;
     else
       语句n+1;
     end;
 #+end_example
+
+语句可以是简单语句或复合语句。
 
 ** while语句
 #+begin_example
