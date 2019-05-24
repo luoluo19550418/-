@@ -180,6 +180,8 @@ delphi的if语句没有elif，即只能有两个分支
   until 条件表达式
 #+end_example
 
+*repeat中的复合语句可以省略begin和end*
+
 ** for语句
 #+begin_example
   for 循环变量 = 初值 to 终值 do
