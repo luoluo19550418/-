@@ -60,8 +60,33 @@ TYPE
 ** 数组
 定义数组时可以通过方括号来指定可能的下标值:
 #+begin_example
+  Type
+    数据类型名 = Array[下标类型] of 基类型;
+#+end_example
+其中:
+
++ 数组类型名为任意合法的标识符
++ 保留字Array表示定义数组类型
++ 下标类型可以为整型、字符型、布尔型、子界类型和枚举类型
++ 基类型可以为任意类型
+
+例如:
+#+begin_example
+  Type
+    Number = ARRAY[1..10] of Integer;
+  VAR
+    myArray:Number;
+#+end_example
+
+我们也可以直接在定义变量时声明数组类型:
+#+begin_example
   VAR
     myArray: ARRAY[1..10] of Integer;
+#+end_example
+
+引用数组内的元素则跟C一样:
+#+begin_example
+  myArray[1]:=1
 #+end_example
 
 ** 记录类型(类似C的结构体)
