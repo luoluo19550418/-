@@ -89,6 +89,19 @@ TYPE
   myArray[1]:=1
 #+end_example
 
+*** 定义多维数组
+直接定义多维数组
+#+begin_example
+  Type
+    数组类型名 = Array[下标类型1,下标类型2] of 基类型
+#+end_example
+
+或者定义为一维数组的一维数组
+#+begin_example
+  Type
+    数组类型名 = Array[下标类型1] of Array[下标类型2] of 基类型
+#+end_example
+
 ** 记录类型(类似C的结构体)
 定义记录类型用 =record...end= 来定义
 #+begin_example
