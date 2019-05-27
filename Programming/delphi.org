@@ -102,6 +102,20 @@ TYPE
     数组类型名 = Array[下标类型1] of Array[下标类型2] of 基类型
 #+end_example
 
+*** 定义动态数组
+#+begin_example
+  VAR
+    数组类型名 = Array of 基类型
+    多维数组类型名 = Array of Array of 基类型
+#+end_example
+
+然后在程序中通过 setLength 过程来动态设置容量
+#+begin_example
+  var
+    SetLength(myArray,10)
+    SetLength(myArray,2,5)
+  end;
+#+end_example
 ** 记录类型(类似C的结构体)
 定义记录类型用 =record...end= 来定义
 #+begin_example
