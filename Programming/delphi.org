@@ -276,3 +276,12 @@ delphi的if语句没有elif，即只能有两个分支
    
 #+end_example
 
+* 定义过程
+#+begin_example
+  Procedure 过程名 ([形式参数列表])
+  var
+  // 声明常量、变量或其他过程、函数
+  begin
+  语句s;
+  end;
+#+end_example
