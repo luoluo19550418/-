@@ -285,3 +285,16 @@ delphi的if语句没有elif，即只能有两个分支
   语句s;
   end;
 #+end_example
+
+** 传值与传址
+默认形参是传值的，但是若在行参前加上 =var= 保留字进行说明，则表示传址
+#+begin_example
+  Procedure TForm1.Myproc(var Str: String)
+#+end_example
+
+** 常量参数
+Const修饰的参数也称为常量参数
+#+begin_example
+  Procedure TForm1.Myproc(const Str: String)
+#+end_example
+
