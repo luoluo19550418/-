@@ -298,3 +298,14 @@ Const修饰的参数也称为常量参数
   Procedure TForm1.Myproc(const Str: String)
 #+end_example
 
+* 定义函数
+#+begin_example
+  Function 函数名(形参表) :返回值类型;
+  局部声明
+  begin
+      语句;
+  end;
+#+end_example
+
+返回值可以通过给 =函数名= 赋值，或者给预定义的变量 =Result= 赋值来实现。
+
