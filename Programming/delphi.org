@@ -1,0 +1,311 @@
+#+TITLE: delphi
+#+AUTHOR: lujun9972
+#+TAGS: Programming
+#+DATE: [2019-05-02 四 12:11]
+#+LANGUAGE:  zh-CN
+#+STARTUP:  inlineimages
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 自定义变量类型
+变量类型定义在 =TYPE= section 中，一般类型以 =T= 开头.
+
+** 定义枚举类型:
+#+begin_src c
+  TYPE
+  TWeekDay=(Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday);
+  VAR
+  WeekDay:TWeekDay;
+#+end_src
+
+** 子界类型:
+字节类型定义了某种类型的取值范围,其与语法为
+#+begin_example
+TYPE
+  类型标识符 = 上界值 .. 下界值;
+#+end_example
+
+例如
+#+begin_src c
+  TYPE
+  TSingle=0..9;
+#+end_src
+
+** 类型重定义
+我们可以把某个类型重定义为另一个类型,类似于C中的 =typedef= ,方法为:
+#+begin_example
+  TYPE
+    重定义类型 = type 类型;
+#+end_example
+
+例如TDateTime就不是编译器可直接识别的预定义类型，它在System单元重定义的。
+#+begin_example
+  TYPE
+    TDateTime = type Double;
+#+end_example
+
+** 集合
+定义某个有序类型的集合，其语法为:
+#+begin_example
+  TYPE
+    集合类型=SET OF 有序类型;
+#+end_example
+
+例如下面声明了一个叫做TIntSet的集合类型，它的值时从1到10之间所有可能的选择:
+#+begin_example
+  TYPE
+    TInts = 1..10;
+    TIntSet = SET OF TInts;
+#+end_example
+
+** 数组
+定义数组时可以通过方括号来指定可能的下标值:
+#+begin_example
+  Type
+    数据类型名 = Array[下标类型] of 基类型;
+#+end_example
+其中:
+
++ 数组类型名为任意合法的标识符
++ 保留字Array表示定义数组类型
++ 下标类型可以为整型、字符型、布尔型、子界类型和枚举类型
++ 基类型可以为任意类型
+
+例如:
+#+begin_example
+  Type
+    Number = ARRAY[1..10] of Integer;
+  VAR
+    myArray:Number;
+#+end_example
+
+我们也可以直接在定义变量时声明数组类型:
+#+begin_example
+  VAR
+    myArray: ARRAY[1..10] of Integer;
+#+end_example
+
+引用数组内的元素则跟C一样:
+#+begin_example
+  myArray[1]:=1
+#+end_example
+
+*** 定义多维数组
+直接定义多维数组
+#+begin_example
+  Type
+    数组类型名 = Array[下标类型1,下标类型2] of 基类型
+#+end_example
+
+或者定义为一维数组的一维数组
+#+begin_example
+  Type
+    数组类型名 = Array[下标类型1] of Array[下标类型2] of 基类型
+#+end_example
+
+*** 定义动态数组
+#+begin_example
+  VAR
+    数组类型名 = Array of 基类型
+    多维数组类型名 = Array of Array of 基类型
+#+end_example
+
+然后在程序中通过 setLength 过程来动态设置容量
+#+begin_example
+  var
+    SetLength(myArray,10)
+    SetLength(myArray,2,5)
+  end;
+#+end_example
+** 记录类型(类似C的结构体)
+定义记录类型用 =record...end= 来定义
+#+begin_example
+  TYPE
+    TDate = record
+      Year: Integer;
+      Month: Byte;
+      Day: Byte;
+    end;
+  VAR
+    BirthDay: TDate;
+  BEGIN
+    BirthDay.Year := 1997;
+    BirthDay.Month := 2;
+    BirthDay.Day := 14;
+  END
+#+end_example
+
+** 过程类型
+过程和函数可以作为值，赋给某个变量或传递给其他过程和函数。过程类型变量其实就是指向函数的指针。
+
+比如，假设有一个叫做Calc的函数，它有两个整型参数并返回一个整数值:
+#+begin_example
+  function Calc(x,y:Integer):Integer;
+#+end_example
+
+那么我们可以定义一个拥有相同函数前面的过程类型f，将Calc函数赋值给变量f:
+#+begin_example
+  VAR
+    F:function(x,y:Integer):Integer;
+  F := Calc;
+#+end_example
+
+** 指针类型
+指针类型的声明格式为:
+#+begin_example
+  type 指针类型标识符 = ^数据类型;
+#+end_example
+
+* 运算符
+
++ 赋值运算符(:=)
++ 不等号(<>)
++ 取整除(Div)
++ 取模(Mod)
++ 集合的并集(+)
++ 集合的差集(-)
++ 集合的交集(*)
++ 判断子集(in)
+
+* 语句
+
+** 注释
++ {注释内容}
++ (* 注释内容 *)
++ //注释内容
+
+** 简单语句
+简单语句以分号(;)结尾
+
+** 复合语句
+复合语句包含在 begin 和 end 之间
+#+begin_example
+  begin
+    i:=1;
+    j:=i+1;
+    s:='abc';
+  end;
+#+end_example
+
+** with语句
+with语句是一种简写方式，用来引用一个记录或对象
+#+begin_example
+  with label1 do begin
+       caption:='Red';
+       font.Color:=clRed;
+  end;
+  
+#+end_example
+
+** if语句
+delphi的if语句没有elif，即只能有两个分支
+#+begin_example
+  if 条件 then
+    单条简单语句或复合语句   // 注意这里没有分号!!
+  else
+    单条简单语句或复合语句;
+#+end_example
+
+** case语句
+#+begin_example
+  case 选择表达式 of
+    值1: 语句1;
+    值2,值3: 语句2;  // 当多个值使用相同的语句时，可以写在一起。
+    ...
+    值n: 语句n;
+    else
+      语句n+1;
+    end;
+#+end_example
+
+语句可以是简单语句或复合语句。
+
+** while语句
+#+begin_example
+  while 条件表达式 do
+    单条简单语句或复合语句;
+#+end_example
+
+** repeat语句
+#+begin_example
+  repeat
+    单条简单语句或复合语句;
+  until 条件表达式
+#+end_example
+
+*repeat中的复合语句可以省略begin和end*
+
+** for语句
+#+begin_example
+  for 循环变量 = 初值 to 终值 do
+    单条简单语句或复合语句;
+#+end_example
+
+或
+
+#+begin_example
+  for 循环变量 = 初值 downto 终值 do
+    单条简单语句或复合语句;
+#+end_example
+
+** 定义过程
+过程是没有返回值的
+#+begin_example
+  procedure 过程名(参数列表);
+  局部声明部分
+  begin
+    过程体语句块;
+  end;
+#+end_example
+
+** 定义函数
+函数是有返回值的,因此需要定义返回值数据类型
+
+#+begin_example
+  procedure 过程名(参数列表):返回值数据类型;
+  局部声明部分
+  begin
+    过程体语句块;
+  end;
+#+end_example
+
+** 定义类
+声明类数据类型使用关键字class,语法为:
+#+begin_example
+  TYPE
+    类名=Class(父类)
+   
+#+end_example
+
+* 定义过程
+#+begin_example
+  Procedure 过程名 ([形式参数列表])
+  var
+  // 声明常量、变量或其他过程、函数
+  begin
+  语句s;
+  end;
+#+end_example
+
+** 传值与传址
+默认形参是传值的，但是若在行参前加上 =var= 保留字进行说明，则表示传址
+#+begin_example
+  Procedure TForm1.Myproc(var Str: String)
+#+end_example
+
+** 常量参数
+Const修饰的参数也称为常量参数
+#+begin_example
+  Procedure TForm1.Myproc(const Str: String)
+#+end_example
+
+* 定义函数
+#+begin_example
+  Function 函数名(形参表) :返回值类型;
+  局部声明
+  begin
+      语句;
+  end;
+#+end_example
+
+返回值可以通过给 =函数名= 赋值，或者给预定义的变量 =Result= 赋值来实现。
+
