@@ -866,7 +866,7 @@
     #+end_src
 
 ** Org-Plot              :org表格绘图
-   通过使用'Gnuplot'[[http://www.gnuplot.info]] 和'gnplot-mode'[[http://cars9.uchicago.edu/~ravel/software/gnuplot-mode.html]] ,Org-Plot可用根据表格中的数据生成2D和3D图表. 这里有一个例子: 首先确保你安装了Gnuplot和Gnuplot mode,然后对下面的表格调用'org-plot/gnuplot'
+   通过使用'Gnuplot'[[http://www.gnuplot.info]] 和'gnuplot-mode'[[http://cars9.uchicago.edu/~ravel/software/gnuplot-mode.html]] ,Org-Plot可用根据表格中的数据生成2D和3D图表. 这里有一个例子: 首先确保你安装了Gnuplot和Gnuplot mode,然后对下面的表格调用'org-plot/gnuplot'
    #+begin_src org
      ,#+PLOT: title:"Citas" ind:1 deps:(3) type:2d with:histograms set:"yrange [0:]"
      | Sede      | Max cites | H-index |
