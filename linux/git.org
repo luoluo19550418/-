@@ -44,11 +44,11 @@
 #+END_SRC
 ** 常用的git配置项
 *** 用户名称和email
-    这两条配置很重要,git提交时都会引用这两条信息,说明是谁提交了更新.
-    #+BEGIN_SRC sh
-      git config --global user.name "darksun"
-      git config --global user.email "lujun9972@gmail.com"
-    #+END_SRC
+这两条配置很重要,git提交时都会引用这两条信息,说明是谁提交了更新.
+#+BEGIN_SRC sh
+  git config --global user.name "darksun"
+  git config --global user.email "lujun9972@gmail.com"
+#+END_SRC
 *** 默认文本编辑器
     当git需要你输入一些额外消息时,会自动调用一个默认外部文件编辑器.默认为操作系统指定的默认编辑器
     #+BEGIN_SRC sh
@@ -77,6 +77,41 @@
       git config --global alias.co checkout # 设置git co为git checkout的别名
       git config --global alias.visual "!gitk" # 设置git visual为执行命令gitk
     #+END_SRC
+*** 配置git commit 模板
+首先创建一个文本文件，内容为git comit的模板,我们假设它的路径为"~/.gitmessage"
+#+begin_src conf :tangle "~/.gitmessage"
+  # type: commit 的类型包括:
+  # feat: 新特性
+  # fix: 修改问题
+  # refactor: 代码重构
+  # docs: 文档修改
+  # style: 代码格式修改, 注意不是 css 修改
+  # test: 测试用例修改
+  # chore: 其他修改, 比如构建流程, 依赖管理.
+
+  # scope: commit 影响的范围, 比如: route, component, utils, build...
+
+  <type>(<scope>):One liner describing the change(<=50 chars)
+
+  PROBLEM: Description of the problem goes here
+
+  SOLUTION: Description of the solution goes here
+
+  TESTS:
+  Explain the how you tested the change. If possible also provide links
+  where your working solution is hosted so that reviewer can test it.
+  How you tested this change.
+#+end_src
+
+设置 commit.template 属性执行该模板文件
+#+begin_src shell
+  git config --global commit.template "~/.gitmessage"
+#+end_src
+
+除了设置 commit.template 属性外，也可以使用 git commit 的 =-f= 属性选定模板文件
+#+begin_src shell
+  git commit -a -f ${path_of_gitmessage}
+#+end_src
 * Git的使用
 ** Git的一般用法
       #+BEGIN_SRC sh
