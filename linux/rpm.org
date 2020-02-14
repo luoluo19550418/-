@@ -1,0 +1,69 @@
+#+TITLE: rpm
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2020-02-14 五 19:38]
+#+LANGUAGE:  zh-CN
+#+STARTUP:  inlineimages
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 查看Package信息
+** 列出package的依赖
+#+begin_src shell
+  rpm -qpR ${package.rpm}
+#+end_src
+** 查看package的信息
+#+begin_src shell
+  rpm -qip ${package.rpm}
+#+end_src
+** 显示已安装package的详细信息
+#+begin_src shell
+  rpm -ql ${package}
+#+end_src
+** 查看已装package的配置文件
+#+begin_src shell
+  rpm -qc ${package}
+#+end_src
+** 查找指定文件/目录所属的package
+#+begin_src shell
+  rpm -qf ${path}
+#+end_src
+** 列出所有已经安装的package
+#+begin_src shell
+  rpm -qa
+#+end_src
+** 查找指定文件/目录所属包的文档
+#+begin_src shell
+  rpm -qdf ${path}
+#+end_src
+
+* 安装/升级/删除package
+** 安装package
+#+begin_src shell
+  rpm -ivh ${package.rpm}
+#+end_src
+** 安装package，但不安装依赖
+#+begin_src shell
+  rpm -ivh --nodeps ${package.rpm}
+#+end_src
+** 升级package
+#+begin_src shell
+  rpm -Uvh ${package.rpm}
+#+end_src
+** 删除package
+#+begin_src shell
+  rpm -ev ${package}              # 不带rpm
+#+end_src
+* 校验package
+** 安装前校验package rpm文件
+#+begin_src shell
+  rpm -Vp ${package}.rpm
+#+end_src
+** 校验所有已安装的package
+#+begin_src shell
+  rpm -Va
+#+end_src
+** 校验package是否安装
+#+begin_src shell
+  rpm -q ${package}
+#+end_src
+
