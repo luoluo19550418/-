@@ -1,0 +1,42 @@
+#+TITLE: chattr
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2020-02-16 日 13:55]
+#+LANGUAGE:  zh-CN
+#+STARTUP:  inlineimages
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+chattr的语法为:
+#+begin_src shell
+  chattr [operator] [attr] [filename]
+#+end_src
+
+其中 operator 可以为:
+
++ + :: 添加属性
++ - :: 删除属性
++ = :: 设置属性
+
+其中 attr 可以是
+
++ a – append only,
++ A – no atime updates,
++ c – compressed,
++ C – no copy on write,
++ d – no dump,
++ D – synchronous directory updates,
++ e – extent format,
++ i – immutable,
++ j – data journalling,
++ P – project hierarchy,
++ s – secure deletion,
++ S – synchronous updates,
++ t – no tail-merging,
++ T – top of directory hierarchy,
++ u – undeletable.
+
+ 
+要列出属性，可以使用lsattr
+#+begin_src shell
+  lsattr filename
+#+end_src
