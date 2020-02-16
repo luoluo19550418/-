@@ -8,8 +8,10 @@
 
 chattr的语法为:
 #+begin_src shell
-  chattr [operator] [attr] [filename]
+  chattr [switch] [operator] [attr] [filename]
 #+end_src
+
+其中 switch 最常用的就是 =-R= 参数，表示递归管理权限
 
 其中 operator 可以为:
 
