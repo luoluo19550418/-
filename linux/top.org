@@ -1,0 +1,78 @@
+#+TITLE: top
+#+AUTHOR: lujun9972
+#+TAGS: linux
+#+DATE: [2020-02-16 日 09:45]
+#+LANGUAGE:  zh-CN
+#+STARTUP:  inlineimages
+#+OPTIONS:  H:6 num:nil toc:t \n:nil ::t |:t ^:nil -:nil f:t *:t <:nil
+
+* 显示进程的绝对路径
+#+begin_src shell
+  top -c
+#+end_src
+
+* 按内存使用量排序
+在top界面中按 =M= 就会按内存使用量对进程进行排序
+
+* 俺CPU使用率排序
+在top界面中按 =P= 就会按CPU使用率对进程进行排序
+
+* 高亮显示排序的列
+在top界面中按 =x= 就会高亮显示排序的列
+
+* 为排序的列添加背景色
+在top界面中按 =b= 就会为排序的列添加背景色
+
+* 逆排序
+在top界面中按 =R=
+
+* 过滤进程
+在top界面中按 =o= 然后输入 ~field_name=value~
+
+例如只显示firefox进程，则输入 ~o COMMAND=firefox~
+
+* 只显示指定用户的进程
+在top界面中按 =u= 然后输入用户名
+
+* 切换显示idle状态的进程
+在top界面中按 =i=
+
+* 切换显示header信息
+在top界面中依次按下下面几个键:
+
++ l :: 隐藏负载(load average)信息
++ t :: 隐藏任务(task) 和 cpu信息
++ m :: 隐藏内存(memory)信息
+
+* 显示所有CPU Core
+在top界面中按 =1=
+
+* 将命令结果拆分为多个panel
+默认top的命令结果放在单个panel中，按下 =A= 进入多panel模式
+
+之后按 =a= 在各个panel之间跳转
+
+* 更改要显示的信息
+在top界面中按 =f=,就会出现Field management界面，其中列出了所有可显示的信息域。
+
+域前有 =*= 说明该域被选中，会被显示。
+
+用上下按键跳转到指定域，然后按下 =d= 或 =空格= 切换是否选中该域
+
+按 =q= 回到top的信息显示界面
+
+* 杀掉指定进程
+在top界面中按 =k=,然后输入PID
+
+* 以树状模型显示进程继承结构
+在top界面中按 =V=
+
+* 更改更新频率
+top默认3秒钟更新一次，按 =d= 可以更改频率
+
+* 更改内存显示的单位
+默认top以KB作为内存单位，按下 =E= 切换header中的内存单位，按下 =e= 切换详细内容中的内存单位
+
+* 按指定域进行排序
+按下 =f= 进入Field Management界面，在需要排序的域上按下 =s=,然后按 =q= 退回显示界面
+

@@ -2956,6 +2956,46 @@ inspect模块提供了许多有用的函数,来获取对象信息.
 + continue :: 断点后继续执行
 + step :: 步进下一条指令
 + next :: 执行下一行代码
+* pip 安装程序包          
+** pip子命令
+#+TABLE: pip子命令
+| install   | 安装程序包                                        |
+| uninstall | 卸载程序包                                        |
+| freeze    | 以requrements格式列表输出当前已安装程序包及其版本 |
+| list      | 列表显示当前已安装的程序包                        |
+| show      | 列表显示已安装程序包的版本信息                    |
+| search    | 按关键字在PyPI上搜索程序包并显示结果列表          |
+| wheel     | 根据指定requirement构建wheel文件                  |
+| help      | 显示帮助信息                                      |
+| 子命令 -h | 显示子命令的帮助信息                              |
+
+** pip的配置信息
+pip常用选项可以实现写在设置文件中，这样可以省去每次都写的麻烦。默认的设置文件为 =$HOME/.pip/pip.conf=
+
+#+begin_src conf
+  [global]
+  quiet = true
+  proxy= server:1080
+
+  [install]
+  upgrade = true
+#+end_src
+
+pip的选项有两种，一种是通用选项，在 =[global]= 中设置，一种与子命令相关的，在 =[子命令]= 中设置
+** pip相关的环境变量
+我们可以通过环境变脸设置选项，环境变量名是根据选项名自动生成的，规则是将选项名的 =--= 后的字母全部改为大写，短线改成下划线，然后在开头加上 =PIP_=
+
++ --quiet :: PIP_QUIET
++ --proxy :: PIP_PROXY
++ --upgrade :: PIP_UPGRADE
+** 关于代理
+--proxy可以设置代理信息，格式为 =[user:passwd@]proxy:port=
+** 使用pip安装版本库中的包
+将版本库 clone 下来并进行安装时，需要在版本库的 URL 前添加 =git+= 等版本库类别，例如
+#+begin_src shell
+  pip install git+https://github.com/user/package
+#+end_src
+
 * Local Variables Setting:
 # Local Variables:
 # org-babel-default-header-args:python: ((:session . "none") (:results . "output") (:exports . "code") (:cache))
